@@ -55,7 +55,7 @@ where
                 .take(self.payload_chunk_size),
         );
 
-        // prepare the list of input points
+        // prepare list of input points
         // perf: can't avoid use of `skip`
         let points: Vec<_> = {
             self.eval_domain
@@ -98,7 +98,6 @@ where
         Self::check_common_commit_consistency(&common, &commit)?;
 
         // prepare list of data elems
-        // TODO refactor copied code
         let data_elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
             proof
                 .prefix_bytes
@@ -109,8 +108,7 @@ where
         .collect();
 
         // prepare list of input points
-        // TODO perf: can't avoid use of `skip`
-        // TODO refactor copied code
+        // perf: can't avoid use of `skip`
         let points: Vec<_> = {
             self.eval_domain
                 .elements()
@@ -120,8 +118,7 @@ where
         };
 
         // verify proof
-        // TODO naive verify for multi_open
-        // https://github.com/EspressoSystems/jellyfish/issues/387
+        // TODO naive verify for multi_open https://github.com/EspressoSystems/jellyfish/issues/387
         if data_elems.len() != proof.proofs.len() {
             return Err(VidError::Argument(format!(
                 "data len {} differs from proof len {}",
