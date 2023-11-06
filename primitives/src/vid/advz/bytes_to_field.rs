@@ -13,8 +13,9 @@ use ark_std::{
 ///
 /// # Example
 ///
-/// ```
-/// # use jf_utils::bytes_to_field;
+/// [doctest ignored because it's a private module.]
+/// ```ignore
+/// # use jf_primitives::vid::advz::{bytes_to_field};
 /// # use ark_ed_on_bn254::Fr as Fr254;
 /// let bytes = [1, 2, 3];
 /// let mut elems_iter = bytes_to_field::<_, Fr254>(bytes);
@@ -46,8 +47,9 @@ where
 ///
 /// # Example
 ///
-/// ```
-/// # use jf_utils::{bytes_to_field, field_to_bytes};
+/// [doctest ignored because it's a private module.]
+/// ```ignore
+/// # use jf_primitives::vid::advz::{bytes_to_field, field_to_bytes};
 /// # use ark_ed_on_bn254::Fr as Fr254;
 /// let bytes = [1, 2, 3];
 /// let mut bytes_iter = field_to_bytes(bytes_to_field::<_, Fr254>(bytes));
@@ -162,7 +164,8 @@ where
     }
 }
 
-/// Return the number of bytes that can be encoded into a generic [`PrimeField`] parameter.
+/// Return the number of bytes that can be encoded into a generic [`PrimeField`]
+/// parameter.
 ///
 /// Returns the byte length of the [`PrimeField`] modulus minus 1.
 ///
