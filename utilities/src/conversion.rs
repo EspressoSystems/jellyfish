@@ -109,19 +109,21 @@ where
 /// - Partition `bytes` into chunks of length P, where P is the field
 ///   characteristic byte length minus 1.
 /// - Convert each chunk into [`Field::BasePrimeField`] via
-///   [`PrimeField::from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
-///   guaranteed not to occur because chunk byte length is sufficiently small.
-/// - Collect [`Field::BasePrimeField`] elements into [`Field`] elements and append to
-///   result.
+///   [`PrimeField::from_le_bytes_mod_order`]. Reduction modulo the field
+///   characteristic is guaranteed not to occur because chunk byte length is
+///   sufficiently small.
+/// - Collect [`Field::BasePrimeField`] elements into [`Field`] elements and
+///   append to result.
 /// - If `bytes` is empty then result is empty.
 ///
 /// # Panics
 ///
 /// Panics only under conditions that should be checkable at compile time:
 ///
-/// - The [`Field::BasePrimeField`] modulus bit length is too small to hold a `u64`.
-/// - The byte length of a single [`Field::BasePrimeField`] element fails to fit inside
-///   a `usize`.
+/// - The [`Field::BasePrimeField`] modulus bit length is too small to hold a
+///   `u64`.
+/// - The byte length of a single [`Field::BasePrimeField`] element fails to fit
+///   inside a `usize`.
 /// - The extension degree of the [`Field`] fails to fit inside a `usize`.
 /// - The byte length of a [`Field`] element fails to fit inside a `usize`.
 ///
