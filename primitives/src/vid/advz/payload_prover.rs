@@ -5,6 +5,10 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementations of [`PayloadProver`] for `Advz`.
+//!
+//! Two implementations:
+//! 1. `PROOF = `[`Proof`]: KZG batch proof for the data. Useful for small sub-slices of `payload` such as an individual transaction within a block. Not snark-friendly because it requires a pairing.
+//! 2. `PROOF = `[`CommitRecovery`]: Rebuild the KZG commitment. Useful for larger sub-slices of `payload` such as a complete namespace. Snark-friendly because it does not require a pairing.
 
 use ark_poly::EvaluationDomain;
 use jf_utils::{bytes_to_field, compile_time_checks};
@@ -17,7 +21,6 @@ use crate::{
     alloc::string::ToString,
     vid::{payload_prover::PayloadProver, vid, VidError, VidScheme},
 };
-// use ark_std::println;
 use ark_std::{format, ops::Range};
 
 impl<P, T, H, V> PayloadProver<Proof<P::Proof>> for GenericAdvz<P, T, H, V>
@@ -41,15 +44,15 @@ where
         check_range_nonempty_and_inside_payload(payload, &range)?;
 
         // index conversion
-        let range_elem = self.range_byte_to_elem2(&range);
-        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let range_elem = self.range_byte_to_elem(&range);
+        let range_poly = self.range_elem_to_poly(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
-        let range_elem_byte = self.range_elem_to_byte2(&range_elem);
+        let range_elem_byte = self.range_elem_to_byte(&range_elem);
 
         check_range_poly(&range_poly)?;
 
-        // grab the `start_namespace`th polynomial
+        // grab the polynomial that contains `range`
         let polynomial = self.polynomial(
             bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size),
@@ -89,8 +92,8 @@ where
         check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
 
         // index conversion
-        let range_elem = self.range_byte_to_elem2(&proof.chunk_range);
-        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let range_elem = self.range_byte_to_elem(&proof.chunk_range);
+        let range_poly = self.range_elem_to_poly(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
 
@@ -141,6 +144,8 @@ where
 }
 
 /// KZG batch proofs and accompanying metadata.
+///
+/// TODO use batch proof instead of `Vec<P>` https://github.com/EspressoSystems/jellyfish/issues/387
 pub struct Proof<P> {
     proofs: Vec<P>,
     prefix_bytes: Vec<u8>,
@@ -173,11 +178,11 @@ where
         check_range_nonempty_and_inside_payload(payload, &range)?;
 
         // index conversion
-        let range_elem = self.range_byte_to_elem2(&range);
-        let range_poly = self.range_elem_to_poly2(&range_elem);
+        let range_elem = self.range_byte_to_elem(&range);
+        let range_poly = self.range_elem_to_poly(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
-        let range_elem_byte = self.range_elem_to_byte2(&range_elem);
+        let range_elem_byte = self.range_elem_to_byte(&range_elem);
 
         check_range_poly(&range_poly)?;
 
@@ -211,7 +216,7 @@ where
         check_chunk_proof_consistency(&chunk, proof.chunk_range.len())?;
 
         // index conversion
-        let range_poly = self.range_byte_to_poly2(&proof.chunk_range);
+        let range_poly = self.range_byte_to_poly(&proof.chunk_range);
 
         check_range_poly(&range_poly)?;
         Self::check_common_commit_consistency(&common, &commit)?;
@@ -242,7 +247,7 @@ where
     }
 }
 
-/// Metadata needed to recover a KZG commitment
+/// Metadata needed to recover a KZG commitment.
 pub struct CommitRecovery<F> {
     prefix_elems: Vec<F>,
     suffix_elems: Vec<F>,
@@ -264,14 +269,9 @@ where
     V::MembershipProof: Sync + Debug,
     V::Index: From<u64>,
 {
-    // lots of index manipulation.
-    // with infinite dev time we should implement type-safe indices to preclude
-    // index-misuse bugs.
+    // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {
         index_coarsen(index, compile_time_checks::<P::Evaluation>().0)
-    }
-    fn _index_elem_to_byte(&self, index: usize) -> usize {
-        index_refine(index, compile_time_checks::<P::Evaluation>().0)
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
         index_refine(
@@ -279,23 +279,17 @@ where
             self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
         )
     }
-    fn range_byte_to_elem2(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen2(range, compile_time_checks::<P::Evaluation>().0)
+    fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen(range, compile_time_checks::<P::Evaluation>().0)
     }
-    fn range_elem_to_byte2(&self, range: &Range<usize>) -> Range<usize> {
-        range_refine2(range, compile_time_checks::<P::Evaluation>().0)
+    fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
+        range_refine(range, compile_time_checks::<P::Evaluation>().0)
     }
-    // fn range_poly_to_byte2(&self, range: &Range<usize>) -> Range<usize> {
-    //     range_refine2(
-    //         range,
-    //         self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
-    //     )
-    // }
-    fn range_elem_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen2(range, self.payload_chunk_size)
+    fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen(range, self.payload_chunk_size)
     }
-    fn range_byte_to_poly2(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen2(
+    fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
+        range_coarsen(
             range,
             self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
         )
@@ -314,7 +308,7 @@ where
     }
 }
 
-fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
+fn range_coarsen(range: &Range<usize>, denominator: usize) -> Range<usize> {
     assert!(!range.is_empty(), "{:?}", range);
     Range {
         start: index_coarsen(range.start, denominator),
@@ -322,7 +316,7 @@ fn range_coarsen2(range: &Range<usize>, denominator: usize) -> Range<usize> {
     }
 }
 
-fn range_refine2(range: &Range<usize>, multiplier: usize) -> Range<usize> {
+fn range_refine(range: &Range<usize>, multiplier: usize) -> Range<usize> {
     assert!(!range.is_empty(), "{:?}", range);
     Range {
         start: index_refine(range.start, multiplier),
@@ -479,24 +473,18 @@ mod tests {
                     };
                     println!("poly {} {} case: {:?}", poly, cases.1, range);
 
-                    let data_proof2: Proof<_> =
-                        advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(
-                        &payload[range.clone()],
-                        &d.commit,
-                        &d.common,
-                        &data_proof2,
-                    )
-                    .unwrap()
-                    .unwrap();
+                    let data_proof: Proof<_> = advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(&payload[range.clone()], &d.commit, &d.common, &data_proof)
+                        .unwrap()
+                        .unwrap();
 
-                    let chunk_proof2: CommitRecovery<_> =
+                    let chunk_proof: CommitRecovery<_> =
                         advz.payload_proof(&payload, range.clone()).unwrap();
                     advz.payload_verify(
                         &payload[range.clone()],
                         &d.commit,
                         &d.common,
-                        &chunk_proof2,
+                        &chunk_proof,
                     )
                     .unwrap()
                     .unwrap();
