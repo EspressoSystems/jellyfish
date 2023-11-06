@@ -19,6 +19,10 @@ pub trait PayloadProver<PROOF>: VidScheme {
         B: AsRef<[u8]>;
 
     /// Verify a proof made by `payload_proof`.
+    ///
+    /// `chunk` is the payload sub-slice for which a proof was generated via
+    /// `payload_proof` using `range`. In other words, `chunk` should equal
+    /// `payload[range.start..range.end]`.
     fn payload_verify<B>(
         &self,
         chunk: B,
