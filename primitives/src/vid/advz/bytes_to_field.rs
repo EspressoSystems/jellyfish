@@ -1,11 +1,10 @@
-use ark_ff::{BigInteger, Field, PrimeField};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::{
     borrow::Borrow,
     iter::Take,
     marker::PhantomData,
     vec::{IntoIter, Vec},
 };
-use jf_utils::compile_time_checks;
 
 /// Deterministic, infallible, invertible iterator adaptor to convert from
 /// arbitrary bytes to field elements.
@@ -75,19 +74,18 @@ where
 
 struct BytesToField<I, F> {
     bytes_iter: I,
-    primefield_bytes_len: usize,
+    elem_byte_capacity: usize,
     _phantom: PhantomData<F>,
 }
 
 impl<I, F> BytesToField<I, F>
 where
-    F: Field,
+    F: PrimeField,
 {
     fn new(bytes_iter: I) -> Self {
-        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
             bytes_iter,
-            primefield_bytes_len,
+            elem_byte_capacity: elem_byte_capacity::<F>(),
             _phantom: PhantomData,
         }
     }
@@ -102,7 +100,7 @@ where
     type Item = F;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut elem_bytes = Vec::with_capacity(self.primefield_bytes_len);
+        let mut elem_bytes = Vec::with_capacity(self.elem_byte_capacity);
         for _ in 0..elem_bytes.capacity() {
             if let Some(byte) = self.bytes_iter.next() {
                 elem_bytes.push(*byte.borrow());
@@ -121,20 +119,19 @@ where
 struct FieldToBytes<I, F> {
     elems_iter: I,
     bytes_iter: Take<IntoIter<u8>>,
-    primefield_bytes_len: usize,
+    elem_byte_capacity: usize,
     _phantom: PhantomData<F>,
 }
 
 impl<I, F> FieldToBytes<I, F>
 where
-    F: Field,
+    F: PrimeField,
 {
     fn new(elems_iter: I) -> Self {
-        let (primefield_bytes_len, ..) = compile_time_checks::<F>();
         Self {
             elems_iter,
             bytes_iter: Vec::new().into_iter().take(0),
-            primefield_bytes_len,
+            elem_byte_capacity: elem_byte_capacity::<F>(),
             _phantom: PhantomData,
         }
     }
@@ -158,11 +155,22 @@ where
                 .into_bigint()
                 .to_bytes_le()
                 .into_iter()
-                .take(self.primefield_bytes_len);
+                .take(self.elem_byte_capacity);
             return self.bytes_iter.next();
         }
         None
     }
+}
+
+/// Return the number of bytes that can be encoded into a generic [`PrimeField`] parameter.
+///
+/// Returns the byte length of the [`PrimeField`] modulus minus 1.
+///
+/// It should be possible to do all this at compile time but I don't know how.
+/// Want to panic on overflow, so use checked arithetic and type conversion.
+pub fn elem_byte_capacity<F: PrimeField>() -> usize {
+    usize::try_from((F::MODULUS_BIT_SIZE - 1) / 8)
+        .expect("prime field modulus byte len should fit into usize")
 }
 
 #[cfg(test)]

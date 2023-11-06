@@ -15,11 +15,11 @@
 //!    Snark-friendly because it does not require a pairing.
 
 use ark_poly::EvaluationDomain;
-use jf_utils::compile_time_checks;
 
 use super::{
-    bytes_to_field, AffineRepr, Debug, DenseUVPolynomial, Digest, DynDigest, GenericAdvz,
-    MerkleTreeScheme, PolynomialCommitmentScheme, PrimeField, UnivariatePCS, Vec, VidResult, Write,
+    bytes_to_field, bytes_to_field::elem_byte_capacity, AffineRepr, Debug, DenseUVPolynomial,
+    Digest, DynDigest, GenericAdvz, MerkleTreeScheme, PolynomialCommitmentScheme, PrimeField,
+    UnivariatePCS, Vec, VidResult, Write,
 };
 use crate::{
     alloc::string::ToString,
@@ -276,19 +276,19 @@ where
 {
     // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {
-        index_coarsen(index, compile_time_checks::<P::Evaluation>().0)
+        index_coarsen(index, elem_byte_capacity::<P::Evaluation>())
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
         index_refine(
             index,
-            self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
+            self.payload_chunk_size * elem_byte_capacity::<P::Evaluation>(),
         )
     }
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen(range, compile_time_checks::<P::Evaluation>().0)
+        range_coarsen(range, elem_byte_capacity::<P::Evaluation>())
     }
     fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
-        range_refine(range, compile_time_checks::<P::Evaluation>().0)
+        range_refine(range, elem_byte_capacity::<P::Evaluation>())
     }
     fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, self.payload_chunk_size)
@@ -296,7 +296,7 @@ where
     fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(
             range,
-            self.payload_chunk_size * compile_time_checks::<P::Evaluation>().0,
+            self.payload_chunk_size * elem_byte_capacity::<P::Evaluation>(),
         )
     }
 
@@ -385,6 +385,7 @@ fn check_chunk_proof_consistency(chunk: &[u8], proof_chunk_len: usize) -> VidRes
 mod tests {
     use crate::vid::{
         advz::{
+            bytes_to_field::elem_byte_capacity,
             payload_prover::{CommitRecovery, Proof},
             tests::*,
             *,
@@ -394,10 +395,9 @@ mod tests {
     use ark_bls12_381::Bls12_381;
     use ark_std::{ops::Range, println, rand::Rng};
     use digest::{generic_array::ArrayLength, OutputSizeUser};
-    use jf_utils::compile_time_checks;
     use sha2::Sha256;
 
-    fn namespace_generic<E, H>()
+    fn correctness_generic<E, H>()
     where
         E: Pairing,
         H: Digest + DynDigest + Default + Clone + Write,
@@ -409,8 +409,8 @@ mod tests {
 
         // more items as a function of the above
         let payload_elems_len = num_polys * payload_chunk_size;
-        let payload_bytes_len = payload_elems_len * compile_time_checks::<E::ScalarField>().0;
-        let poly_bytes_len = payload_chunk_size * compile_time_checks::<E::ScalarField>().0;
+        let payload_bytes_len = payload_elems_len * elem_byte_capacity::<E::ScalarField>();
+        let poly_bytes_len = payload_chunk_size * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
         let payload = init_random_payload(payload_bytes_len, &mut rng);
         let srs = init_srs(payload_elems_len, &mut rng);
@@ -499,7 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn namespace() {
-        namespace_generic::<Bls12_381, Sha256>();
+    fn correctness() {
+        correctness_generic::<Bls12_381, Sha256>();
     }
 }

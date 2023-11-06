@@ -272,9 +272,7 @@ where
 /// # Panics
 ///
 /// Panics under the conditions listed at [`bytes_to_field_elements`].
-///
-/// TODO remove `pub`, move this somewhere else.
-pub fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
+fn compile_time_checks<F: Field>() -> (usize, usize, usize) {
     assert!(
         F::BasePrimeField::MODULUS_BIT_SIZE > 64,
         "base prime field modulus bit len {} too small to hold a u64",
