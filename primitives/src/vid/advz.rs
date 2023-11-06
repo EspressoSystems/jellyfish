@@ -210,8 +210,8 @@ where
         // itertools::process_results() but the code is unreadable.
         let mut hasher = H::new();
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
-        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            let poly = self.polynomial(coeffs_iter);
+        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let poly = self.polynomial(evals_iter);
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
@@ -236,8 +236,8 @@ where
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
         let mut polys = Vec::new();
-        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            polys.push(self.polynomial(coeffs_iter));
+        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            polys.push(self.polynomial(evals_iter));
         }
         end_timer!(bytes_to_polys_time);
 
