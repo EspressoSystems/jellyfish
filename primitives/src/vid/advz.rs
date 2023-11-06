@@ -308,9 +308,6 @@ where
         };
         end_timer!(common_timer);
 
-        let misc_timer = start_timer!(|| {
-            "should be fast: compute polynomial commitments hash, pseudorandom scalar, aggregate polynomial"
-        });
         let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
@@ -320,7 +317,6 @@ where
         // and whose input point is the pseudorandom scalar.
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-        end_timer!(misc_timer);
 
         let agg_proofs_timer = start_timer!(|| format!(
             "compute aggregate proofs for {} storage nodes",

@@ -112,6 +112,9 @@ std = [
         "jf-relation/std",
 ]
 print-trace = ["ark-std/print-trace"]
+kzg-print-trace = [
+        "print-trace",
+] # leave disabled to reduce pollution in downstream users of KZG (such as VID)
 parallel = [
         "ark-ff/parallel",
         "ark-ec/parallel",
