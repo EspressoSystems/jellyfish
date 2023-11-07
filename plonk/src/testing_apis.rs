@@ -151,7 +151,8 @@ impl<E: Pairing> From<verifier::PcsInfo<E>> for PcsInfo<E> {
 /// A wrapper of crate::proof_system::verifier::Verifier
 #[derive(Debug, Clone)]
 pub struct Verifier<E: Pairing> {
-    pub(crate) domain: Radix2EvaluationDomain<E::ScalarField>,
+    /// Evaluation domain
+    pub domain: Radix2EvaluationDomain<E::ScalarField>,
 }
 
 impl<E: Pairing> From<Verifier<E>> for verifier::Verifier<E> {
