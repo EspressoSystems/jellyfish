@@ -75,6 +75,11 @@ name = "pcs"
 harness = false
 
 [[bench]]
+name = "pcs-size"
+path = "benches/pcs_size.rs"
+harness = false
+
+[[bench]]
 name = "reed-solomon"
 path = "benches/reed_solomon.rs"
 harness = false
