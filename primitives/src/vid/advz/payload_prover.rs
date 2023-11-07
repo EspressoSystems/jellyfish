@@ -7,12 +7,13 @@
 //! Implementations of [`PayloadProver`] for `Advz`.
 //!
 //! Two implementations:
-//! 1. `PROOF = `[`Proof`]: KZG batch proof for the data. Useful for small
-//!    sub-slices of `payload` such as an individual transaction within a block.
-//!    Not snark-friendly because it requires a pairing.
-//! 2. `PROOF = `[`CommitRecovery`]: Rebuild the KZG commitment. Useful for
-//!    larger sub-slices of `payload` such as a complete namespace.
-//!    Snark-friendly because it does not require a pairing.
+//! 1. `PROOF = `[`SmallRangeProof`]: Useful for small sub-slices of `payload`
+//!    such as an individual transaction within a block. Not snark-friendly
+//!    because it requires a pairing. Consists of metadata required to verify a
+//!    KZG batch proof.
+//! 2. `PROOF = `[`LargeRangeProof`]: Useful for large sub-slices of `payload`
+//!    such as a complete namespace. Snark-friendly because it does not require
+//!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
 use ark_poly::EvaluationDomain;
 
@@ -30,7 +31,30 @@ use crate::{
 };
 use ark_std::{format, ops::Range};
 
-impl<P, T, H, V> PayloadProver<Proof<P::Proof>> for GenericAdvz<P, T, H, V>
+/// A proof intended for use on small payload subslices.
+///
+/// KZG batch proofs and accompanying metadata.
+///
+/// TODO use batch proof instead of `Vec<P>` <https://github.com/EspressoSystems/jellyfish/issues/387>
+pub struct SmallRangeProof<P> {
+    proofs: Vec<P>,
+    prefix_bytes: Vec<u8>,
+    suffix_bytes: Vec<u8>,
+    chunk_range: Range<usize>,
+}
+
+/// A proof intended for use on large payload subslices.
+///
+/// Metadata needed to recover a KZG commitment.
+pub struct LargeRangeProof<F> {
+    prefix_elems: Vec<F>,
+    suffix_elems: Vec<F>,
+    prefix_bytes: Vec<u8>,
+    suffix_bytes: Vec<u8>,
+    chunk_range: Range<usize>,
+}
+
+impl<P, T, H, V> PayloadProver<SmallRangeProof<P::Proof>> for GenericAdvz<P, T, H, V>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
@@ -43,7 +67,11 @@ where
     V::MembershipProof: Sync + Debug,
     V::Index: From<u64>,
 {
-    fn payload_proof<B>(&self, payload: B, range: Range<usize>) -> VidResult<Proof<P::Proof>>
+    fn payload_proof<B>(
+        &self,
+        payload: B,
+        range: Range<usize>,
+    ) -> VidResult<SmallRangeProof<P::Proof>>
     where
         B: AsRef<[u8]>,
     {
@@ -78,7 +106,7 @@ where
 
         let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
-        Ok(Proof {
+        Ok(SmallRangeProof {
             proofs,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
             suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
@@ -89,7 +117,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &Proof<P::Proof>,
+        proof: &SmallRangeProof<P::Proof>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -145,17 +173,7 @@ where
     }
 }
 
-/// KZG batch proofs and accompanying metadata.
-///
-/// TODO use batch proof instead of `Vec<P>` <https://github.com/EspressoSystems/jellyfish/issues/387>
-pub struct Proof<P> {
-    proofs: Vec<P>,
-    prefix_bytes: Vec<u8>,
-    suffix_bytes: Vec<u8>,
-    chunk_range: Range<usize>,
-}
-
-impl<P, T, H, V> PayloadProver<CommitRecovery<P::Evaluation>> for GenericAdvz<P, T, H, V>
+impl<P, T, H, V> PayloadProver<LargeRangeProof<P::Evaluation>> for GenericAdvz<P, T, H, V>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
@@ -172,7 +190,7 @@ where
         &self,
         payload: B,
         range: Range<usize>,
-    ) -> VidResult<CommitRecovery<P::Evaluation>>
+    ) -> VidResult<LargeRangeProof<P::Evaluation>>
     where
         B: AsRef<[u8]>,
     {
@@ -195,7 +213,7 @@ where
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
-        Ok(CommitRecovery {
+        Ok(LargeRangeProof {
             prefix_elems: prefix,
             suffix_elems: suffix,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
@@ -207,7 +225,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &CommitRecovery<P::Evaluation>,
+        proof: &LargeRangeProof<P::Evaluation>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -241,15 +259,6 @@ where
 
         Ok(Ok(()))
     }
-}
-
-/// Metadata needed to recover a KZG commitment.
-pub struct CommitRecovery<F> {
-    prefix_elems: Vec<F>,
-    suffix_elems: Vec<F>,
-    prefix_bytes: Vec<u8>,
-    suffix_bytes: Vec<u8>,
-    chunk_range: Range<usize>,
 }
 
 impl<P, T, H, V> GenericAdvz<P, T, H, V>
@@ -388,7 +397,7 @@ mod tests {
     use crate::vid::{
         advz::{
             bytes_to_field::elem_byte_capacity,
-            payload_prover::{CommitRecovery, Proof, Statement},
+            payload_prover::{LargeRangeProof, SmallRangeProof, Statement},
             tests::*,
             *,
         },
@@ -487,14 +496,17 @@ mod tests {
                         common: &d.common,
                     };
 
-                    let data_proof: Proof<_> = advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt.clone(), &data_proof)
+                    let small_range_proof: SmallRangeProof<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt.clone(), &small_range_proof)
                         .unwrap()
                         .unwrap();
 
-                    let chunk_proof: CommitRecovery<_> =
+                    let large_range_proof: LargeRangeProof<_> =
                         advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt, &chunk_proof).unwrap().unwrap();
+                    advz.payload_verify(stmt, &large_range_proof)
+                        .unwrap()
+                        .unwrap();
                 }
             }
         }
