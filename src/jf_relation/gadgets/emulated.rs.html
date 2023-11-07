@@ -887,7 +887,7 @@
 <span class="kw">use </span>itertools::izip;
 <span class="kw">use </span>num_bigint::BigUint;
 
-<span class="doccomment">/// Parameters needed for emulating field operations over [`F`].
+<span class="doccomment">/// Parameters needed for emulating field operations over [`PrimeField`].
 </span><span class="kw">pub trait </span>EmulationConfig&lt;F: PrimeField&gt;: PrimeField {
     <span class="doccomment">/// Log2 of the other CRT modulus is 2^T.
     </span><span class="kw">const </span>T: usize;

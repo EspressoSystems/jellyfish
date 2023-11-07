@@ -596,6 +596,20 @@
 <a href="#596" id="596">596</a>
 <a href="#597" id="597">597</a>
 <a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -690,7 +704,9 @@
         poly: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
-        <span class="kw">let </span>commit_time =
+
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="kw">let </span>commit_time =
             <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Committing to polynomial of degree {} &quot;</span>, poly.degree()));
 
         <span class="kw">if </span>poly.degree() &gt; prover_param.powers_of_g.len() {
@@ -703,15 +719,21 @@
 
         <span class="kw">let </span>(num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
-        <span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;MSM to compute commitment to plaintext poly&quot;</span>);
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;MSM to compute commitment to plaintext
+        poly&quot;</span>);
+
         <span class="kw">let </span>commitment = E::G1::msm_bigint(
             <span class="kw-2">&amp;</span>prover_param.powers_of_g[num_leading_zeros..],
             <span class="kw-2">&amp;</span>plain_coeffs,
         )
         .into_affine();
-        <span class="macro">end_timer!</span>(msm_time);
 
-        <span class="macro">end_timer!</span>(commit_time);
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="macro">end_timer!</span>(msm_time);
+
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="macro">end_timer!</span>(commit_time);
         <span class="prelude-val">Ok</span>(Commitment(commitment))
     }
 
@@ -1003,9 +1025,15 @@
 }
 
 <span class="kw">fn </span>convert_to_bigints&lt;F: PrimeField&gt;(p: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;F::BigInt&gt; {
-    <span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting polynomial coeffs to bigints&quot;</span>);
+    <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+    </span><span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting polynomial coeffs to
+    bigints&quot;</span>);
+
     <span class="kw">let </span>coeffs = p.iter().map(|s| s.into_bigint()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-    <span class="macro">end_timer!</span>(to_bigint_time);
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+    </span><span class="macro">end_timer!</span>(to_bigint_time);
+
     coeffs
 }
 
