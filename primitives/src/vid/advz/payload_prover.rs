@@ -23,7 +23,10 @@ use super::{
 };
 use crate::{
     alloc::string::ToString,
-    vid::{payload_prover::PayloadProver, vid, VidError, VidScheme},
+    vid::{
+        payload_prover::{PayloadProver, Statement},
+        vid, VidError, VidScheme,
+    },
 };
 use ark_std::{format, ops::Range};
 
@@ -83,18 +86,12 @@ where
         })
     }
 
-    fn payload_verify<B>(
+    fn payload_verify(
         &self,
-        chunk: B,
-        commit: &Self::Commit,
-        common: &Self::Common,
+        stmt: Statement<Self>,
         proof: &Proof<P::Proof>,
-    ) -> VidResult<Result<(), ()>>
-    where
-        B: AsRef<[u8]>,
-    {
-        let chunk = chunk.as_ref();
-        check_chunk_proof_consistency(chunk, proof.chunk_range.len())?;
+    ) -> VidResult<Result<(), ()>> {
+        Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem(&proof.chunk_range);
@@ -103,14 +100,14 @@ where
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
 
         check_range_poly(&range_poly)?;
-        Self::check_common_commit_consistency(common, commit)?;
+        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
         let data_elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
             proof
                 .prefix_bytes
                 .iter()
-                .chain(chunk)
+                .chain(stmt.payload_subslice)
                 .chain(proof.suffix_bytes.iter()),
         )
         .collect();
@@ -135,7 +132,7 @@ where
             )));
         }
         assert_eq!(data_elems.len(), points.len()); // sanity
-        let poly_commit = &common.poly_commits[range_poly.start];
+        let poly_commit = &stmt.common.poly_commits[range_poly.start];
         for (point, (elem, pf)) in points
             .iter()
             .zip(data_elems.iter().zip(proof.proofs.iter()))
@@ -207,24 +204,18 @@ where
         })
     }
 
-    fn payload_verify<B>(
+    fn payload_verify(
         &self,
-        chunk: B,
-        commit: &Self::Commit,
-        common: &Self::Common,
+        stmt: Statement<Self>,
         proof: &CommitRecovery<P::Evaluation>,
-    ) -> VidResult<Result<(), ()>>
-    where
-        B: AsRef<[u8]>,
-    {
-        let chunk = chunk.as_ref();
-        check_chunk_proof_consistency(chunk, proof.chunk_range.len())?;
+    ) -> VidResult<Result<(), ()>> {
+        Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
         // index conversion
         let range_poly = self.range_byte_to_poly(&proof.chunk_range);
 
         check_range_poly(&range_poly)?;
-        Self::check_common_commit_consistency(common, commit)?;
+        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // rebuild the poly commit, check against `common`
         let poly_commit = {
@@ -237,14 +228,14 @@ where
                         proof
                             .prefix_bytes
                             .iter()
-                            .chain(chunk)
+                            .chain(stmt.payload_subslice)
                             .chain(proof.suffix_bytes.iter()),
                     ))
                     .chain(proof.suffix_elems.iter().cloned()),
             );
             P::commit(&self.ck, &poly).map_err(vid)?
         };
-        if poly_commit != common.poly_commits[range_poly.start] {
+        if poly_commit != stmt.common.poly_commits[range_poly.start] {
             return Ok(Err(()));
         }
 
@@ -311,6 +302,32 @@ where
         }
         Ok(())
     }
+
+    fn check_stmt_proof_consistency(
+        stmt: &Statement<Self>,
+        proof_range: &Range<usize>,
+    ) -> VidResult<()> {
+        if stmt.range.is_empty() {
+            return Err(VidError::Argument(format!(
+                "empty range ({},{})",
+                stmt.range.start, stmt.range.end
+            )));
+        }
+        if stmt.payload_subslice.len() != stmt.range.len() {
+            return Err(VidError::Argument(format!(
+                "payload_subslice length {} inconsistent with range length {}",
+                stmt.payload_subslice.len(),
+                stmt.range.len()
+            )));
+        }
+        if stmt.range != *proof_range {
+            return Err(VidError::Argument(format!(
+                "statement range ({},{}) differs from proof range ({},{})",
+                stmt.range.start, stmt.range.end, proof_range.start, proof_range.end,
+            )));
+        }
+        Ok(())
+    }
 }
 
 fn range_coarsen(range: &Range<usize>, denominator: usize) -> Range<usize> {
@@ -366,27 +383,12 @@ fn check_range_poly(range_poly: &Range<usize>) -> VidResult<()> {
     Ok(())
 }
 
-fn check_chunk_proof_consistency(chunk: &[u8], proof_chunk_len: usize) -> VidResult<()> {
-    if chunk.is_empty() {
-        return Err(VidError::Argument("empty chunk".to_string()));
-    }
-
-    if chunk.len() != proof_chunk_len {
-        return Err(VidError::Argument(format!(
-            "chunk length {} inconsistent with proof length {}",
-            chunk.len(),
-            proof_chunk_len
-        )));
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use crate::vid::{
         advz::{
             bytes_to_field::elem_byte_capacity,
-            payload_prover::{CommitRecovery, Proof},
+            payload_prover::{CommitRecovery, Proof, Statement},
             tests::*,
             *,
         },
@@ -478,21 +480,21 @@ mod tests {
                     };
                     println!("poly {} {} case: {:?}", poly, cases.1, range);
 
+                    let stmt = Statement {
+                        payload_subslice: &payload[range.clone()],
+                        range: range.clone(),
+                        commit: &d.commit,
+                        common: &d.common,
+                    };
+
                     let data_proof: Proof<_> = advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(&payload[range.clone()], &d.commit, &d.common, &data_proof)
+                    advz.payload_verify(stmt.clone(), &data_proof)
                         .unwrap()
                         .unwrap();
 
                     let chunk_proof: CommitRecovery<_> =
                         advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(
-                        &payload[range.clone()],
-                        &d.commit,
-                        &d.common,
-                        &chunk_proof,
-                    )
-                    .unwrap()
-                    .unwrap();
+                    advz.payload_verify(stmt, &chunk_proof).unwrap().unwrap();
                 }
             }
         }

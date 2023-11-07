@@ -23,13 +23,48 @@ pub trait PayloadProver<PROOF>: VidScheme {
     /// `chunk` is the payload sub-slice for which a proof was generated via
     /// `payload_proof` using `range`. In other words, `chunk` should equal
     /// `payload[range.start..range.end]`.
-    fn payload_verify<B>(
-        &self,
-        chunk: B,
-        commit: &Self::Commit,
-        common: &Self::Common,
-        proof: &PROOF,
-    ) -> VidResult<Result<(), ()>>
-    where
-        B: AsRef<[u8]>;
+    fn payload_verify(&self, stmt: Statement<Self>, proof: &PROOF) -> VidResult<Result<(), ()>>;
+}
+
+/// A convenience struct to reduce the list of arguments to [`PayloadProver::payload_verify`].
+/// It's the statement proved by [`PayloadProver::payload_proof`].
+///
+/// # Why the `?Sized` bound?
+/// Rust hates you: <https://stackoverflow.com/a/54465962>
+// TODO: figure out how to derive basic things like Clone, Debug, etc.
+// Nothing works with the combo of both type parameter `V` and lifetime 'a.
+// #[derive(Derivative)]
+// #[derivative(
+//     Clone(bound = "V::Common: Clone, V::Commit:Clone"),
+//     // Debug(bound = "for<'b> &'b V::Common: ark_std::fmt::Debug, for<'b> &'b V::Commit: ark_std::fmt::Debug"),
+//     // Eq(bound = ""),
+//     // Hash(bound = ""),
+//     // PartialEq(bound = "")
+// )]
+pub struct Statement<'a, V>
+where
+    V: VidScheme + ?Sized,
+{
+    /// The subslice `payload[range.start..range.end]` from a call to [`PayloadProver::payload_proof`].
+    pub payload_subslice: &'a [u8],
+    /// The range used to make [`Self::payload_subslice`].
+    pub range: Range<usize>,
+    /// VID commitment against which the proof will be checked.
+    pub commit: &'a V::Commit,
+    /// VID data against which the proof will be checked.
+    pub common: &'a V::Common,
+}
+
+impl<'a, V> Clone for Statement<'a, V>
+where
+    V: VidScheme,
+{
+    fn clone(&self) -> Self {
+        Self {
+            payload_subslice: self.payload_subslice,
+            range: self.range.clone(),
+            commit: self.commit,
+            common: self.common,
+        }
+    }
 }
