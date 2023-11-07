@@ -26,8 +26,9 @@ pub trait PayloadProver<PROOF>: VidScheme {
     fn payload_verify(&self, stmt: Statement<Self>, proof: &PROOF) -> VidResult<Result<(), ()>>;
 }
 
-/// A convenience struct to reduce the list of arguments to [`PayloadProver::payload_verify`].
-/// It's the statement proved by [`PayloadProver::payload_proof`].
+/// A convenience struct to reduce the list of arguments to
+/// [`PayloadProver::payload_verify`]. It's the statement proved by
+/// [`PayloadProver::payload_proof`].
 ///
 /// # Why the `?Sized` bound?
 /// Rust hates you: <https://stackoverflow.com/a/54465962>
@@ -36,7 +37,8 @@ pub trait PayloadProver<PROOF>: VidScheme {
 // #[derive(Derivative)]
 // #[derivative(
 //     Clone(bound = "V::Common: Clone, V::Commit:Clone"),
-//     // Debug(bound = "for<'b> &'b V::Common: ark_std::fmt::Debug, for<'b> &'b V::Commit: ark_std::fmt::Debug"),
+//     // Debug(bound = "for<'b> &'b V::Common: ark_std::fmt::Debug, for<'b> &'b
+// V::Commit: ark_std::fmt::Debug"),
 //     // Eq(bound = ""),
 //     // Hash(bound = ""),
 //     // PartialEq(bound = "")
@@ -45,7 +47,8 @@ pub struct Statement<'a, V>
 where
     V: VidScheme + ?Sized,
 {
-    /// The subslice `payload[range.start..range.end]` from a call to [`PayloadProver::payload_proof`].
+    /// The subslice `payload[range.start..range.end]` from a call to
+    /// [`PayloadProver::payload_proof`].
     pub payload_subslice: &'a [u8],
     /// The range used to make [`Self::payload_subslice`].
     pub range: Range<usize>,
