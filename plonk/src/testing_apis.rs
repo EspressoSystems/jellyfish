@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! This file implements various wrappers of internal functions and structs.
-//! It exposes those APIs under `test_apis` feature.
+//! It exposes those APIs under `test-apis` feature.
 //! The functions and structs in this file should not be used for other
 //! purposes.
 
