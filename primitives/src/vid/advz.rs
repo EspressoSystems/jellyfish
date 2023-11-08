@@ -206,6 +206,11 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
+        let commit_time = start_timer!(|| format!(
+            "VID commit_only {} payload bites to {} nodes",
+            payload.len(),
+            self.num_storage_nodes
+        ));
 
         // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
         // `Result<P::Commitment,_>`` instead of `P::Commitment`.
@@ -220,6 +225,7 @@ where
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
+        end_timer!(commit_time);
         Ok(hasher.finalize())
     }
 
@@ -678,6 +684,19 @@ mod tests {
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
         let _ = advz.disperse(&payload_random);
+    }
+
+    #[test]
+    fn commit_only_timer() {
+        // run with 'print-trace' feature to see timer output
+        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(payload_chunk_size, &mut rng);
+        let advz =
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let payload_random = init_random_payload(1 << 20, &mut rng);
+
+        let _ = advz.commit_only(&payload_random);
     }
 
     #[test]
