@@ -244,10 +244,11 @@ where
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
-        let mut polys = Vec::new();
-        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            polys.push(self.polynomial(evals_iter));
-        }
+        let polys: Vec<_> = elems_iter
+            .chunks(self.payload_chunk_size)
+            .into_iter()
+            .map(|evals_iter| self.polynomial(evals_iter))
+            .collect();
         end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
