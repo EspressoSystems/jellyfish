@@ -10,6 +10,7 @@
 
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
+    alloc::string::ToString,
     merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
     pcs::{
         prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
@@ -27,19 +28,24 @@ use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
 use ark_std::{
     borrow::Borrow,
+    end_timer,
     fmt::Debug,
     format,
     marker::PhantomData,
     ops::{Add, Mul},
-    vec,
+    start_timer, vec,
     vec::Vec,
     Zero,
 };
+use bytes_to_field::{bytes_to_field, field_to_bytes};
 use derivative::Derivative;
 use digest::{crypto_common::Output, Digest, DynDigest};
 use itertools::Itertools;
-use jf_utils::{bytes_to_field, canonical, field_to_bytes};
+use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
+
+mod bytes_to_field;
+pub mod payload_prover;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
@@ -168,7 +174,7 @@ where
     #[serde(with = "canonical")]
     poly_commits: Vec<P::Commitment>,
     all_evals_digest: V::NodeValue,
-    elems_len: usize,
+    bytes_len: usize,
 }
 
 // We take great pains to maintain abstraction by relying only on traits and not
@@ -195,21 +201,20 @@ where
     type Share = Share<P, V>;
     type Common = Common<P, V>;
 
-    fn commit_only<I>(&self, payload: I) -> VidResult<Self::Commit>
+    fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
     where
-        I: IntoIterator,
-        I::Item: Borrow<u8>,
+        B: AsRef<[u8]>,
     {
+        let payload = payload.as_ref();
+
+        // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
+        // `Result<P::Commitment,_>`` instead of `P::Commitment`.
+        // There's probably an idiomatic way to do this using eg.
+        // itertools::process_results() but the code is unreadable.
         let mut hasher = H::new();
         let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
-        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            let mut coeffs: Vec<_> = coeffs_iter.collect();
-            self.eval_domain.fft_in_place(&mut coeffs);
-
-            let poly = DenseUVPolynomial::from_coefficients_vec(coeffs);
+        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            let poly = self.polynomial(evals_iter);
             let commitment = P::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
@@ -218,18 +223,147 @@ where
         Ok(hasher.finalize())
     }
 
-    fn disperse<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
+    fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
     where
-        I: IntoIterator,
-        I::Item: Borrow<u8>,
+        B: AsRef<[u8]>,
     {
-        self.disperse_from_elems(bytes_to_field::<_, P::Evaluation>(payload))
+        let payload = payload.as_ref();
+        let payload_len = payload.len();
+        let disperse_time = start_timer!(|| format!(
+            "VID disperse {} payload bytes to {} nodes",
+            payload_len, self.num_storage_nodes
+        ));
+
+        // partition payload into polynomial coefficients
+        // and count `elems_len` for later
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
+        let elems_iter = bytes_to_field::<_, P::Evaluation>(payload);
+        let mut polys = Vec::new();
+        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
+            polys.push(self.polynomial(evals_iter));
+        }
+        end_timer!(bytes_to_polys_time);
+
+        // evaluate polynomials
+        let all_storage_node_evals_timer = start_timer!(|| format!(
+            "compute all storage node evals for {} polynomials of degree {}",
+            polys.len(),
+            self.payload_chunk_size
+        ));
+        let all_storage_node_evals = {
+            let mut all_storage_node_evals =
+                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
+
+            for poly in polys.iter() {
+                let poly_evals =
+                    P::multi_open_rou_evals(poly, self.num_storage_nodes, &self.multi_open_domain)
+                        .map_err(vid)?;
+
+                for (storage_node_evals, poly_eval) in
+                    all_storage_node_evals.iter_mut().zip(poly_evals)
+                {
+                    storage_node_evals.push(poly_eval);
+                }
+            }
+
+            // sanity checks
+            assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
+            for storage_node_evals in all_storage_node_evals.iter() {
+                assert_eq!(storage_node_evals.len(), polys.len());
+            }
+
+            all_storage_node_evals
+        };
+        end_timer!(all_storage_node_evals_timer);
+
+        // vector commitment to polynomial evaluations
+        // TODO why do I need to compute the height of the merkle tree?
+        let all_evals_commit_timer =
+            start_timer!(|| "compute merkle root of all storage node evals");
+        let height: usize = all_storage_node_evals
+            .len()
+            .checked_ilog(V::ARITY)
+            .ok_or_else(|| {
+                VidError::Argument(format!(
+                    "num_storage_nodes {} log base {} invalid",
+                    all_storage_node_evals.len(),
+                    V::ARITY
+                ))
+            })?
+            .try_into()
+            .expect("num_storage_nodes log base arity should fit into usize");
+        let height = height + 1; // avoid fully qualified syntax for try_into()
+        let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
+        end_timer!(all_evals_commit_timer);
+
+        let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
+        let common = Common {
+            poly_commits: polys
+                .iter()
+                .map(|poly| P::commit(&self.ck, poly))
+                .collect::<Result<_, _>>()
+                .map_err(vid)?,
+            all_evals_digest: all_evals_commit.commitment().digest(),
+            bytes_len: payload_len,
+        };
+        end_timer!(common_timer);
+
+        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
+
+        // Compute aggregate polynomial
+        // as a pseudorandom linear combo of polynomials
+        // via evaluation of the polynomial whose coefficients are polynomials
+        // and whose input point is the pseudorandom scalar.
+        let aggregate_poly =
+            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
+
+        let agg_proofs_timer = start_timer!(|| format!(
+            "compute aggregate proofs for {} storage nodes",
+            self.num_storage_nodes
+        ));
+        let aggregate_proofs = P::multi_open_rou_proofs(
+            &self.ck,
+            &aggregate_poly,
+            self.num_storage_nodes,
+            &self.multi_open_domain,
+        )
+        .map_err(vid)?;
+        end_timer!(agg_proofs_timer);
+
+        let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
+        let shares = all_storage_node_evals
+            .into_iter()
+            .zip(aggregate_proofs)
+            .enumerate()
+            .map(|(index, (evals, aggregate_proof))| {
+                Ok(Share {
+                    index,
+                    evals,
+                    aggregate_proof,
+                    evals_proof: all_evals_commit
+                        .lookup(V::Index::from(index as u64))
+                        .expect_ok()
+                        .map_err(vid)?
+                        .1,
+                })
+            })
+            .collect::<Result<_, VidError>>()?;
+        end_timer!(assemblage_timer);
+
+        end_timer!(disperse_time);
+        Ok(VidDisperse {
+            shares,
+            common,
+            commit,
+        })
     }
 
     fn verify_share(
         &self,
         share: &Self::Share,
         common: &Self::Common,
+        commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
         if share.evals.len() != common.poly_commits.len() {
@@ -241,6 +375,14 @@ where
         }
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
+        }
+
+        // check `common` against `commit`
+        let commit_rebuilt = Self::poly_commits_hash(common.poly_commits.iter())?;
+        if commit_rebuilt != *commit {
+            return Err(VidError::Argument(
+                "commit inconsistent with common".to_string(),
+            ));
         }
 
         // verify eval proof
@@ -255,7 +397,7 @@ where
             return Ok(Err(()));
         }
 
-        let pseudorandom_scalar = Self::pseudorandom_scalar(common)?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
         // as a pseudorandom linear combo of [commitments|evaluations]
@@ -289,168 +431,6 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
-        // TODO can we avoid collect() here?
-        Ok(field_to_bytes(self.recover_elems(shares, common)?).collect())
-    }
-}
-
-impl<P, T, H, V> GenericAdvz<P, T, H, V>
-where
-    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
-    P::Commitment: From<T> + AsRef<T>,
-    T: AffineRepr<ScalarField = P::Evaluation>,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    V::Index: From<u64>,
-{
-    /// Same as [`VidScheme::disperse`] except `payload` iterates over
-    /// field elements.
-    pub fn disperse_from_elems<I>(&self, payload: I) -> VidResult<VidDisperse<Self>>
-    where
-        I: IntoIterator,
-        I::Item: Borrow<P::Evaluation>,
-    {
-        // partition payload into polynomial coefficients
-        // and count `elems_len` for later
-        let elems_iter = payload.into_iter().map(|elem| *elem.borrow());
-        let mut elems_len = 0;
-        let mut polys = Vec::new();
-        for coeffs_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            // TODO TEMPORARY: use FFT to encode polynomials in eval form
-            // Remove these FFTs after we get KZG in eval form
-            // https://github.com/EspressoSystems/jellyfish/issues/339
-            let mut coeffs: Vec<_> = coeffs_iter.collect();
-            let pre_fft_len = coeffs.len();
-            self.eval_domain.fft_in_place(&mut coeffs);
-
-            // sanity check: the fft did not resize coeffs.
-            // If pre_fft_len != self.payload_chunk_size then we must be in the final chunk.
-            // In that case coeffs.len() could be anything, so there's nothing to sanity
-            // check.
-            if pre_fft_len == self.payload_chunk_size {
-                assert_eq!(coeffs.len(), pre_fft_len);
-            }
-
-            elems_len += pre_fft_len;
-            polys.push(DenseUVPolynomial::from_coefficients_vec(coeffs));
-        }
-
-        // evaluate polynomials
-        let all_storage_node_evals = {
-            let mut all_storage_node_evals =
-                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
-
-            for poly in polys.iter() {
-                let poly_evals =
-                    P::multi_open_rou_evals(poly, self.num_storage_nodes, &self.multi_open_domain)
-                        .map_err(vid)?;
-
-                for (storage_node_evals, poly_eval) in
-                    all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
-            }
-
-            // sanity checks
-            assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
-            for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
-            }
-
-            all_storage_node_evals
-        };
-
-        // vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
-        let height: usize = all_storage_node_evals
-            .len()
-            .checked_ilog(V::ARITY)
-            .ok_or_else(|| {
-                VidError::Argument(format!(
-                    "num_storage_nodes {} log base {} invalid",
-                    all_storage_node_evals.len(),
-                    V::ARITY
-                ))
-            })?
-            .try_into()
-            .expect("num_storage_nodes log base arity should fit into usize");
-        let height = height + 1; // avoid fully qualified syntax for try_into()
-        let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
-
-        let common = Common {
-            poly_commits: polys
-                .iter()
-                .map(|poly| P::commit(&self.ck, poly))
-                .collect::<Result<_, _>>()
-                .map_err(vid)?,
-            all_evals_digest: all_evals_commit.commitment().digest(),
-            elems_len,
-        };
-
-        let commit = {
-            let mut hasher = H::new();
-            for poly_commit in common.poly_commits.iter() {
-                // TODO compiler bug? `as` should not be needed here!
-                (poly_commit as &P::Commitment)
-                    .serialize_uncompressed(&mut hasher)
-                    .map_err(vid)?;
-            }
-            hasher.finalize()
-        };
-
-        let pseudorandom_scalar = Self::pseudorandom_scalar(&common)?;
-
-        // Compute aggregate polynomial
-        // as a pseudorandom linear combo of polynomials
-        // via evaluation of the polynomial whose coefficients are polynomials
-        // and whose input point is the pseudorandom scalar.
-        let aggregate_poly =
-            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-
-        let aggregate_proofs = P::multi_open_rou_proofs(
-            &self.ck,
-            &aggregate_poly,
-            self.num_storage_nodes,
-            &self.multi_open_domain,
-        )
-        .map_err(vid)?;
-
-        let shares = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(index, (evals, aggregate_proof))| {
-                Ok(Share {
-                    index,
-                    evals,
-                    aggregate_proof,
-                    evals_proof: all_evals_commit
-                        .lookup(V::Index::from(index as u64))
-                        .expect_ok()
-                        .map_err(vid)?
-                        .1,
-                })
-            })
-            .collect::<Result<_, VidError>>()?;
-
-        Ok(VidDisperse {
-            shares,
-            common,
-            commit,
-        })
-    }
-
-    /// Same as [`VidScheme::recover_payload`] except returns a [`Vec`] of field
-    /// elements.
-    pub fn recover_elems(
-        &self,
-        shares: &[<Self as VidScheme>::Share],
-        common: &<Self as VidScheme>::Common,
-    ) -> VidResult<Vec<P::Evaluation>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -479,8 +459,8 @@ where
             )));
         }
 
-        let result_len = num_polys * self.payload_chunk_size;
-        let mut result = Vec::with_capacity(result_len);
+        let elems_capacity = num_polys * self.payload_chunk_size;
+        let mut elems = Vec::with_capacity(elems_capacity);
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 shares.iter().map(|s| (s.index, s.evals[i])),
@@ -492,22 +472,36 @@ where
             // TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            self.eval_domain.ifft_in_place(&mut coeffs);
+            self.eval_domain.fft_in_place(&mut coeffs);
 
-            result.append(&mut coeffs);
+            elems.append(&mut coeffs);
         }
-        assert_eq!(result.len(), result_len);
-        result.truncate(common.elems_len);
-        Ok(result)
+        assert_eq!(elems.len(), elems_capacity);
+
+        let mut payload: Vec<_> = field_to_bytes(elems).collect();
+        payload.truncate(common.bytes_len);
+        Ok(payload)
     }
+}
 
-    fn pseudorandom_scalar(common: &<Self as VidScheme>::Common) -> VidResult<P::Evaluation> {
+impl<P, T, H, V> GenericAdvz<P, T, H, V>
+where
+    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
+    P::Evaluation: PrimeField,
+    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
+    P::Commitment: From<T> + AsRef<T>,
+    T: AffineRepr<ScalarField = P::Evaluation>,
+    H: Digest + DynDigest + Default + Clone + Write,
+    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
+    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
+    V::Index: From<u64>,
+{
+    fn pseudorandom_scalar(
+        common: &<Self as VidScheme>::Common,
+        commit: &<Self as VidScheme>::Commit,
+    ) -> VidResult<P::Evaluation> {
         let mut hasher = H::new();
-        for poly_commit in common.poly_commits.iter() {
-            poly_commit
-                .serialize_uncompressed(&mut hasher)
-                .map_err(vid)?;
-        }
+        commit.serialize_uncompressed(&mut hasher).map_err(vid)?;
         common
             .all_evals_digest
             .serialize_uncompressed(&mut hasher)
@@ -527,6 +521,44 @@ where
             .first()
             .ok_or_else(|| anyhow!("hash_to_field output is empty"))
             .map_err(vid)?)
+    }
+
+    fn polynomial<I>(&self, coeffs: I) -> P::Polynomial
+    where
+        I: Iterator,
+        I::Item: Borrow<P::Evaluation>,
+    {
+        // TODO TEMPORARY: use FFT to encode polynomials in eval form
+        // Remove these FFTs after we get KZG in eval form
+        // https://github.com/EspressoSystems/jellyfish/issues/339
+        let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
+        let pre_fft_len = coeffs_vec.len();
+        self.eval_domain.ifft_in_place(&mut coeffs_vec);
+
+        // sanity check: the fft did not resize coeffs.
+        // If pre_fft_len != self.payload_chunk_size then we were not given the correct
+        // number of coeffs. In that case coeffs.len() could be anything, so
+        // there's nothing to sanity check.
+        if pre_fft_len == self.payload_chunk_size {
+            assert_eq!(coeffs_vec.len(), pre_fft_len);
+        }
+
+        DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+    }
+
+    fn poly_commits_hash<I>(poly_commits: I) -> VidResult<<Self as VidScheme>::Commit>
+    where
+        I: Iterator,
+        I::Item: Borrow<P::Commitment>,
+    {
+        let mut hasher = H::new();
+        for poly_commit in poly_commits {
+            poly_commit
+                .borrow()
+                .serialize_uncompressed(&mut hasher)
+                .map_err(vid)?;
+        }
+        Ok(hasher.finalize())
     }
 }
 
@@ -633,14 +665,26 @@ mod tests {
         rand::{CryptoRng, RngCore},
         vec,
     };
-    use digest::{generic_array::ArrayLength, OutputSizeUser};
     use sha2::Sha256;
+
+    #[test]
+    fn disperse_timer() {
+        // run with 'print-trace' feature to see timer output
+        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(payload_chunk_size, &mut rng);
+        let advz =
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let payload_random = init_random_payload(1 << 20, &mut rng);
+
+        let _ = advz.disperse(&payload_random);
+    }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (shares, common) = (disperse.shares, disperse.common);
+        let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         for (i, share) in shares.iter().enumerate() {
             // missing share eval
@@ -650,7 +694,7 @@ mod tests {
                     ..share.clone()
                 };
                 assert_arg_err(
-                    advz.verify_share(&share_missing_eval, &common),
+                    advz.verify_share(&share_missing_eval, &common, &commit),
                     "1 missing share should be arg error",
                 );
             }
@@ -659,7 +703,7 @@ mod tests {
             {
                 let mut share_bad_eval = share.clone();
                 share_bad_eval.evals[0].double_in_place();
-                advz.verify_share(&share_bad_eval, &common)
+                advz.verify_share(&share_bad_eval, &common, &commit)
                     .unwrap()
                     .expect_err("bad share value should fail verification");
             }
@@ -670,7 +714,7 @@ mod tests {
                     index: (share.index + 1) % advz.num_storage_nodes,
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_index, &common)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -681,7 +725,7 @@ mod tests {
                     index: share.index + advz.num_storage_nodes,
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_index, &common)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -695,7 +739,7 @@ mod tests {
                     evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
                     ..share.clone()
                 };
-                advz.verify_share(&share_bad_evals_proof, &common)
+                advz.verify_share(&share_bad_evals_proof, &common, &commit)
                     .unwrap()
                     .expect_err("bad share evals proof should fail verification");
             }
@@ -706,7 +750,7 @@ mod tests {
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (shares, common) = (disperse.shares, disperse.common);
+        let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         // missing commit
         let common_missing_item = Common {
@@ -714,7 +758,7 @@ mod tests {
             ..common.clone()
         };
         assert_arg_err(
-            advz.verify_share(&shares[0], &common_missing_item),
+            advz.verify_share(&shares[0], &common_missing_item, &commit),
             "1 missing commit should be arg error",
         );
 
@@ -724,9 +768,10 @@ mod tests {
             corrupted.poly_commits[0] = <Bls12_381 as Pairing>::G1Affine::zero().into();
             corrupted
         };
-        advz.verify_share(&shares[0], &common_1_poly_corruption)
-            .unwrap()
-            .expect_err("1 corrupt poly_commit should fail verification");
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common_1_poly_corruption, &commit),
+            "corrupted commit should be arg error",
+        );
 
         // 1 corrupt commit, all_evals_digest
         let common_1_digest_corruption = {
@@ -742,7 +787,7 @@ mod tests {
                     .expect("digest deserialization should succeed");
             corrupted
         };
-        advz.verify_share(&shares[0], &common_1_digest_corruption)
+        advz.verify_share(&shares[0], &common_1_digest_corruption, &commit)
             .unwrap()
             .expect_err("1 corrupt all_evals_digest should fail verification");
     }
@@ -751,19 +796,25 @@ mod tests {
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
-        let (mut shares, mut common) = (disperse.shares, disperse.common);
+        let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();
         shares[0].evals.pop();
 
         // equal nonzero lengths for common, share
-        advz.verify_share(&shares[0], &common).unwrap().unwrap_err();
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common, &commit),
+            "common inconsistent with commit should be arg error",
+        );
 
         common.poly_commits.clear();
         shares[0].evals.clear();
 
         // zero length for common, share
-        advz.verify_share(&shares[0], &common).unwrap().unwrap_err();
+        assert_arg_err(
+            advz.verify_share(&shares[0], &common, &commit),
+            "expect arg error for common inconsistent with commit",
+        );
     }
 
     #[test]
@@ -817,85 +868,26 @@ mod tests {
         }
     }
 
-    fn prove_namespace_generic<E, H>()
-    where
-        E: Pairing,
-        H: Digest + DynDigest + Default + Clone + Write,
-        <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
-    {
-        // play with these items
-        let (payload_chunk_size, num_storage_nodes) = (4, 6);
-        let num_polys = 4;
-
-        // more items as a function of the above
-        let payload_elems_len = num_polys * payload_chunk_size;
-        let payload_bytes_len = payload_elems_len * modulus_byte_len::<E>();
-        let mut rng = jf_utils::test_rng();
-        let payload_bytes = init_random_bytes(payload_bytes_len, &mut rng);
-        let srs = init_srs(payload_elems_len, &mut rng);
-
-        let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
-        let d = advz.disperse(&payload_bytes).unwrap();
-
-        // TEST: verify "namespaces" (each namespace is a polynomial)
-        // This test is currently trivial: we simply repeat the commit computation.
-        // In the future there will be a proper API that can be tested meaningfully.
-
-        // encode payload as field elements, partition into polynomials, compute
-        // commitments, compare against VID common data
-        let elems_iter = bytes_to_field::<_, E::ScalarField>(payload_bytes);
-        for (coeffs_iter, poly_commit) in elems_iter
-            .chunks(payload_chunk_size)
-            .into_iter()
-            .zip(d.common.poly_commits.iter())
-        {
-            let mut coeffs: Vec<_> = coeffs_iter.collect();
-            advz.eval_domain.fft_in_place(&mut coeffs);
-
-            let poly = <UnivariateKzgPCS::<E> as PolynomialCommitmentScheme>::Polynomial::from_coefficients_vec(coeffs);
-            let my_poly_commit = UnivariateKzgPCS::<E>::commit(&advz.ck, &poly).unwrap();
-            assert_eq!(my_poly_commit, *poly_commit);
-        }
-
-        // compute payload commitment and verify
-        let commit = {
-            let mut hasher = H::new();
-            for poly_commit in d.common.poly_commits.iter() {
-                // TODO compiler bug? `as` should not be needed here!
-                (poly_commit as &<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment)
-                    .serialize_uncompressed(&mut hasher)
-                    .unwrap();
-            }
-            hasher.finalize()
-        };
-        assert_eq!(commit, d.commit);
-    }
-
-    #[test]
-    fn prove_namespace() {
-        prove_namespace_generic::<Bls12_381, Sha256>();
-    }
-
     /// Routine initialization tasks.
     ///
     /// Returns the following tuple:
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
-    fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
+    pub(super) fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let advz = Advz::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
-        let bytes_random = init_random_bytes(4000, &mut rng);
+        let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }
 
     /// Convenience wrapper to assert [`VidError::Argument`] return value.
-    fn assert_arg_err<T>(res: VidResult<T>, msg: &str) {
+    pub(super) fn assert_arg_err<T>(res: VidResult<T>, msg: &str) {
         assert!(matches!(res, Err(Argument(_))), "{}", msg);
     }
 
-    fn init_random_bytes<R>(len: usize, rng: &mut R) -> Vec<u8>
+    pub(super) fn init_random_payload<R>(len: usize, rng: &mut R) -> Vec<u8>
     where
         R: RngCore + CryptoRng,
     {
@@ -904,20 +896,12 @@ mod tests {
         bytes_random
     }
 
-    fn init_srs<E, R>(num_coeffs: usize, rng: &mut R) -> UnivariateUniversalParams<E>
+    pub(super) fn init_srs<E, R>(num_coeffs: usize, rng: &mut R) -> UnivariateUniversalParams<E>
     where
         E: Pairing,
         R: RngCore + CryptoRng,
     {
         UnivariateKzgPCS::gen_srs_for_testing(rng, checked_fft_size(num_coeffs - 1).unwrap())
             .unwrap()
-    }
-
-    fn modulus_byte_len<E>() -> usize
-    where
-        E: Pairing,
-    {
-        usize::try_from((<<UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
-        ::MODULUS_BIT_SIZE - 7)/8 + 1).unwrap()
     }
 }

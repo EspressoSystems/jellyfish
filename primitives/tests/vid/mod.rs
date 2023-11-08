@@ -29,8 +29,11 @@ pub fn round_trip<V, R>(
                 payload_chunk_size, num_storage_nodes, len
             );
 
-            let mut bytes_random = vec![0u8; len];
-            rng.fill_bytes(&mut bytes_random);
+            let bytes_random = {
+                let mut bytes_random = vec![0u8; len];
+                rng.fill_bytes(&mut bytes_random);
+                bytes_random
+            };
 
             let disperse = vid.disperse(&bytes_random).unwrap();
             let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
@@ -38,7 +41,7 @@ pub fn round_trip<V, R>(
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
 
             for share in shares.iter() {
-                vid.verify_share(share, &common).unwrap().unwrap();
+                vid.verify_share(share, &common, &commit).unwrap().unwrap();
             }
 
             // sample a random subset of shares with size payload_chunk_size

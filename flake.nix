@@ -81,6 +81,8 @@
             llvm_15
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
+          CARGO_TARGET_DIR = "target/nix_rustc";
+
           shellHook = ''
             export RUST_BACKTRACE=full
             export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
