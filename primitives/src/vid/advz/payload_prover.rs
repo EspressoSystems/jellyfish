@@ -18,8 +18,8 @@
 use ark_poly::EvaluationDomain;
 
 use super::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, GenericAdvz, PolynomialCommitmentScheme,
-    Vec, VidResult,
+    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, PolynomialCommitmentScheme, Vec,
+    VidResult,
 };
 use crate::{
     alloc::string::ToString,
@@ -59,7 +59,7 @@ pub struct LargeRangeProof<F> {
 
 impl<E, H>
     PayloadProver<SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>>
-    for GenericAdvz<E, H>
+    for Advz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
@@ -189,7 +189,7 @@ where
 
 impl<E, H>
     PayloadProver<LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>
-    for GenericAdvz<E, H>
+    for Advz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
@@ -276,7 +276,7 @@ where
     }
 }
 
-impl<E, H> GenericAdvz<E, H>
+impl<E, H> Advz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,

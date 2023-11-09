@@ -50,25 +50,12 @@ pub mod payload_prover;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
-/// - `H` is any [`Digest`]-compatible hash function
 /// - `E` is any [`Pairing`]
-pub type Advz<E, H> = GenericAdvz<
-    E,
-    H,
-    // HasherMerkleTree<H, Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>,
->;
-
-/// Like [`Advz`] except with more abstraction.
-///
-/// - `P` is a [`PolynomialCommitmentScheme`]
-/// - `T` is the group type underlying
-///   [`PolynomialCommitmentScheme::Commitment`]
 /// - `H` is a [`Digest`]-compatible hash function.
-/// - `V` is a [`MerkleTreeScheme`], though any vector commitment would suffice
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq,
 // PartialOrd, Serialize)]
-pub struct GenericAdvz<E, H> where E: Pairing {
+pub struct Advz<E, H> where E: Pairing {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
     ck: <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::ProverParam,
@@ -85,7 +72,7 @@ pub struct GenericAdvz<E, H> where E: Pairing {
     _pd: PhantomData<H>,
 }
 
-impl<E, H> GenericAdvz<E, H>
+impl<E, H> Advz<E, H>
 where
     E: Pairing,
 {
@@ -211,7 +198,7 @@ where
 //
 // `PrimeField` needed only because `bytes_to_field` needs it.
 // Otherwise we could relax to `FftField`.
-impl<E, H> VidScheme for GenericAdvz<E, H>
+impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
     // TODO replace with H: HasherDigest?
@@ -555,7 +542,7 @@ where
     }
 }
 
-impl<E, H> GenericAdvz<E, H>
+impl<E, H> Advz<E, H>
 where
     E: Pairing,
     H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
