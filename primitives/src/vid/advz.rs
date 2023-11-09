@@ -57,14 +57,12 @@ where
     num_storage_nodes: usize,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
-
-    // TODO change `Evaluation` -> `Point`
-    multi_open_domain: Radix2EvaluationDomain<KzgEval<E>>,
+    multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
     // TODO might be able to eliminate this field and instead use
     // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
     // but that method consumes `other` and its doc is unclear.
-    eval_domain: Radix2EvaluationDomain<KzgEval<E>>,
+    eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
     _pd: PhantomData<H>,
 }
@@ -75,6 +73,7 @@ where
 // So instead I do this:
 type KzgPolynomial<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Polynomial;
 type KzgCommit<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment;
+type KzgPoint<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Point;
 type KzgEval<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation;
 type KzgProof<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof;
 type KzgSrs<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS;

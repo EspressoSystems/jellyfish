@@ -16,8 +16,8 @@
 //!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
 use super::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, PolynomialCommitmentScheme, Vec,
-    VidResult,
+    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, KzgEval, KzgProof,
+    PolynomialCommitmentScheme, Vec, VidResult,
 };
 use crate::{
     alloc::string::ToString,
@@ -55,9 +55,7 @@ pub struct LargeRangeProof<F> {
     chunk_range: Range<usize>,
 }
 
-impl<E, H>
-    PayloadProver<SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>>
-    for Advz<E, H>
+impl<E, H> PayloadProver<SmallRangeProof<KzgProof<E>>> for Advz<E, H>
 where
     E: Pairing,
     H: HasherDigest,
@@ -66,7 +64,7 @@ where
         &self,
         payload: B,
         range: Range<usize>,
-    ) -> VidResult<SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>>
+    ) -> VidResult<SmallRangeProof<KzgProof<E>>>
     where
         B: AsRef<[u8]>,
     {
@@ -85,10 +83,8 @@ where
         // grab the polynomial that contains `range`
         // TODO allow precomputation: https://github.com/EspressoSystems/jellyfish/issues/397
         let polynomial = self.polynomial(
-            bytes_to_field::<_, <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>(
-                payload[start_namespace_byte..].iter(),
-            )
-            .take(self.payload_chunk_size),
+            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size),
         );
 
         // prepare list of input points
@@ -101,12 +97,8 @@ where
                 .collect()
         };
 
-        let (proofs, _evals) = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::multi_open(
-            &self.ck,
-            &polynomial,
-            &points,
-        )
-        .map_err(vid)?;
+        let (proofs, _evals) =
+            UnivariateKzgPCS::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
         Ok(SmallRangeProof {
             proofs,
@@ -119,7 +111,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>,
+        proof: &SmallRangeProof<KzgProof<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -133,15 +125,14 @@ where
         Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
-        let data_elems: Vec<_> =
-            bytes_to_field::<_, <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>(
-                proof
-                    .prefix_bytes
-                    .iter()
-                    .chain(stmt.payload_subslice)
-                    .chain(proof.suffix_bytes.iter()),
-            )
-            .collect();
+        let data_elems: Vec<_> = bytes_to_field::<_, KzgEval<E>>(
+            proof
+                .prefix_bytes
+                .iter()
+                .chain(stmt.payload_subslice)
+                .chain(proof.suffix_bytes.iter()),
+        )
+        .collect();
 
         // prepare list of input points
         // perf: can't avoid use of `skip`
@@ -168,15 +159,7 @@ where
             .iter()
             .zip(data_elems.iter().zip(proof.proofs.iter()))
         {
-            if !<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::verify(
-                &self.vk,
-                poly_commit,
-                point,
-                elem,
-                pf,
-            )
-            .map_err(vid)?
-            {
+            if !UnivariateKzgPCS::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
                 return Ok(Err(()));
             }
         }
@@ -184,9 +167,7 @@ where
     }
 }
 
-impl<E, H>
-    PayloadProver<LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>
-    for Advz<E, H>
+impl<E, H> PayloadProver<LargeRangeProof<KzgEval<E>>> for Advz<E, H>
 where
     E: Pairing,
     H: HasherDigest,
@@ -195,7 +176,7 @@ where
         &self,
         payload: B,
         range: Range<usize>,
-    ) -> VidResult<LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>
+    ) -> VidResult<LargeRangeProof<KzgEval<E>>>
     where
         B: AsRef<[u8]>,
     {
@@ -212,11 +193,9 @@ where
         check_range_poly(&range_poly)?;
 
         // compute the prefix and suffix elems
-        let mut elems_iter = bytes_to_field::<
-            _,
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-        >(payload[start_namespace_byte..].iter())
-        .take(self.payload_chunk_size);
+        let mut elems_iter =
+            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
+                .take(self.payload_chunk_size);
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
@@ -232,7 +211,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+        proof: &LargeRangeProof<KzgEval<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -249,10 +228,7 @@ where
                     .prefix_elems
                     .iter()
                     .cloned()
-                    .chain(bytes_to_field::<
-                        _,
-                        <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-                    >(
+                    .chain(bytes_to_field::<_, KzgEval<E>>(
                         proof
                             .prefix_bytes
                             .iter()
@@ -261,8 +237,7 @@ where
                     ))
                     .chain(proof.suffix_elems.iter().cloned()),
             );
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::commit(&self.ck, &poly)
-                .map_err(vid)?
+            UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?
         };
         if poly_commit != stmt.common.poly_commits[range_poly.start] {
             return Ok(Err(()));
@@ -279,31 +254,19 @@ where
 {
     // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {
-        index_coarsen(
-            index,
-            elem_byte_capacity::<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>(),
-        )
+        index_coarsen(index, elem_byte_capacity::<KzgEval<E>>())
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
         index_refine(
             index,
-            self.payload_chunk_size
-                * elem_byte_capacity::<
-                    <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-                >(),
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen(
-            range,
-            elem_byte_capacity::<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>(),
-        )
+        range_coarsen(range, elem_byte_capacity::<KzgEval<E>>())
     }
     fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
-        range_refine(
-            range,
-            elem_byte_capacity::<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>(),
-        )
+        range_refine(range, elem_byte_capacity::<KzgEval<E>>())
     }
     fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, self.payload_chunk_size)
@@ -311,10 +274,7 @@ where
     fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(
             range,
-            self.payload_chunk_size
-                * elem_byte_capacity::<
-                    <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-                >(),
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
 
