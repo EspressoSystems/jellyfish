@@ -50,15 +50,10 @@ pub trait PayloadProver<PROOF>: VidScheme {
 ///
 /// Rust hates you: <https://stackoverflow.com/a/54465962>
 // TODO: figure out how to derive basic things like Clone, Debug, etc.
-// Nothing works with the combo of both type parameter `V` and lifetime 'a.
+// Seems that `Derivative` can't handle reference members.
 // #[derive(Derivative)]
 // #[derivative(
 //     Clone(bound = "V::Common: Clone, V::Commit:Clone"),
-//     // Debug(bound = "for<'b> &'b V::Common: ark_std::fmt::Debug, for<'b> &'b
-// V::Commit: ark_std::fmt::Debug"),
-//     // Eq(bound = ""),
-//     // Hash(bound = ""),
-//     // PartialEq(bound = "")
 // )]
 pub struct Statement<'a, V>
 where

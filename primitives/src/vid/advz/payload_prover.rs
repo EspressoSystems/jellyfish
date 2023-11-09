@@ -15,8 +15,6 @@
 //!    such as a complete namespace. Snark-friendly because it does not require
 //!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
-use ark_poly::EvaluationDomain;
-
 use super::{
     bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, PolynomialCommitmentScheme, Vec,
     VidResult,
@@ -31,7 +29,9 @@ use crate::{
     },
 };
 use ark_ec::pairing::Pairing;
+use ark_poly::EvaluationDomain;
 use ark_std::{format, ops::Range};
+
 /// A proof intended for use on small payload subslices.
 ///
 /// KZG batch proofs and accompanying metadata.
@@ -59,7 +59,6 @@ impl<E, H>
     PayloadProver<SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>>
     for Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
     H: HasherDigest,
 {
@@ -189,7 +188,6 @@ impl<E, H>
     PayloadProver<LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>
     for Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
     H: HasherDigest,
 {
@@ -276,7 +274,6 @@ where
 
 impl<E, H> Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
     H: HasherDigest,
 {

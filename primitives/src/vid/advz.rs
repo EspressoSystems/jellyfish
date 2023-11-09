@@ -48,9 +48,7 @@ pub mod payload_prover;
 ///
 /// - `E` is any [`Pairing`]
 /// - `H` is a [`Digest`]-compatible hash function.
-// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq,
-// PartialOrd, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Advz<E, H> where E: Pairing {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
@@ -128,9 +126,6 @@ where
 
 /// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
-// #[serde(bound = "H: CanonicalSerialize + CanonicalDeserialize,")]
-// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[derivative(
     Clone(bound = ""),
     Debug(bound = ""),
@@ -141,16 +136,16 @@ where
 pub struct Share<E, H>
 where
     E: Pairing,
-    // H: HasherDigest,
     H: HasherDigest,
-    // V: MerkleTreeScheme,
-    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
 {
     index: usize,
+
     #[serde(with = "canonical")]
     evals: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+
     #[serde(with = "canonical")]
     aggregate_proof: <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof,
+
     evals_proof: <HasherMerkleTree<
         H,
         Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
@@ -159,10 +154,6 @@ where
 
 /// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
-// #[serde(bound = "H: CanonicalSerialize + CanonicalDeserialize,")]
-#[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
-// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[derivative(
     Clone(bound = ""),
     Debug(bound = ""),
@@ -173,37 +164,24 @@ where
 pub struct Common<E, H>
 where
     E: Pairing,
-    // H: HasherDigest,
     H: HasherDigest,
 {
     #[serde(with = "canonical")]
     poly_commits: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
+
+    #[serde(with = "canonical")]
     all_evals_digest: <HasherMerkleTree<
         H,
         Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
     > as MerkleTreeScheme>::NodeValue,
+
     bytes_len: usize,
 }
 
-// We take great pains to maintain abstraction by relying only on traits and not
-// concrete impls of those traits. Explanation of trait bounds:
-// 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
-// (`Evaluation'). 3,4: `Commitment` is (convertible to/from) an elliptic curve
-// group in affine form. 5: `H` is a hasher
-//
-// `PrimeField` needed only because `bytes_to_field` needs it.
-// Otherwise we could relax to `FftField`.
 impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
-    // TODO replace with H: HasherDigest?
     H: HasherDigest,
-    // H: HasherDigest,
-    // V: MerkleTreeScheme<
-    //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    // >,
-    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    // V::Index: From<u64>,
 {
     type Commit = Output<H>;
     type Share = Share<E, H>;
@@ -352,10 +330,7 @@ where
         let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
-        // Compute aggregate polynomial
-        // as a pseudorandom linear combo of polynomials
-        // via evaluation of the polynomial whose coefficients are polynomials
-        // and whose input point is the pseudorandom scalar.
+        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via evaluation of the polynomial whose coefficients are polynomials and whose input point is the pseudorandom scalar.
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
@@ -541,12 +516,6 @@ impl<E, H> Advz<E, H>
 where
     E: Pairing,
     H: HasherDigest,
-    // H: HasherDigest,
-    // V: MerkleTreeScheme<
-    //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    // >,
-    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    // V::Index: From<u64>,
 {
     fn pseudorandom_scalar(
         common: &<Self as VidScheme>::Common,
@@ -607,36 +576,6 @@ where
         Ok(hasher.finalize())
     }
 }
-
-// `From` impls for `VidError`
-//
-// # Goal
-// `anyhow::Error` has the property that `?` magically coerces the error into
-// `anyhow::Error`. I want the same property for `VidError`.
-// I don't know how to achieve this without the following boilerplate.
-//
-// # Boilerplate
-// I want to coerce any error `E` into `VidError::Internal` similar to
-// `anyhow::Error`. Unfortunately, I need to manually impl `From<E> for
-// VidError` for each `E`. Can't do a generic impl because it conflicts with
-// `impl<T> From<T> for T` in core.
-// impl From<crate::errors::PrimitivesError> for VidError {
-//     fn from(value: crate::errors::PrimitivesError) -> Self {
-//         Self::Internal(value.into())
-//     }
-// }
-
-// impl From<crate::pcs::prelude::PCSError> for VidError {
-//     fn from(value: crate::pcs::prelude::PCSError) -> Self {
-//         Self::Internal(value.into())
-//     }
-// }
-
-// impl From<ark_serialize::SerializationError> for VidError {
-//     fn from(value: ark_serialize::SerializationError) -> Self {
-//         Self::Internal(value.into())
-//     }
-// }
 
 /// Evaluate a generalized polynomial at a given point using Horner's method.
 ///
