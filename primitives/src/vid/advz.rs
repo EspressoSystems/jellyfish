@@ -49,22 +49,37 @@ pub mod payload_prover;
 /// - `E` is any [`Pairing`]
 /// - `H` is a [`Digest`]-compatible hash function.
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Advz<E, H> where E: Pairing {
+pub struct Advz<E, H>
+where
+    E: Pairing,
+{
     payload_chunk_size: usize,
     num_storage_nodes: usize,
-    ck: <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::ProverParam,
-    vk: <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::VerifierParam,
+    ck: KzgProverParam<E>,
+    vk: KzgVerifierParam<E>,
 
     // TODO change `Evaluation` -> `Point`
-    multi_open_domain: Radix2EvaluationDomain<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    multi_open_domain: Radix2EvaluationDomain<KzgEval<E>>,
 
     // TODO might be able to eliminate this field and instead use
     // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
     // but that method consumes `other` and its doc is unclear.
-    eval_domain: Radix2EvaluationDomain<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    eval_domain: Radix2EvaluationDomain<KzgEval<E>>,
 
     _pd: PhantomData<H>,
 }
+
+// [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
+// I want to do this but I cant:
+// type Kzg<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>;
+// So instead I do this:
+type KzgPolynomial<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Polynomial;
+type KzgCommit<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment;
+type KzgEval<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation;
+type KzgProof<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof;
+type KzgSrs<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS;
+type KzgProverParam<E> = <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::ProverParam;
+type KzgVerifierParam<E> = <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::VerifierParam;
 
 impl<E, H> Advz<E, H>
 where
@@ -78,7 +93,7 @@ where
     pub fn new(
         payload_chunk_size: usize,
         num_storage_nodes: usize,
-        srs: impl Borrow<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS>,
+        srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         if num_storage_nodes < payload_chunk_size {
             return Err(VidError::Argument(format!(
@@ -86,10 +101,8 @@ where
                 payload_chunk_size, num_storage_nodes
             )));
         }
-        let (ck, vk) =
-            <UnivariateKzgPCS<E> as UnivariatePCS>::trim_fft_size(srs, payload_chunk_size - 1)
-                .map_err(vid)?;
-        let multi_open_domain = <UnivariateKzgPCS<E> as UnivariatePCS>::multi_open_rou_eval_domain(
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, payload_chunk_size - 1).map_err(vid)?;
+        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
             payload_chunk_size - 1,
             num_storage_nodes,
         )
@@ -141,15 +154,12 @@ where
     index: usize,
 
     #[serde(with = "canonical")]
-    evals: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
-    aggregate_proof: <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof,
+    aggregate_proof: KzgProof<E>,
 
-    evals_proof: <HasherMerkleTree<
-        H,
-        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    > as MerkleTreeScheme>::MembershipProof,
+    evals_proof: <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::MembershipProof,
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
@@ -167,13 +177,10 @@ where
     H: HasherDigest,
 {
     #[serde(with = "canonical")]
-    poly_commits: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
+    poly_commits: Vec<KzgCommit<E>>,
 
     #[serde(with = "canonical")]
-    all_evals_digest: <HasherMerkleTree<
-        H,
-        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    > as MerkleTreeScheme>::NodeValue,
+    all_evals_digest: <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::NodeValue,
 
     bytes_len: usize,
 }
@@ -203,15 +210,10 @@ where
         // There's probably an idiomatic way to do this using eg.
         // itertools::process_results() but the code is unreadable.
         let mut hasher = H::new();
-        let elems_iter = bytes_to_field::<
-            _,
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-        >(payload);
+        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
         for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
             let poly = self.polynomial(evals_iter);
-            let commitment =
-                <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::commit(&self.ck, &poly)
-                    .map_err(vid)?;
+            let commitment = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
             commitment
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
@@ -234,10 +236,7 @@ where
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let elems_iter = bytes_to_field::<
-            _,
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-        >(payload);
+        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
         let polys: Vec<_> = elems_iter
             .chunks(self.payload_chunk_size)
             .into_iter()
@@ -256,7 +255,7 @@ where
                 vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
 
             for poly in polys.iter() {
-                let poly_evals = <UnivariateKzgPCS<E> as UnivariatePCS>::multi_open_rou_evals(
+                let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
                     self.num_storage_nodes,
                     &self.multi_open_domain,
@@ -286,30 +285,22 @@ where
             start_timer!(|| "compute merkle root of all storage node evals");
         let height: usize = all_storage_node_evals
             .len()
-            .checked_ilog(
-                <HasherMerkleTree<
-                    H,
-                    Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-                > as MerkleTreeScheme>::ARITY,
-            )
+            .checked_ilog(<HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::ARITY)
             .ok_or_else(|| {
                 VidError::Argument(format!(
                     "num_storage_nodes {} log base {} invalid",
                     all_storage_node_evals.len(),
-                    <HasherMerkleTree<
-                        H,
-                        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-                    > as MerkleTreeScheme>::ARITY
+                    <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::ARITY
                 ))
             })?
             .try_into()
             .expect("num_storage_nodes log base arity should fit into usize");
         let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit =
-            <HasherMerkleTree<
-                H,
-                Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-            > as MerkleTreeScheme>::from_elems(height, &all_storage_node_evals)
+            <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::from_elems(
+                height,
+                &all_storage_node_evals,
+            )
             .map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
@@ -317,9 +308,7 @@ where
         let common = Common {
             poly_commits: polys
                 .iter()
-                .map(|poly| {
-                    <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::commit(&self.ck, poly)
-                })
+                .map(|poly| UnivariateKzgPCS::commit(&self.ck, poly))
                 .collect::<Result<_, _>>()
                 .map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
@@ -340,7 +329,7 @@ where
             "compute aggregate proofs for {} storage nodes",
             self.num_storage_nodes
         ));
-        let aggregate_proofs = <UnivariateKzgPCS<E> as UnivariatePCS>::multi_open_rou_proofs(
+        let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
             self.num_storage_nodes,
@@ -360,12 +349,11 @@ where
                     evals,
                     aggregate_proof,
                     evals_proof: all_evals_commit
-                        .lookup(<HasherMerkleTree<
-                            H,
-                            Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-                        > as MerkleTreeScheme>::Index::from(
-                            index as u64
-                        ))
+                        .lookup(
+                            <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::Index::from(
+                                index as u64,
+                            ),
+                        )
                         .expect_ok()
                         .map_err(vid)?
                         .1,
@@ -409,15 +397,11 @@ where
         }
 
         // verify eval proof
-        if <HasherMerkleTree<
-        H,
-        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    > as MerkleTreeScheme>::verify(
+        if <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::verify(
             common.all_evals_digest,
-            &<HasherMerkleTree<
-            H,
-            Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-        > as MerkleTreeScheme>::Index::from(share.index as u64),
+            &<HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::Index::from(
+                share.index as u64,
+            ),
             &share.evals_proof,
         )
         .map_err(vid)?
@@ -433,22 +417,21 @@ where
         // via evaluation of the polynomial whose coefficients are
         // [commitments|evaluations] and whose input point is the pseudorandom
         // scalar.
-        let aggregate_poly_commit =
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment::from(
-                polynomial_eval(
-                    common
-                        .poly_commits
-                        .iter()
-                        .map(|x| CurveMultiplier(x.as_ref())),
-                    pseudorandom_scalar,
-                )
-                .into(),
-            );
+        let aggregate_poly_commit = KzgCommit::<E>::from(
+            polynomial_eval(
+                common
+                    .poly_commits
+                    .iter()
+                    .map(|x| CurveMultiplier(x.as_ref())),
+                pseudorandom_scalar,
+            )
+            .into(),
+        );
         let aggregate_eval =
             polynomial_eval(share.evals.iter().map(FieldMultiplier), pseudorandom_scalar);
 
         // verify aggregate proof
-        Ok(<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::verify(
+        Ok(UnivariateKzgPCS::verify(
             &self.vk,
             &aggregate_poly_commit,
             &self.multi_open_domain.element(share.index),
@@ -522,7 +505,7 @@ where
     fn pseudorandom_scalar(
         common: &<Self as VidScheme>::Common,
         commit: &<Self as VidScheme>::Commit,
-    ) -> VidResult<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation> {
+    ) -> VidResult<KzgEval<E>> {
         let mut hasher = H::new();
         commit.serialize_uncompressed(&mut hasher).map_err(vid)?;
         common
@@ -546,13 +529,10 @@ where
         Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
     }
 
-    fn polynomial<I>(
-        &self,
-        coeffs: I,
-    ) -> <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Polynomial
+    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
     where
         I: Iterator,
-        I::Item: Borrow<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+        I::Item: Borrow<KzgEval<E>>,
     {
         // TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
@@ -575,7 +555,7 @@ where
     fn poly_commits_hash<I>(poly_commits: I) -> VidResult<<Self as VidScheme>::Commit>
     where
         I: Iterator,
-        I::Item: Borrow<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
+        I::Item: Borrow<KzgCommit<E>>,
     {
         let mut hasher = H::new();
         for poly_commit in poly_commits {
