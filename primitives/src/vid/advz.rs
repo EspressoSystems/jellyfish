@@ -81,6 +81,12 @@ type KzgSrs<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS;
 type KzgProverParam<E> = <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::ProverParam;
 type KzgVerifierParam<E> = <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::VerifierParam;
 
+type KzgEvalsMerkleTree<E, H> = HasherMerkleTree<H, Vec<KzgEval<E>>>;
+type KzgEvalsMerkleTreeNode<E, H> = <KzgEvalsMerkleTree<E, H> as MerkleTreeScheme>::NodeValue;
+type KzgEvalsMerkleTreeIndex<E, H> = <KzgEvalsMerkleTree<E, H> as MerkleTreeScheme>::Index;
+type KzgEvalsMerkleTreeProof<E, H> =
+    <KzgEvalsMerkleTree<E, H> as MerkleTreeScheme>::MembershipProof;
+
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
@@ -159,7 +165,7 @@ where
     #[serde(with = "canonical")]
     aggregate_proof: KzgProof<E>,
 
-    evals_proof: <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::MembershipProof,
+    evals_proof: KzgEvalsMerkleTreeProof<E, H>,
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
@@ -180,7 +186,7 @@ where
     poly_commits: Vec<KzgCommit<E>>,
 
     #[serde(with = "canonical")]
-    all_evals_digest: <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::NodeValue,
+    all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
     bytes_len: usize,
 }
@@ -285,23 +291,19 @@ where
             start_timer!(|| "compute merkle root of all storage node evals");
         let height: usize = all_storage_node_evals
             .len()
-            .checked_ilog(<HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::ARITY)
+            .checked_ilog(KzgEvalsMerkleTree::<E, H>::ARITY)
             .ok_or_else(|| {
                 VidError::Argument(format!(
                     "num_storage_nodes {} log base {} invalid",
                     all_storage_node_evals.len(),
-                    <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::ARITY
+                    KzgEvalsMerkleTree::<E, H>::ARITY
                 ))
             })?
             .try_into()
             .expect("num_storage_nodes log base arity should fit into usize");
         let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit =
-            <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::from_elems(
-                height,
-                &all_storage_node_evals,
-            )
-            .map_err(vid)?;
+            KzgEvalsMerkleTree::<E, H>::from_elems(height, &all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
@@ -349,11 +351,7 @@ where
                     evals,
                     aggregate_proof,
                     evals_proof: all_evals_commit
-                        .lookup(
-                            <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::Index::from(
-                                index as u64,
-                            ),
-                        )
+                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
                         .expect_ok()
                         .map_err(vid)?
                         .1,
@@ -397,11 +395,9 @@ where
         }
 
         // verify eval proof
-        if <HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::verify(
+        if KzgEvalsMerkleTree::<E, H>::verify(
             common.all_evals_digest,
-            &<HasherMerkleTree<H, Vec<KzgEval<E>>> as MerkleTreeScheme>::Index::from(
-                share.index as u64,
-            ),
+            &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
             &share.evals_proof,
         )
         .map_err(vid)?
