@@ -330,7 +330,9 @@ where
         let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
-        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via evaluation of the polynomial whose coefficients are polynomials and whose input point is the pseudorandom scalar.
+        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
+        // evaluation of the polynomial whose coefficients are polynomials and whose
+        // input point is the pseudorandom scalar.
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
@@ -529,9 +531,18 @@ where
             .map_err(vid)?;
 
         // Notes on hash-to-field:
-        // - Can't use `Field::from_random_bytes` because it's fallible. (In what sense is it from "random" bytes?!). This despite the docs explicitly say: "This function is primarily intended for sampling random field elements from a hash-function or RNG output."
-        // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces us to add additional trait bounds `Clone + Default + DynDigest` everywhere. Also, `HashToField` does not expose an incremental API (ie. `update`) so we would need to use an ordinary hasher and pipe `hasher.finalize()` through `hash_to_field`. (Ugh!)
-        // - We don't need the resulting field element to be cryptographically indistinguishable from uniformly random. We only need it to be unpredictable. So it suffices to use
+        // - Can't use `Field::from_random_bytes` because it's fallible. (In what sense
+        //   is it from "random" bytes?!). This despite the docs explicitly say: "This
+        //   function is primarily intended for sampling random field elements from a
+        //   hash-function or RNG output."
+        // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces
+        //   us to add additional trait bounds `Clone + Default + DynDigest` everywhere.
+        //   Also, `HashToField` does not expose an incremental API (ie. `update`) so we
+        //   would need to use an ordinary hasher and pipe `hasher.finalize()` through
+        //   `hash_to_field`. (Ugh!)
+        // - We don't need the resulting field element to be cryptographically
+        //   indistinguishable from uniformly random. We only need it to be
+        //   unpredictable. So it suffices to use
         Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
     }
 
