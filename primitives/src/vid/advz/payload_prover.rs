@@ -428,14 +428,12 @@ mod tests {
     };
     use ark_bls12_381::Bls12_381;
     use ark_std::{ops::Range, println, rand::Rng};
-    use digest::{generic_array::ArrayLength, OutputSizeUser};
     use sha2::Sha256;
 
     fn correctness_generic<E, H>()
     where
         E: Pairing,
-        H: Digest + DynDigest + Default + Clone + Write,
-        <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+        H: DynDigest + Default + Clone + HasherDigest,
     {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);

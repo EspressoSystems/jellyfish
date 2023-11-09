@@ -28,7 +28,7 @@ use ark_ff::{
     Field,
 };
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     end_timer, format,
@@ -40,7 +40,7 @@ use ark_std::{
 };
 use bytes_to_field::{bytes_to_field, field_to_bytes};
 use derivative::Derivative;
-use digest::{crypto_common::Output, Digest, DynDigest};
+use digest::{crypto_common::Output, DynDigest};
 use itertools::Itertools;
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
@@ -146,7 +146,7 @@ pub struct Share<E, H>
 where
     E: Pairing,
     // H: HasherDigest,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: DynDigest + Default + Clone + HasherDigest,
     // V: MerkleTreeScheme,
     // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
 {
@@ -179,7 +179,7 @@ pub struct Common<E, H>
 where
     E: Pairing,
     // H: HasherDigest,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: DynDigest + Default + Clone + HasherDigest,
 {
     #[serde(with = "canonical")]
     poly_commits: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
@@ -202,7 +202,7 @@ impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
     // TODO replace with H: HasherDigest?
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: DynDigest + Default + Clone + HasherDigest,
     // H: HasherDigest,
     // V: MerkleTreeScheme<
     //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
@@ -545,7 +545,7 @@ where
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: DynDigest + Default + Clone + HasherDigest,
     // H: HasherDigest,
     // V: MerkleTreeScheme<
     //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
