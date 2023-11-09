@@ -18,11 +18,12 @@
 use ark_poly::EvaluationDomain;
 
 use super::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, Debug, Digest, DynDigest, GenericAdvz,
-    MerkleTreeScheme, PolynomialCommitmentScheme, Vec, VidResult, Write,
+    bytes_to_field, bytes_to_field::elem_byte_capacity, GenericAdvz, PolynomialCommitmentScheme,
+    Vec, VidResult,
 };
 use crate::{
     alloc::string::ToString,
+    merkle_tree::hasher::HasherDigest,
     pcs::prelude::UnivariateKzgPCS,
     vid::{
         payload_prover::{PayloadProver, Statement},
@@ -30,8 +31,9 @@ use crate::{
     },
 };
 use ark_ec::pairing::Pairing;
+use ark_serialize::Write;
 use ark_std::{format, ops::Range};
-
+use digest::{Digest, DynDigest};
 /// A proof intended for use on small payload subslices.
 ///
 /// KZG batch proofs and accompanying metadata.
@@ -55,18 +57,13 @@ pub struct LargeRangeProof<F> {
     chunk_range: Range<usize>,
 }
 
-impl<E, H, V>
+impl<E, H>
     PayloadProver<SmallRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof>>
-    for GenericAdvz<E, H, V>
+    for GenericAdvz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<
-        Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    >,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -190,18 +187,13 @@ where
     }
 }
 
-impl<E, H, V>
+impl<E, H>
     PayloadProver<LargeRangeProof<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>
-    for GenericAdvz<E, H, V>
+    for GenericAdvz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<
-        Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    >,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -284,16 +276,11 @@ where
     }
 }
 
-impl<E, H, V> GenericAdvz<E, H, V>
+impl<E, H> GenericAdvz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<
-        Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    >,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
 {
     // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {

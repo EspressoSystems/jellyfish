@@ -11,7 +11,10 @@
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
-    merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
+    merkle_tree::{
+        hasher::{HasherDigest, HasherMerkleTree},
+        MerkleCommitment, MerkleTreeScheme,
+    },
     pcs::{
         prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
         UnivariatePCS,
@@ -28,9 +31,7 @@ use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
 use ark_std::{
     borrow::Borrow,
-    end_timer,
-    fmt::Debug,
-    format,
+    end_timer, format,
     marker::PhantomData,
     ops::{Add, Mul},
     start_timer, vec,
@@ -54,7 +55,7 @@ pub mod payload_prover;
 pub type Advz<E, H> = GenericAdvz<
     E,
     H,
-    HasherMerkleTree<H, Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>,
+    // HasherMerkleTree<H, Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>>,
 >;
 
 /// Like [`Advz`] except with more abstraction.
@@ -67,7 +68,7 @@ pub type Advz<E, H> = GenericAdvz<
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq,
 // PartialOrd, Serialize)]
-pub struct GenericAdvz<E, H, V> where E: Pairing {
+pub struct GenericAdvz<E, H> where E: Pairing {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
     ck: <<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::SRS as StructuredReferenceString>::ProverParam,
@@ -81,10 +82,10 @@ pub struct GenericAdvz<E, H, V> where E: Pairing {
     // but that method consumes `other` and its doc is unclear.
     eval_domain: Radix2EvaluationDomain<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
 
-    _pd: (PhantomData<H>, PhantomData<V>),
+    _pd: PhantomData<H>,
 }
 
-impl<E, H, V> GenericAdvz<E, H, V>
+impl<E, H> GenericAdvz<E, H>
 where
     E: Pairing,
 {
@@ -144,36 +145,61 @@ where
 
 /// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
+// #[serde(bound = "H: CanonicalSerialize + CanonicalDeserialize,")]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[derivative(Clone, Debug, Eq, Hash(bound = ""), PartialEq)]
-pub struct Share<E, V>
+#[derivative(
+    Clone,
+    Debug(bound = ""),
+    Eq(bound = ""),
+    Hash(bound = ""),
+    PartialEq(bound = "")
+)]
+pub struct Share<E, H>
 where
     E: Pairing,
-    V: MerkleTreeScheme,
-    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
+    // H: HasherDigest,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    // V: MerkleTreeScheme,
+    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
 {
     index: usize,
     #[serde(with = "canonical")]
     evals: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
     #[serde(with = "canonical")]
     aggregate_proof: <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Proof,
-    evals_proof: V::MembershipProof,
+    evals_proof: <HasherMerkleTree<
+        H,
+        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    > as MerkleTreeScheme>::MembershipProof,
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
+// #[serde(bound = "H: CanonicalSerialize + CanonicalDeserialize,")]
+#[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-#[derivative(Clone, Debug, Default, Eq, Hash(bound = ""), PartialEq)]
-pub struct Common<E, V>
+#[derivative(
+    Clone,
+    Debug(bound = ""),
+    Default,
+    Eq(bound = ""),
+    Hash(bound = ""),
+    PartialEq(bound = "")
+)]
+pub struct Common<E, H>
 where
     E: Pairing,
-    V: MerkleTreeScheme,
+    // H: HasherDigest,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
 {
     #[serde(with = "canonical")]
     poly_commits: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
-    all_evals_digest: V::NodeValue,
+    all_evals_digest: <HasherMerkleTree<
+        H,
+        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    > as MerkleTreeScheme>::NodeValue,
     bytes_len: usize,
 }
 
@@ -185,19 +211,21 @@ where
 //
 // `PrimeField` needed only because `bytes_to_field` needs it.
 // Otherwise we could relax to `FftField`.
-impl<E, H, V> VidScheme for GenericAdvz<E, H, V>
+impl<E, H> VidScheme for GenericAdvz<E, H>
 where
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write, // 5
-    V: MerkleTreeScheme<
-        Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    >,
-    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    V::Index: From<u64>,
+    // TODO replace with H: HasherDigest?
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    // H: HasherDigest,
+    // V: MerkleTreeScheme<
+    //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    // >,
+    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
+    // V::Index: From<u64>,
 {
     type Commit = Output<H>;
-    type Share = Share<E, V>;
-    type Common = Common<E, V>;
+    type Share = Share<E, H>;
+    type Common = Common<E, H>;
 
     fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
     where
@@ -298,18 +326,31 @@ where
             start_timer!(|| "compute merkle root of all storage node evals");
         let height: usize = all_storage_node_evals
             .len()
-            .checked_ilog(V::ARITY)
+            .checked_ilog(
+                <HasherMerkleTree<
+                    H,
+                    Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+                > as MerkleTreeScheme>::ARITY,
+            )
             .ok_or_else(|| {
                 VidError::Argument(format!(
                     "num_storage_nodes {} log base {} invalid",
                     all_storage_node_evals.len(),
-                    V::ARITY
+                    <HasherMerkleTree<
+                        H,
+                        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+                    > as MerkleTreeScheme>::ARITY
                 ))
             })?
             .try_into()
             .expect("num_storage_nodes log base arity should fit into usize");
         let height = height + 1; // avoid fully qualified syntax for try_into()
-        let all_evals_commit = V::from_elems(height, &all_storage_node_evals).map_err(vid)?;
+        let all_evals_commit =
+            <HasherMerkleTree<
+                H,
+                Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+            > as MerkleTreeScheme>::from_elems(height, &all_storage_node_evals)
+            .map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
@@ -360,7 +401,12 @@ where
                     evals,
                     aggregate_proof,
                     evals_proof: all_evals_commit
-                        .lookup(V::Index::from(index as u64))
+                        .lookup(<HasherMerkleTree<
+                            H,
+                            Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+                        > as MerkleTreeScheme>::Index::from(
+                            index as u64
+                        ))
                         .expect_ok()
                         .map_err(vid)?
                         .1,
@@ -404,9 +450,15 @@ where
         }
 
         // verify eval proof
-        if V::verify(
+        if <HasherMerkleTree<
+        H,
+        Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    > as MerkleTreeScheme>::verify(
             common.all_evals_digest,
-            &V::Index::from(share.index as u64),
+            &<HasherMerkleTree<
+            H,
+            Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+        > as MerkleTreeScheme>::Index::from(share.index as u64),
             &share.evals_proof,
         )
         .map_err(vid)?
@@ -503,15 +555,16 @@ where
     }
 }
 
-impl<E, H, V> GenericAdvz<E, H, V>
+impl<E, H> GenericAdvz<E, H>
 where
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<
-        Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
-    >,
-    V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    V::Index: From<u64>,
+    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    // H: HasherDigest,
+    // V: MerkleTreeScheme<
+    //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
+    // >,
+    // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
+    // V::Index: From<u64>,
 {
     fn pseudorandom_scalar(
         common: &<Self as VidScheme>::Common,
