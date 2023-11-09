@@ -21,12 +21,8 @@ use crate::{
     },
     reed_solomon_code::reed_solomon_erasure_decode_rou,
 };
-use anyhow::anyhow;
 use ark_ec::{pairing::Pairing, AffineRepr};
-use ark_ff::{
-    fields::field_hashers::{DefaultFieldHasher, HashToField},
-    Field,
-};
+use ark_ff::{Field, PrimeField};
 use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
@@ -40,7 +36,7 @@ use ark_std::{
 };
 use bytes_to_field::{bytes_to_field, field_to_bytes};
 use derivative::Derivative;
-use digest::{crypto_common::Output, DynDigest};
+use digest::crypto_common::Output;
 use itertools::Itertools;
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
@@ -136,7 +132,7 @@ where
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[derivative(
-    Clone,
+    Clone(bound = ""),
     Debug(bound = ""),
     Eq(bound = ""),
     Hash(bound = ""),
@@ -146,7 +142,7 @@ pub struct Share<E, H>
 where
     E: Pairing,
     // H: HasherDigest,
-    H: DynDigest + Default + Clone + HasherDigest,
+    H: HasherDigest,
     // V: MerkleTreeScheme,
     // V::MembershipProof: Sync + Debug, /* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
 {
@@ -168,9 +164,8 @@ where
 // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 // #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[derivative(
-    Clone,
+    Clone(bound = ""),
     Debug(bound = ""),
-    Default,
     Eq(bound = ""),
     Hash(bound = ""),
     PartialEq(bound = "")
@@ -179,7 +174,7 @@ pub struct Common<E, H>
 where
     E: Pairing,
     // H: HasherDigest,
-    H: DynDigest + Default + Clone + HasherDigest,
+    H: HasherDigest,
 {
     #[serde(with = "canonical")]
     poly_commits: Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Commitment>,
@@ -202,7 +197,7 @@ impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
     // TODO replace with H: HasherDigest?
-    H: DynDigest + Default + Clone + HasherDigest,
+    H: HasherDigest,
     // H: HasherDigest,
     // V: MerkleTreeScheme<
     //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
@@ -545,7 +540,7 @@ where
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
-    H: DynDigest + Default + Clone + HasherDigest,
+    H: HasherDigest,
     // H: HasherDigest,
     // V: MerkleTreeScheme<
     //     Element = Vec<<UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation>,
@@ -565,20 +560,10 @@ where
             .map_err(vid)?;
 
         // Notes on hash-to-field:
-        // - Can't use `Field::from_random_bytes` because it's fallible (in what sense
-        //   is it from "random" bytes?!)
-        // - `HashToField` does not expose an incremental API (ie. `update`) so use an
-        //   ordinary hasher and pipe `hasher.finalize()` through `hash_to_field`
-        //   (sheesh!)
-        const HASH_TO_FIELD_DOMAIN_SEP: &[u8; 4] = b"rick";
-        let hasher_to_field = <DefaultFieldHasher<H> as HashToField<
-            <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Evaluation,
-        >>::new(HASH_TO_FIELD_DOMAIN_SEP);
-        Ok(*hasher_to_field
-            .hash_to_field(&hasher.finalize(), 1)
-            .first()
-            .ok_or_else(|| anyhow!("hash_to_field output is empty"))
-            .map_err(vid)?)
+        // - Can't use `Field::from_random_bytes` because it's fallible. (In what sense is it from "random" bytes?!). This despite the docs explicitly say: "This function is primarily intended for sampling random field elements from a hash-function or RNG output."
+        // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces us to add additional trait bounds `Clone + Default + DynDigest` everywhere. Also, `HashToField` does not expose an incremental API (ie. `update`) so we would need to use an ordinary hasher and pipe `hasher.finalize()` through `hash_to_field`. (Ugh!)
+        // - We don't need the resulting field element to be cryptographically indistinguishable from uniformly random. We only need it to be unpredictable. So it suffices to use
+        Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
     }
 
     fn polynomial<I>(

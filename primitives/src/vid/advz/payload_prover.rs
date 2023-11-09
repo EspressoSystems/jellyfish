@@ -31,9 +31,7 @@ use crate::{
     },
 };
 use ark_ec::pairing::Pairing;
-use ark_serialize::Write;
 use ark_std::{format, ops::Range};
-use digest::{Digest, DynDigest};
 /// A proof intended for use on small payload subslices.
 ///
 /// KZG batch proofs and accompanying metadata.
@@ -63,7 +61,7 @@ impl<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -193,7 +191,7 @@ impl<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -280,7 +278,7 @@ impl<E, H> Advz<E, H>
 where
     // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
     E: Pairing,
-    H: Digest + DynDigest + Default + Clone + Write + HasherDigest,
+    H: HasherDigest,
 {
     // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {
@@ -433,7 +431,7 @@ mod tests {
     fn correctness_generic<E, H>()
     where
         E: Pairing,
-        H: DynDigest + Default + Clone + HasherDigest,
+        H: HasherDigest,
     {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
