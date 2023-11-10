@@ -19,7 +19,7 @@ use core::marker::PhantomData;
 use itertools::izip;
 use num_bigint::BigUint;
 
-/// Parameters needed for emulating field operations over [`F`].
+/// Parameters needed for emulating field operations over [`PrimeField`].
 pub trait EmulationConfig<F: PrimeField>: PrimeField {
     /// Log2 of the other CRT modulus is 2^T.
     const T: usize;

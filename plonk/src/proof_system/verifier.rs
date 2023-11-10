@@ -816,14 +816,14 @@ where
 
     /// Evaluate vanishing polynomial at point `zeta`
     #[inline]
-    fn evaluate_vanishing_poly(&self, zeta: &E::ScalarField) -> E::ScalarField {
+    pub(crate) fn evaluate_vanishing_poly(&self, zeta: &E::ScalarField) -> E::ScalarField {
         self.domain.evaluate_vanishing_polynomial(*zeta)
     }
 
     /// Evaluate the first and the last lagrange polynomial at point `zeta`
     /// given the vanishing polynomial evaluation `vanish_eval`.
     #[inline]
-    fn evaluate_lagrange_1_and_n(
+    pub(crate) fn evaluate_lagrange_1_and_n(
         &self,
         zeta: &E::ScalarField,
         vanish_eval: &E::ScalarField,
@@ -892,7 +892,7 @@ where
     /// * pub_input[l/2+i]
     ///
     /// TODO: reuse the lagrange values
-    fn evaluate_pi_poly(
+    pub(crate) fn evaluate_pi_poly(
         &self,
         pub_input: &[E::ScalarField],
         z: &E::ScalarField,
