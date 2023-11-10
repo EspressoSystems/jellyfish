@@ -13,16 +13,32 @@ use ark_std::ops::Range;
 
 /// Payload proof functionality for [`VidScheme`].
 pub trait PayloadProver<PROOF>: VidScheme {
-    /// Compute a proof for a sub-slice of payload data.
+    /// Compute a proof for a subslice of payload data.
+    ///
+    /// # Arguments
+    ///
+    /// - `payload`: a (possibly large) binary payload.
+    /// - `range`: indicates the subslice `payload[range.start..range.end]` of
+    ///   `playload` for which a proof will be made.
+    ///
+    /// # Why not just a single `&[u8]` argument for `payload`?
+    ///
+    /// You might think it's sufficient that [`PayloadProver::payload_proof`]
+    /// take only a single `&[u8]` argument that the user creates via
+    /// `payload[range.start..range.end]`. However, the generated proof might
+    /// depend on `range.start` or on `payload` bytes outside of `range`. This
+    /// data would be lost if [`PayloadProver::payload_proof`] accepted only a
+    /// single `&[u8]` argument.
     fn payload_proof<B>(&self, payload: B, range: Range<usize>) -> VidResult<PROOF>
     where
         B: AsRef<[u8]>;
 
-    /// Verify a proof made by `payload_proof`.
+    /// Verify a proof made by [`PayloadProver::payload_proof`].
     ///
-    /// `chunk` is the payload sub-slice for which a proof was generated via
-    /// `payload_proof` using `range`. In other words, `chunk` should equal
-    /// `payload[range.start..range.end]`.
+    /// # Arguments
+    ///
+    /// - `stmt`: see [`Statement`].
+    /// - `proof`: made by a call to [`PayloadProver::payload_proof`].
     fn payload_verify(&self, stmt: Statement<Self>, proof: &PROOF) -> VidResult<Result<(), ()>>;
 }
 
@@ -31,17 +47,13 @@ pub trait PayloadProver<PROOF>: VidScheme {
 /// [`PayloadProver::payload_proof`].
 ///
 /// # Why the `?Sized` bound?
+///
 /// Rust hates you: <https://stackoverflow.com/a/54465962>
 // TODO: figure out how to derive basic things like Clone, Debug, etc.
-// Nothing works with the combo of both type parameter `V` and lifetime 'a.
+// Seems that `Derivative` can't handle reference members.
 // #[derive(Derivative)]
 // #[derivative(
 //     Clone(bound = "V::Common: Clone, V::Commit:Clone"),
-//     // Debug(bound = "for<'b> &'b V::Common: ark_std::fmt::Debug, for<'b> &'b
-// V::Commit: ark_std::fmt::Debug"),
-//     // Eq(bound = ""),
-//     // Hash(bound = ""),
-//     // PartialEq(bound = "")
 // )]
 pub struct Statement<'a, V>
 where
