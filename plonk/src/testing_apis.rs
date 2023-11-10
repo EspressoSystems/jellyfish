@@ -5,19 +5,20 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! This file implements various wrappers of internal functions and structs.
-//! It exposes those APIs under `test_apis` feature.
+//! It exposes those APIs under `test-apis` feature.
 //! The functions and structs in this file should not be used for other
 //! purposes.
 
 #![allow(missing_docs)]
 
 use crate::{
+    constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
     proof_system::{
         structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
         verifier,
     },
-    transcript::PlonkTranscript,
+    transcript::{PlonkTranscript, SolidityTranscript},
 };
 use ark_ec::{
     pairing::Pairing,
@@ -150,7 +151,8 @@ impl<E: Pairing> From<verifier::PcsInfo<E>> for PcsInfo<E> {
 /// A wrapper of crate::proof_system::verifier::Verifier
 #[derive(Debug, Clone)]
 pub struct Verifier<E: Pairing> {
-    pub(crate) domain: Radix2EvaluationDomain<E::ScalarField>,
+    /// Evaluation domain
+    pub domain: Radix2EvaluationDomain<E::ScalarField>,
 }
 
 impl<E: Pairing> From<Verifier<E>> for verifier::Verifier<E> {
@@ -220,6 +222,34 @@ where
             extra_transcript_init_msg,
         )?
         .into())
+    }
+
+    /// Compute some intermediate polynomial evaluations used to further compute
+    /// `PcsInfo`.
+    ///
+    /// Returns:
+    /// `(vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval)` on challenge
+    /// point `zeta`.
+    pub fn compute_poly_evals_for_pcs_info(
+        &self,
+        zeta: &E::ScalarField,
+        public_input: &[E::ScalarField],
+    ) -> Result<
+        (
+            E::ScalarField,
+            E::ScalarField,
+            E::ScalarField,
+            E::ScalarField,
+        ),
+        PlonkError,
+    > {
+        let verifier: verifier::Verifier<E> = (*self).clone().into();
+
+        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
+        let (lagrange_1_eval, lagrange_n_eval) =
+            verifier.evaluate_lagrange_1_and_n(zeta, &vanish_eval);
+        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+        Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))
     }
 
     /// Compute the constant term of the linearization polynomial:
@@ -345,5 +375,18 @@ where
             plookup_proofs_vec,
             buffer_v_and_uv_basis,
         )
+    }
+}
+
+/// exposing the internal states for testing purposes
+impl SolidityTranscript {
+    /// Create a new transcript from specific internal states.
+    pub fn from_internal(transcript: Vec<u8>, state: [u8; KECCAK256_STATE_SIZE]) -> Self {
+        Self { transcript, state }
+    }
+
+    /// Returns the internal states
+    pub fn internal(&self) -> (Vec<u8>, [u8; KECCAK256_STATE_SIZE]) {
+        (self.transcript.clone(), self.state.clone())
     }
 }
