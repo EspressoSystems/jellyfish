@@ -303,6 +303,25 @@ where
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<Vec<Self::Evaluation>, PCSError>;
+
+    /// Input a polynomial, and multiple evaluation points,
+    /// compute a *single* opening proof for the multiple points of the same
+    /// polynomial.
+    fn multi_point_open(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        points: &[Self::Point],
+    ) -> Result<(Self::Proof, Vec<Self::Evaluation>), PCSError>;
+
+    /// Verifies that `values` are the evaluation at the `points` of the
+    /// polynomial committed inside `comm`.
+    fn multi_point_verify(
+        srs: &Self::SRS,
+        commitment: &Self::Commitment,
+        points: &[Self::Point],
+        values: &[Self::Evaluation],
+        proof: &Self::Proof,
+    ) -> Result<bool, PCSError>;
 }
 
 /// compute the fft size (i.e. `num_coeffs`) given a degree.

@@ -23,6 +23,8 @@ pub struct UnivariateUniversalParams<E: Pairing> {
     pub h: E::G2Affine,
     /// \beta times the above generator of G2.
     pub beta_h: E::G2Affine,
+    /// \beta powers of the generator h of G2
+    pub powers_of_h: Vec<E::G2Affine>,
 }
 
 impl<E: Pairing> UnivariateUniversalParams<E> {
@@ -155,10 +157,18 @@ mod tests {
         let h = h.into_affine();
         let beta_h = (h * beta).into_affine();
 
+        let powers_of_h_threshold = 10;
+        let powers_of_h = powers_of_beta
+            .iter()
+            .take(powers_of_h_threshold)
+            .map(|x| (h * x).into_affine())
+            .collect();
+
         let pp = UnivariateUniversalParams {
             powers_of_g,
             h,
             beta_h,
+            powers_of_h,
         };
         end_timer!(setup_time);
         Ok(pp)
