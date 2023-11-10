@@ -1747,14 +1747,14 @@
 
     <span class="doccomment">/// Evaluate vanishing polynomial at point `zeta`
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>evaluate_vanishing_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, zeta: <span class="kw-2">&amp;</span>E::ScalarField) -&gt; E::ScalarField {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>evaluate_vanishing_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, zeta: <span class="kw-2">&amp;</span>E::ScalarField) -&gt; E::ScalarField {
         <span class="self">self</span>.domain.evaluate_vanishing_polynomial(<span class="kw-2">*</span>zeta)
     }
 
     <span class="doccomment">/// Evaluate the first and the last lagrange polynomial at point `zeta`
     /// given the vanishing polynomial evaluation `vanish_eval`.
     </span><span class="attr">#[inline]
-    </span><span class="kw">fn </span>evaluate_lagrange_1_and_n(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>evaluate_lagrange_1_and_n(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         zeta: <span class="kw-2">&amp;</span>E::ScalarField,
         vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
@@ -1823,7 +1823,7 @@
     /// * pub_input[l/2+i]
     ///
     /// TODO: reuse the lagrange values
-    </span><span class="kw">fn </span>evaluate_pi_poly(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>evaluate_pi_poly(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pub_input: <span class="kw-2">&amp;</span>[E::ScalarField],
         z: <span class="kw-2">&amp;</span>E::ScalarField,

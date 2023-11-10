@@ -1016,26 +1016,26 @@
 #[derivative(PartialEq, Hash(bound = <span class="string">&quot;E:Pairing&quot;</span>))]
 </span><span class="kw">pub struct </span>Proof&lt;E: Pairing&gt; {
     <span class="doccomment">/// Wire witness polynomials commitments.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>wires_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
     <span class="doccomment">/// The polynomial commitment for the wire permutation argument.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) prod_perm_poly_comm: Commitment&lt;E&gt;,
+    </span><span class="kw">pub </span>prod_perm_poly_comm: Commitment&lt;E&gt;,
 
     <span class="doccomment">/// Splitted quotient polynomial commitments.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) split_quot_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>split_quot_poly_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
     <span class="doccomment">/// (Aggregated) proof of evaluations at challenge point `zeta`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) opening_proof: Commitment&lt;E&gt;,
+    </span><span class="kw">pub </span>opening_proof: Commitment&lt;E&gt;,
 
     <span class="doccomment">/// (Aggregated) proof of evaluation at challenge point `zeta * g` where `g`
     /// is the root of unity.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) shifted_opening_proof: Commitment&lt;E&gt;,
+    </span><span class="kw">pub </span>shifted_opening_proof: Commitment&lt;E&gt;,
 
     <span class="doccomment">/// Polynomial evaluations.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) poly_evals: ProofEvaluations&lt;E::ScalarField&gt;,
+    </span><span class="kw">pub </span>poly_evals: ProofEvaluations&lt;E::ScalarField&gt;,
 
     <span class="doccomment">/// The partial proof for Plookup argument
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_proof: <span class="prelude-ty">Option</span>&lt;PlookupProof&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>plookup_proof: <span class="prelude-ty">Option</span>&lt;PlookupProof&lt;E&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;E, P&gt; TryFrom&lt;Vec&lt;E::BaseField&gt;&gt; <span class="kw">for </span>Proof&lt;E&gt;
@@ -1358,14 +1358,14 @@
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash, CanonicalSerialize, CanonicalDeserialize)]
 </span><span class="kw">pub struct </span>ProofEvaluations&lt;F: Field&gt; {
     <span class="doccomment">/// Wire witness polynomials evaluations at point `zeta`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wires_evals: Vec&lt;F&gt;,
+    </span><span class="kw">pub </span>wires_evals: Vec&lt;F&gt;,
 
     <span class="doccomment">/// Extended permutation (sigma) polynomials evaluations at point `zeta`.
     /// We do not include the last sigma polynomial evaluation.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wire_sigma_evals: Vec&lt;F&gt;,
+    </span><span class="kw">pub </span>wire_sigma_evals: Vec&lt;F&gt;,
 
     <span class="doccomment">/// Permutation product polynomial evaluation at point `zeta * g`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) perm_next_eval: F,
+    </span><span class="kw">pub </span>perm_next_eval: F,
 }
 
 <span class="kw">impl</span>&lt;F: Field&gt; TryFrom&lt;Vec&lt;F&gt;&gt; <span class="kw">for </span>ProofEvaluations&lt;F&gt; {
@@ -1611,29 +1611,29 @@
 </span><span class="attr">#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
 </span><span class="kw">pub struct </span>VerifyingKey&lt;E: Pairing&gt; {
     <span class="doccomment">/// The size of the evaluation domain. Should be a power of two.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) domain_size: usize,
+    </span><span class="kw">pub </span>domain_size: usize,
 
     <span class="doccomment">/// The number of public inputs.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) num_inputs: usize,
+    </span><span class="kw">pub </span>num_inputs: usize,
 
     <span class="doccomment">/// The permutation polynomial commitments. The commitments are not hiding.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) sigma_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>sigma_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
     <span class="doccomment">/// The selector polynomial commitments. The commitments are not hiding.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) selector_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>selector_comms: Vec&lt;Commitment&lt;E&gt;&gt;,
 
     <span class="doccomment">/// The constants K0, ..., K_num_wire_types that ensure wire subsets are
     /// disjoint.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) k: Vec&lt;E::ScalarField&gt;,
+    </span><span class="kw">pub </span>k: Vec&lt;E::ScalarField&gt;,
 
     <span class="doccomment">/// KZG PCS opening key.
     </span><span class="kw">pub </span>open_key: OpenKey&lt;E&gt;,
 
     <span class="doccomment">/// A flag indicating whether the key is a merged key.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) is_merged: bool,
+    </span><span class="kw">pub </span>is_merged: bool,
 
     <span class="doccomment">/// Plookup verifying key, None if not support lookup.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) plookup_vk: <span class="prelude-ty">Option</span>&lt;PlookupVerifyingKey&lt;E&gt;&gt;,
+    </span><span class="kw">pub </span>plookup_vk: <span class="prelude-ty">Option</span>&lt;PlookupVerifyingKey&lt;E&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;E, F, P1, P2&gt; From&lt;VerifyingKey&lt;E&gt;&gt; <span class="kw">for </span>Vec&lt;E::BaseField&gt;

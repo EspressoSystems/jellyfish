@@ -128,8 +128,8 @@
 /// 2. challenge = state\[0\]
 /// 3. transcript = vec!\[challenge\]
 </span><span class="kw">pub struct </span>SolidityTranscript {
-    transcript: Vec&lt;u8&gt;,
-    state: [u8; KECCAK256_STATE_SIZE], <span class="comment">// 64 bytes state size
+    <span class="kw">pub</span>(<span class="kw">crate</span>) transcript: Vec&lt;u8&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) state: [u8; KECCAK256_STATE_SIZE], <span class="comment">// 64 bytes state size
 </span>}
 
 <span class="kw">impl</span>&lt;F&gt; PlonkTranscript&lt;F&gt; <span class="kw">for </span>SolidityTranscript {
