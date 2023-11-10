@@ -889,6 +889,9 @@
 <a href="#889" id="889">889</a>
 <a href="#890" id="890">890</a>
 <a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1035,6 +1038,7 @@
 
 <span class="doccomment">/// The [`VidScheme::Share`] type for [`Advz`].
 </span><span class="attr">#[derive(Derivative, Deserialize, Serialize)]
+#[serde(bound = <span class="string">&quot;Output&lt;H&gt;: Serialize + for&lt;&#39;a&gt; Deserialize&lt;&#39;a&gt;&quot;</span>)]
 #[derivative(
     Clone(bound = <span class="string">&quot;&quot;</span>),
     Debug(bound = <span class="string">&quot;&quot;</span>),
@@ -1529,7 +1533,8 @@
     };
     <span class="kw">use </span>sha2::Sha256;
 
-    <span class="attr">#[test]
+    <span class="comment">// #[test]
+    </span><span class="attr">#[allow(dead_code)]
     </span><span class="kw">fn </span>disperse_timer() {
         <span class="comment">// run with &#39;print-trace&#39; feature to see timer output
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
@@ -1542,7 +1547,8 @@
         <span class="kw">let _ </span>= advz.disperse(<span class="kw-2">&amp;</span>payload_random);
     }
 
-    <span class="attr">#[test]
+    <span class="comment">// #[test]
+    </span><span class="attr">#[allow(dead_code)]
     </span><span class="kw">fn </span>commit_only_timer() {
         <span class="comment">// run with &#39;print-trace&#39; feature to see timer output
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
