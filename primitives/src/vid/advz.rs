@@ -47,7 +47,7 @@ pub mod payload_prover;
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
 /// - `E` is any [`Pairing`]
-/// - `H` is a [`Digest`]-compatible hash function.
+/// - `H` is a [`digest::Digest`]-compatible hash function.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Advz<E, H>
 where
