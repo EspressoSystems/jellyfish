@@ -41,7 +41,7 @@ use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierPa
 pub(crate) mod srs;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
-pub struct UnivariateKzgPCS<E: Pairing> {
+pub struct UnivariateKzgPCS<E> {
     #[doc(hidden)]
     phantom: PhantomData<E>,
 }

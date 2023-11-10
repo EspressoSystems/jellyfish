@@ -15,20 +15,21 @@
 //!    such as a complete namespace. Snark-friendly because it does not require
 //!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
-use ark_poly::EvaluationDomain;
-
 use super::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, AffineRepr, Debug, DenseUVPolynomial,
-    Digest, DynDigest, GenericAdvz, MerkleTreeScheme, PolynomialCommitmentScheme, PrimeField,
-    UnivariatePCS, Vec, VidResult, Write,
+    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, KzgEval, KzgProof,
+    PolynomialCommitmentScheme, Vec, VidResult,
 };
 use crate::{
     alloc::string::ToString,
+    merkle_tree::hasher::HasherDigest,
+    pcs::prelude::UnivariateKzgPCS,
     vid::{
         payload_prover::{PayloadProver, Statement},
         vid, VidError, VidScheme,
     },
 };
+use ark_ec::pairing::Pairing;
+use ark_poly::EvaluationDomain;
 use ark_std::{format, ops::Range};
 
 /// A proof intended for use on small payload subslices.
@@ -54,24 +55,16 @@ pub struct LargeRangeProof<F> {
     chunk_range: Range<usize>,
 }
 
-impl<P, T, H, V> PayloadProver<SmallRangeProof<P::Proof>> for GenericAdvz<P, T, H, V>
+impl<E, H> PayloadProver<SmallRangeProof<KzgProof<E>>> for Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
-    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
-    P::Commitment: From<T> + AsRef<T>,
-    T: AffineRepr<ScalarField = P::Evaluation>,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    E: Pairing,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
         payload: B,
         range: Range<usize>,
-    ) -> VidResult<SmallRangeProof<P::Proof>>
+    ) -> VidResult<SmallRangeProof<KzgProof<E>>>
     where
         B: AsRef<[u8]>,
     {
@@ -90,7 +83,7 @@ where
         // grab the polynomial that contains `range`
         // TODO allow precomputation: https://github.com/EspressoSystems/jellyfish/issues/397
         let polynomial = self.polynomial(
-            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
+            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size),
         );
 
@@ -104,7 +97,8 @@ where
                 .collect()
         };
 
-        let (proofs, _evals) = P::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
+        let (proofs, _evals) =
+            UnivariateKzgPCS::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
         Ok(SmallRangeProof {
             proofs,
@@ -117,7 +111,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &SmallRangeProof<P::Proof>,
+        proof: &SmallRangeProof<KzgProof<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -131,7 +125,7 @@ where
         Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
-        let data_elems: Vec<_> = bytes_to_field::<_, P::Evaluation>(
+        let data_elems: Vec<_> = bytes_to_field::<_, KzgEval<E>>(
             proof
                 .prefix_bytes
                 .iter()
@@ -165,7 +159,7 @@ where
             .iter()
             .zip(data_elems.iter().zip(proof.proofs.iter()))
         {
-            if !P::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
+            if !UnivariateKzgPCS::verify(&self.vk, poly_commit, point, elem, pf).map_err(vid)? {
                 return Ok(Err(()));
             }
         }
@@ -173,24 +167,16 @@ where
     }
 }
 
-impl<P, T, H, V> PayloadProver<LargeRangeProof<P::Evaluation>> for GenericAdvz<P, T, H, V>
+impl<E, H> PayloadProver<LargeRangeProof<KzgEval<E>>> for Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
-    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
-    P::Commitment: From<T> + AsRef<T>,
-    T: AffineRepr<ScalarField = P::Evaluation>,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    E: Pairing,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
         payload: B,
         range: Range<usize>,
-    ) -> VidResult<LargeRangeProof<P::Evaluation>>
+    ) -> VidResult<LargeRangeProof<KzgEval<E>>>
     where
         B: AsRef<[u8]>,
     {
@@ -208,7 +194,7 @@ where
 
         // compute the prefix and suffix elems
         let mut elems_iter =
-            bytes_to_field::<_, P::Evaluation>(payload[start_namespace_byte..].iter())
+            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size);
         let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
@@ -225,7 +211,7 @@ where
     fn payload_verify(
         &self,
         stmt: Statement<Self>,
-        proof: &LargeRangeProof<P::Evaluation>,
+        proof: &LargeRangeProof<KzgEval<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
 
@@ -242,7 +228,7 @@ where
                     .prefix_elems
                     .iter()
                     .cloned()
-                    .chain(bytes_to_field::<_, P::Evaluation>(
+                    .chain(bytes_to_field::<_, KzgEval<E>>(
                         proof
                             .prefix_bytes
                             .iter()
@@ -251,7 +237,7 @@ where
                     ))
                     .chain(proof.suffix_elems.iter().cloned()),
             );
-            P::commit(&self.ck, &poly).map_err(vid)?
+            UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?
         };
         if poly_commit != stmt.common.poly_commits[range_poly.start] {
             return Ok(Err(()));
@@ -261,34 +247,26 @@ where
     }
 }
 
-impl<P, T, H, V> GenericAdvz<P, T, H, V>
+impl<E, H> Advz<E, H>
 where
-    // TODO ugly trait bounds https://github.com/EspressoSystems/jellyfish/issues/253
-    P: UnivariatePCS<Point = <P as PolynomialCommitmentScheme>::Evaluation>,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial<P::Evaluation>,
-    P::Commitment: From<T> + AsRef<T>,
-    T: AffineRepr<ScalarField = P::Evaluation>,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme<Element = Vec<P::Evaluation>>,
-    V::MembershipProof: Sync + Debug,
-    V::Index: From<u64>,
+    E: Pairing,
+    H: HasherDigest,
 {
     // lots of index manipulation
     fn index_byte_to_elem(&self, index: usize) -> usize {
-        index_coarsen(index, elem_byte_capacity::<P::Evaluation>())
+        index_coarsen(index, elem_byte_capacity::<KzgEval<E>>())
     }
     fn index_poly_to_byte(&self, index: usize) -> usize {
         index_refine(
             index,
-            self.payload_chunk_size * elem_byte_capacity::<P::Evaluation>(),
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen(range, elem_byte_capacity::<P::Evaluation>())
+        range_coarsen(range, elem_byte_capacity::<KzgEval<E>>())
     }
     fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
-        range_refine(range, elem_byte_capacity::<P::Evaluation>())
+        range_refine(range, elem_byte_capacity::<KzgEval<E>>())
     }
     fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, self.payload_chunk_size)
@@ -296,7 +274,7 @@ where
     fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(
             range,
-            self.payload_chunk_size * elem_byte_capacity::<P::Evaluation>(),
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
 
@@ -405,14 +383,12 @@ mod tests {
     };
     use ark_bls12_381::Bls12_381;
     use ark_std::{ops::Range, println, rand::Rng};
-    use digest::{generic_array::ArrayLength, OutputSizeUser};
     use sha2::Sha256;
 
     fn correctness_generic<E, H>()
     where
         E: Pairing,
-        H: Digest + DynDigest + Default + Clone + Write,
-        <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
+        H: HasherDigest,
     {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
