@@ -71,6 +71,18 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -86,16 +98,32 @@
 
 <span class="doccomment">/// Payload proof functionality for [`VidScheme`].
 </span><span class="kw">pub trait </span>PayloadProver&lt;PROOF&gt;: VidScheme {
-    <span class="doccomment">/// Compute a proof for a sub-slice of payload data.
+    <span class="doccomment">/// Compute a proof for a subslice of payload data.
+    ///
+    /// # Arguments
+    ///
+    /// - `payload`: a (possibly large) binary payload.
+    /// - `range`: indicates the subslice `payload[range.start..range.end]` of
+    ///   `playload` for which a proof will be made.
+    ///
+    /// # Why not just a single `&amp;[u8]` argument for `payload`?
+    ///
+    /// You might think it&#39;s sufficient that [`PayloadProver::payload_proof`]
+    /// take only a single `&amp;[u8]` argument that the user creates via
+    /// `payload[range.start..range.end]`. However, the generated proof might
+    /// depend on `range.start` or on `payload` bytes outside of `range`. This
+    /// data would be lost if [`PayloadProver::payload_proof`] accepted only a
+    /// single `&amp;[u8]` argument.
     </span><span class="kw">fn </span>payload_proof&lt;B&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: B, range: Range&lt;usize&gt;) -&gt; VidResult&lt;PROOF&gt;
     <span class="kw">where
         </span>B: AsRef&lt;[u8]&gt;;
 
-    <span class="doccomment">/// Verify a proof made by `payload_proof`.
+    <span class="doccomment">/// Verify a proof made by [`PayloadProver::payload_proof`].
     ///
-    /// `chunk` is the payload sub-slice for which a proof was generated via
-    /// `payload_proof` using `range`. In other words, `chunk` should equal
-    /// `payload[range.start..range.end]`.
+    /// # Arguments
+    ///
+    /// - `stmt`: see [`Statement`].
+    /// - `proof`: made by a call to [`PayloadProver::payload_proof`].
     </span><span class="kw">fn </span>payload_verify(<span class="kw-2">&amp;</span><span class="self">self</span>, stmt: Statement&lt;<span class="self">Self</span>&gt;, proof: <span class="kw-2">&amp;</span>PROOF) -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt;;
 }
 
@@ -104,17 +132,13 @@
 /// [`PayloadProver::payload_proof`].
 ///
 /// # Why the `?Sized` bound?
+///
 /// Rust hates you: &lt;https://stackoverflow.com/a/54465962&gt;
 </span><span class="comment">// TODO: figure out how to derive basic things like Clone, Debug, etc.
-// Nothing works with the combo of both type parameter `V` and lifetime &#39;a.
+// Seems that `Derivative` can&#39;t handle reference members.
 // #[derive(Derivative)]
 // #[derivative(
 //     Clone(bound = &quot;V::Common: Clone, V::Commit:Clone&quot;),
-//     // Debug(bound = &quot;for&lt;&#39;b&gt; &amp;&#39;b V::Common: ark_std::fmt::Debug, for&lt;&#39;b&gt; &amp;&#39;b
-// V::Commit: ark_std::fmt::Debug&quot;),
-//     // Eq(bound = &quot;&quot;),
-//     // Hash(bound = &quot;&quot;),
-//     // PartialEq(bound = &quot;&quot;)
 // )]
 </span><span class="kw">pub struct </span>Statement&lt;<span class="lifetime">&#39;a</span>, V&gt;
 <span class="kw">where

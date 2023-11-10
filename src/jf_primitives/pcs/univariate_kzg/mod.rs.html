@@ -653,7 +653,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>srs;
 
 <span class="doccomment">/// KZG Polynomial Commitment Scheme on univariate polynomial.
-</span><span class="kw">pub struct </span>UnivariateKzgPCS&lt;E: Pairing&gt; {
+</span><span class="kw">pub struct </span>UnivariateKzgPCS&lt;E&gt; {
     <span class="attr">#[doc(hidden)]
     </span>phantom: PhantomData&lt;E&gt;,
 }

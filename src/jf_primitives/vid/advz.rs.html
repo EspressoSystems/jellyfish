@@ -889,22 +889,6 @@
 <a href="#889" id="889">889</a>
 <a href="#890" id="890">890</a>
 <a href="#891" id="891">891</a>
-<a href="#892" id="892">892</a>
-<a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -918,26 +902,23 @@
 </span><span class="kw">use super</span>::{vid, VidDisperse, VidError, VidResult, VidScheme};
 <span class="kw">use crate</span>::{
     alloc::string::ToString,
-    merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
+    merkle_tree::{
+        hasher::{HasherDigest, HasherMerkleTree},
+        MerkleCommitment, MerkleTreeScheme,
+    },
     pcs::{
         prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
         UnivariatePCS,
     },
     reed_solomon_code::reed_solomon_erasure_decode_rou,
 };
-<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr};
-<span class="kw">use </span>ark_ff::{
-    fields::field_hashers::{DefaultFieldHasher, HashToField},
-    FftField, Field, PrimeField,
-};
+<span class="kw">use </span>ark_ff::{Field, PrimeField};
 <span class="kw">use </span>ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
-<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Write};
+<span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow,
-    end_timer,
-    fmt::Debug,
-    format,
+    end_timer, format,
     marker::PhantomData,
     ops::{Add, Mul},
     start_timer, vec,
@@ -946,7 +927,7 @@
 };
 <span class="kw">use </span>bytes_to_field::{bytes_to_field, field_to_bytes};
 <span class="kw">use </span>derivative::Derivative;
-<span class="kw">use </span>digest::{crypto_common::Output, Digest, DynDigest};
+<span class="kw">use </span>digest::crypto_common::Output;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_utils::canonical;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -956,48 +937,49 @@
 
 <span class="doccomment">/// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
-/// - `H` is any [`Digest`]-compatible hash function
 /// - `E` is any [`Pairing`]
-</span><span class="kw">pub type </span>Advz&lt;E, H&gt; = GenericAdvz&lt;
-    UnivariateKzgPCS&lt;E&gt;,
-    &lt;E <span class="kw">as </span>Pairing&gt;::G1Affine,
-    H,
-    HasherMerkleTree&lt;H, Vec&lt;&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;&gt;,
-&gt;;
-
-<span class="doccomment">/// Like [`Advz`] except with more abstraction.
-///
-/// - `P` is a [`PolynomialCommitmentScheme`]
-/// - `T` is the group type underlying
-///   [`PolynomialCommitmentScheme::Commitment`]
-/// - `H` is a [`Digest`]-compatible hash function.
-/// - `V` is a [`MerkleTreeScheme`], though any vector commitment would suffice
-</span><span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derive(Clone, Debug, Default, Deserialize, Eq, Hash, Ord, PartialEq,
-// PartialOrd, Serialize)]
-</span><span class="kw">pub struct </span>GenericAdvz&lt;P, T, H, V&gt;
+/// - `H` is a [`digest::Digest`]-compatible hash function.
+</span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq)]
+</span><span class="kw">pub struct </span>Advz&lt;E, H&gt;
 <span class="kw">where
-    </span>P: PolynomialCommitmentScheme,
-    P::Evaluation: FftField,
+    </span>E: Pairing,
 {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
-    ck: &lt;P::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam,
-    vk: &lt;P::SRS <span class="kw">as </span>StructuredReferenceString&gt;::VerifierParam,
-    multi_open_domain: Radix2EvaluationDomain&lt;P::Evaluation&gt;,
+    ck: KzgProverParam&lt;E&gt;,
+    vk: KzgVerifierParam&lt;E&gt;,
+    multi_open_domain: Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
 
     <span class="comment">// TODO might be able to eliminate this field and instead use
     // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
     // but that method consumes `other` and its doc is unclear.
-    </span>eval_domain: Radix2EvaluationDomain&lt;P::Evaluation&gt;,
+    </span>eval_domain: Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
 
-    _pd: (PhantomData&lt;T&gt;, PhantomData&lt;H&gt;, PhantomData&lt;V&gt;),
+    _pd: PhantomData&lt;H&gt;,
 }
 
-<span class="kw">impl</span>&lt;P, T, H, V&gt; GenericAdvz&lt;P, T, H, V&gt;
+<span class="comment">// [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
+// I want to do this but I cant:
+// type Kzg&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; as PolynomialCommitmentScheme&gt;;
+// So instead I do this:
+</span><span class="kw">type </span>KzgPolynomial&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Polynomial;
+<span class="kw">type </span>KzgCommit&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Commitment;
+<span class="kw">type </span>KzgPoint&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Point;
+<span class="kw">type </span>KzgEval&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation;
+<span class="kw">type </span>KzgProof&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Proof;
+<span class="kw">type </span>KzgSrs&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::SRS;
+<span class="kw">type </span>KzgProverParam&lt;E&gt; = &lt;&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam;
+<span class="kw">type </span>KzgVerifierParam&lt;E&gt; = &lt;&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::SRS <span class="kw">as </span>StructuredReferenceString&gt;::VerifierParam;
+
+<span class="kw">type </span>KzgEvalsMerkleTree&lt;E, H&gt; = HasherMerkleTree&lt;H, Vec&lt;KzgEval&lt;E&gt;&gt;&gt;;
+<span class="kw">type </span>KzgEvalsMerkleTreeNode&lt;E, H&gt; = &lt;KzgEvalsMerkleTree&lt;E, H&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::NodeValue;
+<span class="kw">type </span>KzgEvalsMerkleTreeIndex&lt;E, H&gt; = &lt;KzgEvalsMerkleTree&lt;E, H&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::Index;
+<span class="kw">type </span>KzgEvalsMerkleTreeProof&lt;E, H&gt; =
+    &lt;KzgEvalsMerkleTree&lt;E, H&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::MembershipProof;
+
+<span class="kw">impl</span>&lt;E, H&gt; Advz&lt;E, H&gt;
 <span class="kw">where
-    </span>P: UnivariatePCS,
-    P::Evaluation: FftField,
+    </span>E: Pairing,
 {
     <span class="doccomment">/// Return a new instance of `Self`.
     ///
@@ -1007,7 +989,7 @@
     </span><span class="kw">pub fn </span>new(
         payload_chunk_size: usize,
         num_storage_nodes: usize,
-        srs: <span class="kw">impl </span>Borrow&lt;P::SRS&gt;,
+        srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">if </span>num_storage_nodes &lt; payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
@@ -1015,10 +997,12 @@
                 payload_chunk_size, num_storage_nodes
             )));
         }
-        <span class="kw">let </span>(ck, vk) = P::trim_fft_size(srs, payload_chunk_size - <span class="number">1</span>).map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>multi_open_domain =
-            P::multi_open_rou_eval_domain(payload_chunk_size - <span class="number">1</span>, num_storage_nodes)
-                .map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, payload_chunk_size - <span class="number">1</span>).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>multi_open_domain = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(
+            payload_chunk_size - <span class="number">1</span>,
+            num_storage_nodes,
+        )
+        .map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(payload_chunk_size).ok_or_else(|| {
             VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
                 <span class="string">&quot;fail to construct doman of size {}&quot;</span>,
@@ -1051,82 +1035,86 @@
 
 <span class="doccomment">/// The [`VidScheme::Share`] type for [`Advz`].
 </span><span class="attr">#[derive(Derivative, Deserialize, Serialize)]
-</span><span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-</span><span class="attr">#[derivative(Clone, Debug, Eq, Hash, PartialEq)]
-</span><span class="kw">pub struct </span>Share&lt;P, V&gt;
+#[derivative(
+    Clone(bound = <span class="string">&quot;&quot;</span>),
+    Debug(bound = <span class="string">&quot;&quot;</span>),
+    Eq(bound = <span class="string">&quot;&quot;</span>),
+    Hash(bound = <span class="string">&quot;&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;&quot;</span>)
+)]
+</span><span class="kw">pub struct </span>Share&lt;E, H&gt;
 <span class="kw">where
-    </span>P: PolynomialCommitmentScheme,
-    V: MerkleTreeScheme,
-    V::MembershipProof: Sync + Debug, <span class="comment">/* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-</span>{
+    </span>E: Pairing,
+    H: HasherDigest,
+{
     index: usize,
+
     <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
-    </span>evals: Vec&lt;P::Evaluation&gt;,
+    </span>evals: Vec&lt;KzgEval&lt;E&gt;&gt;,
+
     <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
-    </span>aggregate_proof: P::Proof,
-    evals_proof: V::MembershipProof,
+    </span>aggregate_proof: KzgProof&lt;E&gt;,
+
+    evals_proof: KzgEvalsMerkleTreeProof&lt;E, H&gt;,
 }
 
 <span class="doccomment">/// The [`VidScheme::Common`] type for [`Advz`].
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
-</span><span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
-// #[derivative(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
-</span><span class="attr">#[derivative(Clone, Debug, Default, Eq, Hash, PartialEq)]
-</span><span class="kw">pub struct </span>Common&lt;P, V&gt;
+#[derivative(
+    Clone(bound = <span class="string">&quot;&quot;</span>),
+    Debug(bound = <span class="string">&quot;&quot;</span>),
+    Eq(bound = <span class="string">&quot;&quot;</span>),
+    Hash(bound = <span class="string">&quot;&quot;</span>),
+    PartialEq(bound = <span class="string">&quot;&quot;</span>)
+)]
+</span><span class="kw">pub struct </span>Common&lt;E, H&gt;
 <span class="kw">where
-    </span>P: PolynomialCommitmentScheme,
-    V: MerkleTreeScheme,
+    </span>E: Pairing,
+    H: HasherDigest,
 {
     <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
-    </span>poly_commits: Vec&lt;P::Commitment&gt;,
-    all_evals_digest: V::NodeValue,
+    </span>poly_commits: Vec&lt;KzgCommit&lt;E&gt;&gt;,
+
+    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    </span>all_evals_digest: KzgEvalsMerkleTreeNode&lt;E, H&gt;,
+
     bytes_len: usize,
 }
 
-<span class="comment">// We take great pains to maintain abstraction by relying only on traits and not
-// concrete impls of those traits. Explanation of trait bounds:
-// 1,2: `Polynomial` is univariate: domain (`Point`) same field as range
-// (`Evaluation&#39;). 3,4: `Commitment` is (convertible to/from) an elliptic curve
-// group in affine form. 5: `H` is a hasher
-//
-// `PrimeField` needed only because `bytes_to_field` needs it.
-// Otherwise we could relax to `FftField`.
-</span><span class="kw">impl</span>&lt;P, T, H, V&gt; VidScheme <span class="kw">for </span>GenericAdvz&lt;P, T, H, V&gt;
+<span class="kw">impl</span>&lt;E, H&gt; VidScheme <span class="kw">for </span>Advz&lt;E, H&gt;
 <span class="kw">where
-    </span>P: UnivariatePCS&lt;Point = &lt;P <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial&lt;P::Evaluation&gt;, <span class="comment">// 2
-    </span>P::Commitment: From&lt;T&gt; + AsRef&lt;T&gt;,               <span class="comment">// 3
-    </span>T: AffineRepr&lt;ScalarField = P::Evaluation&gt;,      <span class="comment">// 4
-    </span>H: Digest + DynDigest + Default + Clone + Write, <span class="comment">// 5
-    </span>V: MerkleTreeScheme&lt;Element = Vec&lt;P::Evaluation&gt;&gt;,
-    V::MembershipProof: Sync + Debug, <span class="comment">/* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    </span>V::Index: From&lt;u64&gt;,
+    </span>E: Pairing,
+    H: HasherDigest,
 {
     <span class="kw">type </span>Commit = Output&lt;H&gt;;
-    <span class="kw">type </span>Share = Share&lt;P, V&gt;;
-    <span class="kw">type </span>Common = Common&lt;P, V&gt;;
+    <span class="kw">type </span>Share = Share&lt;E, H&gt;;
+    <span class="kw">type </span>Common = Common&lt;E, H&gt;;
 
     <span class="kw">fn </span>commit_only&lt;B&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt;
     <span class="kw">where
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
+        <span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
+            <span class="string">&quot;VID commit_only {} payload bites to {} nodes&quot;</span>,
+            payload.len(),
+            <span class="self">self</span>.num_storage_nodes
+        ));
 
         <span class="comment">// Can&#39;t use `Self::poly_commits_hash()`` here because `P::commit()`` returns
         // `Result&lt;P::Commitment,_&gt;`` instead of `P::Commitment`.
         // There&#39;s probably an idiomatic way to do this using eg.
         // itertools::process_results() but the code is unreadable.
         </span><span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
-        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, P::Evaluation&gt;(payload);
+        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload);
         <span class="kw">for </span>evals_iter <span class="kw">in </span>elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter() {
             <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
-            <span class="kw">let </span>commitment = P::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
+            <span class="kw">let </span>commitment = UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
             commitment
                 .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
                 .map_err(vid)<span class="question-mark">?</span>;
         }
+        <span class="macro">end_timer!</span>(commit_time);
         <span class="prelude-val">Ok</span>(hasher.finalize())
     }
 
@@ -1144,11 +1132,12 @@
         <span class="comment">// partition payload into polynomial coefficients
         // and count `elems_len` for later
         </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;encode payload bytes into polynomials&quot;</span>);
-        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, P::Evaluation&gt;(payload);
-        <span class="kw">let </span><span class="kw-2">mut </span>polys = Vec::new();
-        <span class="kw">for </span>evals_iter <span class="kw">in </span>elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter() {
-            polys.push(<span class="self">self</span>.polynomial(evals_iter));
-        }
+        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload);
+        <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = elems_iter
+            .chunks(<span class="self">self</span>.payload_chunk_size)
+            .into_iter()
+            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
+            .collect();
         <span class="macro">end_timer!</span>(bytes_to_polys_time);
 
         <span class="comment">// evaluate polynomials
@@ -1162,9 +1151,12 @@
                 <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); <span class="self">self</span>.num_storage_nodes];
 
             <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
-                <span class="kw">let </span>poly_evals =
-                    P::multi_open_rou_evals(poly, <span class="self">self</span>.num_storage_nodes, <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain)
-                        .map_err(vid)<span class="question-mark">?</span>;
+                <span class="kw">let </span>poly_evals = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
+                    poly,
+                    <span class="self">self</span>.num_storage_nodes,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
+                )
+                .map_err(vid)<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in
                     </span>all_storage_node_evals.iter_mut().zip(poly_evals)
@@ -1189,25 +1181,26 @@
             <span class="macro">start_timer!</span>(|| <span class="string">&quot;compute merkle root of all storage node evals&quot;</span>);
         <span class="kw">let </span>height: usize = all_storage_node_evals
             .len()
-            .checked_ilog(V::ARITY)
+            .checked_ilog(KzgEvalsMerkleTree::&lt;E, H&gt;::ARITY)
             .ok_or_else(|| {
                 VidError::Argument(<span class="macro">format!</span>(
                     <span class="string">&quot;num_storage_nodes {} log base {} invalid&quot;</span>,
                     all_storage_node_evals.len(),
-                    V::ARITY
+                    KzgEvalsMerkleTree::&lt;E, H&gt;::ARITY
                 ))
             })<span class="question-mark">?
             </span>.try_into()
             .expect(<span class="string">&quot;num_storage_nodes log base arity should fit into usize&quot;</span>);
         <span class="kw">let </span>height = height + <span class="number">1</span>; <span class="comment">// avoid fully qualified syntax for try_into()
-        </span><span class="kw">let </span>all_evals_commit = V::from_elems(height, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>all_evals_commit =
+            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(height, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(all_evals_commit_timer);
 
         <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;compute {} KZG commitments&quot;</span>, polys.len()));
         <span class="kw">let </span>common = Common {
             poly_commits: polys
                 .iter()
-                .map(|poly| P::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, poly))
+                .map(|poly| UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, poly))
                 .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()
                 .map_err(vid)<span class="question-mark">?</span>,
             all_evals_digest: all_evals_commit.commitment().digest(),
@@ -1218,10 +1211,9 @@
         <span class="kw">let </span>commit = <span class="self">Self</span>::poly_commits_hash(common.poly_commits.iter())<span class="question-mark">?</span>;
         <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)<span class="question-mark">?</span>;
 
-        <span class="comment">// Compute aggregate polynomial
-        // as a pseudorandom linear combo of polynomials
-        // via evaluation of the polynomial whose coefficients are polynomials
-        // and whose input point is the pseudorandom scalar.
+        <span class="comment">// Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
+        // evaluation of the polynomial whose coefficients are polynomials and whose
+        // input point is the pseudorandom scalar.
         </span><span class="kw">let </span>aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
@@ -1229,7 +1221,7 @@
             <span class="string">&quot;compute aggregate proofs for {} storage nodes&quot;</span>,
             <span class="self">self</span>.num_storage_nodes
         ));
-        <span class="kw">let </span>aggregate_proofs = P::multi_open_rou_proofs(
+        <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
             <span class="kw-2">&amp;</span>aggregate_poly,
             <span class="self">self</span>.num_storage_nodes,
@@ -1249,7 +1241,7 @@
                     evals,
                     aggregate_proof,
                     evals_proof: all_evals_commit
-                        .lookup(V::Index::from(index <span class="kw">as </span>u64))
+                        .lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(index <span class="kw">as </span>u64))
                         .expect_ok()
                         .map_err(vid)<span class="question-mark">?
                         </span>.<span class="number">1</span>,
@@ -1293,9 +1285,9 @@
         }
 
         <span class="comment">// verify eval proof
-        </span><span class="kw">if </span>V::verify(
+        </span><span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
             common.all_evals_digest,
-            <span class="kw-2">&amp;</span>V::Index::from(share.index <span class="kw">as </span>u64),
+            <span class="kw-2">&amp;</span>KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(share.index <span class="kw">as </span>u64),
             <span class="kw-2">&amp;</span>share.evals_proof,
         )
         .map_err(vid)<span class="question-mark">?
@@ -1311,7 +1303,7 @@
         // via evaluation of the polynomial whose coefficients are
         // [commitments|evaluations] and whose input point is the pseudorandom
         // scalar.
-        </span><span class="kw">let </span>aggregate_poly_commit = P::Commitment::from(
+        </span><span class="kw">let </span>aggregate_poly_commit = KzgCommit::&lt;E&gt;::from(
             polynomial_eval(
                 common
                     .poly_commits
@@ -1325,7 +1317,7 @@
             polynomial_eval(share.evals.iter().map(FieldMultiplier), pseudorandom_scalar);
 
         <span class="comment">// verify aggregate proof
-        </span><span class="prelude-val">Ok</span>(P::verify(
+        </span><span class="prelude-val">Ok</span>(UnivariateKzgPCS::verify(
             <span class="kw-2">&amp;</span><span class="self">self</span>.vk,
             <span class="kw-2">&amp;</span>aggregate_poly_commit,
             <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain.element(share.index),
@@ -1391,22 +1383,15 @@
     }
 }
 
-<span class="kw">impl</span>&lt;P, T, H, V&gt; GenericAdvz&lt;P, T, H, V&gt;
+<span class="kw">impl</span>&lt;E, H&gt; Advz&lt;E, H&gt;
 <span class="kw">where
-    </span>P: UnivariatePCS&lt;Point = &lt;P <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Evaluation&gt;,
-    P::Evaluation: PrimeField,
-    P::Polynomial: DenseUVPolynomial&lt;P::Evaluation&gt;,
-    P::Commitment: From&lt;T&gt; + AsRef&lt;T&gt;,
-    T: AffineRepr&lt;ScalarField = P::Evaluation&gt;,
-    H: Digest + DynDigest + Default + Clone + Write,
-    V: MerkleTreeScheme&lt;Element = Vec&lt;P::Evaluation&gt;&gt;,
-    V::MembershipProof: Sync + Debug, <span class="comment">/* TODO https://github.com/EspressoSystems/jellyfish/issues/253 */
-    </span>V::Index: From&lt;u64&gt;,
+    </span>E: Pairing,
+    H: HasherDigest,
 {
     <span class="kw">fn </span>pseudorandom_scalar(
         common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
         commit: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit,
-    ) -&gt; VidResult&lt;P::Evaluation&gt; {
+    ) -&gt; VidResult&lt;KzgEval&lt;E&gt;&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
         commit.serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher).map_err(vid)<span class="question-mark">?</span>;
         common
@@ -1415,25 +1400,25 @@
             .map_err(vid)<span class="question-mark">?</span>;
 
         <span class="comment">// Notes on hash-to-field:
-        // - Can&#39;t use `Field::from_random_bytes` because it&#39;s fallible (in what sense
-        //   is it from &quot;random&quot; bytes?!)
-        // - `HashToField` does not expose an incremental API (ie. `update`) so use an
-        //   ordinary hasher and pipe `hasher.finalize()` through `hash_to_field`
-        //   (sheesh!)
-        </span><span class="kw">const </span>HASH_TO_FIELD_DOMAIN_SEP: <span class="kw-2">&amp;</span>[u8; <span class="number">4</span>] = <span class="string">b&quot;rick&quot;</span>;
-        <span class="kw">let </span>hasher_to_field =
-            &lt;DefaultFieldHasher&lt;H&gt; <span class="kw">as </span>HashToField&lt;P::Evaluation&gt;&gt;::new(HASH_TO_FIELD_DOMAIN_SEP);
-        <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>hasher_to_field
-            .hash_to_field(<span class="kw-2">&amp;</span>hasher.finalize(), <span class="number">1</span>)
-            .first()
-            .ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;hash_to_field output is empty&quot;</span>))
-            .map_err(vid)<span class="question-mark">?</span>)
+        // - Can&#39;t use `Field::from_random_bytes` because it&#39;s fallible. (In what sense
+        //   is it from &quot;random&quot; bytes?!). This despite the docs explicitly say: &quot;This
+        //   function is primarily intended for sampling random field elements from a
+        //   hash-function or RNG output.&quot;
+        // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces
+        //   us to add additional trait bounds `Clone + Default + DynDigest` everywhere.
+        //   Also, `HashToField` does not expose an incremental API (ie. `update`) so we
+        //   would need to use an ordinary hasher and pipe `hasher.finalize()` through
+        //   `hash_to_field`. (Ugh!)
+        // - We don&#39;t need the resulting field element to be cryptographically
+        //   indistinguishable from uniformly random. We only need it to be
+        //   unpredictable. So it suffices to use
+        </span><span class="prelude-val">Ok</span>(PrimeField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>hasher.finalize()))
     }
 
-    <span class="kw">fn </span>polynomial&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coeffs: I) -&gt; P::Polynomial
+    <span class="kw">fn </span>polynomial&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coeffs: I) -&gt; KzgPolynomial&lt;E&gt;
     <span class="kw">where
         </span>I: Iterator,
-        I::Item: Borrow&lt;P::Evaluation&gt;,
+        I::Item: Borrow&lt;KzgEval&lt;E&gt;&gt;,
     {
         <span class="comment">// TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
@@ -1456,7 +1441,7 @@
     <span class="kw">fn </span>poly_commits_hash&lt;I&gt;(poly_commits: I) -&gt; VidResult&lt;&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit&gt;
     <span class="kw">where
         </span>I: Iterator,
-        I::Item: Borrow&lt;P::Commitment&gt;,
+        I::Item: Borrow&lt;KzgCommit&lt;E&gt;&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
         <span class="kw">for </span>poly_commit <span class="kw">in </span>poly_commits {
@@ -1469,37 +1454,7 @@
     }
 }
 
-<span class="comment">// `From` impls for `VidError`
-//
-// # Goal
-// `anyhow::Error` has the property that `?` magically coerces the error into
-// `anyhow::Error`. I want the same property for `VidError`.
-// I don&#39;t know how to achieve this without the following boilerplate.
-//
-// # Boilerplate
-// I want to coerce any error `E` into `VidError::Internal` similar to
-// `anyhow::Error`. Unfortunately, I need to manually impl `From&lt;E&gt; for
-// VidError` for each `E`. Can&#39;t do a generic impl because it conflicts with
-// `impl&lt;T&gt; From&lt;T&gt; for T` in core.
-// impl From&lt;crate::errors::PrimitivesError&gt; for VidError {
-//     fn from(value: crate::errors::PrimitivesError) -&gt; Self {
-//         Self::Internal(value.into())
-//     }
-// }
-
-// impl From&lt;crate::pcs::prelude::PCSError&gt; for VidError {
-//     fn from(value: crate::pcs::prelude::PCSError) -&gt; Self {
-//         Self::Internal(value.into())
-//     }
-// }
-
-// impl From&lt;ark_serialize::SerializationError&gt; for VidError {
-//     fn from(value: ark_serialize::SerializationError) -&gt; Self {
-//         Self::Internal(value.into())
-//     }
-// }
-
-</span><span class="doccomment">/// Evaluate a generalized polynomial at a given point using Horner&#39;s method.
+<span class="doccomment">/// Evaluate a generalized polynomial at a given point using Horner&#39;s method.
 ///
 /// Coefficients can be anything that can be multiplied by a point
 /// and such that the result of such multiplications can be added.
@@ -1585,6 +1540,19 @@
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">20</span>, <span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let _ </span>= advz.disperse(<span class="kw-2">&amp;</span>payload_random);
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>commit_only_timer() {
+        <span class="comment">// run with &#39;print-trace&#39; feature to see timer output
+        </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+        <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>advz =
+            Advz::&lt;Bls12_381, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">20</span>, <span class="kw-2">&amp;mut </span>rng);
+
+        <span class="kw">let _ </span>= advz.commit_only(<span class="kw-2">&amp;</span>payload_random);
     }
 
     <span class="attr">#[test]
