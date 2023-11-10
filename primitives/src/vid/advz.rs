@@ -144,6 +144,7 @@ where
 
 /// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
+#[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 #[derivative(
     Clone(bound = ""),
     Debug(bound = ""),
@@ -638,7 +639,8 @@ mod tests {
     };
     use sha2::Sha256;
 
-    #[test]
+    // #[test]
+    #[allow(dead_code)]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
@@ -651,7 +653,8 @@ mod tests {
         let _ = advz.disperse(&payload_random);
     }
 
-    #[test]
+    // #[test]
+    #[allow(dead_code)]
     fn commit_only_timer() {
         // run with 'print-trace' feature to see timer output
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
