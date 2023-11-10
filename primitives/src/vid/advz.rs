@@ -144,6 +144,7 @@ where
 
 /// The [`VidScheme::Share`] type for [`Advz`].
 #[derive(Derivative, Deserialize, Serialize)]
+#[serde(bound = "Output<H>: Serialize + for<'a> Deserialize<'a>")]
 #[derivative(
     Clone(bound = ""),
     Debug(bound = ""),
