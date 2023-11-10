@@ -23,7 +23,7 @@ pub struct UnivariateUniversalParams<E: Pairing> {
     pub h: E::G2Affine,
     /// \beta times the above generator of G2.
     pub beta_h: E::G2Affine,
-    /// \beta powers of the generator h of G2
+    /// powers of \beta time the generator h of G2
     pub powers_of_h: Vec<E::G2Affine>,
 }
 

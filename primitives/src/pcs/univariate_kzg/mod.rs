@@ -406,7 +406,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
     ) -> Result<bool, PCSError> {
         if points.is_empty() {
             return Err(PCSError::InvalidParameters(
-                "no point to evaluate and open".to_string(),
+                "no evaluation to check".to_string(),
             ));
         }
         if points.len() != values.len() {
@@ -450,7 +450,6 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         let (num_leading_zeros, vanish_poly_coeffs) =
             skip_leading_zeros_and_convert_to_bigints(&vanish_poly);
 
-        // TODO: we need the real powers of h
         let vanish_cm: E::G2Affine = E::G2::msm_bigint(
             &srs.borrow().powers_of_h[num_leading_zeros..],
             &vanish_poly_coeffs,
