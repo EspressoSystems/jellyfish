@@ -424,6 +424,13 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 values.len(),
             )));
         }
+        if srs.borrow().powers_of_h.len() < points.len() + 1 {
+            return Err(PCSError::InvalidParameters(format!(
+                "the number of powers of beta times h {} in SRS <= the number of evaluation points {}",
+                srs.borrow().powers_of_h.len(),
+                points.len(),
+            )));
+        }
 
         let check_time = start_timer!(|| "Checking evaluations");
 
