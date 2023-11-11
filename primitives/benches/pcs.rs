@@ -20,8 +20,8 @@ use jf_primitives::pcs::{
 };
 use jf_utils::test_rng;
 
-const MIN_NUM_VARS: usize = 10;
-const MAX_NUM_VARS: usize = 20;
+const MIN_NUM_VARS: usize = 12;
+const MAX_NUM_VARS: usize = 22;
 
 /// Measure the time cost of {commit/open/verify} across a range of num_vars
 pub fn bench_pcs_method<E: Pairing>(
