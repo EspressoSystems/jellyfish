@@ -41,7 +41,13 @@ pub fn bench_pcs_method<E: Pairing>(
             BenchmarkId::from_parameter(num_vars),
             &num_vars,
             |b, num_vars| {
-                b.iter(|| method(&pp, *num_vars));
+                b.iter_custom(|i| {
+                    let mut time = Duration::from_nanos(0);
+                    for _ in 0..i {
+                        time += method(&pp, *num_vars);
+                    }
+                    time
+                });
             },
         );
     }
