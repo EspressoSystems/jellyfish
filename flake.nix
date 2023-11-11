@@ -37,7 +37,8 @@
         cargo-with-nightly = pkgs.writeShellScriptBin "cargo" ''
           if [[ "$1" == "+nightly" ]]; then
             shift
-            exec env PATH=${nightlyToolchain}/bin:$PATH cargo "$@"
+            # Prepend nightly toolchain directory containing cargo, rustc, etc.
+            exec env PATH="${nightlyToolchain}/bin:$PATH" cargo "$@"
           fi
           exec ${stableToolchain}/bin/cargo "$@"
         '';
