@@ -48,7 +48,7 @@ pub trait Vrf {
     // FIXME: the API looks a bit strange when the default generator is used.
     // For example:
     //   `S::param_gen::<StdRng>(None)`
-    // wheere `StdRng` is redundent.
+    // wheere `StdRng` is redundant.
     fn param_gen<R: CryptoRng + RngCore>(
         &self,
         prng: Option<&mut R>,
