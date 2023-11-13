@@ -127,7 +127,7 @@
     <span class="kw">fn </span>from(e: BLST_ERROR) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>e {
             BLST_ERROR::BLST_SUCCESS =&gt; {
-                <span class="self">Self</span>::InternalError(<span class="string">&quot;Expecting an error, but got a sucess.&quot;</span>.to_string())
+                <span class="self">Self</span>::InternalError(<span class="string">&quot;Expecting an error, but got a success.&quot;</span>.to_string())
             },
             BLST_ERROR::BLST_VERIFY_FAIL =&gt; <span class="self">Self</span>::VerificationError(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>)),
             <span class="kw">_ </span>=&gt; <span class="self">Self</span>::ParameterError(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>)),

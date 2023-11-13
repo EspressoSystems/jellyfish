@@ -508,7 +508,7 @@
 
     <span class="doccomment">/// Absorb an input into the sponge.
     /// This function will absorb the entire input, in chunks of `RATE`,
-    /// even if the input lenght is not a multiple of `RATE`.
+    /// even if the input length is not a multiple of `RATE`.
     </span><span class="kw">fn </span>absorb(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: <span class="kw-2">&amp;</span><span class="kw">impl </span>Absorb) {
         <span class="kw">let </span>input_field_elements = input.to_sponge_field_elements_as_vec();
 

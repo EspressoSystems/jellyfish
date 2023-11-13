@@ -532,7 +532,7 @@
 //! let (sk1, pk1) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b&quot;banking&quot;.as_ref())?;
 //! let (sk2, pk2) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b&quot;legal&quot;.as_ref())?;
 //!
-//! let msg = &quot;I authorize transfering 10 dollars to Alice&quot;;
+//! let msg = &quot;I authorize transferring 10 dollars to Alice&quot;;
 //! let sig = BLSSignatureScheme::sign(&amp;pp, &amp;sk1, &amp;msg, &amp;mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&amp;pp, &amp;pk1, &amp;msg, &amp;sig).is_ok());
 //!

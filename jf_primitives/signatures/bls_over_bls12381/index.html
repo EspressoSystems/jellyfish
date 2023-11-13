@@ -40,7 +40,7 @@ hasher.update(<span class="string">b&quot;MY-BLS-SIG-KEYGEN-SALT-DOM-SEP&quot;</
 <span class="kw">let </span>(sk1, pk1) = BLSSignatureScheme::key_gen_v5(<span class="kw-2">&amp;</span>ikm, <span class="kw-2">&amp;</span>salt, <span class="string">b&quot;banking&quot;</span>.as_ref())<span class="question-mark">?</span>;
 <span class="kw">let </span>(sk2, pk2) = BLSSignatureScheme::key_gen_v5(<span class="kw-2">&amp;</span>ikm, <span class="kw-2">&amp;</span>salt, <span class="string">b&quot;legal&quot;</span>.as_ref())<span class="question-mark">?</span>;
 
-<span class="kw">let </span>msg = <span class="string">&quot;I authorize transfering 10 dollars to Alice&quot;</span>;
+<span class="kw">let </span>msg = <span class="string">&quot;I authorize transferring 10 dollars to Alice&quot;</span>;
 <span class="kw">let </span>sig = BLSSignatureScheme::sign(<span class="kw-2">&amp;</span>pp, <span class="kw-2">&amp;</span>sk1, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;mut </span>rng)<span class="question-mark">?</span>;
 <span class="macro">assert!</span>(BLSSignatureScheme::verify(<span class="kw-2">&amp;</span>pp, <span class="kw-2">&amp;</span>pk1, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>sig).is_ok());
 
