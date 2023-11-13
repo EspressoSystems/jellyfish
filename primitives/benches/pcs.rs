@@ -4,8 +4,6 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![cfg(feature = "test-srs")]
-
 use std::time::{Duration, Instant};
 
 use ark_bls12_381::Bls12_381;

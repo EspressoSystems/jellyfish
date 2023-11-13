@@ -73,11 +73,13 @@ harness = false
 [[bench]]
 name = "pcs"
 harness = false
+required-features = ["test-srs"]
 
 [[bench]]
 name = "pcs-size"
 path = "benches/pcs_size.rs"
 harness = false
+required-features = ["test-srs"]
 
 [[bench]]
 name = "reed-solomon"
@@ -87,6 +89,7 @@ harness = false
 [[bench]]
 name = "advz"
 harness = false
+required-features = ["test-srs"]
 
 [[bench]]
 name = "minroot"
