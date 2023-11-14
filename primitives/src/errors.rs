@@ -58,7 +58,7 @@ impl From<BLST_ERROR> for PrimitivesError {
     fn from(e: BLST_ERROR) -> Self {
         match e {
             BLST_ERROR::BLST_SUCCESS => {
-                Self::InternalError("Expecting an error, but got a sucess.".to_string())
+                Self::InternalError("Expecting an error, but got a success.".to_string())
             },
             BLST_ERROR::BLST_VERIFY_FAIL => Self::VerificationError(format!("{e:?}")),
             _ => Self::ParameterError(format!("{e:?}")),

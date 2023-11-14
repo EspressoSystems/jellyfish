@@ -160,7 +160,7 @@ impl<T: RescueParameter + PrimeField, const RATE: usize> CryptographicSponge
 
     /// Absorb an input into the sponge.
     /// This function will absorb the entire input, in chunks of `RATE`,
-    /// even if the input lenght is not a multiple of `RATE`.
+    /// even if the input length is not a multiple of `RATE`.
     fn absorb(&mut self, input: &impl Absorb) {
         let input_field_elements = input.to_sponge_field_elements_as_vec();
 
