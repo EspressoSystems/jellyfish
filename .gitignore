@@ -11,3 +11,7 @@ Cargo.lock
 # Test coverage (grcov)
 default.profraw
 /.pre-commit-config.yaml
+
+# benchmark reports placed here for some reason:
+# https://doc.rust-lang.org/cargo/commands/cargo-bench.html#working-directory-of-benchmarks
+/primitives/target

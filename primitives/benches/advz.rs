@@ -4,7 +4,6 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![cfg(feature = "test-srs")]
 use ark_bls12_381::Bls12_381;
 use ark_bn254::Bn254;
 use ark_ec::pairing::Pairing;
@@ -29,12 +28,17 @@ where
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     // play with these items
-    const RATE: usize = 4; // ratio of num_storage_nodes : polynomial_degree
-    let storage_node_counts = [600, 700, 800, 900, 1000];
+    //
+    // CODE_RATE is merely a convenient way to automatically choose polynomial
+    // degree as a function of storage node count.
+    // If desired, you could set polynomial degrees independent of storage node
+    // count.
+    const CODE_RATE: usize = 4; // ratio of num_storage_nodes : polynomial_degree
+    let storage_node_counts = [512, 1024];
     let payload_byte_lens = [1 * MB];
 
     // more items as a function of the above
-    let poly_degrees_iter = storage_node_counts.iter().map(|c| c / RATE);
+    let poly_degrees_iter = storage_node_counts.iter().map(|c| c / CODE_RATE);
     let supported_degree = poly_degrees_iter.clone().max().unwrap();
     let vid_sizes_iter = poly_degrees_iter.zip(storage_node_counts);
     let mut rng = jf_utils::test_rng();
@@ -47,8 +51,11 @@ where
     // run all benches for each payload_byte_lens
     for len in payload_byte_lens {
         // random payload data
-        let mut payload_bytes = vec![0u8; len];
-        rng.fill_bytes(&mut payload_bytes);
+        let payload_bytes = {
+            let mut payload_bytes = vec![0u8; len];
+            rng.fill_bytes(&mut payload_bytes);
+            payload_bytes
+        };
 
         let benchmark_group_name =
             |op_name| format!("advz_{}_{}_{}KB", pairing_name, op_name, len / KB);
@@ -89,13 +96,17 @@ where
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
-            let (shares, common) = (disperse.shares, disperse.common);
+            let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
                 |b, _| {
                     // verify only the 0th share
-                    b.iter(|| advz.verify_share(&shares[0], &common).unwrap().unwrap());
+                    b.iter(|| {
+                        advz.verify_share(&shares[0], &common, &commit)
+                            .unwrap()
+                            .unwrap()
+                    });
                 },
             );
         }
@@ -130,4 +141,5 @@ fn advz_main(c: &mut Criterion) {
 }
 
 criterion_group!(name = benches; config = Criterion::default().sample_size(10); targets = advz_main);
+
 criterion_main!(benches);

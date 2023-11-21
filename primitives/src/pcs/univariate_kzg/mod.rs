@@ -41,7 +41,7 @@ use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierPa
 pub(crate) mod srs;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
-pub struct UnivariateKzgPCS<E: Pairing> {
+pub struct UnivariateKzgPCS<E> {
     #[doc(hidden)]
     phantom: PhantomData<E>,
 }
@@ -92,6 +92,8 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError> {
         let prover_param = prover_param.borrow();
+
+        #[cfg(feature = "kzg-print-trace")]
         let commit_time =
             start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
 
@@ -105,14 +107,20 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
-        let msm_time = start_timer!(|| "MSM to compute commitment to plaintext poly");
+        #[cfg(feature = "kzg-print-trace")]
+        let msm_time = start_timer!(|| "MSM to compute commitment to plaintext
+        poly");
+
         let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
             &plain_coeffs,
         )
         .into_affine();
+
+        #[cfg(feature = "kzg-print-trace")]
         end_timer!(msm_time);
 
+        #[cfg(feature = "kzg-print-trace")]
         end_timer!(commit_time);
         Ok(Commitment(commitment))
     }
@@ -405,9 +413,15 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial
 }
 
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
-    let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to bigints");
+    #[cfg(feature = "kzg-print-trace")]
+    let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to
+    bigints");
+
     let coeffs = p.iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
+
+    #[cfg(feature = "kzg-print-trace")]
     end_timer!(to_bigint_time);
+
     coeffs
 }
 

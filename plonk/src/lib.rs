@@ -23,5 +23,5 @@ pub mod transcript;
 
 pub use jf_relation::PlonkType;
 
-#[cfg(feature = "test_apis")]
+#[cfg(feature = "test-apis")]
 pub mod testing_apis;
