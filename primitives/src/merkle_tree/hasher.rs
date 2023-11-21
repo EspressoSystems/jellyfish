@@ -37,7 +37,7 @@
 
 // clippy is freaking out about `HasherNode` and this is the only thing I
 // could do to stop it
-#![allow(clippy::incorrect_partial_ord_impl_on_ord_type)]
+#![allow(clippy::non_canonical_partial_ord_impl)]
 
 use crate::errors::PrimitivesError;
 

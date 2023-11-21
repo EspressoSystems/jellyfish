@@ -311,17 +311,15 @@ impl<E: Pairing> Prover<E> {
         );
         let mut lin_poly = r_circ + r_perm;
         // compute Plookup contribution if support lookup
-        let r_lookup = if plookup_evals.is_some() {
-            Some(self.compute_lin_poly_plookup_contribution(
+        let r_lookup = plookup_evals.map(|plookup_evals| {
+            self.compute_lin_poly_plookup_contribution(
                 pk,
                 challenges,
                 &poly_evals.wires_evals,
-                plookup_evals.as_ref().unwrap(),
+                plookup_evals,
                 &online_oracles.plookup_oracles,
-            ))
-        } else {
-            None
-        };
+            )
+        });
         if let Some(lookup_poly) = r_lookup {
             lin_poly = lin_poly + lookup_poly;
         }
