@@ -8,11 +8,17 @@
 //! to make and verify a proof of correctness of an arbitrary sub-slice of data
 //! from a payload.
 
+use core::fmt::Debug;
+
 use super::{VidResult, VidScheme};
 use ark_std::ops::Range;
+use serde::{de::DeserializeOwned, Serialize};
 
 /// Payload proof functionality for [`VidScheme`].
-pub trait PayloadProver<PROOF>: VidScheme {
+pub trait PayloadProver<PROOF>: VidScheme
+where
+    PROOF: Clone + Debug + Eq + PartialEq + Serialize + DeserializeOwned,
+{
     /// Compute a proof for a subslice of payload data.
     ///
     /// # Arguments

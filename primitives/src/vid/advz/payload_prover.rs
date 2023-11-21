@@ -30,14 +30,20 @@ use crate::{
 };
 use ark_ec::pairing::Pairing;
 use ark_poly::EvaluationDomain;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{format, ops::Range};
+use jf_utils::canonical;
+use serde::{Deserialize, Serialize};
 
 /// A proof intended for use on small payload subslices.
 ///
 /// KZG batch proofs and accompanying metadata.
 ///
 /// TODO use batch proof instead of `Vec<P>` <https://github.com/EspressoSystems/jellyfish/issues/387>
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(bound = "P: CanonicalSerialize + CanonicalDeserialize")]
 pub struct SmallRangeProof<P> {
+    #[serde(with = "canonical")]
     proofs: Vec<P>,
     prefix_bytes: Vec<u8>,
     suffix_bytes: Vec<u8>,
@@ -47,8 +53,12 @@ pub struct SmallRangeProof<P> {
 /// A proof intended for use on large payload subslices.
 ///
 /// Metadata needed to recover a KZG commitment.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(bound = "F: CanonicalSerialize + CanonicalDeserialize")]
 pub struct LargeRangeProof<F> {
+    #[serde(with = "canonical")]
     prefix_elems: Vec<F>,
+    #[serde(with = "canonical")]
     suffix_elems: Vec<F>,
     prefix_bytes: Vec<u8>,
     suffix_bytes: Vec<u8>,
