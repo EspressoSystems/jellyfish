@@ -392,7 +392,7 @@ mod tests {
         payload_prover::PayloadProver,
     };
     use ark_bls12_381::Bls12_381;
-    use ark_std::{ops::Range, println, rand::Rng};
+    use ark_std::{ops::Range, print, println, rand::Rng};
     use sha2::Sha256;
 
     fn correctness_generic<E, H>()
@@ -402,18 +402,21 @@ mod tests {
     {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
-        let num_polys = 4;
+        let num_polys = 3;
 
         // more items as a function of the above
         let payload_elems_len = num_polys * payload_chunk_size;
-        let payload_bytes_len = payload_elems_len * elem_byte_capacity::<E::ScalarField>();
+        let payload_bytes_base_len = payload_elems_len * elem_byte_capacity::<E::ScalarField>();
         let poly_bytes_len = payload_chunk_size * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
-        let payload = init_random_payload(payload_bytes_len, &mut rng);
         let srs = init_srs(payload_elems_len, &mut rng);
-
         let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
-        let d = advz.disperse(&payload).unwrap();
+
+        // TEST: different payload byte lengths
+        let payload_byte_len_noise_cases = vec![0, poly_bytes_len / 2, poly_bytes_len - 1];
+        let payload_len_cases = payload_byte_len_noise_cases
+            .into_iter()
+            .map(|l| payload_bytes_base_len - l);
 
         // TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (polynomial, start, len)
@@ -464,35 +467,56 @@ mod tests {
         };
         let all_cases = [(edge_cases, "edge"), (random_cases, "rand")];
 
-        for poly in 0..num_polys {
-            let poly_offset = poly * poly_bytes_len;
+        for payload_len_case in payload_len_cases {
+            let payload = init_random_payload(payload_len_case, &mut rng);
+            let d = advz.disperse(&payload).unwrap();
+            println!("payload byte len case: {}", payload.len());
 
-            for cases in all_cases.iter() {
-                for range in cases.0.iter() {
-                    let range = Range {
-                        start: range.start + poly_offset,
-                        end: range.end + poly_offset,
-                    };
-                    println!("poly {} {} case: {:?}", poly, cases.1, range);
+            for poly in 0..num_polys {
+                let poly_offset = poly * poly_bytes_len;
 
-                    let stmt = Statement {
-                        payload_subslice: &payload[range.clone()],
-                        range: range.clone(),
-                        commit: &d.commit,
-                        common: &d.common,
-                    };
+                for cases in all_cases.iter() {
+                    for range in cases.0.iter() {
+                        let range = Range {
+                            start: range.start + poly_offset,
+                            end: range.end + poly_offset,
+                        };
+                        print!("poly {} {} case: {:?}", poly, cases.1, range);
 
-                    let small_range_proof: SmallRangeProof<_> =
-                        advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt.clone(), &small_range_proof)
-                        .unwrap()
-                        .unwrap();
+                        // ensure range fits inside payload
+                        let range = if range.start >= payload.len() {
+                            println!(" outside payload len {}, skipping", payload.len());
+                            continue;
+                        } else if range.end > payload.len() {
+                            println!(" clamped to payload len {}", payload.len());
+                            Range {
+                                end: payload.len(),
+                                ..range
+                            }
+                        } else {
+                            println!();
+                            range
+                        };
 
-                    let large_range_proof: LargeRangeProof<_> =
-                        advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt, &large_range_proof)
-                        .unwrap()
-                        .unwrap();
+                        let stmt = Statement {
+                            payload_subslice: &payload[range.clone()],
+                            range: range.clone(),
+                            commit: &d.commit,
+                            common: &d.common,
+                        };
+
+                        let small_range_proof: SmallRangeProof<_> =
+                            advz.payload_proof(&payload, range.clone()).unwrap();
+                        advz.payload_verify(stmt.clone(), &small_range_proof)
+                            .unwrap()
+                            .unwrap();
+
+                        let large_range_proof: LargeRangeProof<_> =
+                            advz.payload_proof(&payload, range.clone()).unwrap();
+                        advz.payload_verify(stmt, &large_range_proof)
+                            .unwrap()
+                            .unwrap();
+                    }
                 }
             }
         }
