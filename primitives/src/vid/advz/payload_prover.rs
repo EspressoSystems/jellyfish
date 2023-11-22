@@ -86,7 +86,7 @@ where
         let range_poly = self.range_elem_to_poly(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
-        let range_elem_byte = self.range_elem_to_byte(&range_elem);
+        let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
 
         check_range_poly(&range_poly)?;
 
@@ -110,16 +110,10 @@ where
         let (proofs, _evals) =
             UnivariateKzgPCS::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
-        // ensure suffix_bytes is inside payload
-        let suffix_range = Range {
-            start: range.end,
-            end: ark_std::cmp::min(range_elem_byte.end, payload.len()),
-        };
-
         Ok(SmallRangeProof {
             proofs,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
-            suffix_bytes: payload[suffix_range].to_vec(),
+            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
             chunk_range: range,
         })
     }
@@ -204,7 +198,7 @@ where
         let range_poly = self.range_elem_to_poly(&range_elem);
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
-        let range_elem_byte = self.range_elem_to_byte(&range_elem);
+        let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
 
         check_range_poly(&range_poly)?;
 
@@ -215,17 +209,11 @@ where
         let prefix_elems: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix_elems: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
-        // ensure suffix_bytes is inside payload
-        let suffix_bytes_range = Range {
-            start: range.end,
-            end: ark_std::cmp::min(range_elem_byte.end, payload.len()),
-        };
-
         Ok(LargeRangeProof {
             prefix_elems,
             suffix_elems,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
-            suffix_bytes: payload[suffix_bytes_range].to_vec(),
+            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
             chunk_range: range,
         })
     }
@@ -289,6 +277,13 @@ where
     }
     fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
         range_refine(range, elem_byte_capacity::<KzgEval<E>>())
+    }
+    fn range_elem_to_byte_clamped(&self, range: &Range<usize>, len: usize) -> Range<usize> {
+        let result = self.range_elem_to_byte(range);
+        Range {
+            end: ark_std::cmp::min(result.end, len),
+            ..result
+        }
     }
     fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, self.payload_chunk_size)
