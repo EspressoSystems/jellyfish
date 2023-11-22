@@ -503,6 +503,37 @@
 <a href="#503" id="503">503</a>
 <a href="#504" id="504">504</a>
 <a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -591,7 +622,7 @@
         <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
         <span class="kw">let </span>start_namespace_byte = <span class="self">self</span>.index_poly_to_byte(range_poly.start);
         <span class="kw">let </span>offset_elem = range_elem.start - <span class="self">self</span>.index_byte_to_elem(start_namespace_byte);
-        <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte(<span class="kw-2">&amp;</span>range_elem);
+        <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
 
         check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
 
@@ -703,7 +734,7 @@
         <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
         <span class="kw">let </span>start_namespace_byte = <span class="self">self</span>.index_poly_to_byte(range_poly.start);
         <span class="kw">let </span>offset_elem = range_elem.start - <span class="self">self</span>.index_byte_to_elem(start_namespace_byte);
-        <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte(<span class="kw-2">&amp;</span>range_elem);
+        <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
 
         check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
 
@@ -711,12 +742,12 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>elems_iter =
             bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload[start_namespace_byte..].iter())
                 .take(<span class="self">self</span>.payload_chunk_size);
-        <span class="kw">let </span>prefix: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.by_ref().take(offset_elem).collect();
-        <span class="kw">let </span>suffix: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.skip(range_elem.len()).collect();
+        <span class="kw">let </span>prefix_elems: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.by_ref().take(offset_elem).collect();
+        <span class="kw">let </span>suffix_elems: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.skip(range_elem.len()).collect();
 
         <span class="prelude-val">Ok</span>(LargeRangeProof {
-            prefix_elems: prefix,
-            suffix_elems: suffix,
+            prefix_elems,
+            suffix_elems,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
             suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
             chunk_range: range,
@@ -782,6 +813,13 @@
     }
     <span class="kw">fn </span>range_elem_to_byte(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
         range_refine(range, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
+    }
+    <span class="kw">fn </span>range_elem_to_byte_clamped(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, len: usize) -&gt; Range&lt;usize&gt; {
+        <span class="kw">let </span>result = <span class="self">self</span>.range_elem_to_byte(range);
+        Range {
+            end: ark_std::cmp::min(result.end, len),
+            ..result
+        }
     }
     <span class="kw">fn </span>range_elem_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
         range_coarsen(range, <span class="self">self</span>.payload_chunk_size)
@@ -897,7 +935,7 @@
         payload_prover::PayloadProver,
     };
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
-    <span class="kw">use </span>ark_std::{ops::Range, println, rand::Rng};
+    <span class="kw">use </span>ark_std::{ops::Range, print, println, rand::Rng};
     <span class="kw">use </span>sha2::Sha256;
 
     <span class="kw">fn </span>correctness_generic&lt;E, H&gt;()
@@ -907,18 +945,21 @@
     {
         <span class="comment">// play with these items
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
-        <span class="kw">let </span>num_polys = <span class="number">4</span>;
+        <span class="kw">let </span>num_polys = <span class="number">3</span>;
 
         <span class="comment">// more items as a function of the above
         </span><span class="kw">let </span>payload_elems_len = num_polys * payload_chunk_size;
-        <span class="kw">let </span>payload_bytes_len = payload_elems_len * elem_byte_capacity::&lt;E::ScalarField&gt;();
+        <span class="kw">let </span>payload_bytes_base_len = payload_elems_len * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span>poly_bytes_len = payload_chunk_size * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-        <span class="kw">let </span>payload = init_random_payload(payload_bytes_len, <span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>srs = init_srs(payload_elems_len, <span class="kw-2">&amp;mut </span>rng);
-
         <span class="kw">let </span>advz = Advz::&lt;E, H&gt;::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
-        <span class="kw">let </span>d = advz.disperse(<span class="kw-2">&amp;</span>payload).unwrap();
+
+        <span class="comment">// TEST: different payload byte lengths
+        </span><span class="kw">let </span>payload_byte_len_noise_cases = <span class="macro">vec!</span>[<span class="number">0</span>, poly_bytes_len / <span class="number">2</span>, poly_bytes_len - <span class="number">1</span>];
+        <span class="kw">let </span>payload_len_cases = payload_byte_len_noise_cases
+            .into_iter()
+            .map(|l| payload_bytes_base_len - l);
 
         <span class="comment">// TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (polynomial, start, len)
@@ -969,35 +1010,56 @@
         };
         <span class="kw">let </span>all_cases = [(edge_cases, <span class="string">&quot;edge&quot;</span>), (random_cases, <span class="string">&quot;rand&quot;</span>)];
 
-        <span class="kw">for </span>poly <span class="kw">in </span><span class="number">0</span>..num_polys {
-            <span class="kw">let </span>poly_offset = poly * poly_bytes_len;
+        <span class="kw">for </span>payload_len_case <span class="kw">in </span>payload_len_cases {
+            <span class="kw">let </span>payload = init_random_payload(payload_len_case, <span class="kw-2">&amp;mut </span>rng);
+            <span class="kw">let </span>d = advz.disperse(<span class="kw-2">&amp;</span>payload).unwrap();
+            <span class="macro">println!</span>(<span class="string">&quot;payload byte len case: {}&quot;</span>, payload.len());
 
-            <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
-                <span class="kw">for </span>range <span class="kw">in </span>cases.<span class="number">0</span>.iter() {
-                    <span class="kw">let </span>range = Range {
-                        start: range.start + poly_offset,
-                        end: range.end + poly_offset,
-                    };
-                    <span class="macro">println!</span>(<span class="string">&quot;poly {} {} case: {:?}&quot;</span>, poly, cases.<span class="number">1</span>, range);
+            <span class="kw">for </span>poly <span class="kw">in </span><span class="number">0</span>..num_polys {
+                <span class="kw">let </span>poly_offset = poly * poly_bytes_len;
 
-                    <span class="kw">let </span>stmt = Statement {
-                        payload_subslice: <span class="kw-2">&amp;</span>payload[range.clone()],
-                        range: range.clone(),
-                        commit: <span class="kw-2">&amp;</span>d.commit,
-                        common: <span class="kw-2">&amp;</span>d.common,
-                    };
+                <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
+                    <span class="kw">for </span>range <span class="kw">in </span>cases.<span class="number">0</span>.iter() {
+                        <span class="kw">let </span>range = Range {
+                            start: range.start + poly_offset,
+                            end: range.end + poly_offset,
+                        };
+                        <span class="macro">print!</span>(<span class="string">&quot;poly {} {} case: {:?}&quot;</span>, poly, cases.<span class="number">1</span>, range);
 
-                    <span class="kw">let </span>small_range_proof: SmallRangeProof&lt;<span class="kw">_</span>&gt; =
-                        advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt.clone(), <span class="kw-2">&amp;</span>small_range_proof)
-                        .unwrap()
-                        .unwrap();
+                        <span class="comment">// ensure range fits inside payload
+                        </span><span class="kw">let </span>range = <span class="kw">if </span>range.start &gt;= payload.len() {
+                            <span class="macro">println!</span>(<span class="string">&quot; outside payload len {}, skipping&quot;</span>, payload.len());
+                            <span class="kw">continue</span>;
+                        } <span class="kw">else if </span>range.end &gt; payload.len() {
+                            <span class="macro">println!</span>(<span class="string">&quot; clamped to payload len {}&quot;</span>, payload.len());
+                            Range {
+                                end: payload.len(),
+                                ..range
+                            }
+                        } <span class="kw">else </span>{
+                            <span class="macro">println!</span>();
+                            range
+                        };
 
-                    <span class="kw">let </span>large_range_proof: LargeRangeProof&lt;<span class="kw">_</span>&gt; =
-                        advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt, <span class="kw-2">&amp;</span>large_range_proof)
-                        .unwrap()
-                        .unwrap();
+                        <span class="kw">let </span>stmt = Statement {
+                            payload_subslice: <span class="kw-2">&amp;</span>payload[range.clone()],
+                            range: range.clone(),
+                            commit: <span class="kw-2">&amp;</span>d.commit,
+                            common: <span class="kw-2">&amp;</span>d.common,
+                        };
+
+                        <span class="kw">let </span>small_range_proof: SmallRangeProof&lt;<span class="kw">_</span>&gt; =
+                            advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
+                        advz.payload_verify(stmt.clone(), <span class="kw-2">&amp;</span>small_range_proof)
+                            .unwrap()
+                            .unwrap();
+
+                        <span class="kw">let </span>large_range_proof: LargeRangeProof&lt;<span class="kw">_</span>&gt; =
+                            advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
+                        advz.payload_verify(stmt, <span class="kw-2">&amp;</span>large_range_proof)
+                            .unwrap()
+                            .unwrap();
+                    }
                 }
             }
         }
