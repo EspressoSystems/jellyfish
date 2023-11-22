@@ -110,10 +110,16 @@ where
         let (proofs, _evals) =
             UnivariateKzgPCS::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
 
+        // ensure suffix_bytes is inside payload
+        let suffix_range = Range {
+            start: range.end,
+            end: ark_std::cmp::min(range_elem_byte.end, payload.len()),
+        };
+
         Ok(SmallRangeProof {
             proofs,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
-            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
+            suffix_bytes: payload[suffix_range].to_vec(),
             chunk_range: range,
         })
     }
@@ -206,14 +212,20 @@ where
         let mut elems_iter =
             bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
                 .take(self.payload_chunk_size);
-        let prefix: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
-        let suffix: Vec<_> = elems_iter.skip(range_elem.len()).collect();
+        let prefix_elems: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
+        let suffix_elems: Vec<_> = elems_iter.skip(range_elem.len()).collect();
+
+        // ensure suffix_bytes is inside payload
+        let suffix_bytes_range = Range {
+            start: range.end,
+            end: ark_std::cmp::min(range_elem_byte.end, payload.len()),
+        };
 
         Ok(LargeRangeProof {
-            prefix_elems: prefix,
-            suffix_elems: suffix,
+            prefix_elems,
+            suffix_elems,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
-            suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
+            suffix_bytes: payload[suffix_bytes_range].to_vec(),
             chunk_range: range,
         })
     }
