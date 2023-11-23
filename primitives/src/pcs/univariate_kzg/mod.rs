@@ -148,12 +148,18 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         polynomial: &Self::Polynomial,
         point: &Self::Point,
     ) -> Result<(Self::Proof, Self::Evaluation), PCSError> {
+        #[cfg(feature = "kzg-print-trace")]
         let open_time =
             start_timer!(|| format!("Opening polynomial of degree {}", polynomial.degree()));
+
         let divisor = Self::Polynomial::from_coefficients_vec(vec![-*point, E::ScalarField::one()]);
 
+        #[cfg(feature = "kzg-print-trace")]
         let witness_time = start_timer!(|| "Computing witness polynomial");
+
         let witness_polynomial = polynomial / &divisor;
+
+        #[cfg(feature = "kzg-print-trace")]
         end_timer!(witness_time);
 
         let (num_leading_zeros, witness_coeffs) =
@@ -169,7 +175,9 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         // https://github.com/EspressoSystems/jellyfish/issues/426
         let eval = polynomial.evaluate(point);
 
+        #[cfg(feature = "kzg-print-trace")]
         end_timer!(open_time);
+
         Ok((Self::Proof { proof }, eval))
     }
 
