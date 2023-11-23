@@ -18,8 +18,7 @@ use ark_ec::{
 };
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
-    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Polynomial,
-    Radix2EvaluationDomain,
+    univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
@@ -335,6 +334,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
     ) -> Result<Vec<Self::Proof>, PCSError> {
         #[cfg(feature = "parallel")]
         {
+            use ark_poly::EvaluationDomain;
             let prover_param = prover_param.borrow(); // needed for Send + Sync
 
             // We prefer use `.par_bridge()` instead of
