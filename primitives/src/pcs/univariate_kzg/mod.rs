@@ -18,7 +18,8 @@ use ark_ec::{
 };
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
-    univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
+    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Polynomial,
+    Radix2EvaluationDomain,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
@@ -164,6 +165,8 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         )
         .into_affine();
 
+        // TODO offer an `open()` that doesn't also evaluate
+        // https://github.com/EspressoSystems/jellyfish/issues/426
         let eval = polynomial.evaluate(point);
 
         end_timer!(open_time);
@@ -322,16 +325,44 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<Vec<Self::Proof>, PCSError> {
-        let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
-        let proofs: Vec<_> = h_poly
-            .batch_evaluate_rou(domain)?
-            .into_iter()
-            .take(num_points)
-            .map(|g| UnivariateKzgProof {
-                proof: g.into_affine(),
-            })
-            .collect();
-        Ok(proofs)
+        #[cfg(feature = "parallel")]
+        {
+            let prover_param = prover_param.borrow(); // needed for Send + Sync
+
+            // We prefer use `.par_bridge()` instead of
+            // `.collect::<Vec<_>>().par_iter()`.
+            // (It avoids an unnecessary `collect()`.)
+            // However, `par_iter` is guaranteed to preserve order,
+            // whereas `par_bridge` is not!
+            // https://github.com/rayon-rs/rayon/issues/551#issuecomment-882069261
+            // https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html
+            //
+            // We prefer to compute only the proof---not the evaluation.
+            // However, `Self::open()` returns both,
+            // so we throw away the eval via `.map(|r| r.0)`.
+            // https://github.com/EspressoSystems/jellyfish/issues/426
+            domain
+                .elements()
+                .take(num_points)
+                .collect::<Vec<_>>()
+                .par_iter()
+                .map(|point| Self::open(prover_param, polynomial, point).map(|r| r.0))
+                .collect()
+        }
+
+        #[cfg(not(feature = "parallel"))]
+        {
+            let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+            let proofs: Vec<_> = h_poly
+                .batch_evaluate_rou(domain)?
+                .into_iter()
+                .take(num_points)
+                .map(|g| UnivariateKzgProof {
+                    proof: g.into_affine(),
+                })
+                .collect();
+            Ok(proofs)
+        }
     }
 
     /// Compute the evaluations in [`Self::multi_open_rou()`].
