@@ -32,6 +32,7 @@ use ark_ec::pairing::Pairing;
 use ark_poly::EvaluationDomain;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{format, ops::Range};
+use itertools::Itertools;
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
 
@@ -84,31 +85,41 @@ where
         // index conversion
         let range_elem = self.range_byte_to_elem(&range);
         let range_poly = self.range_elem_to_poly(&range_elem);
-        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
-        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+        let start_poly_byte = self.index_poly_to_byte(range_poly.start);
+        let offset_elem = range_elem.start - self.index_byte_to_elem(start_poly_byte);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
+        let range_poly_byte = self.range_poly_to_byte_clamped(&range, payload.len());
 
-        check_range_poly(&range_poly)?;
-
-        // grab the polynomial that contains `range`
-        // TODO allow precomputation: https://github.com/EspressoSystems/jellyfish/issues/397
-        let polynomial = self.polynomial(
-            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
-                .take(self.payload_chunk_size),
-        );
+        // NEW
 
         // prepare list of input points
-        // perf: can't avoid use of `skip`
-        let points: Vec<_> = {
-            self.eval_domain
-                .elements()
-                .skip(offset_elem)
-                .take(range_elem.len())
-                .collect()
-        };
+        // perf: we might not need all these points
+        let points: Vec<_> = self.eval_domain.elements().collect();
 
-        let (proofs, _evals) =
-            UnivariateKzgPCS::multi_open(&self.ck, &polynomial, &points).map_err(vid)?;
+        let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
+        let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
+        for (i, evals_iter) in elems_iter
+            .chunks(self.payload_chunk_size)
+            .into_iter()
+            .enumerate()
+        {
+            let poly = self.polynomial(evals_iter);
+            let points_range = Range {
+                // first polynomial? skip to the start of the proof range
+                start: if i == 0 { offset_elem } else { 0 },
+                // final polynomial? stop at the end of the proof range
+                end: if i == range_poly.len() - 1 {
+                    range_elem.len() - (i * self.payload_chunk_size)
+                } else {
+                    points.len()
+                },
+            };
+            proofs.extend(
+                UnivariateKzgPCS::multi_open(&self.ck, &poly, &points[points_range])
+                    .map_err(vid)?
+                    .0,
+            );
+        }
 
         Ok(SmallRangeProof {
             proofs,
@@ -275,11 +286,8 @@ where
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, elem_byte_capacity::<KzgEval<E>>())
     }
-    fn range_elem_to_byte(&self, range: &Range<usize>) -> Range<usize> {
-        range_refine(range, elem_byte_capacity::<KzgEval<E>>())
-    }
     fn range_elem_to_byte_clamped(&self, range: &Range<usize>, len: usize) -> Range<usize> {
-        let result = self.range_elem_to_byte(range);
+        let result = range_refine(range, elem_byte_capacity::<KzgEval<E>>());
         Range {
             end: ark_std::cmp::min(result.end, len),
             ..result
@@ -293,6 +301,16 @@ where
             range,
             self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         )
+    }
+    fn range_poly_to_byte_clamped(&self, range: &Range<usize>, len: usize) -> Range<usize> {
+        let result = range_refine(
+            range,
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
+        );
+        Range {
+            end: ark_std::cmp::min(result.end, len),
+            ..result
+        }
     }
 
     fn check_common_commit_consistency(
