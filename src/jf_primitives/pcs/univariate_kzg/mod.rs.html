@@ -610,6 +610,45 @@
 <a href="#610" id="610">610</a>
 <a href="#611" id="611">611</a>
 <a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -759,13 +798,19 @@
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
         point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, <span class="self">Self</span>::Evaluation), PCSError&gt; {
-        <span class="kw">let </span>open_time =
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="kw">let </span>open_time =
             <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Opening polynomial of degree {}&quot;</span>, polynomial.degree()));
+
         <span class="kw">let </span>divisor = <span class="self">Self</span>::Polynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>point, E::ScalarField::one()]);
 
-        <span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
+
         <span class="kw">let </span>witness_polynomial = polynomial / <span class="kw-2">&amp;</span>divisor;
-        <span class="macro">end_timer!</span>(witness_time);
+
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="macro">end_timer!</span>(witness_time);
 
         <span class="kw">let </span>(num_leading_zeros, witness_coeffs) =
             skip_leading_zeros_and_convert_to_bigints(<span class="kw-2">&amp;</span>witness_polynomial);
@@ -776,9 +821,13 @@
         )
         .into_affine();
 
-        <span class="kw">let </span>eval = polynomial.evaluate(point);
+        <span class="comment">// TODO offer an `open()` that doesn&#39;t also evaluate
+        // https://github.com/EspressoSystems/jellyfish/issues/426
+        </span><span class="kw">let </span>eval = polynomial.evaluate(point);
 
-        <span class="macro">end_timer!</span>(open_time);
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        </span><span class="macro">end_timer!</span>(open_time);
+
         <span class="prelude-val">Ok</span>((<span class="self">Self</span>::Proof { proof }, eval))
     }
 
@@ -934,16 +983,45 @@
         num_points: usize,
         domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Proof&gt;, PCSError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>h_poly = <span class="self">Self</span>::compute_h_poly_in_fk23(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
-        <span class="kw">let </span>proofs: Vec&lt;<span class="kw">_</span>&gt; = h_poly
-            .batch_evaluate_rou(domain)<span class="question-mark">?
-            </span>.into_iter()
-            .take(num_points)
-            .map(|g| UnivariateKzgProof {
-                proof: g.into_affine(),
-            })
-            .collect();
-        <span class="prelude-val">Ok</span>(proofs)
+        <span class="attr">#[cfg(feature = <span class="string">&quot;naive-kzg-multi-open&quot;</span>)]
+        </span>{
+            <span class="kw">use </span>ark_poly::EvaluationDomain;
+            <span class="kw">let </span>prover_param = prover_param.borrow(); <span class="comment">// needed for Send + Sync
+
+            // We prefer use `.par_bridge()` instead of
+            // `.collect::&lt;Vec&lt;_&gt;&gt;().par_iter()`.
+            // (It avoids an unnecessary `collect()`.)
+            // However, `par_iter` is guaranteed to preserve order,
+            // whereas `par_bridge` is not!
+            // https://github.com/rayon-rs/rayon/issues/551#issuecomment-882069261
+            // https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html
+            //
+            // We prefer to compute only the proof---not the evaluation.
+            // However, `Self::open()` returns both,
+            // so we throw away the eval via `.map(|r| r.0)`.
+            // https://github.com/EspressoSystems/jellyfish/issues/426
+            </span>domain
+                .elements()
+                .take(num_points)
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+                .par_iter()
+                .map(|point| <span class="self">Self</span>::open(prover_param, polynomial, point).map(|r| r.<span class="number">0</span>))
+                .collect()
+        }
+
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;naive-kzg-multi-open&quot;</span>))]
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>h_poly = <span class="self">Self</span>::compute_h_poly_in_fk23(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
+            <span class="kw">let </span>proofs: Vec&lt;<span class="kw">_</span>&gt; = h_poly
+                .batch_evaluate_rou(domain)<span class="question-mark">?
+                </span>.into_iter()
+                .take(num_points)
+                .map(|g| UnivariateKzgProof {
+                    proof: g.into_affine(),
+                })
+                .collect();
+            <span class="prelude-val">Ok</span>(proofs)
+        }
     }
 
     <span class="doccomment">/// Compute the evaluations in [`Self::multi_open_rou()`].
