@@ -332,7 +332,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<Vec<Self::Proof>, PCSError> {
-        #[cfg(feature = "no-fk23")]
+        #[cfg(feature = "naive-kzg-multi-open")]
         {
             use ark_poly::EvaluationDomain;
             let prover_param = prover_param.borrow(); // needed for Send + Sync
@@ -358,7 +358,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 .collect()
         }
 
-        #[cfg(not(feature = "no-fk23"))]
+        #[cfg(not(feature = "naive-kzg-multi-open"))]
         {
             let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
             let proofs: Vec<_> = h_poly
