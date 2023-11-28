@@ -9,7 +9,7 @@
 //! < q, we represent the elements in F_q using CRT modulus [p, 2^T] where p *
 //! 2^T > q^2 + q. This constraint is required to emulate the F_q multiplication
 //! by checking a * b - k * q = c (mod 2^T * p) without any overflow. The second
-//! componenet, with modulus 2^T, will be divided into limbs each with B bits
+//! component, with modulus 2^T, will be divided into limbs each with B bits
 //! where 2^{2B} < p.
 
 use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
@@ -19,7 +19,7 @@ use core::marker::PhantomData;
 use itertools::izip;
 use num_bigint::BigUint;
 
-/// Parameters needed for emulating field operations over [`F`].
+/// Parameters needed for emulating field operations over [`PrimeField`].
 pub trait EmulationConfig<F: PrimeField>: PrimeField {
     /// Log2 of the other CRT modulus is 2^T.
     const T: usize;

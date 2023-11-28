@@ -18,6 +18,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 ### Fixed
 
 - [#243](https://github.com/EspressoSystems/jellyfish/pull/243) fixes bug in MerkleTreeGadget implementation for SparseRescueMerkleTree.
+- [#377](https://github.com/EspressoSystems/jellyfish/pull/377) fix: VID ADVZ allow zero-length payload
 
 ### Added
 
@@ -34,6 +35,8 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#341](https://github.com/EspressoSystems/jellyfish/pull/341) Port VDF from another repo
 - [#343](https://github.com/EspressoSystems/jellyfish/pull/343) Rescue parameter for `ark_bn254::Fq`
 - [#362](https://github.com/EspressoSystems/jellyfish/pull/362) Derive Eq, Hash at a bunch of places
+- [#381](https://github.com/EspressoSystems/jellyfish/pull/381) VID take iterator instead of slice
+- [#389](https://github.com/EspressoSystems/jellyfish/pull/389) Hello-world namespace support for ADVZ VID scheme
 
 ### Changed
 
@@ -45,6 +48,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#302](https://github.com/EspressoSystems/jellyfish/pull/302) Followup APIs for non-native ECC circuit support.
 - [#323](https://github.com/EspressoSystems/jellyfish/pull/323) Improve performance of range gate in ultra plonk.
 - [#371](https://github.com/EspressoSystems/jellyfish/pull/371) VID disperse also return payload commitment
+- [#385](https://github.com/EspressoSystems/jellyfish/pull/385) Use FFT to encode polynomials in eval form.
 
 ### Removed
 

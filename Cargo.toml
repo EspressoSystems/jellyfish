@@ -1,10 +1,6 @@
 [workspace]
-members = [
-  "plonk",
-  "primitives",
-  "relation",
-  "utilities",
-]
+members = ["plonk", "primitives", "relation", "utilities"]
+resolver = "2"
 
 [workspace.package]
 version = "0.4.0-pre.0"
@@ -15,3 +11,7 @@ rust-version = "1.64.0"
 homepage = "https://github.com/EspressoSystems/jellyfish"
 documentation = "https://jellyfish.docs.espressosys.com"
 repository = "https://github.com/EspressoSystems/jellyfish"
+
+[workspace.dependencies]
+itertools = { version = "0.10.1", default-features = false }
+tagged-base64 = { git = "https://github.com/EspressoSystems/tagged-base64.git", tag = "0.3.4" }

@@ -18,10 +18,10 @@
   inputs.pre-commit-hooks.url = "github:cachix/pre-commit-hooks.nix";
   inputs.pre-commit-hooks.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, flake-utils, flake-compat, rust-overlay, pre-commit-hooks, ... }:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ 
+        overlays = [
           (import rust-overlay)
         ];
         pkgs = import nixpkgs { inherit system overlays; };
@@ -30,8 +30,18 @@
 
         stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
-          targets = ["wasm32-unknown-unknown"];
+          targets = [ "wasm32-unknown-unknown" ];
         };
+        # A script that calls nightly cargo if invoked with `+nightly`
+        # as the first argument, otherwise it calls stable cargo.
+        cargo-with-nightly = pkgs.writeShellScriptBin "cargo" ''
+          if [[ "$1" == "+nightly" ]]; then
+            shift
+            # Prepend nightly toolchain directory containing cargo, rustc, etc.
+            exec env PATH="${nightlyToolchain}/bin:$PATH" cargo "$@"
+          fi
+          exec ${stableToolchain}/bin/cargo "$@"
+        '';
       in with pkgs;
       {
         check = {
@@ -70,9 +80,10 @@
           buildInputs = [
             argbash
             openssl
-            pkgconfig
+            pkg-config
             git
 
+            cargo-with-nightly
             stableToolchain
             nightlyToolchain
             cargo-sort
@@ -80,6 +91,8 @@
             clangStdenv
             llvm_15
           ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
+
+          CARGO_TARGET_DIR = "target/nix_rustc";
 
           shellHook = ''
             export RUST_BACKTRACE=full

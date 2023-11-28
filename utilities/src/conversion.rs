@@ -108,20 +108,22 @@ where
 ///   `u64`.
 /// - Partition `bytes` into chunks of length P, where P is the field
 ///   characteristic byte length minus 1.
-/// - Convert each chunk into [`BasePrimeField`] via
-///   [`from_le_bytes_mod_order`]. Reduction modulo the field characteristic is
-///   guaranteed not to occur because chunk byte length is sufficiently small.
-/// - Collect [`BasePrimeField`] elements into [`Field`] elements and append to
-///   result.
+/// - Convert each chunk into [`Field::BasePrimeField`] via
+///   [`PrimeField::from_le_bytes_mod_order`]. Reduction modulo the field
+///   characteristic is guaranteed not to occur because chunk byte length is
+///   sufficiently small.
+/// - Collect [`Field::BasePrimeField`] elements into [`Field`] elements and
+///   append to result.
 /// - If `bytes` is empty then result is empty.
 ///
 /// # Panics
 ///
 /// Panics only under conditions that should be checkable at compile time:
 ///
-/// - The [`BasePrimeField`] modulus bit length is too small to hold a `u64`.
-/// - The byte length of a single [`BasePrimeField`] element fails to fit inside
-///   a `usize`.
+/// - The [`Field::BasePrimeField`] modulus bit length is too small to hold a
+///   `u64`.
+/// - The byte length of a single [`Field::BasePrimeField`] element fails to fit
+///   inside a `usize`.
 /// - The extension degree of the [`Field`] fails to fit inside a `usize`.
 /// - The byte length of a [`Field`] element fails to fit inside a `usize`.
 ///
@@ -300,6 +302,7 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
+    use ark_ff::{Field, PrimeField};
     use ark_std::{rand::RngCore, UniformRand};
 
     #[test]

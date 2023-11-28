@@ -29,8 +29,8 @@ use sha3::{Digest, Keccak256};
 /// 2. challenge = state\[0\]
 /// 3. transcript = vec!\[challenge\]
 pub struct SolidityTranscript {
-    transcript: Vec<u8>,
-    state: [u8; KECCAK256_STATE_SIZE], // 64 bytes state size
+    pub(crate) transcript: Vec<u8>,
+    pub(crate) state: [u8; KECCAK256_STATE_SIZE], // 64 bytes state size
 }
 
 impl<F> PlonkTranscript<F> for SolidityTranscript {
