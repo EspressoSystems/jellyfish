@@ -410,6 +410,7 @@ mod tests {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let num_polys = 3;
+        let num_random_cases = 20;
 
         // more items as a function of the above
         let payload_elems_len = num_polys * payload_chunk_size;
@@ -428,44 +429,18 @@ mod tests {
         // TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (polynomial, start, len)
         // so do some edge cases and random cases
-        let edge_cases = vec![
-            Range { start: 0, end: 1 },
-            Range { start: 0, end: 2 },
-            Range {
-                start: 0,
-                end: poly_bytes_len - 1,
-            },
-            Range {
-                start: 0,
-                end: poly_bytes_len,
-            },
-            Range { start: 1, end: 2 },
-            Range { start: 1, end: 3 },
-            Range {
-                start: 1,
-                end: poly_bytes_len - 1,
-            },
-            Range {
-                start: 1,
-                end: poly_bytes_len,
-            },
-            Range {
-                start: poly_bytes_len - 2,
-                end: poly_bytes_len - 1,
-            },
-            Range {
-                start: poly_bytes_len - 2,
-                end: poly_bytes_len,
-            },
-            Range {
-                start: poly_bytes_len - 1,
-                end: poly_bytes_len,
-            },
-        ];
+        let edge_cases = {
+            let mut edge_cases = make_edge_cases(0, poly_bytes_len); // inside the first polynomial
+            edge_cases.extend(make_edge_cases(
+                (num_polys - 1) * poly_bytes_len,
+                num_polys * poly_bytes_len,
+            )); // inside the final polynomial
+            edge_cases.extend(make_edge_cases(0, num_polys * poly_bytes_len)); // spanning the entire payload
+            edge_cases
+        };
         let random_cases = {
-            let num_cases = edge_cases.len();
-            let mut random_cases = Vec::with_capacity(num_cases);
-            for _ in 0..num_cases {
+            let mut random_cases = Vec::with_capacity(num_random_cases);
+            for _ in 0..num_random_cases {
                 let start = rng.gen_range(0..poly_bytes_len - 1);
                 let end = rng.gen_range(start + 1..poly_bytes_len);
                 random_cases.push(Range { start, end });
@@ -479,53 +454,94 @@ mod tests {
             let d = advz.disperse(&payload).unwrap();
             println!("payload byte len case: {}", payload.len());
 
-            for poly in 0..num_polys {
-                let poly_offset = poly * poly_bytes_len;
+            for cases in all_cases.iter() {
+                for range in cases.0.iter() {
+                    print!("{} case: {:?}", cases.1, range);
 
-                for cases in all_cases.iter() {
-                    for range in cases.0.iter() {
-                        let range = Range {
-                            start: range.start + poly_offset,
-                            end: range.end + poly_offset,
-                        };
-                        print!("poly {} {} case: {:?}", poly, cases.1, range);
+                    // ensure range fits inside payload
+                    let range = if range.start >= payload.len() {
+                        println!(" outside payload len {}, skipping", payload.len());
+                        continue;
+                    } else if range.end > payload.len() {
+                        println!(" clamped to payload len {}", payload.len());
+                        Range {
+                            end: payload.len(),
+                            ..*range
+                        }
+                    } else {
+                        println!();
+                        range.clone()
+                    };
 
-                        // ensure range fits inside payload
-                        let range = if range.start >= payload.len() {
-                            println!(" outside payload len {}, skipping", payload.len());
-                            continue;
-                        } else if range.end > payload.len() {
-                            println!(" clamped to payload len {}", payload.len());
-                            Range {
-                                end: payload.len(),
-                                ..range
-                            }
-                        } else {
-                            println!();
-                            range
-                        };
+                    let stmt = Statement {
+                        payload_subslice: &payload[range.clone()],
+                        range: range.clone(),
+                        commit: &d.commit,
+                        common: &d.common,
+                    };
 
-                        let stmt = Statement {
-                            payload_subslice: &payload[range.clone()],
-                            range: range.clone(),
-                            commit: &d.commit,
-                            common: &d.common,
-                        };
+                    let small_range_proof: SmallRangeProof<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt.clone(), &small_range_proof)
+                        .unwrap()
+                        .unwrap();
 
-                        let small_range_proof: SmallRangeProof<_> =
-                            advz.payload_proof(&payload, range.clone()).unwrap();
-                        advz.payload_verify(stmt.clone(), &small_range_proof)
-                            .unwrap()
-                            .unwrap();
-
-                        let large_range_proof: LargeRangeProof<_> =
-                            advz.payload_proof(&payload, range.clone()).unwrap();
-                        advz.payload_verify(stmt, &large_range_proof)
-                            .unwrap()
-                            .unwrap();
-                    }
+                    let large_range_proof: LargeRangeProof<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt, &large_range_proof)
+                        .unwrap()
+                        .unwrap();
                 }
             }
+        }
+
+        fn make_edge_cases(min: usize, max: usize) -> Vec<Range<usize>> {
+            vec![
+                Range {
+                    start: min,
+                    end: min + 1,
+                },
+                Range {
+                    start: min,
+                    end: min + 2,
+                },
+                Range {
+                    start: min,
+                    end: max - 1,
+                },
+                Range {
+                    start: min,
+                    end: max,
+                },
+                Range {
+                    start: min + 1,
+                    end: min + 2,
+                },
+                Range {
+                    start: min + 1,
+                    end: min + 3,
+                },
+                Range {
+                    start: min + 1,
+                    end: max - 1,
+                },
+                Range {
+                    start: min + 1,
+                    end: max,
+                },
+                Range {
+                    start: max - 2,
+                    end: max - 1,
+                },
+                Range {
+                    start: max - 2,
+                    end: max,
+                },
+                Range {
+                    start: max - 1,
+                    end: max,
+                },
+            ]
         }
     }
 
