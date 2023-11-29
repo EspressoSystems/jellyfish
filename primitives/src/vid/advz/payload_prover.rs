@@ -138,7 +138,6 @@ where
         Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
-        // TODO don't collect
         let data_elems: Vec<_> = bytes_to_field::<_, KzgEval<E>>(
             proof
                 .prefix_bytes
