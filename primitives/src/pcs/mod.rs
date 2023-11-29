@@ -69,6 +69,15 @@ pub trait PolynomialCommitmentScheme {
         Self::SRS::gen_srs_for_testing(rng, supported_degree)
     }
 
+    /// Setup for testing.
+    ///
+    /// - For univariate polynomials, `prover/verifier_supported_degree` is the
+    ///   maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
+    ///   variables.
+    ///
+    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
+    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
     #[cfg(any(test, feature = "test-srs"))]
     fn gen_srs_for_testing_with_verifier_degree<R: RngCore + CryptoRng>(
         rng: &mut R,
@@ -244,7 +253,8 @@ pub trait StructuredReferenceString: Sized {
 
     /// Build SRS for testing.
     ///
-    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For univariate polynomials, `prover/verifier_supported_degree` is the
+    ///   maximum degree.
     /// - For multilinear polynomials, `supported_degree` is the number of
     ///   variables.
     ///
