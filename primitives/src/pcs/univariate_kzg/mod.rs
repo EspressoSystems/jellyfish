@@ -529,7 +529,8 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 .into(),
             proof.proof.into(),
         ];
-        let pairing_inputs_r: Vec<E::G2Prepared> = vec![verifier_param.borrow().h.into(), vanish_cm.into()];
+        let pairing_inputs_r: Vec<E::G2Prepared> =
+            vec![verifier_param.borrow().h.into(), vanish_cm.into()];
 
         let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
             .0
