@@ -417,6 +417,8 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         // Compute the polynomial \prod_i (X-point_i)
         // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
         let vanish_poly =
             Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
         let divisor: Self::Polynomial = points.iter().skip(1).fold(vanish_poly, |acc, point| {
@@ -424,6 +426,9 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         });
 
         // Compute quotient poly
+        // Quadratic complexity as Arkworks is using naive long division
+        // TODO: using FFTs for division
+        // https://github.com/EspressoSystems/jellyfish/issues/436
         let witness_time = start_timer!(|| "Computing witness polynomial");
         let witness_polynomial = polynomial / &divisor;
         end_timer!(witness_time);
@@ -476,6 +481,8 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         // Compute the commitment to I(X) = sum_i eval_i * L_{point_i}(X)
         // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
         let evals_poly = values
             .iter()
             .enumerate()
@@ -494,6 +501,8 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         // Compute the commitment to Z(X) = prod_i (X-point_i)
         // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
         let vanish_poly =
             Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
         let vanish_poly: Self::Polynomial =
