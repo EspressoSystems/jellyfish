@@ -86,10 +86,9 @@ where
         // index conversion
         let range_elem = self.range_byte_to_elem(&range);
         let range_poly = self.range_elem_to_poly(&range_elem);
-        let start_poly_byte = self.index_poly_to_byte(range_poly.start);
-        let offset_elem = range_elem.start - self.index_byte_to_elem(start_poly_byte);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
         let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
+        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
 
         // prepare list of input points
         // perf: we might not need all these points
@@ -158,8 +157,7 @@ where
         // index conversion
         let range_elem = self.range_byte_to_elem(&proof.chunk_range);
         let range_poly = self.range_elem_to_poly(&range_elem);
-        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
-        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
+        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
 
         // prepare list of input points
         // perf: we might not need all these points
@@ -222,10 +220,9 @@ where
         // index conversion
         let range_elem = self.range_byte_to_elem(&range);
         let range_poly = self.range_elem_to_poly(&range_elem);
-        let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
-        let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
         let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
+        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
 
         // compute the prefix and suffix elems
         let mut elems_iter = bytes_to_field::<_, KzgEval<E>>(payload[range_poly_byte].iter());
@@ -287,15 +284,6 @@ where
     H: HasherDigest,
 {
     // lots of index manipulation
-    fn index_byte_to_elem(&self, index: usize) -> usize {
-        index_coarsen(index, elem_byte_capacity::<KzgEval<E>>())
-    }
-    fn index_poly_to_byte(&self, index: usize) -> usize {
-        index_refine(
-            index,
-            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
-        )
-    }
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(range, elem_byte_capacity::<KzgEval<E>>())
     }
@@ -325,7 +313,15 @@ where
             ..result
         }
     }
+    fn offset_poly_to_elem(&self, range_poly_start: usize, range_elem_start: usize) -> usize {
+        let start_poly_byte = index_refine(
+            range_poly_start,
+            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
+        );
+        range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::<KzgEval<E>>())
+    }
 
+    // arg check helpers
     fn check_common_commit_consistency(
         common: &<Self as VidScheme>::Common,
         commit: &<Self as VidScheme>::Commit,
@@ -337,7 +333,6 @@ where
         }
         Ok(())
     }
-
     fn check_stmt_proof_consistency(
         stmt: &Statement<Self>,
         proof_range: &Range<usize>,
@@ -569,7 +564,4 @@ mod tests {
     fn correctness() {
         correctness_generic::<Bls12_381, Sha256>();
     }
-
-    // TODO ShortRangeProof: test overlapping ranges have the same proofs for
-    // their intersection.
 }
