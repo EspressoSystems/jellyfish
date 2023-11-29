@@ -32,7 +32,7 @@ use anyhow::anyhow;
 use ark_ec::pairing::Pairing;
 use ark_poly::EvaluationDomain;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{format, ops::Range, println};
+use ark_std::{format, ops::Range};
 use itertools::Itertools;
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
@@ -95,14 +95,6 @@ where
         // perf: we might not need all these points
         let points: Vec<_> = self.eval_domain.elements().collect();
 
-        println!(
-            "PROOF: num_points {} offset {} range_elem ({}..{})",
-            points.len(),
-            offset_elem,
-            range_elem.start,
-            range_elem.end
-        );
-
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
         for (i, evals_iter) in elems_iter
@@ -121,10 +113,6 @@ where
                     points.len()
                 },
             };
-            println!(
-                "PROOF: poly {} using points ({}..{})",
-                i, points_range.start, points_range.end
-            );
             proofs.extend(
                 UnivariateKzgPCS::multi_open(&self.ck, &poly, &points[points_range])
                     .map_err(vid)?
@@ -237,13 +225,10 @@ where
         let start_namespace_byte = self.index_poly_to_byte(range_poly.start);
         let offset_elem = range_elem.start - self.index_byte_to_elem(start_namespace_byte);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
-
-        check_range_poly(&range_poly)?;
+        let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
 
         // compute the prefix and suffix elems
-        let mut elems_iter =
-            bytes_to_field::<_, KzgEval<E>>(payload[start_namespace_byte..].iter())
-                .take(self.payload_chunk_size);
+        let mut elems_iter = bytes_to_field::<_, KzgEval<E>>(payload[range_poly_byte].iter());
         let prefix_elems: Vec<_> = elems_iter.by_ref().take(offset_elem).collect();
         let suffix_elems: Vec<_> = elems_iter.skip(range_elem.len()).collect();
 
@@ -262,35 +247,36 @@ where
         proof: &LargeRangeProof<KzgEval<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
+        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // index conversion
         let range_poly = self.range_byte_to_poly(&proof.chunk_range);
 
-        check_range_poly(&range_poly)?;
-        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
-
-        // rebuild the poly commit, check against `common`
-        let poly_commit = {
-            let poly = self.polynomial(
+        // rebuild the needed payload elements from statement and proof
+        let elems_iter = proof
+            .prefix_elems
+            .iter()
+            .cloned()
+            .chain(bytes_to_field::<_, KzgEval<E>>(
                 proof
-                    .prefix_elems
+                    .prefix_bytes
                     .iter()
-                    .cloned()
-                    .chain(bytes_to_field::<_, KzgEval<E>>(
-                        proof
-                            .prefix_bytes
-                            .iter()
-                            .chain(stmt.payload_subslice)
-                            .chain(proof.suffix_bytes.iter()),
-                    ))
-                    .chain(proof.suffix_elems.iter().cloned()),
-            );
-            UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?
-        };
-        if poly_commit != stmt.common.poly_commits[range_poly.start] {
-            return Ok(Err(()));
-        }
+                    .chain(stmt.payload_subslice)
+                    .chain(proof.suffix_bytes.iter()),
+            ))
+            .chain(proof.suffix_elems.iter().cloned());
 
+        // rebuild the poly commits, check against `common`
+        for (commit_index, evals_iter) in range_poly
+            .into_iter()
+            .zip(elems_iter.chunks(self.payload_chunk_size).into_iter())
+        {
+            let poly = self.polynomial(evals_iter);
+            let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
+            if poly_commit != stmt.common.poly_commits[commit_index] {
+                return Ok(Err(()));
+            }
+        }
         Ok(Ok(()))
     }
 }
@@ -421,23 +407,12 @@ fn check_range_nonempty_and_inside_payload(payload: &[u8], range: &Range<usize>)
     Ok(())
 }
 
-fn check_range_poly(range_poly: &Range<usize>) -> VidResult<()> {
-    // TODO TEMPORARY: forbid requests that span multiple polynomials
-    if range_poly.len() != 1 {
-        return Err(VidError::Argument(format!(
-            "request spans {} polynomials, expect 1",
-            range_poly.len()
-        )));
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use crate::vid::{
         advz::{
             bytes_to_field::elem_byte_capacity,
-            payload_prover::{SmallRangeProof, Statement},
+            payload_prover::{LargeRangeProof, SmallRangeProof, Statement},
             tests::*,
             *,
         },
@@ -531,11 +506,11 @@ mod tests {
                         .unwrap()
                         .unwrap();
 
-                    // let large_range_proof: LargeRangeProof<_> =
-                    //     advz.payload_proof(&payload, range.clone()).unwrap();
-                    // advz.payload_verify(stmt, &large_range_proof)
-                    //     .unwrap()
-                    //     .unwrap();
+                    let large_range_proof: LargeRangeProof<_> =
+                        advz.payload_proof(&payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt, &large_range_proof)
+                        .unwrap()
+                        .unwrap();
                 }
             }
         }
