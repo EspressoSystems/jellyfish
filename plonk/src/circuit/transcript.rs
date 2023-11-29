@@ -230,7 +230,7 @@ mod tests {
         short_weierstrass::{Affine, SWCurveConfig},
         AffineRepr, CurveGroup,
     };
-    use ark_std::{format, UniformRand};
+    use ark_std::{format, vec, UniformRand};
     use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
@@ -301,10 +301,13 @@ mod tests {
         let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
         let mut transcript = RescueTranscript::<F>::new(label);
 
+        let h = E::G2Affine::generator();
+        let beta_h = E::G2::rand(&mut rng).into_affine();
         let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
             g: E::G1Affine::generator(),
-            h: E::G2Affine::generator(),
-            beta_h: E::G2::rand(&mut rng).into_affine(),
+            h,
+            beta_h,
+            powers_of_h: vec![h, beta_h],
         };
 
         let dummy_vk = VerifyingKey {
@@ -313,7 +316,7 @@ mod tests {
             sigma_comms: Vec::new(),
             selector_comms: Vec::new(),
             k: Vec::new(),
-            open_key,
+            open_key: open_key.clone(),
             is_merged: false,
             plookup_vk: None,
         };
@@ -373,7 +376,7 @@ mod tests {
                 sigma_comms,
                 selector_comms,
                 k,
-                open_key,
+                open_key: open_key.clone(),
                 is_merged: false,
                 plookup_vk: None,
             };

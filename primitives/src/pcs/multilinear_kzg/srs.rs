@@ -117,12 +117,34 @@ impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
         Ok((ck, vk))
     }
 
+    /// Naive implementation
+    fn trim_with_verifier_degree(
+        &self,
+        prover_supported_num_vars: usize,
+        _verifier_supported_num_vars: usize,
+    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
+        self.trim(prover_supported_num_vars)
+    }
+
     #[cfg(any(test, feature = "test-srs"))]
     fn gen_srs_for_testing<R>(rng: &mut R, num_vars: usize) -> Result<Self, PCSError>
     where
         R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
     {
         tests::gen_srs_for_testing(rng, num_vars)
+    }
+
+    /// Naive implementation
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing_with_verifier_degree<R>(
+        rng: &mut R,
+        prover_num_vars: usize,
+        _verifier_num_vars: usize,
+    ) -> Result<Self, PCSError>
+    where
+        R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        tests::gen_srs_for_testing(rng, prover_num_vars)
     }
 }
 
@@ -148,6 +170,15 @@ impl<E: Pairing> StructuredReferenceString
         )?;
 
         Ok(((ml_pp.0, uni_pp.0), (ml_pp.1, uni_pp.1)))
+    }
+
+    /// Naive implementation
+    fn trim_with_verifier_degree(
+        &self,
+        prover_supported_num_vars: usize,
+        _verifier_supported_num_vars: usize,
+    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError> {
+        self.trim(prover_supported_num_vars)
     }
 
     fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam {
@@ -196,6 +227,19 @@ impl<E: Pairing> StructuredReferenceString
                 supported_degree,
             )?;
         Ok((ml_pp, uni_pp))
+    }
+
+    /// Naive implementation
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing_with_verifier_degree<R>(
+        rng: &mut R,
+        prover_num_vars: usize,
+        _verifier_num_vars: usize,
+    ) -> Result<Self, PCSError>
+    where
+        R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
+    {
+        Self::gen_srs_for_testing(rng, prover_num_vars)
     }
 }
 

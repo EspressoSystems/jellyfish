@@ -740,7 +740,12 @@ mod tests {
     {
         let rng = &mut test_rng();
         let degree = 20;
-        let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+        let verifier_degree = 10;
+        let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing_with_verifier_degree(
+            rng,
+            degree,
+            verifier_degree,
+        )?;
         let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
         for _ in 0..10 {
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(

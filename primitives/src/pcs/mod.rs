@@ -69,6 +69,19 @@ pub trait PolynomialCommitmentScheme {
         Self::SRS::gen_srs_for_testing(rng, supported_degree)
     }
 
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing_with_verifier_degree<R: RngCore + CryptoRng>(
+        rng: &mut R,
+        prover_supported_degree: usize,
+        verifier_supported_degree: usize,
+    ) -> Result<Self::SRS, PCSError> {
+        Self::SRS::gen_srs_for_testing_with_verifier_degree(
+            rng,
+            prover_supported_degree,
+            verifier_supported_degree,
+        )
+    }
+
     /// Load public parameter in production environment.
     /// These parameters are loaded from files with serialized `pp` bytes, and
     /// the actual setup is usually carried out via MPC and should be
@@ -199,6 +212,22 @@ pub trait StructuredReferenceString: Sized {
         supported_degree: usize,
     ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
 
+    /// Trim the universal parameters to specialize the public parameters
+    /// for polynomials to the given `prover/verifier_supported_degree`, and
+    /// returns committer key and verifier key.
+    ///
+    /// - For univariate polynomials, `prover_/verifier_supported_degree` is the
+    ///   maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is 2 to the number of
+    ///   variables.
+    ///
+    /// `supported_log_size` should be in range `1..=params.log_size`
+    fn trim_with_verifier_degree(
+        &self,
+        prover_supported_degree: usize,
+        verifier_supported_degree: usize,
+    ) -> Result<(Self::ProverParam, Self::VerifierParam), PCSError>;
+
     /// Build SRS for testing.
     ///
     /// - For univariate polynomials, `supported_degree` is the maximum degree.
@@ -211,6 +240,21 @@ pub trait StructuredReferenceString: Sized {
     fn gen_srs_for_testing<R: RngCore + CryptoRng>(
         rng: &mut R,
         supported_degree: usize,
+    ) -> Result<Self, PCSError>;
+
+    /// Build SRS for testing.
+    ///
+    /// - For univariate polynomials, `supported_degree` is the maximum degree.
+    /// - For multilinear polynomials, `supported_degree` is the number of
+    ///   variables.
+    ///
+    /// WARNING: THIS FUNCTION IS FOR TESTING PURPOSE ONLY.
+    /// THE OUTPUT SRS SHOULD NOT BE USED IN PRODUCTION.
+    #[cfg(any(test, feature = "test-srs"))]
+    fn gen_srs_for_testing_with_verifier_degree<R: RngCore + CryptoRng>(
+        rng: &mut R,
+        prover_supported_degree: usize,
+        verifier_supported_degree: usize,
     ) -> Result<Self, PCSError>;
 
     /// Load public parameter in production environment.
