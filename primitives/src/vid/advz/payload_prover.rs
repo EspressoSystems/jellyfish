@@ -89,6 +89,8 @@ where
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
         let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
         let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
+        let final_points_range_end =
+            self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
         // perf: we might not need all these points
@@ -107,7 +109,7 @@ where
                 start: if i == 0 { offset_elem } else { 0 },
                 // final polynomial? stop at the end of the proof range
                 end: if i == range_poly.len() - 1 {
-                    (range_elem.len() + offset_elem - 1) % points.len() + 1
+                    final_points_range_end
                 } else {
                     points.len()
                 },
@@ -158,6 +160,8 @@ where
         let range_elem = self.range_byte_to_elem(&proof.chunk_range);
         let range_poly = self.range_elem_to_poly(&range_elem);
         let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
+        let final_points_range_end =
+            self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
         // perf: we might not need all these points
@@ -174,7 +178,7 @@ where
                 start: if i == 0 { offset_elem } else { 0 },
                 // final polynomial? stop at the end of the proof range
                 end: if i == range_poly.len() - 1 {
-                    (range_elem.len() + offset_elem - 1) % points.len() + 1
+                    final_points_range_end
                 } else {
                     points.len()
                 },
@@ -319,6 +323,9 @@ where
             self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
         );
         range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::<KzgEval<E>>())
+    }
+    fn final_poly_points_range_end(&self, range_elem_len: usize, offset_elem: usize) -> usize {
+        (range_elem_len + offset_elem - 1) % self.payload_chunk_size + 1
     }
 
     // arg check helpers
