@@ -386,6 +386,159 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
             .collect();
         Ok(evals)
     }
+
+    /// Input a polynomial, and multiple evaluation points,
+    /// compute a batch opening proof for the multiple points of the same
+    /// polynomial.
+    ///
+    /// Warning: don't use it when `points.len()` is large
+    fn multi_point_open(
+        prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
+        polynomial: &Self::Polynomial,
+        points: &[Self::Point],
+    ) -> Result<(Self::Proof, Vec<Self::Evaluation>), PCSError> {
+        if points.is_empty() {
+            return Err(PCSError::InvalidParameters(
+                "no point to evaluate and open".to_string(),
+            ));
+        }
+        let open_time = start_timer!(|| format!(
+            "Opening polynomial of degree {} at {} points",
+            polynomial.degree(),
+            points.len()
+        ));
+
+        let evals_time = start_timer!(|| "Computing polynomial evaluations");
+        let evals: Vec<Self::Evaluation> = points
+            .iter()
+            .map(|point| polynomial.evaluate(point))
+            .collect();
+        end_timer!(evals_time);
+
+        // Compute the polynomial \prod_i (X-point_i)
+        // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
+        let vanish_poly =
+            Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
+        let divisor: Self::Polynomial = points.iter().skip(1).fold(vanish_poly, |acc, point| {
+            &acc * &Self::Polynomial::from_coefficients_vec(vec![-*point, E::ScalarField::one()])
+        });
+
+        // Compute quotient poly
+        // Quadratic complexity as Arkworks is using naive long division
+        // TODO: using FFTs for division
+        // https://github.com/EspressoSystems/jellyfish/issues/436
+        let witness_time = start_timer!(|| "Computing witness polynomial");
+        let witness_polynomial = polynomial / &divisor;
+        end_timer!(witness_time);
+
+        let (num_leading_zeros, witness_coeffs) =
+            skip_leading_zeros_and_convert_to_bigints(&witness_polynomial);
+
+        let proof: E::G1Affine = E::G1::msm_bigint(
+            &prover_param.borrow().powers_of_g[num_leading_zeros..],
+            &witness_coeffs,
+        )
+        .into_affine();
+
+        end_timer!(open_time);
+        Ok((Self::Proof { proof }, evals))
+    }
+
+    /// Verifies that `values` are the evaluation at the `points` of the
+    /// polynomial committed inside `comm`.
+    ///
+    /// Warning: don't use it when `points.len()` is large
+    fn multi_point_verify(
+        verifier_param: impl Borrow<<Self::SRS as StructuredReferenceString>::VerifierParam>,
+        commitment: &Self::Commitment,
+        points: &[Self::Point],
+        values: &[Self::Evaluation],
+        proof: &Self::Proof,
+    ) -> Result<bool, PCSError> {
+        if points.is_empty() {
+            return Err(PCSError::InvalidParameters(
+                "no evaluation to check".to_string(),
+            ));
+        }
+        if points.len() != values.len() {
+            return Err(PCSError::InvalidParameters(format!(
+                "the number of points {} is different from the number of evaluation values {}",
+                points.len(),
+                values.len(),
+            )));
+        }
+        if verifier_param.borrow().powers_of_h.len() < points.len() + 1 {
+            return Err(PCSError::InvalidParameters(format!(
+                "the number of powers of beta times h {} in SRS <= the number of evaluation points {}",
+                verifier_param.borrow().powers_of_h.len(),
+                points.len(),
+            )));
+        }
+
+        let check_time = start_timer!(|| "Checking evaluations");
+
+        // Compute the commitment to I(X) = sum_i eval_i * L_{point_i}(X)
+        // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
+        let evals_poly = values
+            .iter()
+            .enumerate()
+            .fold(Self::Polynomial::zero(), |acc, (i, &value)| {
+                acc + lagrange_poly(points, i, value)
+            });
+
+        let (num_leading_zeros, evals_poly_coeffs) =
+            skip_leading_zeros_and_convert_to_bigints(&evals_poly);
+
+        let evals_cm: E::G1Affine = E::G1::msm_bigint(
+            &verifier_param.borrow().powers_of_g[num_leading_zeros..],
+            &evals_poly_coeffs,
+        )
+        .into_affine();
+
+        // Compute the commitment to Z(X) = prod_i (X-point_i)
+        // O(|points|^2) complexity and we assume the number of points is small
+        // TODO: optimize complexity if support large number of points
+        // https://github.com/EspressoSystems/jellyfish/issues/436
+        let vanish_poly =
+            Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
+        let vanish_poly: Self::Polynomial =
+            points.iter().skip(1).fold(vanish_poly, |acc, point| {
+                &acc * &Self::Polynomial::from_coefficients_vec(vec![
+                    -*point,
+                    E::ScalarField::one(),
+                ])
+            });
+
+        let (num_leading_zeros, vanish_poly_coeffs) =
+            skip_leading_zeros_and_convert_to_bigints(&vanish_poly);
+
+        let vanish_cm: E::G2Affine = E::G2::msm_bigint(
+            &verifier_param.borrow().powers_of_h[num_leading_zeros..],
+            &vanish_poly_coeffs,
+        )
+        .into_affine();
+
+        // Check the pairing
+        let pairing_inputs_l: Vec<E::G1Prepared> = vec![
+            (evals_cm.into_group() - commitment.0.into_group())
+                .into_affine()
+                .into(),
+            proof.proof.into(),
+        ];
+        let pairing_inputs_r: Vec<E::G2Prepared> =
+            vec![verifier_param.borrow().h.into(), vanish_cm.into()];
+
+        let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
+            .0
+            .is_one();
+
+        end_timer!(check_time, || format!("Result: {res}"));
+        Ok(res)
+    }
 }
 
 impl<E, F> UnivariateKzgPCS<E>
@@ -462,6 +615,20 @@ fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
     end_timer!(to_bigint_time);
 
     coeffs
+}
+
+// Compute Lagrange poly `value * prod_{j!=i} (X-point_j)/(point_i-point_j)`
+// We assume i < points.len()
+fn lagrange_poly<F: PrimeField>(points: &[F], i: usize, value: F) -> DensePolynomial<F> {
+    let mut res = DensePolynomial::from_coefficients_vec(vec![value]);
+    let point_i = points[i];
+    for (j, &point) in points.iter().enumerate() {
+        if j != i {
+            let z_inv = (point_i - point).inverse().unwrap();
+            res = &res * &DensePolynomial::from_coefficients_vec(vec![-point * z_inv, z_inv]);
+        }
+    }
+    res
 }
 
 #[cfg(test)]
@@ -568,6 +735,40 @@ mod tests {
         Ok(())
     }
 
+    fn multi_point_open_test_template<E>() -> Result<(), PCSError>
+    where
+        E: Pairing,
+    {
+        let rng = &mut test_rng();
+        let degree = 20;
+        let verifier_degree = 10;
+        let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing_with_verifier_degree(
+            rng,
+            degree,
+            verifier_degree,
+        )?;
+        let (ck, vk) = pp
+            .borrow()
+            .trim_with_verifier_degree(degree, verifier_degree)?;
+        for _ in 0..10 {
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
+            let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
+            let points: Vec<E::ScalarField> = (0..5).map(|_| E::ScalarField::rand(rng)).collect();
+            let (proof, values) = UnivariateKzgPCS::<E>::multi_point_open(&ck, &p, &points[..])?;
+
+            assert!(UnivariateKzgPCS::<E>::multi_point_verify(
+                &vk,
+                &comm,
+                &points[..],
+                &values[..],
+                &proof
+            )?);
+        }
+        Ok(())
+    }
+
     #[test]
     fn end_to_end_test() {
         end_to_end_test_template::<Bls12_381>().expect("test failed for bls12-381");
@@ -580,6 +781,11 @@ mod tests {
     #[test]
     fn batch_check_test() {
         batch_check_test_template::<Bls12_381>().expect("test failed for bls12-381");
+    }
+
+    #[test]
+    fn multi_point_open_test() {
+        multi_point_open_test_template::<Bls12_381>().expect("test failed for bls12-381");
     }
 
     #[test]

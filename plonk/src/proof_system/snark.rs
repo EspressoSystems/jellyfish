@@ -481,6 +481,7 @@ where
             powers_of_g,
             h,
             beta_h,
+            powers_of_h: vec![h, beta_h],
         };
         end_timer!(setup_time);
         Ok(pp)
