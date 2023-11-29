@@ -416,6 +416,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         end_timer!(evals_time);
 
         // Compute the polynomial \prod_i (X-point_i)
+        // O(|points|^2) complexity and we assume the number of points is small
         let vanish_poly =
             Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
         let divisor: Self::Polynomial = points.iter().skip(1).fold(vanish_poly, |acc, point| {
@@ -474,6 +475,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         let check_time = start_timer!(|| "Checking evaluations");
 
         // Compute the commitment to I(X) = sum_i eval_i * L_{point_i}(X)
+        // O(|points|^2) complexity and we assume the number of points is small
         let evals_poly = values
             .iter()
             .enumerate()
@@ -491,6 +493,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         .into_affine();
 
         // Compute the commitment to Z(X) = prod_i (X-point_i)
+        // O(|points|^2) complexity and we assume the number of points is small
         let vanish_poly =
             Self::Polynomial::from_coefficients_vec(vec![-points[0], E::ScalarField::one()]);
         let vanish_poly: Self::Polynomial =
