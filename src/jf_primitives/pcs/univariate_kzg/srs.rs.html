@@ -165,6 +165,65 @@
 <a href="#165" id="165">165</a>
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -176,7 +235,7 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::pcs::{PCSError, StructuredReferenceString};
 <span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-<span class="kw">use </span>ark_std::vec::Vec;
+<span class="kw">use </span>ark_std::{string::ToString, vec::Vec};
 
 <span class="doccomment">/// `UniversalParams` are the universal parameters for the KZG10 scheme.
 </span><span class="comment">// Adapted from
@@ -186,10 +245,13 @@
     <span class="doccomment">/// Group elements of the form `{ \beta^i G }`, where `i` ranges from 0 to
     /// `degree`.
     </span><span class="kw">pub </span>powers_of_g: Vec&lt;E::G1Affine&gt;,
-    <span class="doccomment">/// The generator of G2.
+    <span class="doccomment">/// TODO: remove h and beta_h
+    /// The generator of G2.
     </span><span class="kw">pub </span>h: E::G2Affine,
     <span class="doccomment">/// \beta times the above generator of G2.
     </span><span class="kw">pub </span>beta_h: E::G2Affine,
+    <span class="doccomment">/// powers of \beta time the generator h of G2
+    </span><span class="kw">pub </span>powers_of_h: Vec&lt;E::G2Affine&gt;,
 }
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; UnivariateUniversalParams&lt;E&gt; {
@@ -208,17 +270,22 @@
 
 <span class="doccomment">/// `UnivariateVerifierParam` is used to check evaluation proofs for a given
 /// commitment.
-</span><span class="attr">#[derive(
-    Derivative, Clone, Copy, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq,
-)]
+</span><span class="attr">#[derive(Derivative, Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
 #[derivative(Default)]
 </span><span class="kw">pub struct </span>UnivariateVerifierParam&lt;E: Pairing&gt; {
-    <span class="doccomment">/// The generator of G1.
+    <span class="doccomment">/// TODO: remove g, h and beta_h
+    /// The generator of G1.
     </span><span class="kw">pub </span>g: E::G1Affine,
     <span class="doccomment">/// The generator of G2.
     </span><span class="kw">pub </span>h: E::G2Affine,
     <span class="doccomment">/// \beta times the above generator of G2.
     </span><span class="kw">pub </span>beta_h: E::G2Affine,
+    <span class="doccomment">/// powers of \beta time the generator h of G2: only used for multi-point
+    /// openings
+    </span><span class="kw">pub </span>powers_of_h: Vec&lt;E::G2Affine&gt;,
+    <span class="doccomment">/// powers of \beta time the generator g of G1: only used for multi-point
+    /// openings
+    </span><span class="kw">pub </span>powers_of_g: Vec&lt;E::G1Affine&gt;,
 }
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; StructuredReferenceString <span class="kw">for </span>UnivariateUniversalParams&lt;E&gt; {
@@ -233,12 +300,55 @@
     }
 
     <span class="doccomment">/// Extract the verifier parameters from the public parameters.
-    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, _supported_degree: usize) -&gt; <span class="self">Self</span>::VerifierParam {
+    </span><span class="kw">fn </span>extract_verifier_param(<span class="kw-2">&amp;</span><span class="self">self</span>, supported_degree: usize) -&gt; <span class="self">Self</span>::VerifierParam {
         <span class="self">Self</span>::VerifierParam {
             g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
             h: <span class="self">self</span>.h,
             beta_h: <span class="self">self</span>.beta_h,
+            powers_of_h: <span class="self">self</span>.powers_of_h[..=supported_degree].to_vec(),
+            powers_of_g: <span class="self">self</span>.powers_of_g[..=supported_degree].to_vec(),
         }
+    }
+
+    <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
+    /// for univariate polynomials to the given `supported_degree`, and
+    /// returns committer key and verifier key. `supported_degree` should
+    /// be in range `1..params.len()`
+    </span><span class="kw">fn </span>trim_with_verifier_degree(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        prover_supported_degree: usize,
+        verifier_supported_degree: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.powers_of_g.len() &lt;= prover_supported_degree {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
+                <span class="string">&quot;Largest supported prover degree by the SRS is: {}, but requested: {}&quot;</span>,
+                <span class="self">self</span>.powers_of_g.len() - <span class="number">1</span>,
+                prover_supported_degree,
+            )));
+        }
+        <span class="kw">if </span><span class="self">self</span>.powers_of_h.len() &lt;= verifier_supported_degree {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
+                <span class="string">&quot;Largest supported verifier degree by the SRS is: {}, but requested: {}&quot;</span>,
+                <span class="self">self</span>.powers_of_h.len() - <span class="number">1</span>,
+                verifier_supported_degree,
+            )));
+        }
+        <span class="kw">if </span>verifier_supported_degree == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
+                <span class="string">&quot;Verifier supported degree should be larger than zero&quot;</span>.to_string(),
+            ));
+        }
+        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=prover_supported_degree].to_vec();
+
+        <span class="kw">let </span>pk = <span class="self">Self</span>::ProverParam { powers_of_g };
+        <span class="kw">let </span>vk = <span class="self">Self</span>::VerifierParam {
+            g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
+            h: <span class="self">self</span>.h,
+            beta_h: <span class="self">self</span>.beta_h,
+            powers_of_h: <span class="self">self</span>.powers_of_h[..=verifier_supported_degree].to_vec(),
+            powers_of_g: <span class="self">self</span>.powers_of_g[..=verifier_supported_degree].to_vec(),
+        };
+        <span class="prelude-val">Ok</span>((pk, vk))
     }
 
     <span class="doccomment">/// Trim the universal parameters to specialize the public parameters
@@ -249,22 +359,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         supported_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::ProverParam, <span class="self">Self</span>::VerifierParam), PCSError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.powers_of_g.len() &lt;= supported_degree {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
-                <span class="string">&quot;Largest supported degree by the SRS is: {}, but requested: {}&quot;</span>,
-                <span class="self">self</span>.powers_of_g.len() - <span class="number">1</span>,
-                supported_degree,
-            )));
-        }
-        <span class="kw">let </span>powers_of_g = <span class="self">self</span>.powers_of_g[..=supported_degree].to_vec();
-
-        <span class="kw">let </span>pk = <span class="self">Self</span>::ProverParam { powers_of_g };
-        <span class="kw">let </span>vk = <span class="self">Self</span>::VerifierParam {
-            g: <span class="self">self</span>.powers_of_g[<span class="number">0</span>],
-            h: <span class="self">self</span>.h,
-            beta_h: <span class="self">self</span>.beta_h,
-        };
-        <span class="prelude-val">Ok</span>((pk, vk))
+        <span class="self">self</span>.trim_with_verifier_degree(supported_degree, <span class="number">1</span>)
     }
 
     <span class="comment">// (alex): I&#39;m not sure how to import `RngCore, CryptoRng` under `cfg(test)`
@@ -274,7 +369,18 @@
     <span class="kw">where
         </span>R: ark_std::rand::RngCore + ark_std::rand::CryptoRng,
     {
-        tests::gen_srs_for_testing(rng, max_degree)
+        tests::gen_srs_for_testing(rng, max_degree, <span class="number">1</span>)
+    }
+
+    <span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="kw">fn </span>gen_srs_for_testing_with_verifier_degree&lt;
+        R: ark_std::rand::prelude::RngCore + ark_std::rand::prelude::CryptoRng,
+    &gt;(
+        rng: <span class="kw-2">&amp;mut </span>R,
+        prover_supported_degree: usize,
+        verifier_supported_degree: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PCSError&gt; {
+        tests::gen_srs_for_testing(rng, prover_supported_degree, verifier_supported_degree)
     }
 }
 
@@ -292,10 +398,14 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gen_srs_for_testing&lt;E: Pairing, R: RngCore + CryptoRng&gt;(
         rng: <span class="kw-2">&amp;mut </span>R,
-        max_degree: usize,
+        prover_degree: usize,
+        verifier_degree: usize,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;UnivariateUniversalParams&lt;E&gt;, PCSError&gt; {
-        <span class="kw">let </span>setup_time =
-            <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, max_degree));
+        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
+            <span class="string">&quot;KZG10::Setup with prover degree {} and verifier degree {}&quot;</span>,
+            prover_degree,
+            verifier_degree
+        ));
         <span class="kw">let </span>beta = E::ScalarField::rand(rng);
         <span class="kw">let </span>g = E::G1::rand(rng);
         <span class="kw">let </span>h = E::G2::rand(rng);
@@ -303,12 +413,13 @@
         <span class="kw">let </span><span class="kw-2">mut </span>powers_of_beta = <span class="macro">vec!</span>[E::ScalarField::one()];
 
         <span class="kw">let </span><span class="kw-2">mut </span>cur = beta;
+        <span class="kw">let </span>max_degree = ark_std::cmp::max(prover_degree, verifier_degree);
         <span class="kw">for _ in </span><span class="number">0</span>..max_degree {
             powers_of_beta.push(cur);
             cur <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>beta;
         }
 
-        <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(max_degree + <span class="number">1</span>);
+        <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(prover_degree + <span class="number">1</span>);
 
         <span class="kw">let </span>scalar_bits = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
         <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Generating powers of G&quot;</span>);
@@ -323,10 +434,17 @@
         <span class="kw">let </span>h = h.into_affine();
         <span class="kw">let </span>beta_h = (h * beta).into_affine();
 
+        <span class="kw">let </span>powers_of_h = powers_of_beta
+            .iter()
+            .take(verifier_degree + <span class="number">1</span>)
+            .map(|x| (h * x).into_affine())
+            .collect();
+
         <span class="kw">let </span>pp = UnivariateUniversalParams {
             powers_of_g,
             h,
             beta_h,
+            powers_of_h,
         };
         <span class="macro">end_timer!</span>(setup_time);
         <span class="prelude-val">Ok</span>(pp)

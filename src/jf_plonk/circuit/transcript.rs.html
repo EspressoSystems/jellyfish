@@ -408,6 +408,11 @@
 <a href="#408" id="408">408</a>
 <a href="#409" id="409">409</a>
 <a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -640,7 +645,7 @@
         short_weierstrass::{Affine, SWCurveConfig},
         AffineRepr, CurveGroup,
     };
-    <span class="kw">use </span>ark_std::{format, UniformRand};
+    <span class="kw">use </span>ark_std::{format, vec, UniformRand};
     <span class="kw">use </span>jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
     <span class="kw">use </span>jf_relation::gadgets::ecc::TEPoint;
     <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching, test_rng};
@@ -711,10 +716,15 @@
         <span class="kw">let </span><span class="kw-2">mut </span>transcript_var = RescueTranscriptVar::new(<span class="kw-2">&amp;mut </span>circuit);
         <span class="kw">let </span><span class="kw-2">mut </span>transcript = RescueTranscript::&lt;F&gt;::new(label);
 
+        <span class="kw">let </span>g = E::G1Affine::generator();
+        <span class="kw">let </span>h = E::G2Affine::generator();
+        <span class="kw">let </span>beta_h = E::G2::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
         <span class="kw">let </span>open_key: UnivariateVerifierParam&lt;E&gt; = UnivariateVerifierParam {
-            g: E::G1Affine::generator(),
-            h: E::G2Affine::generator(),
-            beta_h: E::G2::rand(<span class="kw-2">&amp;mut </span>rng).into_affine(),
+            g,
+            h,
+            beta_h,
+            powers_of_h: <span class="macro">vec!</span>[h, beta_h],
+            powers_of_g: <span class="macro">vec!</span>[g],
         };
 
         <span class="kw">let </span>dummy_vk = VerifyingKey {
@@ -723,7 +733,7 @@
             sigma_comms: Vec::new(),
             selector_comms: Vec::new(),
             k: Vec::new(),
-            open_key,
+            open_key: open_key.clone(),
             is_merged: <span class="bool-val">false</span>,
             plookup_vk: <span class="prelude-val">None</span>,
         };
@@ -783,7 +793,7 @@
                 sigma_comms,
                 selector_comms,
                 k,
-                open_key,
+                open_key: open_key.clone(),
                 is_merged: <span class="bool-val">false</span>,
                 plookup_vk: <span class="prelude-val">None</span>,
             };
