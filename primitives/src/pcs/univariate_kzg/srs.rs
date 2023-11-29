@@ -129,7 +129,8 @@ mod tests {
         rng: &mut R,
         max_degree: usize,
     ) -> Result<UnivariateUniversalParams<E>, PCSError> {
-        let setup_time = start_timer!(|| format!("KZG10::Setup with degree {}", max_degree));
+        let setup_time =
+            start_timer!(|| ark_std::format!("KZG10::Setup with degree {}", max_degree));
         let beta = E::ScalarField::rand(rng);
         let g = E::G1::rand(rng);
         let h = E::G2::rand(rng);
