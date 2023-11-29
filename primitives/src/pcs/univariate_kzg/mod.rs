@@ -451,7 +451,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
     ///
     /// Warning: don't use it when `points.len()` is large
     fn multi_point_verify(
-        srs: &Self::SRS,
+        verifier_param: impl Borrow<<Self::SRS as StructuredReferenceString>::VerifierParam>,
         commitment: &Self::Commitment,
         points: &[Self::Point],
         values: &[Self::Evaluation],
@@ -469,10 +469,10 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 values.len(),
             )));
         }
-        if srs.borrow().powers_of_h.len() < points.len() + 1 {
+        if verifier_param.borrow().powers_of_h.len() < points.len() + 1 {
             return Err(PCSError::InvalidParameters(format!(
                 "the number of powers of beta times h {} in SRS <= the number of evaluation points {}",
-                srs.borrow().powers_of_h.len(),
+                verifier_param.borrow().powers_of_h.len(),
                 points.len(),
             )));
         }
@@ -494,7 +494,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
             skip_leading_zeros_and_convert_to_bigints(&evals_poly);
 
         let evals_cm: E::G1Affine = E::G1::msm_bigint(
-            &srs.borrow().powers_of_g[num_leading_zeros..],
+            &verifier_param.borrow().powers_of_g[num_leading_zeros..],
             &evals_poly_coeffs,
         )
         .into_affine();
@@ -517,7 +517,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
             skip_leading_zeros_and_convert_to_bigints(&vanish_poly);
 
         let vanish_cm: E::G2Affine = E::G2::msm_bigint(
-            &srs.borrow().powers_of_h[num_leading_zeros..],
+            &verifier_param.borrow().powers_of_h[num_leading_zeros..],
             &vanish_poly_coeffs,
         )
         .into_affine();
@@ -529,7 +529,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 .into(),
             proof.proof.into(),
         ];
-        let pairing_inputs_r: Vec<E::G2Prepared> = vec![srs.h.into(), vanish_cm.into()];
+        let pairing_inputs_r: Vec<E::G2Prepared> = vec![verifier_param.borrow().h.into(), vanish_cm.into()];
 
         let res = E::multi_pairing(pairing_inputs_l, pairing_inputs_r)
             .0
@@ -746,7 +746,9 @@ mod tests {
             degree,
             verifier_degree,
         )?;
-        let (ck, _) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
+        let (ck, vk) = pp
+            .borrow()
+            .trim_with_verifier_degree(degree, verifier_degree)?;
         for _ in 0..10 {
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
@@ -756,7 +758,7 @@ mod tests {
             let (proof, values) = UnivariateKzgPCS::<E>::multi_point_open(&ck, &p, &points[..])?;
 
             assert!(UnivariateKzgPCS::<E>::multi_point_verify(
-                &pp,
+                &vk,
                 &comm,
                 &points[..],
                 &values[..],

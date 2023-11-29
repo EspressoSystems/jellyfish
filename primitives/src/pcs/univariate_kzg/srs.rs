@@ -47,15 +47,19 @@ pub struct UnivariateProverParam<E: Pairing> {
 #[derive(Derivative, Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
 #[derivative(Default)]
 pub struct UnivariateVerifierParam<E: Pairing> {
+    /// TODO: remove g, h and beta_h
     /// The generator of G1.
     pub g: E::G1Affine,
-    /// TODO: remove h and beta_h
     /// The generator of G2.
     pub h: E::G2Affine,
     /// \beta times the above generator of G2.
     pub beta_h: E::G2Affine,
-    /// powers of \beta time the generator h of G2: h^{beta^2}, h^{beta^3}, ....
+    /// powers of \beta time the generator h of G2: only used for multi-point
+    /// openings
     pub powers_of_h: Vec<E::G2Affine>,
+    /// powers of \beta time the generator g of G1: only used for multi-point
+    /// openings
+    pub powers_of_g: Vec<E::G1Affine>,
 }
 
 impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
@@ -76,6 +80,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
             h: self.h,
             beta_h: self.beta_h,
             powers_of_h: self.powers_of_h[..=supported_degree].to_vec(),
+            powers_of_g: self.powers_of_g[..=supported_degree].to_vec(),
         }
     }
 
@@ -115,6 +120,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
             h: self.h,
             beta_h: self.beta_h,
             powers_of_h: self.powers_of_h[..=verifier_supported_degree].to_vec(),
+            powers_of_g: self.powers_of_g[..=verifier_supported_degree].to_vec(),
         };
         Ok((pk, vk))
     }

@@ -301,13 +301,15 @@ mod tests {
         let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
         let mut transcript = RescueTranscript::<F>::new(label);
 
+        let g = E::G1Affine::generator();
         let h = E::G2Affine::generator();
         let beta_h = E::G2::rand(&mut rng).into_affine();
         let open_key: UnivariateVerifierParam<E> = UnivariateVerifierParam {
-            g: E::G1Affine::generator(),
+            g,
             h,
             beta_h,
             powers_of_h: vec![h, beta_h],
+            powers_of_g: vec![g],
         };
 
         let dummy_vk = VerifyingKey {

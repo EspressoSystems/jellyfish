@@ -360,7 +360,7 @@ where
     /// Verifies that `values` are the evaluation at the `points` of the
     /// polynomial committed inside `comm`.
     fn multi_point_verify(
-        srs: &Self::SRS,
+        verifier_param: impl Borrow<<Self::SRS as StructuredReferenceString>::VerifierParam>,
         commitment: &Self::Commitment,
         points: &[Self::Point],
         values: &[Self::Evaluation],
