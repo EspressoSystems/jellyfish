@@ -17,6 +17,8 @@ use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
 use ark_ff::{FftField, Field, PrimeField};
+#[cfg(not(feature = "seq-fk-23"))]
+use ark_poly::EvaluationDomain;
 use ark_poly::{
     univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
 };
@@ -332,35 +334,81 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<Vec<Self::Proof>, PCSError> {
-        #[cfg(feature = "naive-kzg-multi-open")]
-        {
-            use ark_poly::EvaluationDomain;
-            let prover_param = prover_param.borrow(); // needed for Send + Sync
+        // #[cfg(feature = "naive-kzg-multi-open")]
+        // {
+        //     use ark_poly::EvaluationDomain;
+        //     let prover_param = prover_param.borrow(); // needed for Send + Sync
 
-            // We prefer use `.par_bridge()` instead of
-            // `.collect::<Vec<_>>().par_iter()`.
-            // (It avoids an unnecessary `collect()`.)
-            // However, `par_iter` is guaranteed to preserve order,
-            // whereas `par_bridge` is not!
-            // https://github.com/rayon-rs/rayon/issues/551#issuecomment-882069261
-            // https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html
-            //
-            // We prefer to compute only the proof---not the evaluation.
-            // However, `Self::open()` returns both,
-            // so we throw away the eval via `.map(|r| r.0)`.
-            // https://github.com/EspressoSystems/jellyfish/issues/426
-            domain
-                .elements()
-                .take(num_points)
-                .collect::<Vec<_>>()
-                .par_iter()
-                .map(|point| Self::open(prover_param, polynomial, point).map(|r| r.0))
-                .collect()
+        //     // We prefer use `.par_bridge()` instead of
+        //     // `.collect::<Vec<_>>().par_iter()`.
+        //     // (It avoids an unnecessary `collect()`.)
+        //     // However, `par_iter` is guaranteed to preserve order,
+        //     // whereas `par_bridge` is not!
+        //     // https://github.com/rayon-rs/rayon/issues/551#issuecomment-882069261
+        //     // https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html
+        //     //
+        //     // We prefer to compute only the proof---not the evaluation.
+        //     // However, `Self::open()` returns both,
+        //     // so we throw away the eval via `.map(|r| r.0)`.
+        //     // https://github.com/EspressoSystems/jellyfish/issues/426
+        //     domain
+        //         .elements()
+        //         .take(num_points)
+        //         .collect::<Vec<_>>()
+        //         .par_iter()
+        //         .map(|point| Self::open(prover_param, polynomial, point).map(|r|
+        // r.0))         .collect()
+        // }
+
+        #[cfg(not(feature = "seq-fk-23"))]
+        {
+            let h_poly_timer = start_timer!(|| "compute h_poly");
+            let h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+            end_timer!(h_poly_timer);
+            let small_domain: Radix2EvaluationDomain<Self::Evaluation> =
+                Radix2EvaluationDomain::new(h_poly.degree() + 1).ok_or_else(|| {
+                    PCSError::InvalidParameters(format!(
+                        "failed to create a domain of size {}",
+                        h_poly.degree() + 1,
+                    ))
+                })?;
+            let parallel_factor = domain.size() / small_domain.size();
+
+            let mut offsets = vec![Self::Evaluation::one()];
+            for _ in 1..parallel_factor {
+                offsets.push(domain.group_gen() * offsets.last().unwrap());
+            }
+            let proofs_timer = start_timer!(|| format!(
+                "gen eval proofs with parallel_factor {} and num_points {}",
+                parallel_factor, num_points,
+            ));
+            let proofs: Vec<Vec<_>> = parallelizable_slice_iter(&offsets)
+                .map(|&offset| {
+                    small_domain
+                        .get_coset(offset)
+                        .unwrap()
+                        .fft(&h_poly.coeffs[..])
+                })
+                .collect();
+            end_timer!(proofs_timer);
+            let mut res = vec![];
+            for j in 0..small_domain.size() {
+                for proof in proofs.iter() {
+                    res.push(UnivariateKzgProof {
+                        proof: proof[j].into_affine(),
+                    });
+                }
+            }
+            res = res.into_iter().take(num_points).collect();
+            Ok(res)
         }
 
-        #[cfg(not(feature = "naive-kzg-multi-open"))]
+        #[cfg(feature = "seq-fk-23")]
         {
+            let h_poly_timer = start_timer!(|| "compute h_poly");
             let mut h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+            end_timer!(h_poly_timer);
+            let proofs_timer = start_timer!(|| "gen eval proofs");
             let proofs: Vec<_> = h_poly
                 .batch_evaluate_rou(domain)?
                 .into_iter()
@@ -369,6 +417,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                     proof: g.into_affine(),
                 })
                 .collect();
+            end_timer!(proofs_timer);
             Ok(proofs)
         }
     }
