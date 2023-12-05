@@ -509,9 +509,32 @@ mod tests {
 
                     let large_range_proof: LargeRangeProof<_> =
                         advz.payload_proof(&payload, range.clone()).unwrap();
-                    advz.payload_verify(stmt, &large_range_proof)
+                    advz.payload_verify(stmt.clone(), &large_range_proof)
                         .unwrap()
                         .unwrap();
+
+                    // test wrong proofs
+                    let stmt_corrupted = Statement {
+                        // corrupt the payload subslice by adding 1 to each byte
+                        payload_subslice: &stmt
+                            .payload_subslice
+                            .iter()
+                            .cloned()
+                            .map(|b| b.wrapping_add(1))
+                            .collect::<Vec<_>>(),
+                        ..stmt
+                    };
+                    advz.payload_verify(stmt_corrupted.clone(), &small_range_proof)
+                        .unwrap()
+                        .unwrap_err();
+                    advz.payload_verify(stmt_corrupted, &large_range_proof)
+                        .unwrap()
+                        .unwrap_err();
+
+                    // TODO more tests for bad proofs, eg:
+                    // - valid proof, different range
+                    // - corrupt proof
+                    // - etc
                 }
             }
         }
