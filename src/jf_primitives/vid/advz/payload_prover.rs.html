@@ -534,6 +534,66 @@
 <a href="#534" id="534">534</a>
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -564,10 +624,12 @@
         vid, VidError, VidScheme,
     },
 };
+<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>ark_ec::pairing::Pairing;
 <span class="kw">use </span>ark_poly::EvaluationDomain;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{format, ops::Range};
+<span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_utils::canonical;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
@@ -620,31 +682,40 @@
         <span class="comment">// index conversion
         </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
         <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
-        <span class="kw">let </span>start_namespace_byte = <span class="self">self</span>.index_poly_to_byte(range_poly.start);
-        <span class="kw">let </span>offset_elem = range_elem.start - <span class="self">self</span>.index_byte_to_elem(start_namespace_byte);
         <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
-
-        check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
-
-        <span class="comment">// grab the polynomial that contains `range`
-        // TODO allow precomputation: https://github.com/EspressoSystems/jellyfish/issues/397
-        </span><span class="kw">let </span>polynomial = <span class="self">self</span>.polynomial(
-            bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload[start_namespace_byte..].iter())
-                .take(<span class="self">self</span>.payload_chunk_size),
-        );
+        <span class="kw">let </span>range_poly_byte = <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len());
+        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
+        <span class="kw">let </span>final_points_range_end =
+            <span class="self">self</span>.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         <span class="comment">// prepare list of input points
-        // perf: can&#39;t avoid use of `skip`
-        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = {
-            <span class="self">self</span>.eval_domain
-                .elements()
-                .skip(offset_elem)
-                .take(range_elem.len())
-                .collect()
-        };
+        // perf: we might not need all these points
+        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.eval_domain.elements().collect();
 
-        <span class="kw">let </span>(proofs, _evals) =
-            UnivariateKzgPCS::multi_open(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polynomial, <span class="kw-2">&amp;</span>points).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(<span class="kw-2">&amp;</span>payload[range_poly_byte]);
+        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(range_poly.len() * points.len());
+        <span class="kw">for </span>(i, evals_iter) <span class="kw">in </span>elems_iter
+            .chunks(<span class="self">self</span>.payload_chunk_size)
+            .into_iter()
+            .enumerate()
+        {
+            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
+            <span class="kw">let </span>points_range = Range {
+                <span class="comment">// first polynomial? skip to the start of the proof range
+                </span>start: <span class="kw">if </span>i == <span class="number">0 </span>{ offset_elem } <span class="kw">else </span>{ <span class="number">0 </span>},
+                <span class="comment">// final polynomial? stop at the end of the proof range
+                </span>end: <span class="kw">if </span>i == range_poly.len() - <span class="number">1 </span>{
+                    final_points_range_end
+                } <span class="kw">else </span>{
+                    points.len()
+                },
+            };
+            proofs.extend(
+                UnivariateKzgPCS::multi_open(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly, <span class="kw-2">&amp;</span>points[points_range])
+                    .map_err(vid)<span class="question-mark">?
+                    </span>.<span class="number">0</span>,
+            );
+        }
 
         <span class="prelude-val">Ok</span>(SmallRangeProof {
             proofs,
@@ -660,14 +731,6 @@
         proof: <span class="kw-2">&amp;</span>SmallRangeProof&lt;KzgProof&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt; {
         <span class="self">Self</span>::check_stmt_proof_consistency(<span class="kw-2">&amp;</span>stmt, <span class="kw-2">&amp;</span>proof.chunk_range)<span class="question-mark">?</span>;
-
-        <span class="comment">// index conversion
-        </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>proof.chunk_range);
-        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
-        <span class="kw">let </span>start_namespace_byte = <span class="self">self</span>.index_poly_to_byte(range_poly.start);
-        <span class="kw">let </span>offset_elem = range_elem.start - <span class="self">self</span>.index_byte_to_elem(start_namespace_byte);
-
-        check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
         <span class="self">Self</span>::check_common_commit_consistency(stmt.common, stmt.commit)<span class="question-mark">?</span>;
 
         <span class="comment">// prepare list of data elems
@@ -680,36 +743,60 @@
         )
         .collect();
 
-        <span class="comment">// prepare list of input points
-        // perf: can&#39;t avoid use of `skip`
-        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = {
-            <span class="self">self</span>.eval_domain
-                .elements()
-                .skip(offset_elem)
-                .take(range_elem.len())
-                .collect()
-        };
-
-        <span class="comment">// verify proof
-        // TODO naive verify for multi_open https://github.com/EspressoSystems/jellyfish/issues/387
-        </span><span class="kw">if </span>data_elems.len() != proof.proofs.len() {
+        <span class="kw">if </span>data_elems.len() != proof.proofs.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">&quot;data len {} differs from proof len {}&quot;</span>,
                 data_elems.len(),
                 proof.proofs.len()
             )));
         }
-        <span class="macro">assert_eq!</span>(data_elems.len(), points.len()); <span class="comment">// sanity
-        </span><span class="kw">let </span>poly_commit = <span class="kw-2">&amp;</span>stmt.common.poly_commits[range_poly.start];
-        <span class="kw">for </span>(point, (elem, pf)) <span class="kw">in </span>points
+
+        <span class="comment">// index conversion
+        </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>proof.chunk_range);
+        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
+        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
+        <span class="kw">let </span>final_points_range_end =
+            <span class="self">self</span>.final_poly_points_range_end(range_elem.len(), offset_elem);
+
+        <span class="comment">// prepare list of input points
+        // perf: we might not need all these points
+        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.eval_domain.elements().collect();
+
+        <span class="comment">// verify proof
+        </span><span class="kw">let </span><span class="kw-2">mut </span>cur_proof_index = <span class="number">0</span>;
+        <span class="kw">for </span>(i, poly_commit) <span class="kw">in </span>stmt.common.poly_commits[range_poly.clone()]
             .iter()
-            .zip(data_elems.iter().zip(proof.proofs.iter()))
+            .enumerate()
         {
-            <span class="kw">if </span>!UnivariateKzgPCS::verify(<span class="kw-2">&amp;</span><span class="self">self</span>.vk, poly_commit, point, elem, pf).map_err(vid)<span class="question-mark">? </span>{
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
+            <span class="kw">let </span>points_range = Range {
+                <span class="comment">// first polynomial? skip to the start of the proof range
+                </span>start: <span class="kw">if </span>i == <span class="number">0 </span>{ offset_elem } <span class="kw">else </span>{ <span class="number">0 </span>},
+                <span class="comment">// final polynomial? stop at the end of the proof range
+                </span>end: <span class="kw">if </span>i == range_poly.len() - <span class="number">1 </span>{
+                    final_points_range_end
+                } <span class="kw">else </span>{
+                    points.len()
+                },
+            };
+            <span class="comment">// TODO naive verify for multi_open https://github.com/EspressoSystems/jellyfish/issues/387
+            </span><span class="kw">for </span>point <span class="kw">in </span>points[points_range].iter() {
+                <span class="kw">let </span>data_elem = data_elems
+                    .get(cur_proof_index)
+                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">&quot;ran out of data elems&quot;</span>)))<span class="question-mark">?</span>;
+                <span class="kw">let </span>cur_proof = proof
+                    .proofs
+                    .get(cur_proof_index)
+                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">&quot;ran out of proofs&quot;</span>)))<span class="question-mark">?</span>;
+                <span class="kw">if </span>!UnivariateKzgPCS::verify(<span class="kw-2">&amp;</span><span class="self">self</span>.vk, poly_commit, point, data_elem, cur_proof)
+                    .map_err(vid)<span class="question-mark">?
+                </span>{
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
+                }
+                cur_proof_index += <span class="number">1</span>;
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
+        <span class="macro">assert_eq!</span>(cur_proof_index, proof.proofs.len()); <span class="comment">// sanity
+        </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
     }
 }
 
@@ -732,16 +819,12 @@
         <span class="comment">// index conversion
         </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
         <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
-        <span class="kw">let </span>start_namespace_byte = <span class="self">self</span>.index_poly_to_byte(range_poly.start);
-        <span class="kw">let </span>offset_elem = range_elem.start - <span class="self">self</span>.index_byte_to_elem(start_namespace_byte);
         <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
-
-        check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
+        <span class="kw">let </span>range_poly_byte = <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len());
+        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
 
         <span class="comment">// compute the prefix and suffix elems
-        </span><span class="kw">let </span><span class="kw-2">mut </span>elems_iter =
-            bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload[start_namespace_byte..].iter())
-                .take(<span class="self">self</span>.payload_chunk_size);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload[range_poly_byte].iter());
         <span class="kw">let </span>prefix_elems: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.by_ref().take(offset_elem).collect();
         <span class="kw">let </span>suffix_elems: Vec&lt;<span class="kw">_</span>&gt; = elems_iter.skip(range_elem.len()).collect();
 
@@ -760,35 +843,36 @@
         proof: <span class="kw-2">&amp;</span>LargeRangeProof&lt;KzgEval&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt; {
         <span class="self">Self</span>::check_stmt_proof_consistency(<span class="kw-2">&amp;</span>stmt, <span class="kw-2">&amp;</span>proof.chunk_range)<span class="question-mark">?</span>;
+        <span class="self">Self</span>::check_common_commit_consistency(stmt.common, stmt.commit)<span class="question-mark">?</span>;
 
         <span class="comment">// index conversion
         </span><span class="kw">let </span>range_poly = <span class="self">self</span>.range_byte_to_poly(<span class="kw-2">&amp;</span>proof.chunk_range);
 
-        check_range_poly(<span class="kw-2">&amp;</span>range_poly)<span class="question-mark">?</span>;
-        <span class="self">Self</span>::check_common_commit_consistency(stmt.common, stmt.commit)<span class="question-mark">?</span>;
-
-        <span class="comment">// rebuild the poly commit, check against `common`
-        </span><span class="kw">let </span>poly_commit = {
-            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(
+        <span class="comment">// rebuild the needed payload elements from statement and proof
+        </span><span class="kw">let </span>elems_iter = proof
+            .prefix_elems
+            .iter()
+            .cloned()
+            .chain(bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(
                 proof
-                    .prefix_elems
+                    .prefix_bytes
                     .iter()
-                    .cloned()
-                    .chain(bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(
-                        proof
-                            .prefix_bytes
-                            .iter()
-                            .chain(stmt.payload_subslice)
-                            .chain(proof.suffix_bytes.iter()),
-                    ))
-                    .chain(proof.suffix_elems.iter().cloned()),
-            );
-            UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?
-        </span>};
-        <span class="kw">if </span>poly_commit != stmt.common.poly_commits[range_poly.start] {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
-        }
+                    .chain(stmt.payload_subslice)
+                    .chain(proof.suffix_bytes.iter()),
+            ))
+            .chain(proof.suffix_elems.iter().cloned());
 
+        <span class="comment">// rebuild the poly commits, check against `common`
+        </span><span class="kw">for </span>(commit_index, evals_iter) <span class="kw">in </span>range_poly
+            .into_iter()
+            .zip(elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter())
+        {
+            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
+            <span class="kw">let </span>poly_commit = UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
+            <span class="kw">if </span>poly_commit != stmt.common.poly_commits[commit_index] {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
+            }
+        }
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(()))
     }
 }
@@ -799,23 +883,11 @@
     H: HasherDigest,
 {
     <span class="comment">// lots of index manipulation
-    </span><span class="kw">fn </span>index_byte_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; usize {
-        index_coarsen(index, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
-    }
-    <span class="kw">fn </span>index_poly_to_byte(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; usize {
-        index_refine(
-            index,
-            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
-        )
-    }
-    <span class="kw">fn </span>range_byte_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
+    </span><span class="kw">fn </span>range_byte_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
         range_coarsen(range, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
     }
-    <span class="kw">fn </span>range_elem_to_byte(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
-        range_refine(range, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
-    }
     <span class="kw">fn </span>range_elem_to_byte_clamped(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, len: usize) -&gt; Range&lt;usize&gt; {
-        <span class="kw">let </span>result = <span class="self">self</span>.range_elem_to_byte(range);
+        <span class="kw">let </span>result = range_refine(range, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;());
         Range {
             end: ark_std::cmp::min(result.end, len),
             ..result
@@ -830,8 +902,29 @@
             <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         )
     }
+    <span class="kw">fn </span>range_poly_to_byte_clamped(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, len: usize) -&gt; Range&lt;usize&gt; {
+        <span class="kw">let </span>result = range_refine(
+            range,
+            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+        );
+        Range {
+            end: ark_std::cmp::min(result.end, len),
+            ..result
+        }
+    }
+    <span class="kw">fn </span>offset_poly_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range_poly_start: usize, range_elem_start: usize) -&gt; usize {
+        <span class="kw">let </span>start_poly_byte = index_refine(
+            range_poly_start,
+            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+        );
+        range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
+    }
+    <span class="kw">fn </span>final_poly_points_range_end(<span class="kw-2">&amp;</span><span class="self">self</span>, range_elem_len: usize, offset_elem: usize) -&gt; usize {
+        (range_elem_len + offset_elem - <span class="number">1</span>) % <span class="self">self</span>.payload_chunk_size + <span class="number">1
+    </span>}
 
-    <span class="kw">fn </span>check_common_commit_consistency(
+    <span class="comment">// arg check helpers
+    </span><span class="kw">fn </span>check_common_commit_consistency(
         common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
         commit: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit,
     ) -&gt; VidResult&lt;()&gt; {
@@ -842,7 +935,6 @@
         }
         <span class="prelude-val">Ok</span>(())
     }
-
     <span class="kw">fn </span>check_stmt_proof_consistency(
         stmt: <span class="kw-2">&amp;</span>Statement&lt;<span class="self">Self</span>&gt;,
         proof_range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;,
@@ -912,17 +1004,6 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn </span>check_range_poly(range_poly: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; VidResult&lt;()&gt; {
-    <span class="comment">// TODO TEMPORARY: forbid requests that span multiple polynomials
-    </span><span class="kw">if </span>range_poly.len() != <span class="number">1 </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-            <span class="string">&quot;request spans {} polynomials, expect 1&quot;</span>,
-            range_poly.len()
-        )));
-    }
-    <span class="prelude-val">Ok</span>(())
-}
-
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span><span class="kw">crate</span>::vid::{
@@ -946,6 +1027,7 @@
         <span class="comment">// play with these items
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
         <span class="kw">let </span>num_polys = <span class="number">3</span>;
+        <span class="kw">let </span>num_random_cases = <span class="number">20</span>;
 
         <span class="comment">// more items as a function of the above
         </span><span class="kw">let </span>payload_elems_len = num_polys * payload_chunk_size;
@@ -964,46 +1046,20 @@
         <span class="comment">// TEST: prove data ranges for this paylaod
         // it takes too long to test all combos of (polynomial, start, len)
         // so do some edge cases and random cases
-        </span><span class="kw">let </span>edge_cases = <span class="macro">vec!</span>[
-            Range { start: <span class="number">0</span>, end: <span class="number">1 </span>},
-            Range { start: <span class="number">0</span>, end: <span class="number">2 </span>},
-            Range {
-                start: <span class="number">0</span>,
-                end: poly_bytes_len - <span class="number">1</span>,
-            },
-            Range {
-                start: <span class="number">0</span>,
-                end: poly_bytes_len,
-            },
-            Range { start: <span class="number">1</span>, end: <span class="number">2 </span>},
-            Range { start: <span class="number">1</span>, end: <span class="number">3 </span>},
-            Range {
-                start: <span class="number">1</span>,
-                end: poly_bytes_len - <span class="number">1</span>,
-            },
-            Range {
-                start: <span class="number">1</span>,
-                end: poly_bytes_len,
-            },
-            Range {
-                start: poly_bytes_len - <span class="number">2</span>,
-                end: poly_bytes_len - <span class="number">1</span>,
-            },
-            Range {
-                start: poly_bytes_len - <span class="number">2</span>,
-                end: poly_bytes_len,
-            },
-            Range {
-                start: poly_bytes_len - <span class="number">1</span>,
-                end: poly_bytes_len,
-            },
-        ];
+        </span><span class="kw">let </span>edge_cases = {
+            <span class="kw">let </span><span class="kw-2">mut </span>edge_cases = make_edge_cases(<span class="number">0</span>, poly_bytes_len); <span class="comment">// inside the first polynomial
+            </span>edge_cases.extend(make_edge_cases(
+                payload_bytes_base_len - poly_bytes_len,
+                payload_bytes_base_len,
+            )); <span class="comment">// inside the final polynomial
+            </span>edge_cases.extend(make_edge_cases(<span class="number">0</span>, payload_bytes_base_len)); <span class="comment">// spanning the entire payload
+            </span>edge_cases
+        };
         <span class="kw">let </span>random_cases = {
-            <span class="kw">let </span>num_cases = edge_cases.len();
-            <span class="kw">let </span><span class="kw-2">mut </span>random_cases = Vec::with_capacity(num_cases);
-            <span class="kw">for _ in </span><span class="number">0</span>..num_cases {
-                <span class="kw">let </span>start = rng.gen_range(<span class="number">0</span>..poly_bytes_len - <span class="number">1</span>);
-                <span class="kw">let </span>end = rng.gen_range(start + <span class="number">1</span>..poly_bytes_len);
+            <span class="kw">let </span><span class="kw-2">mut </span>random_cases = Vec::with_capacity(num_random_cases);
+            <span class="kw">for _ in </span><span class="number">0</span>..num_random_cases {
+                <span class="kw">let </span>start = rng.gen_range(<span class="number">0</span>..payload_bytes_base_len - <span class="number">1</span>);
+                <span class="kw">let </span>end = rng.gen_range(start + <span class="number">1</span>..payload_bytes_base_len);
                 random_cases.push(Range { start, end });
             }
             random_cases
@@ -1015,53 +1071,117 @@
             <span class="kw">let </span>d = advz.disperse(<span class="kw-2">&amp;</span>payload).unwrap();
             <span class="macro">println!</span>(<span class="string">&quot;payload byte len case: {}&quot;</span>, payload.len());
 
-            <span class="kw">for </span>poly <span class="kw">in </span><span class="number">0</span>..num_polys {
-                <span class="kw">let </span>poly_offset = poly * poly_bytes_len;
+            <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
+                <span class="kw">for </span>range <span class="kw">in </span>cases.<span class="number">0</span>.iter() {
+                    <span class="macro">print!</span>(<span class="string">&quot;{} case: {:?}&quot;</span>, cases.<span class="number">1</span>, range);
 
-                <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
-                    <span class="kw">for </span>range <span class="kw">in </span>cases.<span class="number">0</span>.iter() {
-                        <span class="kw">let </span>range = Range {
-                            start: range.start + poly_offset,
-                            end: range.end + poly_offset,
-                        };
-                        <span class="macro">print!</span>(<span class="string">&quot;poly {} {} case: {:?}&quot;</span>, poly, cases.<span class="number">1</span>, range);
+                    <span class="comment">// ensure range fits inside payload
+                    </span><span class="kw">let </span>range = <span class="kw">if </span>range.start &gt;= payload.len() {
+                        <span class="macro">println!</span>(<span class="string">&quot; outside payload len {}, skipping&quot;</span>, payload.len());
+                        <span class="kw">continue</span>;
+                    } <span class="kw">else if </span>range.end &gt; payload.len() {
+                        <span class="macro">println!</span>(<span class="string">&quot; clamped to payload len {}&quot;</span>, payload.len());
+                        Range {
+                            end: payload.len(),
+                            ..<span class="kw-2">*</span>range
+                        }
+                    } <span class="kw">else </span>{
+                        <span class="macro">println!</span>();
+                        range.clone()
+                    };
 
-                        <span class="comment">// ensure range fits inside payload
-                        </span><span class="kw">let </span>range = <span class="kw">if </span>range.start &gt;= payload.len() {
-                            <span class="macro">println!</span>(<span class="string">&quot; outside payload len {}, skipping&quot;</span>, payload.len());
-                            <span class="kw">continue</span>;
-                        } <span class="kw">else if </span>range.end &gt; payload.len() {
-                            <span class="macro">println!</span>(<span class="string">&quot; clamped to payload len {}&quot;</span>, payload.len());
-                            Range {
-                                end: payload.len(),
-                                ..range
-                            }
-                        } <span class="kw">else </span>{
-                            <span class="macro">println!</span>();
-                            range
-                        };
+                    <span class="kw">let </span>stmt = Statement {
+                        payload_subslice: <span class="kw-2">&amp;</span>payload[range.clone()],
+                        range: range.clone(),
+                        commit: <span class="kw-2">&amp;</span>d.commit,
+                        common: <span class="kw-2">&amp;</span>d.common,
+                    };
 
-                        <span class="kw">let </span>stmt = Statement {
-                            payload_subslice: <span class="kw-2">&amp;</span>payload[range.clone()],
-                            range: range.clone(),
-                            commit: <span class="kw-2">&amp;</span>d.commit,
-                            common: <span class="kw-2">&amp;</span>d.common,
-                        };
+                    <span class="kw">let </span>small_range_proof: SmallRangeProof&lt;<span class="kw">_</span>&gt; =
+                        advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt.clone(), <span class="kw-2">&amp;</span>small_range_proof)
+                        .unwrap()
+                        .unwrap();
 
-                        <span class="kw">let </span>small_range_proof: SmallRangeProof&lt;<span class="kw">_</span>&gt; =
-                            advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
-                        advz.payload_verify(stmt.clone(), <span class="kw-2">&amp;</span>small_range_proof)
-                            .unwrap()
-                            .unwrap();
+                    <span class="kw">let </span>large_range_proof: LargeRangeProof&lt;<span class="kw">_</span>&gt; =
+                        advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
+                    advz.payload_verify(stmt.clone(), <span class="kw-2">&amp;</span>large_range_proof)
+                        .unwrap()
+                        .unwrap();
 
-                        <span class="kw">let </span>large_range_proof: LargeRangeProof&lt;<span class="kw">_</span>&gt; =
-                            advz.payload_proof(<span class="kw-2">&amp;</span>payload, range.clone()).unwrap();
-                        advz.payload_verify(stmt, <span class="kw-2">&amp;</span>large_range_proof)
-                            .unwrap()
-                            .unwrap();
-                    }
-                }
+                    <span class="comment">// test wrong proofs
+                    </span><span class="kw">let </span>stmt_corrupted = Statement {
+                        <span class="comment">// corrupt the payload subslice by adding 1 to each byte
+                        </span>payload_subslice: <span class="kw-2">&amp;</span>stmt
+                            .payload_subslice
+                            .iter()
+                            .cloned()
+                            .map(|b| b.wrapping_add(<span class="number">1</span>))
+                            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                        ..stmt
+                    };
+                    advz.payload_verify(stmt_corrupted.clone(), <span class="kw-2">&amp;</span>small_range_proof)
+                        .unwrap()
+                        .unwrap_err();
+                    advz.payload_verify(stmt_corrupted, <span class="kw-2">&amp;</span>large_range_proof)
+                        .unwrap()
+                        .unwrap_err();
+
+                    <span class="comment">// TODO more tests for bad proofs, eg:
+                    // - valid proof, different range
+                    // - corrupt proof
+                    // - etc
+                </span>}
             }
+        }
+
+        <span class="kw">fn </span>make_edge_cases(min: usize, max: usize) -&gt; Vec&lt;Range&lt;usize&gt;&gt; {
+            <span class="macro">vec!</span>[
+                Range {
+                    start: min,
+                    end: min + <span class="number">1</span>,
+                },
+                Range {
+                    start: min,
+                    end: min + <span class="number">2</span>,
+                },
+                Range {
+                    start: min,
+                    end: max - <span class="number">1</span>,
+                },
+                Range {
+                    start: min,
+                    end: max,
+                },
+                Range {
+                    start: min + <span class="number">1</span>,
+                    end: min + <span class="number">2</span>,
+                },
+                Range {
+                    start: min + <span class="number">1</span>,
+                    end: min + <span class="number">3</span>,
+                },
+                Range {
+                    start: min + <span class="number">1</span>,
+                    end: max - <span class="number">1</span>,
+                },
+                Range {
+                    start: min + <span class="number">1</span>,
+                    end: max,
+                },
+                Range {
+                    start: max - <span class="number">2</span>,
+                    end: max - <span class="number">1</span>,
+                },
+                Range {
+                    start: max - <span class="number">2</span>,
+                    end: max,
+                },
+                Range {
+                    start: max - <span class="number">1</span>,
+                    end: max,
+                },
+            ]
         }
     }
 
