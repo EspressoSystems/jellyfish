@@ -595,7 +595,6 @@ where
     E: Pairing<ScalarField = F>,
     F: FftField,
 {
-    #[allow(dead_code)]
     fn compute_h_poly_parallel(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
         poly_coeffs: &[E::ScalarField],
