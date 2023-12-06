@@ -600,6 +600,11 @@ where
         prover_param: impl Borrow<UnivariateProverParam<E>>,
         poly_coeffs: &[E::ScalarField],
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
+        if poly_coeffs.is_empty() {
+            // Shouldn't we return error here? But test `round_trip` fails if we return
+            // error
+            return Ok(GeneralDensePolynomial::from_coeff_vec(vec![]));
+        }
         let h_poly_deg = poly_coeffs.len() - 1;
         let srs_vec: Vec<E::G1Affine> = prover_param
             .borrow()
