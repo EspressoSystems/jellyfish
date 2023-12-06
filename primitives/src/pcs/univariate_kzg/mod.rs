@@ -363,7 +363,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         #[cfg(not(feature = "seq-fk-23"))]
         {
             let h_poly_timer = start_timer!(|| "compute h_poly");
-            let h_poly = Self::compute_h_poly_in_fk23(prover_param, &polynomial.coeffs)?;
+            let h_poly = Self::compute_h_poly_parallel(prover_param, &polynomial.coeffs)?;
             end_timer!(h_poly_timer);
             let small_domain: Radix2EvaluationDomain<Self::Evaluation> =
                 Radix2EvaluationDomain::new(h_poly.degree() + 1).ok_or_else(|| {
@@ -595,6 +595,37 @@ where
     E: Pairing<ScalarField = F>,
     F: FftField,
 {
+    #[allow(dead_code)]
+    fn compute_h_poly_parallel(
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
+        poly_coeffs: &[E::ScalarField],
+    ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
+        let h_poly_deg = poly_coeffs.len() - 1;
+        let srs_vec: Vec<E::G1Affine> = prover_param
+            .borrow()
+            .powers_of_g
+            .iter()
+            .take(h_poly_deg)
+            .rev()
+            .cloned()
+            .collect();
+
+        let matrix: Vec<Vec<E::ScalarField>> = (0..h_poly_deg)
+            .map(|i| {
+                poly_coeffs
+                    .iter()
+                    .rev()
+                    .take(h_poly_deg - i)
+                    .copied()
+                    .collect()
+            })
+            .collect();
+        let h_vec: Vec<E::G1> = parallelizable_slice_iter(&matrix)
+            .map(|coeffs| E::G1::msm(&srs_vec[h_poly_deg - coeffs.len()..], &coeffs[..]).unwrap())
+            .collect();
+        Ok(GeneralDensePolynomial::from_coeff_vec(h_vec))
+    }
+
     // Sec 2.2. of <https://eprint.iacr.org/2023/033>
     fn compute_h_poly_in_fk23(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
