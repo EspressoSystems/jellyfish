@@ -38,6 +38,7 @@ and follow [semantic versioning](https://semver.org/) for our releases.
 - [#381](https://github.com/EspressoSystems/jellyfish/pull/381) VID take iterator instead of slice
 - [#389](https://github.com/EspressoSystems/jellyfish/pull/389) Hello-world namespace support for ADVZ VID scheme
 - [#406](https://github.com/EspressoSystems/jellyfish/pull/406) Implement KZG multiproof
+- [#438](https://github.com/EspressoSystems/jellyfish/pull/438) ADVZ PayloadProver support requests that span multiple polynomial
 
 ### Changed
 
