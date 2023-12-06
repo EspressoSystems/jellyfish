@@ -334,32 +334,6 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
         num_points: usize,
         domain: &Radix2EvaluationDomain<Self::Evaluation>,
     ) -> Result<Vec<Self::Proof>, PCSError> {
-        // #[cfg(feature = "naive-kzg-multi-open")]
-        // {
-        //     use ark_poly::EvaluationDomain;
-        //     let prover_param = prover_param.borrow(); // needed for Send + Sync
-
-        //     // We prefer use `.par_bridge()` instead of
-        //     // `.collect::<Vec<_>>().par_iter()`.
-        //     // (It avoids an unnecessary `collect()`.)
-        //     // However, `par_iter` is guaranteed to preserve order,
-        //     // whereas `par_bridge` is not!
-        //     // https://github.com/rayon-rs/rayon/issues/551#issuecomment-882069261
-        //     // https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html
-        //     //
-        //     // We prefer to compute only the proof---not the evaluation.
-        //     // However, `Self::open()` returns both,
-        //     // so we throw away the eval via `.map(|r| r.0)`.
-        //     // https://github.com/EspressoSystems/jellyfish/issues/426
-        //     domain
-        //         .elements()
-        //         .take(num_points)
-        //         .collect::<Vec<_>>()
-        //         .par_iter()
-        //         .map(|point| Self::open(prover_param, polynomial, point).map(|r|
-        // r.0))         .collect()
-        // }
-
         #[cfg(not(feature = "seq-fk-23"))]
         {
             let h_poly_timer = start_timer!(|| "compute h_poly");
