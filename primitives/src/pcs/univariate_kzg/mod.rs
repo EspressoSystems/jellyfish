@@ -348,7 +348,8 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
                 })?;
             let parallel_factor = domain.size() / small_domain.size();
 
-            let mut offsets = vec![Self::Evaluation::one()];
+            let mut offsets = Vec::with_capacity(parallel_factor);
+            offsets.push(Self::Evaluation::one());
             for _ in 1..parallel_factor {
                 offsets.push(domain.group_gen() * offsets.last().unwrap());
             }
@@ -575,8 +576,6 @@ where
         poly_coeffs: &[E::ScalarField],
     ) -> Result<GeneralDensePolynomial<E::G1, F>, PCSError> {
         if poly_coeffs.is_empty() {
-            // Shouldn't we return error here? But test `round_trip` fails if we return
-            // error
             return Ok(GeneralDensePolynomial::from_coeff_vec(vec![]));
         }
         let h_poly_deg = poly_coeffs.len() - 1;
