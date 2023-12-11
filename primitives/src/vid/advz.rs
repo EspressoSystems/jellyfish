@@ -390,13 +390,7 @@ where
             return Ok(Err(())); // not an arg error
         }
 
-        // check `common` against `commit`
-        let commit_rebuilt = Self::derive_commit(&common.poly_commits, common.bytes_len)?;
-        if commit_rebuilt != *commit {
-            return Err(VidError::Argument(
-                "commit inconsistent with common".to_string(),
-            ));
-        }
+        Self::check_common_commit_consistency(common, commit)?;
 
         // verify eval proof
         if KzgEvalsMerkleTree::<E, H>::verify(
@@ -566,6 +560,18 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize())
+    }
+
+    fn check_common_commit_consistency(
+        common: &<Self as VidScheme>::Common,
+        commit: &<Self as VidScheme>::Commit,
+    ) -> VidResult<()> {
+        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
     }
 }
 

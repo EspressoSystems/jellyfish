@@ -20,12 +20,11 @@ use super::{
     PolynomialCommitmentScheme, Vec, VidResult,
 };
 use crate::{
-    alloc::string::ToString,
     merkle_tree::hasher::HasherDigest,
     pcs::prelude::UnivariateKzgPCS,
     vid::{
         payload_prover::{PayloadProver, Statement},
-        vid, VidError, VidScheme,
+        vid, VidError,
     },
 };
 use anyhow::anyhow;
@@ -323,18 +322,6 @@ where
         (range_elem_len + offset_elem - 1) % self.payload_chunk_size + 1
     }
 
-    // arg check helpers
-    fn check_common_commit_consistency(
-        common: &<Self as VidScheme>::Common,
-        commit: &<Self as VidScheme>::Commit,
-    ) -> VidResult<()> {
-        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-        Ok(())
-    }
     fn check_stmt_consistency(stmt: &Statement<Self>) -> VidResult<()> {
         if stmt.range.is_empty() {
             return Err(VidError::Argument(format!(
