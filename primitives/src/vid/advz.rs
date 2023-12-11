@@ -188,7 +188,7 @@ where
     #[serde(with = "canonical")]
     all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
-    bytes_len: usize,
+    bytes_len: usize, // TODO don't use usize in serializable struct?
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -205,27 +205,13 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let commit_time = start_timer!(|| format!(
-            "VID commit_only {} payload bites to {} nodes",
-            payload.len(),
-            self.num_storage_nodes
-        ));
-
-        // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
-        // `Result<P::Commitment,_>`` instead of `P::Commitment`.
-        // There's probably an idiomatic way to do this using eg.
-        // itertools::process_results() but the code is unreadable.
-        let mut hasher = H::new();
-        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
-        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            let poly = self.polynomial(evals_iter);
-            let commitment = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
-            commitment
-                .serialize_uncompressed(&mut hasher)
-                .map_err(vid)?;
-        }
-        end_timer!(commit_time);
-        Ok(hasher.finalize())
+        let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
+            .chunks(self.payload_chunk_size)
+            .into_iter()
+            .map(|evals_iter| self.polynomial(evals_iter))
+            .collect();
+        let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
+        Self::derive_commit(&poly_commits, payload.len())
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -318,7 +304,7 @@ where
         };
         end_timer!(common_timer);
 
-        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
+        let commit = Self::derive_commit(&common.poly_commits, payload_len)?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -386,13 +372,7 @@ where
             return Ok(Err(())); // not an arg error
         }
 
-        // check `common` against `commit`
-        let commit_rebuilt = Self::poly_commits_hash(common.poly_commits.iter())?;
-        if commit_rebuilt != *commit {
-            return Err(VidError::Argument(
-                "commit inconsistent with common".to_string(),
-            ));
-        }
+        Self::check_common_commit_consistency(common, commit)?;
 
         // verify eval proof
         if KzgEvalsMerkleTree::<E, H>::verify(
@@ -548,19 +528,33 @@ where
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 
-    fn poly_commits_hash<I>(poly_commits: I) -> VidResult<<Self as VidScheme>::Commit>
-    where
-        I: Iterator,
-        I::Item: Borrow<KzgCommit<E>>,
-    {
+    /// Derive a commitment from whatever data is needed.
+    fn derive_commit(
+        poly_commits: &[KzgCommit<E>],
+        payload_byte_len: usize,
+    ) -> VidResult<<Self as VidScheme>::Commit> {
         let mut hasher = H::new();
+        payload_byte_len
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
         for poly_commit in poly_commits {
             poly_commit
-                .borrow()
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
         Ok(hasher.finalize())
+    }
+
+    fn check_common_commit_consistency(
+        common: &<Self as VidScheme>::Common,
+        commit: &<Self as VidScheme>::Commit,
+    ) -> VidResult<()> {
+        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
     }
 }
 
