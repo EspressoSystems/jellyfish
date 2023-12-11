@@ -131,7 +131,6 @@ where
         proof: &SmallRangeProof<KzgProof<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_consistency(&stmt)?;
-        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
         let data_elems: Vec<_> = bytes_to_field::<_, KzgEval<E>>(
@@ -242,7 +241,6 @@ where
         proof: &LargeRangeProof<KzgEval<E>>,
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_consistency(&stmt)?;
-        Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // index conversion
         let range_poly = self.range_byte_to_poly(&stmt.range);
@@ -336,7 +334,7 @@ where
                 stmt.range.len()
             )));
         }
-        Ok(())
+        Self::check_common_commit_consistency(stmt.common, stmt.commit)
     }
 }
 
