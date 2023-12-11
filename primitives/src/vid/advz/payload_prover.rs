@@ -49,7 +49,6 @@ pub struct SmallRangeProof<P> {
     proofs: Vec<P>,
     prefix_bytes: Vec<u8>,
     suffix_bytes: Vec<u8>,
-    chunk_range: Range<usize>,
 }
 
 /// A proof intended for use on large payload subslices.
@@ -64,7 +63,6 @@ pub struct LargeRangeProof<F> {
     suffix_elems: Vec<F>,
     prefix_bytes: Vec<u8>,
     suffix_bytes: Vec<u8>,
-    chunk_range: Range<usize>,
 }
 
 impl<E, H> PayloadProver<SmallRangeProof<KzgProof<E>>> for Advz<E, H>
@@ -125,7 +123,6 @@ where
             proofs,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
             suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
-            chunk_range: range,
         })
     }
 
@@ -134,7 +131,7 @@ where
         stmt: Statement<Self>,
         proof: &SmallRangeProof<KzgProof<E>>,
     ) -> VidResult<Result<(), ()>> {
-        Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
+        Self::check_stmt_consistency(&stmt)?;
         Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // prepare list of data elems
@@ -156,7 +153,7 @@ where
         }
 
         // index conversion
-        let range_elem = self.range_byte_to_elem(&proof.chunk_range);
+        let range_elem = self.range_byte_to_elem(&stmt.range);
         let range_poly = self.range_elem_to_poly(&range_elem);
         let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
         let final_points_range_end =
@@ -237,7 +234,6 @@ where
             suffix_elems,
             prefix_bytes: payload[range_elem_byte.start..range.start].to_vec(),
             suffix_bytes: payload[range.end..range_elem_byte.end].to_vec(),
-            chunk_range: range,
         })
     }
 
@@ -246,11 +242,11 @@ where
         stmt: Statement<Self>,
         proof: &LargeRangeProof<KzgEval<E>>,
     ) -> VidResult<Result<(), ()>> {
-        Self::check_stmt_proof_consistency(&stmt, &proof.chunk_range)?;
+        Self::check_stmt_consistency(&stmt)?;
         Self::check_common_commit_consistency(stmt.common, stmt.commit)?;
 
         // index conversion
-        let range_poly = self.range_byte_to_poly(&proof.chunk_range);
+        let range_poly = self.range_byte_to_poly(&stmt.range);
 
         // rebuild the needed payload elements from statement and proof
         let elems_iter = proof
@@ -339,10 +335,7 @@ where
         }
         Ok(())
     }
-    fn check_stmt_proof_consistency(
-        stmt: &Statement<Self>,
-        proof_range: &Range<usize>,
-    ) -> VidResult<()> {
+    fn check_stmt_consistency(stmt: &Statement<Self>) -> VidResult<()> {
         if stmt.range.is_empty() {
             return Err(VidError::Argument(format!(
                 "empty range ({},{})",
@@ -354,12 +347,6 @@ where
                 "payload_subslice length {} inconsistent with range length {}",
                 stmt.payload_subslice.len(),
                 stmt.range.len()
-            )));
-        }
-        if stmt.range != *proof_range {
-            return Err(VidError::Argument(format!(
-                "statement range ({},{}) differs from proof range ({},{})",
-                stmt.range.start, stmt.range.end, proof_range.start, proof_range.end,
             )));
         }
         Ok(())
@@ -397,6 +384,7 @@ fn check_range_nonempty_and_inside_payload(payload: &[u8], range: &Range<usize>)
             range.start, range.end
         )));
     }
+    // no need to check range.start because we already checked range.is_empty()
     if range.end > payload.len() {
         return Err(VidError::Argument(format!(
             "range ({}..{}) out of bounds for payload len {}",
