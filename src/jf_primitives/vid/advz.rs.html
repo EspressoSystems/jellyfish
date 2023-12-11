@@ -886,12 +886,6 @@
 <a href="#886" id="886">886</a>
 <a href="#887" id="887">887</a>
 <a href="#888" id="888">888</a>
-<a href="#889" id="889">889</a>
-<a href="#890" id="890">890</a>
-<a href="#891" id="891">891</a>
-<a href="#892" id="892">892</a>
-<a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1082,8 +1076,8 @@
     <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
     </span>all_evals_digest: KzgEvalsMerkleTreeNode&lt;E, H&gt;,
 
-    bytes_len: usize,
-}
+    bytes_len: usize, <span class="comment">// TODO don&#39;t use usize in serializable struct?
+</span>}
 
 <span class="kw">impl</span>&lt;E, H&gt; VidScheme <span class="kw">for </span>Advz&lt;E, H&gt;
 <span class="kw">where
@@ -1099,27 +1093,13 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">&quot;VID commit_only {} payload bites to {} nodes&quot;</span>,
-            payload.len(),
-            <span class="self">self</span>.num_storage_nodes
-        ));
-
-        <span class="comment">// Can&#39;t use `Self::poly_commits_hash()`` here because `P::commit()`` returns
-        // `Result&lt;P::Commitment,_&gt;`` instead of `P::Commitment`.
-        // There&#39;s probably an idiomatic way to do this using eg.
-        // itertools::process_results() but the code is unreadable.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
-        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload);
-        <span class="kw">for </span>evals_iter <span class="kw">in </span>elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter() {
-            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
-            <span class="kw">let </span>commitment = UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
-            commitment
-                .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
-                .map_err(vid)<span class="question-mark">?</span>;
-        }
-        <span class="macro">end_timer!</span>(commit_time);
-        <span class="prelude-val">Ok</span>(hasher.finalize())
+        <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload)
+            .chunks(<span class="self">self</span>.payload_chunk_size)
+            .into_iter()
+            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
+            .collect();
+        <span class="kw">let </span>poly_commits = UnivariateKzgPCS::batch_commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polys).map_err(vid)<span class="question-mark">?</span>;
+        <span class="self">Self</span>::derive_commit(<span class="kw-2">&amp;</span>poly_commits, payload.len())
     }
 
     <span class="kw">fn </span>disperse&lt;B&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;
@@ -1212,7 +1192,7 @@
         };
         <span class="macro">end_timer!</span>(common_timer);
 
-        <span class="kw">let </span>commit = <span class="self">Self</span>::poly_commits_hash(common.poly_commits.iter())<span class="question-mark">?</span>;
+        <span class="kw">let </span>commit = <span class="self">Self</span>::derive_commit(<span class="kw-2">&amp;</span>common.poly_commits, payload_len)<span class="question-mark">?</span>;
         <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)<span class="question-mark">?</span>;
 
         <span class="comment">// Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -1280,13 +1260,7 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(())); <span class="comment">// not an arg error
         </span>}
 
-        <span class="comment">// check `common` against `commit`
-        </span><span class="kw">let </span>commit_rebuilt = <span class="self">Self</span>::poly_commits_hash(common.poly_commits.iter())<span class="question-mark">?</span>;
-        <span class="kw">if </span>commit_rebuilt != <span class="kw-2">*</span>commit {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(
-                <span class="string">&quot;commit inconsistent with common&quot;</span>.to_string(),
-            ));
-        }
+        <span class="self">Self</span>::check_common_commit_consistency(common, commit)<span class="question-mark">?</span>;
 
         <span class="comment">// verify eval proof
         </span><span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
@@ -1442,19 +1416,33 @@
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 
-    <span class="kw">fn </span>poly_commits_hash&lt;I&gt;(poly_commits: I) -&gt; VidResult&lt;&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit&gt;
-    <span class="kw">where
-        </span>I: Iterator,
-        I::Item: Borrow&lt;KzgCommit&lt;E&gt;&gt;,
-    {
+    <span class="doccomment">/// Derive a commitment from whatever data is needed.
+    </span><span class="kw">fn </span>derive_commit(
+        poly_commits: <span class="kw-2">&amp;</span>[KzgCommit&lt;E&gt;],
+        payload_byte_len: usize,
+    ) -&gt; VidResult&lt;&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = H::new();
+        payload_byte_len
+            .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
+            .map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">for </span>poly_commit <span class="kw">in </span>poly_commits {
             poly_commit
-                .borrow()
                 .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
                 .map_err(vid)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(hasher.finalize())
+    }
+
+    <span class="kw">fn </span>check_common_commit_consistency(
+        common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
+        commit: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit,
+    ) -&gt; VidResult&lt;()&gt; {
+        <span class="kw">if </span><span class="kw-2">*</span>commit != <span class="self">Self</span>::derive_commit(<span class="kw-2">&amp;</span>common.poly_commits, common.bytes_len)<span class="question-mark">? </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(
+                <span class="string">&quot;common inconsistent with commit&quot;</span>.to_string(),
+            ));
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
