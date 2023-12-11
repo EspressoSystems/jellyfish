@@ -188,7 +188,7 @@ where
     #[serde(with = "canonical")]
     all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
-    bytes_len: usize,
+    bytes_len: usize, // TODO don't use usize in serializable struct?
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -216,6 +216,10 @@ where
         // There's probably an idiomatic way to do this using eg.
         // itertools::process_results() but the code is unreadable.
         let mut hasher = H::new();
+        payload
+            .len()
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
         for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
             let poly = self.polynomial(evals_iter);
@@ -318,7 +322,7 @@ where
         };
         end_timer!(common_timer);
 
-        let commit = Self::poly_commits_hash(common.poly_commits.iter())?;
+        let commit = Self::derive_commit(common.poly_commits.iter(), payload_len)?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -387,7 +391,7 @@ where
         }
 
         // check `common` against `commit`
-        let commit_rebuilt = Self::poly_commits_hash(common.poly_commits.iter())?;
+        let commit_rebuilt = Self::derive_commit(common.poly_commits.iter(), common.bytes_len)?;
         if commit_rebuilt != *commit {
             return Err(VidError::Argument(
                 "commit inconsistent with common".to_string(),
@@ -548,12 +552,18 @@ where
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 
-    fn poly_commits_hash<I>(poly_commits: I) -> VidResult<<Self as VidScheme>::Commit>
+    fn derive_commit<I>(
+        poly_commits: I,
+        payload_byte_len: usize,
+    ) -> VidResult<<Self as VidScheme>::Commit>
     where
         I: Iterator,
         I::Item: Borrow<KzgCommit<E>>,
     {
         let mut hasher = H::new();
+        payload_byte_len
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
         for poly_commit in poly_commits {
             poly_commit
                 .borrow()
