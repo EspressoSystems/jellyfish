@@ -78,7 +78,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        check_range_nonempty_and_inside_payload(payload, &range)?;
+        check_range_nonempty_and_in_bounds(payload.len(), &range)?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem(&range);
@@ -214,7 +214,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        check_range_nonempty_and_inside_payload(payload, &range)?;
+        check_range_nonempty_and_in_bounds(payload.len(), &range)?;
 
         // index conversion
         let range_elem = self.range_byte_to_elem(&range);
@@ -364,7 +364,7 @@ fn index_refine(index: usize, multiplier: usize) -> usize {
     index * multiplier
 }
 
-fn check_range_nonempty_and_inside_payload(payload: &[u8], range: &Range<usize>) -> VidResult<()> {
+fn check_range_nonempty_and_in_bounds(len: usize, range: &Range<usize>) -> VidResult<()> {
     if range.is_empty() {
         return Err(VidError::Argument(format!(
             "empty range ({}..{})",
@@ -372,12 +372,10 @@ fn check_range_nonempty_and_inside_payload(payload: &[u8], range: &Range<usize>)
         )));
     }
     // no need to check range.start because we already checked range.is_empty()
-    if range.end > payload.len() {
+    if range.end > len {
         return Err(VidError::Argument(format!(
-            "range ({}..{}) out of bounds for payload len {}",
-            range.start,
-            range.end,
-            payload.len()
+            "range ({}..{}) out of bounds for length {}",
+            range.start, range.end, len
         )));
     }
     Ok(())
