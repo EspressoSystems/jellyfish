@@ -205,22 +205,13 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let commit_time = start_timer!(|| format!(
-            "VID commit_only {} payload bites to {} nodes",
-            payload.len(),
-            self.num_storage_nodes
-        ));
-        let poly_commits = bytes_to_field::<_, KzgEval<E>>(payload)
+        let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
             .chunks(self.payload_chunk_size)
             .into_iter()
-            .map(|evals_iter| {
-                let poly = self.polynomial(evals_iter);
-                UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)
-            })
-            .collect::<VidResult<Vec<_>>>()?;
-        let result = Self::derive_commit(&poly_commits, payload.len());
-        end_timer!(commit_time);
-        result
+            .map(|evals_iter| self.polynomial(evals_iter))
+            .collect();
+        let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
+        Self::derive_commit(&poly_commits, payload.len())
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
