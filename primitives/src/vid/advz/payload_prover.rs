@@ -328,7 +328,7 @@ where
         common: &<Self as VidScheme>::Common,
         commit: &<Self as VidScheme>::Commit,
     ) -> VidResult<()> {
-        if *commit != Self::derive_commit(common.poly_commits.iter(), common.bytes_len)? {
+        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
             return Err(VidError::Argument(
                 "common inconsistent with commit".to_string(),
             ));

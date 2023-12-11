@@ -322,7 +322,7 @@ where
         };
         end_timer!(common_timer);
 
-        let commit = Self::derive_commit(common.poly_commits.iter(), payload_len)?;
+        let commit = Self::derive_commit(&common.poly_commits, payload_len)?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -391,7 +391,7 @@ where
         }
 
         // check `common` against `commit`
-        let commit_rebuilt = Self::derive_commit(common.poly_commits.iter(), common.bytes_len)?;
+        let commit_rebuilt = Self::derive_commit(&common.poly_commits, common.bytes_len)?;
         if commit_rebuilt != *commit {
             return Err(VidError::Argument(
                 "commit inconsistent with common".to_string(),
@@ -552,21 +552,16 @@ where
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 
-    fn derive_commit<I>(
-        poly_commits: I,
+    fn derive_commit(
+        poly_commits: &[KzgCommit<E>],
         payload_byte_len: usize,
-    ) -> VidResult<<Self as VidScheme>::Commit>
-    where
-        I: Iterator,
-        I::Item: Borrow<KzgCommit<E>>,
-    {
+    ) -> VidResult<<Self as VidScheme>::Commit> {
         let mut hasher = H::new();
         payload_byte_len
             .serialize_uncompressed(&mut hasher)
             .map_err(vid)?;
         for poly_commit in poly_commits {
             poly_commit
-                .borrow()
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
