@@ -210,26 +210,17 @@ where
             payload.len(),
             self.num_storage_nodes
         ));
-
-        // Can't use `Self::poly_commits_hash()`` here because `P::commit()`` returns
-        // `Result<P::Commitment,_>`` instead of `P::Commitment`.
-        // There's probably an idiomatic way to do this using eg.
-        // itertools::process_results() but the code is unreadable.
-        let mut hasher = H::new();
-        payload
-            .len()
-            .serialize_uncompressed(&mut hasher)
-            .map_err(vid)?;
-        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
-        for evals_iter in elems_iter.chunks(self.payload_chunk_size).into_iter() {
-            let poly = self.polynomial(evals_iter);
-            let commitment = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
-            commitment
-                .serialize_uncompressed(&mut hasher)
-                .map_err(vid)?;
-        }
+        let poly_commits = bytes_to_field::<_, KzgEval<E>>(payload)
+            .chunks(self.payload_chunk_size)
+            .into_iter()
+            .map(|evals_iter| {
+                let poly = self.polynomial(evals_iter);
+                UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)
+            })
+            .collect::<VidResult<Vec<_>>>()?;
+        let result = Self::derive_commit(&poly_commits, payload.len());
         end_timer!(commit_time);
-        Ok(hasher.finalize())
+        result
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -546,6 +537,7 @@ where
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
     }
 
+    /// Derive a commitment from whatever data is needed.
     fn derive_commit(
         poly_commits: &[KzgCommit<E>],
         payload_byte_len: usize,
