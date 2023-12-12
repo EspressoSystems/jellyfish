@@ -288,7 +288,8 @@ where
     }
 
     /// Get the signing key.
-    /// WARNING: This increase footprint of the sensitive key, please handle with care
+    /// WARNING: This increase footprint of the sensitive key, please handle
+    /// with care
     pub fn sign_key(&self) -> SignKey<P::ScalarField> {
         self.sk.clone()
     }
