@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, LengthGetter, VidDisperse, VidError, VidResult, VidScheme};
+use super::{vid, CommitChecker, LengthGetter, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -201,6 +201,21 @@ where
     }
 }
 
+impl<E, H> CommitChecker<Advz<E, H>> for Common<E, H>
+where
+    E: Pairing,
+    H: HasherDigest,
+{
+    fn is_consistent(&self, commit: &<Advz<E, H> as VidScheme>::Commit) -> VidResult<()> {
+        if *commit != Advz::<E, H>::derive_commit(&self.poly_commits, self.bytes_len)? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
+    }
+}
+
 impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
@@ -382,8 +397,7 @@ where
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
-
-        Self::check_common_commit_consistency(common, commit)?;
+        common.is_consistent(commit)?;
 
         // verify eval proof
         if KzgEvalsMerkleTree::<E, H>::verify(
@@ -554,18 +568,6 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize())
-    }
-
-    fn check_common_commit_consistency(
-        common: &<Self as VidScheme>::Common,
-        commit: &<Self as VidScheme>::Commit,
-    ) -> VidResult<()> {
-        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-        Ok(())
     }
 }
 

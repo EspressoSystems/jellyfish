@@ -84,11 +84,21 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub commit: V::Commit,
 }
 
-/// [`VidScheme::Common`] could impl this trait to allow users to get the block
+/// [`VidScheme::Common`] could impl this trait to allow users to get the
 /// payload byte length.
 pub trait LengthGetter {
     /// Get the payload byte length.
     fn get_payload_byte_len(&self) -> usize;
+}
+
+/// [`VidScheme::Common`] could impl this trait to allow users to check
+/// consistency against a payload commitment.
+pub trait CommitChecker<V>
+where
+    V: VidScheme<Common = Self>,
+{
+    /// Check consistency with a payload commitment.
+    fn is_consistent(&self, commit: &V::Commit) -> VidResult<()>;
 }
 
 pub mod payload_prover;

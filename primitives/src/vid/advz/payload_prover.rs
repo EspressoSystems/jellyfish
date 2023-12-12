@@ -24,7 +24,7 @@ use crate::{
     pcs::prelude::UnivariateKzgPCS,
     vid::{
         payload_prover::{PayloadProver, Statement},
-        vid, VidError,
+        vid, CommitChecker, VidError,
     },
 };
 use anyhow::anyhow;
@@ -329,7 +329,7 @@ where
                 stmt.range.len()
             )));
         }
-        Self::check_common_commit_consistency(stmt.common, stmt.commit)
+        stmt.common.is_consistent(stmt.commit)
     }
 }
 
