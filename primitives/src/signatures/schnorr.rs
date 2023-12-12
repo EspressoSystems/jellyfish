@@ -283,8 +283,8 @@ where
     }
 
     /// Get the internal of the signing key, namely a P::ScalarField element
-    pub fn sign_key_internal(&self) -> &P::ScalarField {
-        &self.sk.0
+    pub fn sign_key_internal(&self) -> &SignKey<P::ScalarField> {
+        &self.sk
     }
 
     /// Signature function
