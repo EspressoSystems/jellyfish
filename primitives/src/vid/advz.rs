@@ -318,13 +318,8 @@ where
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
-        // TODO use batch_commit to parallelize commitments!
         let common = Common {
-            poly_commits: polys
-                .iter()
-                .map(|poly| UnivariateKzgPCS::commit(&self.ck, poly))
-                .collect::<Result<_, _>>()
-                .map_err(vid)?,
+            poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             bytes_len: payload_len,
         };
