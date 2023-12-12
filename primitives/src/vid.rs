@@ -84,6 +84,13 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub commit: V::Commit,
 }
 
+/// [`VidScheme::Common`] could impl this trait to allow users to get the block
+/// payload byte length.
+pub trait LengthGetter {
+    /// Get the payload byte length.
+    fn get_payload_byte_len(&self) -> usize;
+}
+
 pub mod payload_prover;
 
 pub mod advz; // instantiation of `VidScheme`

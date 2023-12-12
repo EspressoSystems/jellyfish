@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
+use super::{vid, LengthGetter, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -191,6 +191,16 @@ where
     bytes_len: usize, // TODO don't use usize in serializable struct?
 }
 
+impl<E, H> LengthGetter for Common<E, H>
+where
+    E: Pairing,
+    H: HasherDigest,
+{
+    fn get_payload_byte_len(&self) -> usize {
+        self.bytes_len
+    }
+}
+
 impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
@@ -293,6 +303,7 @@ where
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
+        // TODO use batch_commit to parallelize commitments!
         let common = Common {
             poly_commits: polys
                 .iter()
