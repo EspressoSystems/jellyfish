@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, CommitChecker, LengthGetter, VidDisperse, VidError, VidResult, VidScheme};
+use super::{vid, CommonBounds, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -191,28 +191,13 @@ where
     bytes_len: usize, // TODO don't use usize in serializable struct?
 }
 
-impl<E, H> LengthGetter for Common<E, H>
+impl<E, H> CommonBounds for Common<E, H>
 where
     E: Pairing,
     H: HasherDigest,
 {
-    fn get_payload_byte_len(&self) -> usize {
+    fn payload_byte_len(&self) -> usize {
         self.bytes_len
-    }
-}
-
-impl<E, H> CommitChecker<Advz<E, H>> for Common<E, H>
-where
-    E: Pairing,
-    H: HasherDigest,
-{
-    fn is_consistent(&self, commit: &<Advz<E, H> as VidScheme>::Commit) -> VidResult<()> {
-        if *commit != Advz::<E, H>::derive_commit(&self.poly_commits, self.bytes_len)? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-        Ok(())
     }
 }
 
@@ -392,7 +377,7 @@ where
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
-        common.is_consistent(commit)?;
+        Self::is_consistent(commit, common)?;
 
         // verify eval proof
         if KzgEvalsMerkleTree::<E, H>::verify(
@@ -490,6 +475,15 @@ where
         let mut payload: Vec<_> = field_to_bytes(elems).collect();
         payload.truncate(common.bytes_len);
         Ok(payload)
+    }
+
+    fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()> {
+        if *commit != Advz::<E, H>::derive_commit(&common.poly_commits, common.bytes_len)? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
     }
 }
 

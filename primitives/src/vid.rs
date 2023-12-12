@@ -55,6 +55,10 @@ pub trait VidScheme {
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+
+    /// Check that a [`VidScheme::Common`] is consistent with a
+    /// [`VidScheme::Commit`].
+    fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
 }
 
 /// Convenience struct to aggregate disperse data.
@@ -84,21 +88,13 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub commit: V::Commit,
 }
 
-/// [`VidScheme::Common`] could impl this trait to allow users to get the
-/// payload byte length.
-pub trait LengthGetter {
-    /// Get the payload byte length.
-    fn get_payload_byte_len(&self) -> usize;
-}
-
-/// [`VidScheme::Common`] could impl this trait to allow users to check
-/// consistency against a payload commitment.
-pub trait CommitChecker<V>
-where
-    V: VidScheme<Common = Self>,
+/// Trait for [`VidScheme::Common`].
+pub trait CommonBounds:
+    CanonicalSerialize + CanonicalDeserialize + Clone + Debug + Eq + PartialEq + Hash + Sync
+// TODO serde instead of canonical
 {
-    /// Check consistency with a payload commitment.
-    fn is_consistent(&self, commit: &V::Commit) -> VidResult<()>;
+    /// Get the payload byte length.
+    fn payload_byte_len(&self) -> usize;
 }
 
 pub mod payload_prover;
