@@ -6,10 +6,9 @@
 
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
 use displaydoc::Display;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
@@ -20,14 +19,7 @@ pub trait VidScheme {
     type Share: Clone + Debug + Eq + PartialEq + Hash + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
-    type Common: CanonicalSerialize
-        + CanonicalDeserialize
-        + Clone
-        + Debug
-        + Eq
-        + PartialEq
-        + Hash
-        + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Common: CommonBounds;
 
     /// Compute a payload commitment
     fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
@@ -90,8 +82,7 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
 
 /// Trait for [`VidScheme::Common`].
 pub trait CommonBounds:
-    CanonicalSerialize + CanonicalDeserialize + Clone + Debug + Eq + PartialEq + Hash + Sync
-// TODO serde instead of canonical
+    Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync
 {
     /// Get the payload byte length.
     fn payload_byte_len(&self) -> usize;
