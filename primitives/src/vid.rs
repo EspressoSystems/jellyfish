@@ -13,10 +13,10 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload commitment.
-    type Commit: Clone + Debug + Eq + PartialEq + Hash + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Commit: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
-    type Share: Clone + Debug + Eq + PartialEq + Hash + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Share: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
     type Common: CommonBounds;
