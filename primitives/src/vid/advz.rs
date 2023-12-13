@@ -294,11 +294,7 @@ where
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
         let common = Common {
-            poly_commits: polys
-                .iter()
-                .map(|poly| UnivariateKzgPCS::commit(&self.ck, poly))
-                .collect::<Result<_, _>>()
-                .map_err(vid)?,
+            poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             bytes_len: payload_len,
         };
@@ -371,8 +367,7 @@ where
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
-
-        Self::check_common_commit_consistency(common, commit)?;
+        Self::is_consistent(commit, common)?;
 
         // verify eval proof
         if KzgEvalsMerkleTree::<E, H>::verify(
@@ -471,6 +466,19 @@ where
         payload.truncate(common.bytes_len);
         Ok(payload)
     }
+
+    fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()> {
+        if *commit != Advz::<E, H>::derive_commit(&common.poly_commits, common.bytes_len)? {
+            return Err(VidError::Argument(
+                "common inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    fn get_payload_byte_len(common: &Self::Common) -> usize {
+        common.bytes_len
+    }
 }
 
 impl<E, H> Advz<E, H>
@@ -543,18 +551,6 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize())
-    }
-
-    fn check_common_commit_consistency(
-        common: &<Self as VidScheme>::Common,
-        commit: &<Self as VidScheme>::Commit,
-    ) -> VidResult<()> {
-        if *commit != Self::derive_commit(&common.poly_commits, common.bytes_len)? {
-            return Err(VidError::Argument(
-                "common inconsistent with commit".to_string(),
-            ));
-        }
-        Ok(())
     }
 }
 
