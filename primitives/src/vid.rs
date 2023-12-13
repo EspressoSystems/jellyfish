@@ -50,6 +50,9 @@ pub trait VidScheme {
 
     /// Check that a [`VidScheme::Common`] is consistent with a
     /// [`VidScheme::Commit`].
+    ///
+    /// TODO conform to nested result pattern like [`VidScheme::verify_share`].
+    /// Unfortunately, `VidResult<()>` is more user-friently.
     fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
 }
 
