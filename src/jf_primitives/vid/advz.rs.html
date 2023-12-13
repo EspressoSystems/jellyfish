@@ -882,10 +882,6 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
-<a href="#887" id="887">887</a>
-<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1182,11 +1178,7 @@
 
         <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;compute {} KZG commitments&quot;</span>, polys.len()));
         <span class="kw">let </span>common = Common {
-            poly_commits: polys
-                .iter()
-                .map(|poly| UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, poly))
-                .collect::&lt;<span class="prelude-ty">Result</span>&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;()
-                .map_err(vid)<span class="question-mark">?</span>,
+            poly_commits: UnivariateKzgPCS::batch_commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polys).map_err(vid)<span class="question-mark">?</span>,
             all_evals_digest: all_evals_commit.commitment().digest(),
             bytes_len: payload_len,
         };
@@ -1259,8 +1251,7 @@
         <span class="kw">if </span>share.index &gt;= <span class="self">self</span>.num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(())); <span class="comment">// not an arg error
         </span>}
-
-        <span class="self">Self</span>::check_common_commit_consistency(common, commit)<span class="question-mark">?</span>;
+        <span class="self">Self</span>::is_consistent(commit, common)<span class="question-mark">?</span>;
 
         <span class="comment">// verify eval proof
         </span><span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
@@ -1359,6 +1350,19 @@
         payload.truncate(common.bytes_len);
         <span class="prelude-val">Ok</span>(payload)
     }
+
+    <span class="kw">fn </span>is_consistent(commit: <span class="kw-2">&amp;</span><span class="self">Self</span>::Commit, common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;()&gt; {
+        <span class="kw">if </span><span class="kw-2">*</span>commit != Advz::&lt;E, H&gt;::derive_commit(<span class="kw-2">&amp;</span>common.poly_commits, common.bytes_len)<span class="question-mark">? </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(
+                <span class="string">&quot;common inconsistent with commit&quot;</span>.to_string(),
+            ));
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn </span>get_payload_byte_len(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
+        common.bytes_len
+    }
 }
 
 <span class="kw">impl</span>&lt;E, H&gt; Advz&lt;E, H&gt;
@@ -1431,18 +1435,6 @@
                 .map_err(vid)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(hasher.finalize())
-    }
-
-    <span class="kw">fn </span>check_common_commit_consistency(
-        common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
-        commit: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit,
-    ) -&gt; VidResult&lt;()&gt; {
-        <span class="kw">if </span><span class="kw-2">*</span>commit != <span class="self">Self</span>::derive_commit(<span class="kw-2">&amp;</span>common.poly_commits, common.bytes_len)<span class="question-mark">? </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(
-                <span class="string">&quot;common inconsistent with commit&quot;</span>.to_string(),
-            ));
-        }
-        <span class="prelude-val">Ok</span>(())
     }
 }
 
