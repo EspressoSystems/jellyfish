@@ -19,7 +19,7 @@ pub trait VidScheme {
     type Share: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
-    type Common: CommonBounds;
+    type Common: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment
     fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
@@ -54,6 +54,9 @@ pub trait VidScheme {
     /// TODO conform to nested result pattern like [`VidScheme::verify_share`].
     /// Unfortunately, `VidResult<()>` is more user-friently.
     fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
+
+    /// Extract the payload byte length data from a [`VidScheme::Common`].
+    fn get_payload_byte_len(common: &Self::Common) -> usize;
 }
 
 /// Convenience struct to aggregate disperse data.
@@ -81,14 +84,6 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     pub common: V::Common,
     /// VID payload commitment.
     pub commit: V::Commit,
-}
-
-/// Trait for [`VidScheme::Common`].
-pub trait CommonBounds:
-    Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync
-{
-    /// Get the payload byte length.
-    fn payload_byte_len(&self) -> usize;
 }
 
 pub mod payload_prover;

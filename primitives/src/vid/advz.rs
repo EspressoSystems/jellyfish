@@ -8,7 +8,7 @@
 //!
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
-use super::{vid, CommonBounds, VidDisperse, VidError, VidResult, VidScheme};
+use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -189,16 +189,6 @@ where
     all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
     bytes_len: usize, // TODO don't use usize in serializable struct?
-}
-
-impl<E, H> CommonBounds for Common<E, H>
-where
-    E: Pairing,
-    H: HasherDigest,
-{
-    fn payload_byte_len(&self) -> usize {
-        self.bytes_len
-    }
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -484,6 +474,10 @@ where
             ));
         }
         Ok(())
+    }
+
+    fn get_payload_byte_len(common: &Self::Common) -> usize {
+        common.bytes_len
     }
 }
 
