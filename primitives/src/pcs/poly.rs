@@ -25,7 +25,7 @@ use itertools::{
 
 use crate::errors::PrimitivesError;
 
-// TODO: (alex) change to trait alias once stablized in Rust:
+// TODO: (alex) change to trait alias once stabilized in Rust:
 // `https://doc.rust-lang.org/unstable-book/language-features/trait-alias.html`
 /// A trait bound alias for generalized coefficient type used in
 /// `GeneralDensePolynomial`. Concrete instantiations can be both field or
