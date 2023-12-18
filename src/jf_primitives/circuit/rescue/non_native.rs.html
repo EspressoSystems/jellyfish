@@ -2518,7 +2518,7 @@
         <span class="kw-2">*</span>circuit.witness_mut(fsks_var.components().<span class="number">0</span>) = F::from(<span class="number">1_u32</span>);
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_err());
 
-        <span class="comment">// make data_vars of bad lenth
+        <span class="comment">// make data_vars of bad length
         </span><span class="kw">let </span><span class="kw-2">mut </span>data_vars = data_vars;
         <span class="kw">let </span>zero_var = FpElemVar::zero(
             <span class="kw-2">&amp;</span>circuit,
