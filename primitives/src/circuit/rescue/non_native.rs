@@ -1249,7 +1249,7 @@ mod tests {
         *circuit.witness_mut(fsks_var.components().0) = F::from(1_u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        // make data_vars of bad lenth
+        // make data_vars of bad length
         let mut data_vars = data_vars;
         let zero_var = FpElemVar::zero(
             &circuit,
