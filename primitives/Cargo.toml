@@ -35,6 +35,9 @@ derivative = { version = "2", features = ["use_core"] }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { version = "0.2.3", default-features = false }
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
+generic-array = { version = "0", features = [
+        "serde",
+] } # not a direct dependency, but we need serde
 hashbrown = "0.13.1"
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-relation = { path = "../relation", default-features = false }
@@ -47,7 +50,7 @@ rayon = { version = "1.5.0", optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 sha2 = { version = "0.10.1", default-features = false }
 sha3 = { version = "0.10.5", default-features = false }
-tagged-base64 = "0.3.3"
+tagged-base64 = { workspace = true }
 typenum = { version = "1.15.0", default-features = false, features = [
         "no_std",
 ] }
@@ -131,3 +134,4 @@ parallel = [
         "rayon",
 ]
 test-srs = []
+seq-fk-23 = [] # FK23 without parallelism

@@ -821,7 +821,7 @@ impl<E: Pairing> VerifyingKey<E> {
             sigma_comms,
             selector_comms,
             k: self.k.clone(),
-            open_key: self.open_key,
+            open_key: self.open_key.clone(),
             plookup_vk: None,
             is_merged: true,
         })

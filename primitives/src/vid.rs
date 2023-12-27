@@ -6,28 +6,20 @@
 
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
 use displaydoc::Display;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload commitment.
-    type Commit: Clone + Debug + Eq + PartialEq + Hash + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Commit: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
-    type Share: Clone + Debug + Eq + PartialEq + Hash + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Share: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Common data sent to all storage nodes.
-    type Common: CanonicalSerialize
-        + CanonicalDeserialize
-        + Clone
-        + Debug
-        + Eq
-        + PartialEq
-        + Hash
-        + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Common: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment
     fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
@@ -55,6 +47,16 @@ pub trait VidScheme {
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+
+    /// Check that a [`VidScheme::Common`] is consistent with a
+    /// [`VidScheme::Commit`].
+    ///
+    /// TODO conform to nested result pattern like [`VidScheme::verify_share`].
+    /// Unfortunately, `VidResult<()>` is more user-friently.
+    fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
+
+    /// Extract the payload byte length data from a [`VidScheme::Common`].
+    fn get_payload_byte_len(common: &Self::Common) -> usize;
 }
 
 /// Convenience struct to aggregate disperse data.

@@ -282,6 +282,18 @@ where
         self.vk.clone()
     }
 
+    /// Get reference to the signing key.
+    pub fn sign_key_ref(&self) -> &SignKey<P::ScalarField> {
+        &self.sk
+    }
+
+    /// Get the signing key.
+    /// WARNING: This increase footprint of the sensitive key, please handle
+    /// with care
+    pub fn sign_key(&self) -> SignKey<P::ScalarField> {
+        self.sk.clone()
+    }
+
     /// Get the internal of the signing key, namely a P::ScalarField element
     pub fn sign_key_internal(&self) -> &P::ScalarField {
         &self.sk.0
