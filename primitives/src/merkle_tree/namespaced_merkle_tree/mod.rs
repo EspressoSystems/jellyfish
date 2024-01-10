@@ -365,7 +365,7 @@ mod nmt_tests {
     use typenum::U2;
 
     use super::*;
-    use crate::merkle_tree::examples::{Sha3Digest, Sha3Node};
+    use crate::merkle_tree::prelude::{Sha3Digest, Sha3Node};
 
     type NamespaceId = u64;
     type Hasher = NamespacedHasher<Sha3Digest, Leaf, NamespaceId, Sha3Node, u64>;
