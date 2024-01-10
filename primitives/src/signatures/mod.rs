@@ -42,7 +42,7 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
         + Eq;
 
     /// Public Parameter
-    type PublicParameter: Debug + PartialEq + for<'a> Deserialize<'a> + Serialize;
+    type PublicParameter: Debug + Clone + PartialEq + for<'a> Deserialize<'a> + Serialize;
 
     /// Signature
     type Signature: Debug
