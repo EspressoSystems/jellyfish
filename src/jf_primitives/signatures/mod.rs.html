@@ -236,7 +236,7 @@
         + Eq;
 
     <span class="doccomment">/// Public Parameter
-    </span><span class="kw">type </span>PublicParameter: Debug + PartialEq + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Serialize;
+    </span><span class="kw">type </span>PublicParameter: Debug + Clone + PartialEq + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Serialize;
 
     <span class="doccomment">/// Signature
     </span><span class="kw">type </span>Signature: Debug

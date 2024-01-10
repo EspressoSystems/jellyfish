@@ -953,7 +953,7 @@
     <span class="kw">use </span>typenum::U2;
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::merkle_tree::examples::{Sha3Digest, Sha3Node};
+    <span class="kw">use </span><span class="kw">crate</span>::merkle_tree::prelude::{Sha3Digest, Sha3Node};
 
     <span class="kw">type </span>NamespaceId = u64;
     <span class="kw">type </span>Hasher = NamespacedHasher&lt;Sha3Digest, Leaf, NamespaceId, Sha3Node, u64&gt;;
