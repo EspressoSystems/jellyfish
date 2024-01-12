@@ -561,7 +561,8 @@ mod tests {
                 assert_ne!(vk1.cmp(&vk2), ark_std::cmp::Ordering::Equal);
                 assert_ne!(vk1, vk2);
             }
-            // Generate two group elements that are equal but have different projective representation.
+            // Generate two group elements that are equal but have different projective
+            // representation.
             let mut vk = VerKey::from(&SignKey::generate(&mut rng));
             let vk_copy = vk.clone();
             let scalar = ark_bn254::Fq::rand(&mut rng);
