@@ -6,14 +6,31 @@
 
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
 /// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
-use ark_std::{error::Error, fmt::Debug, hash::Hash, string::String, vec::Vec};
+use ark_std::{
+    error::Error,
+    fmt::{Debug, Display},
+    hash::Hash,
+    string::String,
+    vec::Vec,
+};
 use displaydoc::Display;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use tagged_base64::TaggedBase64;
 
 /// VID: Verifiable Information Dispersal
 pub trait VidScheme {
     /// Payload commitment.
-    type Commit: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
+    type Commit: Clone
+        + Debug
+        + Display
+        + DeserializeOwned
+        + Eq
+        + PartialEq
+        + Hash
+        + Serialize
+        + Sync
+        + for<'a> TryFrom<&'a TaggedBase64>
+        + Into<TaggedBase64>; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Share-specific data sent to a storage node.
     type Share: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
