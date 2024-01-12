@@ -12,7 +12,7 @@ use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
-        hasher::{HasherDigest, HasherMerkleTree},
+        hasher::{HasherDigest, HasherMerkleTree, HasherNode},
         MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
@@ -198,7 +198,9 @@ where
     E: Pairing,
     H: HasherDigest,
 {
-    type Commit = Output<H>;
+    // use HasherNode<H> instead of Output<H> to easily meet trait bounds
+    type Commit = HasherNode<H>;
+
     type Share = Share<E, H>;
     type Common = Common<E, H>;
 
@@ -552,7 +554,7 @@ where
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
-        Ok(hasher.finalize())
+        Ok(hasher.finalize().into())
     }
 }
 
