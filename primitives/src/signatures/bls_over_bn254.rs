@@ -452,8 +452,7 @@ mod tests {
     };
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use ark_std::vec::Vec;
-    use ark_std::UniformRand;
+    use ark_std::{vec::Vec, UniformRand};
 
     #[test]
     fn test_bls_signature_internals() {
