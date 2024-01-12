@@ -223,7 +223,17 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 #[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(
-    Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
+    Clone,
+    Hash,
+    Default,
+    Zeroize,
+    Eq,
+    PartialEq,
+    CanonicalSerialize,
+    CanonicalDeserialize,
+    Debug,
+    Ord,
+    PartialOrd,
 )]
 #[zeroize(drop)]
 /// Signing key for BLS signature.
@@ -247,6 +257,17 @@ impl Hash for VerKey {
 impl PartialEq for VerKey {
     fn eq(&self, other: &Self) -> bool {
         self.0.into_affine().eq(&other.0.into_affine())
+    }
+}
+
+// An arbitrary comparison for VerKey. Doesn't mean anything.
+impl PartialOrd for VerKey {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        let mut bytes = ark_std::vec![];
+        CanonicalSerialize::serialize_compressed(self, &mut bytes).unwrap();
+        let mut others = ark_std::vec![];
+        CanonicalSerialize::serialize_compressed(other, &mut others).unwrap();
+        bytes.partial_cmp(&others)
     }
 }
 
