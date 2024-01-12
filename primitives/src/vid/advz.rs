@@ -100,6 +100,8 @@ where
         num_storage_nodes: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
+        // TODO support any degree, give multiple shares to nodes if needed
+        // https://github.com/EspressoSystems/jellyfish/issues/393
         if num_storage_nodes < payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "payload_chunk_size {} exceeds num_storage_nodes {}",
