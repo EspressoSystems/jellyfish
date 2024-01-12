@@ -42,7 +42,7 @@ use ark_bn254::{
 use ark_ec::{
     bn::{Bn, G1Prepared, G2Prepared},
     pairing::Pairing,
-    CurveGroup, Group,
+    AffineRepr, CurveGroup, Group,
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
@@ -263,11 +263,10 @@ impl PartialEq for VerKey {
 // An arbitrary comparison for VerKey. Doesn't mean anything.
 impl PartialOrd for VerKey {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        let mut bytes = ark_std::vec![];
-        CanonicalSerialize::serialize_compressed(self, &mut bytes).unwrap();
-        let mut others = ark_std::vec![];
-        CanonicalSerialize::serialize_compressed(other, &mut others).unwrap();
-        bytes.partial_cmp(&others)
+        self.0
+            .into_affine()
+            .xy()
+            .partial_cmp(&other.0.into_affine().xy())
     }
 }
 
