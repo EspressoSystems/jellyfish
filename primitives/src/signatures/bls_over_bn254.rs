@@ -42,7 +42,7 @@ use ark_bn254::{
 use ark_ec::{
     bn::{Bn, G1Prepared, G2Prepared},
     pairing::Pairing,
-    CurveGroup, Group,
+    AffineRepr, CurveGroup, Group,
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
@@ -223,7 +223,17 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 #[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(
-    Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
+    Clone,
+    Hash,
+    Default,
+    Zeroize,
+    Eq,
+    PartialEq,
+    CanonicalSerialize,
+    CanonicalDeserialize,
+    Debug,
+    Ord,
+    PartialOrd,
 )]
 #[zeroize(drop)]
 /// Signing key for BLS signature.
@@ -235,18 +245,21 @@ pub struct SignKey(pub(crate) ScalarField);
 
 /// Signature public verification key
 #[tagged(tag::BLS_VER_KEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, Clone, Debug, Copy)]
+#[derive(
+    CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, PartialEq, Clone, Debug, Copy, Hash,
+)]
 pub struct VerKey(pub(crate) G2Projective);
 
-impl Hash for VerKey {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        Hash::hash(&self.0.into_affine(), state)
+// An arbitrary comparison for VerKey.
+// The ordering here has no actual meaning.
+impl PartialOrd for VerKey {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
-
-impl PartialEq for VerKey {
-    fn eq(&self, other: &Self) -> bool {
-        self.0.into_affine().eq(&other.0.into_affine())
+impl Ord for VerKey {
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.into_affine().xy().cmp(&other.0.into_affine().xy())
     }
 }
 
@@ -439,7 +452,7 @@ mod tests {
     };
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use ark_std::vec::Vec;
+    use ark_std::{vec::Vec, UniformRand};
 
     #[test]
     fn test_bls_signature_internals() {
@@ -531,5 +544,35 @@ mod tests {
         sig.serialize_compressed(&mut ser_bytes).unwrap();
         let de: Signature = Signature::deserialize_compressed(&ser_bytes[..]).unwrap();
         assert_eq!(de, sig);
+    }
+
+    #[test]
+    fn test_cmp_keys() {
+        let mut rng = jf_utils::test_rng();
+        for _ in 0..100 {
+            let sk1 = SignKey::generate(&mut rng);
+            let sk2 = SignKey::generate(&mut rng);
+            let vk1 = VerKey::from(&sk1);
+            let vk2 = VerKey::from(&sk2);
+            if sk1 == sk2 {
+                assert_eq!(vk1.cmp(&vk2), ark_std::cmp::Ordering::Equal);
+                assert_eq!(vk1, vk2);
+            } else {
+                assert_ne!(vk1.cmp(&vk2), ark_std::cmp::Ordering::Equal);
+                assert_ne!(vk1, vk2);
+            }
+            // Generate two group elements that are equal but have different projective
+            // representation.
+            let mut vk = VerKey::from(&SignKey::generate(&mut rng));
+            let vk_copy = vk.clone();
+            let scalar = ark_bn254::Fq::rand(&mut rng);
+            let scalar_sq = scalar * scalar;
+            let scalar_cube = scalar_sq * scalar;
+            vk.0.x.mul_assign_by_fp(&scalar_sq);
+            vk.0.y.mul_assign_by_fp(&scalar_cube);
+            vk.0.z.mul_assign_by_fp(&scalar);
+            assert_eq!(vk.cmp(&vk_copy), ark_std::cmp::Ordering::Equal);
+            assert_eq!(vk, vk_copy);
+        }
     }
 }
