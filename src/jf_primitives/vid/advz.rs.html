@@ -882,6 +882,10 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -896,7 +900,7 @@
 <span class="kw">use crate</span>::{
     alloc::string::ToString,
     merkle_tree::{
-        hasher::{HasherDigest, HasherMerkleTree},
+        hasher::{HasherDigest, HasherMerkleTree, HasherNode},
         MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
@@ -984,7 +988,9 @@
         num_storage_nodes: usize,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">if </span>num_storage_nodes &lt; payload_chunk_size {
+        <span class="comment">// TODO support any degree, give multiple shares to nodes if needed
+        // https://github.com/EspressoSystems/jellyfish/issues/393
+        </span><span class="kw">if </span>num_storage_nodes &lt; payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">&quot;payload_chunk_size {} exceeds num_storage_nodes {}&quot;</span>,
                 payload_chunk_size, num_storage_nodes
@@ -1080,7 +1086,9 @@
     </span>E: Pairing,
     H: HasherDigest,
 {
-    <span class="kw">type </span>Commit = Output&lt;H&gt;;
+    <span class="comment">// use HasherNode&lt;H&gt; instead of Output&lt;H&gt; to easily meet trait bounds
+    </span><span class="kw">type </span>Commit = HasherNode&lt;H&gt;;
+
     <span class="kw">type </span>Share = Share&lt;E, H&gt;;
     <span class="kw">type </span>Common = Common&lt;E, H&gt;;
 
@@ -1434,7 +1442,7 @@
                 .serialize_uncompressed(<span class="kw-2">&amp;mut </span>hasher)
                 .map_err(vid)<span class="question-mark">?</span>;
         }
-        <span class="prelude-val">Ok</span>(hasher.finalize())
+        <span class="prelude-val">Ok</span>(hasher.finalize().into())
     }
 }
 

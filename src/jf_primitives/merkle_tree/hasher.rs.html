@@ -290,7 +290,7 @@
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
 };
-<span class="kw">use </span>serde::{Deserialize, Serialize};
+<span class="kw">use </span>tagged_base64::tagged;
 <span class="kw">use </span>typenum::U3;
 
 <span class="doccomment">/// Merkle tree generic over [`Digest`] hasher `H`.
@@ -401,8 +401,7 @@
 }
 
 <span class="doccomment">/// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
-</span><span class="attr">#[derive(Derivative, Deserialize, Serialize)]
-#[serde(bound = <span class="string">&quot;Output&lt;H&gt;: Serialize + for&lt;&#39;a&gt; Deserialize&lt;&#39;a&gt;&quot;</span>)]
+</span><span class="attr">#[derive(Derivative)]
 #[derivative(
     Clone(bound = <span class="string">&quot;&quot;</span>),
     Copy(bound = <span class="string">&quot;&lt;&lt;H as OutputSizeUser&gt;::OutputSize as ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy&quot;</span>),
@@ -414,6 +413,7 @@
     PartialEq(bound = <span class="string">&quot;&quot;</span>),
     PartialOrd(bound = <span class="string">&quot;&quot;</span>)
 )]
+#[tagged(<span class="string">&quot;HASH&quot;</span>)]
 </span><span class="kw">pub struct </span>HasherNode&lt;H&gt;(Output&lt;H&gt;)
 <span class="kw">where
     </span>H: Digest;
