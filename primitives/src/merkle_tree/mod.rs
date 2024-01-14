@@ -254,7 +254,7 @@ pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
     /// Insert a list of new values at the leftmost available slots
     /// * `elems` - elements to insert
     /// * `returns` - Ok(()) if successful. If there are too many elements,
-    ///   insertions will be performed until the merkle tree is full, and wil
+    ///   insertions will be performed until the merkle tree is full, and will
     ///   return an Err().
     fn extend(
         &mut self,
