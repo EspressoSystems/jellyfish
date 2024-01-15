@@ -52,7 +52,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, *};
 use ark_std::{
     format,
     hash::{Hash, Hasher},
-    rand::{CryptoRng, Rng, RngCore},
+    rand::{CryptoRng, RngCore},
     string::ToString,
     vec::Vec,
     One, UniformRand,
@@ -358,7 +358,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
 
 impl KeyPair {
     /// Key-pair generation algorithm
-    pub fn generate<R: Rng>(prng: &mut R) -> KeyPair {
+    pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> KeyPair {
         let sk = SignKey::generate(prng);
         let vk = VerKey::from(&sk);
         KeyPair { sk, vk }
@@ -401,7 +401,8 @@ impl KeyPair {
 }
 
 impl SignKey {
-    fn generate<R: Rng>(prng: &mut R) -> SignKey {
+    /// Signature Key generation function
+    pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> SignKey {
         SignKey(ScalarField::rand(prng))
     }
 }
