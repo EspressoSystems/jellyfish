@@ -576,6 +576,7 @@
 <a href="#576" id="576">576</a>
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -630,7 +631,7 @@
 <span class="kw">use </span>ark_std::{
     format,
     hash::{Hash, Hasher},
-    rand::{CryptoRng, Rng, RngCore},
+    rand::{CryptoRng, RngCore},
     string::ToString,
     vec::Vec,
     One, UniformRand,
@@ -936,7 +937,7 @@
 
 <span class="kw">impl </span>KeyPair {
     <span class="doccomment">/// Key-pair generation algorithm
-    </span><span class="kw">pub fn </span>generate&lt;R: Rng&gt;(prng: <span class="kw-2">&amp;mut </span>R) -&gt; KeyPair {
+    </span><span class="kw">pub fn </span>generate&lt;R: CryptoRng + RngCore&gt;(prng: <span class="kw-2">&amp;mut </span>R) -&gt; KeyPair {
         <span class="kw">let </span>sk = SignKey::generate(prng);
         <span class="kw">let </span>vk = VerKey::from(<span class="kw-2">&amp;</span>sk);
         KeyPair { sk, vk }
@@ -979,7 +980,8 @@
 }
 
 <span class="kw">impl </span>SignKey {
-    <span class="kw">fn </span>generate&lt;R: Rng&gt;(prng: <span class="kw-2">&amp;mut </span>R) -&gt; SignKey {
+    <span class="doccomment">/// Signature Key generation function
+    </span><span class="kw">pub fn </span>generate&lt;R: CryptoRng + RngCore&gt;(prng: <span class="kw-2">&amp;mut </span>R) -&gt; SignKey {
         SignKey(ScalarField::rand(prng))
     }
 }
