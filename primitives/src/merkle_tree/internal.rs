@@ -735,7 +735,7 @@ where
                                 value: children[frontier - 1].value(),
                             });
                     }
-                    let increment = children[frontier].extend_internal::<H, Arity>(
+                    let increment = children[frontier].extend_and_forget_internal::<H, Arity>(
                         height - 1,
                         &cur_pos,
                         traversal_path,
@@ -775,7 +775,7 @@ where
                                     value: children[frontier - 1].value(),
                                 });
                         }
-                        let increment = children[frontier].extend_internal::<H, Arity>(
+                        let increment = children[frontier].extend_and_forget_internal::<H, Arity>(
                             height - 1,
                             &cur_pos,
                             traversal_path,
