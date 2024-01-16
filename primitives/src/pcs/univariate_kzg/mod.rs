@@ -40,7 +40,11 @@ use jf_utils::par_utils::parallelizable_slice_iter;
 use rayon::prelude::*;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
+mod eval_form;
 pub(crate) mod srs;
+pub(crate) mod srs_eval_form;
+
+pub use eval_form::*;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
 pub struct UnivariateKzgPCS<E> {
@@ -70,22 +74,6 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     type BatchCommitment = Vec<Self::Commitment>;
     type Proof = UnivariateKzgProof<E>;
     type BatchProof = UnivariateKzgBatchProof<E>;
-
-    /// Trim the universal parameters to specialize the public parameters.
-    /// Input `max_degree` for univariate.
-    /// `supported_num_vars` must be None or an error is returned.
-    fn trim(
-        srs: impl Borrow<Self::SRS>,
-        supported_degree: usize,
-        supported_num_vars: Option<usize>,
-    ) -> Result<(UnivariateProverParam<E>, UnivariateVerifierParam<E>), PCSError> {
-        if supported_num_vars.is_some() {
-            return Err(PCSError::InvalidParameters(
-                "univariate should not receive a num_var param".to_string(),
-            ));
-        }
-        srs.borrow().trim(supported_degree)
-    }
 
     /// Generate a commitment for a polynomial
     /// Note that the scheme is not hidding
@@ -144,6 +132,10 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
     /// On input a polynomial `p` and a point `point`, outputs a proof for the
     /// same.
+    /// The witness polynomial w(x) the quotient of the division
+    /// (p(x) - p(z)) / (x - z)
+    /// Observe that this quotient does not change with z because p(z) is the
+    /// remainder term. We can therefore omit p(z) when computing the quotient.
     fn open(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
         polynomial: &Self::Polynomial,
