@@ -1632,7 +1632,7 @@
                                 value: children[frontier - <span class="number">1</span>].value(),
                             });
                     }
-                    <span class="kw">let </span>increment = children[frontier].extend_internal::&lt;H, Arity&gt;(
+                    <span class="kw">let </span>increment = children[frontier].extend_and_forget_internal::&lt;H, Arity&gt;(
                         height - <span class="number">1</span>,
                         <span class="kw-2">&amp;</span>cur_pos,
                         traversal_path,
@@ -1672,7 +1672,7 @@
                                     value: children[frontier - <span class="number">1</span>].value(),
                                 });
                         }
-                        <span class="kw">let </span>increment = children[frontier].extend_internal::&lt;H, Arity&gt;(
+                        <span class="kw">let </span>increment = children[frontier].extend_and_forget_internal::&lt;H, Arity&gt;(
                             height - <span class="number">1</span>,
                             <span class="kw-2">&amp;</span>cur_pos,
                             traversal_path,
