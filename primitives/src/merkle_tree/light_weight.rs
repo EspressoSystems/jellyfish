@@ -112,6 +112,10 @@ mod mt_tests {
         assert!(mt.push(F::from(0u64)).is_err());
         assert!(mt.extend(&[]).is_ok());
         assert!(mt.extend(&[F::from(1u64)]).is_err());
+
+        // Checks that the prior elements are all forgotten
+        (0..8).for_each(|i| assert!(mt.lookup(i).expect_not_in_memory().is_ok()));
+        assert!(mt.lookup(8).expect_ok().is_ok());
     }
 
     #[test]
