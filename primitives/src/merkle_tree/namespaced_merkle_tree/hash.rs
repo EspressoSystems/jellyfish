@@ -7,7 +7,7 @@ use sha3::Sha3_256;
 
 use crate::{
     errors::PrimitivesError,
-    merkle_tree::examples::{Sha3Digest, Sha3Node},
+    merkle_tree::prelude::{Sha3Digest, Sha3Node},
 };
 
 use super::{BindNamespace, DigestAlgorithm, Element, Index, Namespace, Namespaced, NodeValue};

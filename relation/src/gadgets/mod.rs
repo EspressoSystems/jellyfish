@@ -14,10 +14,15 @@ mod cmp;
 mod emulated;
 mod logic;
 mod range;
+#[allow(unused_imports)]
 pub use arithmetic::*;
+#[allow(unused_imports)]
 pub use cmp::*;
+#[allow(unused_imports)]
 pub use emulated::*;
+#[allow(unused_imports)]
 pub use logic::*;
+#[allow(unused_imports)]
 pub use range::*;
 
 // Helper functions

@@ -12,7 +12,7 @@ use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
-        hasher::{HasherDigest, HasherMerkleTree},
+        hasher::{HasherDigest, HasherMerkleTree, HasherNode},
         MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
@@ -100,6 +100,8 @@ where
         num_storage_nodes: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
+        // TODO support any degree, give multiple shares to nodes if needed
+        // https://github.com/EspressoSystems/jellyfish/issues/393
         if num_storage_nodes < payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "payload_chunk_size {} exceeds num_storage_nodes {}",
@@ -196,7 +198,9 @@ where
     E: Pairing,
     H: HasherDigest,
 {
-    type Commit = Output<H>;
+    // use HasherNode<H> instead of Output<H> to easily meet trait bounds
+    type Commit = HasherNode<H>;
+
     type Share = Share<E, H>;
     type Common = Common<E, H>;
 
@@ -550,7 +554,7 @@ where
                 .serialize_uncompressed(&mut hasher)
                 .map_err(vid)?;
         }
-        Ok(hasher.finalize())
+        Ok(hasher.finalize().into())
     }
 }
 
