@@ -18,8 +18,8 @@ use jf_primitives::pcs::{
 };
 use jf_utils::test_rng;
 
-const MIN_NUM_VARS: usize = 10;
-const MAX_NUM_VARS: usize = 20;
+const MIN_NUM_VARS: usize = 12;
+const MAX_NUM_VARS: usize = 22;
 
 /// Measure the time cost of {commit/open/verify} across a range of num_vars
 pub fn bench_pcs_method<E: Pairing>(
@@ -39,7 +39,15 @@ pub fn bench_pcs_method<E: Pairing>(
             BenchmarkId::from_parameter(num_vars),
             &num_vars,
             |b, num_vars| {
-                b.iter(|| method(&pp, *num_vars));
+                // `iter` ignores the result of the function call (i.e. the time), so we need
+                // `iter_custom`, otherwise the PCS setup is included in the measurements.
+                b.iter_custom(|i| {
+                    let mut time = Duration::from_nanos(0);
+                    for _ in 0..i {
+                        time += method(&pp, *num_vars);
+                    }
+                    time
+                });
             },
         );
     }
