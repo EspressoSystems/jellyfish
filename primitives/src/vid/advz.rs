@@ -237,7 +237,7 @@ where
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let disperse_time = start_timer!(|| format!(
             "VID disperse {} payload bytes to {} nodes",
-            payload_len, self.num_storage_nodes
+            payload_byte_len, self.num_storage_nodes
         ));
 
         // partition payload into polynomial coefficients
