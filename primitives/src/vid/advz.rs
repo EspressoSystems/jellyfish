@@ -370,6 +370,12 @@ where
                 common.poly_commits.len()
             )));
         }
+        if common.num_storage_nodes != self.num_storage_nodes {
+            return Err(VidError::Argument(format!(
+                "common num_storage_nodes differs from self ({},{})",
+                common.num_storage_nodes, self.num_storage_nodes
+            )));
+        }
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
@@ -426,6 +432,12 @@ where
                 "not enough shares {}, expected at least {}",
                 shares.len(),
                 self.payload_chunk_size
+            )));
+        }
+        if common.num_storage_nodes != self.num_storage_nodes {
+            return Err(VidError::Argument(format!(
+                "common num_storage_nodes differs from self ({},{})",
+                common.num_storage_nodes, self.num_storage_nodes
             )));
         }
 
