@@ -39,6 +39,8 @@ pub fn round_trip<V, R>(
             let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             assert_eq!(shares.len(), num_storage_nodes);
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
+            assert_eq!(len, V::get_payload_byte_len(&common));
+            assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));
 
             for share in shares.iter() {
                 vid.verify_share(share, &common, &commit).unwrap().unwrap();
