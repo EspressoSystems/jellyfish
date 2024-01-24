@@ -384,7 +384,8 @@ where
                 common.poly_commits.len()
             )));
         }
-        if common.num_storage_nodes != self.num_storage_nodes.try_into().map_err(vid)? {
+        let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
+        if common.num_storage_nodes != num_storage_nodes {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
@@ -448,7 +449,8 @@ where
                 self.payload_chunk_size
             )));
         }
-        if common.num_storage_nodes != self.num_storage_nodes.try_into().map_err(vid)? {
+        let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
+        if common.num_storage_nodes != num_storage_nodes {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
