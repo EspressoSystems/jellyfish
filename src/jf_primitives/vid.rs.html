@@ -137,6 +137,9 @@
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -213,6 +216,9 @@
 
     <span class="doccomment">/// Extract the payload byte length data from a [`VidScheme::Common`].
     </span><span class="kw">fn </span>get_payload_byte_len(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize;
+
+    <span class="doccomment">/// Extract the number of storage nodes from a [`VidScheme::Common`].
+    </span><span class="kw">fn </span>get_num_storage_nodes(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize;
 }
 
 <span class="doccomment">/// Convenience struct to aggregate disperse data.

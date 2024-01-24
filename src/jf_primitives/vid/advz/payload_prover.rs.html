@@ -560,6 +560,9 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -883,7 +886,10 @@
     </span>}
 
     <span class="kw">fn </span>check_stmt_consistency(stmt: <span class="kw-2">&amp;</span>Statement&lt;<span class="self">Self</span>&gt;) -&gt; VidResult&lt;()&gt; {
-        check_range_nonempty_and_in_bounds(stmt.common.bytes_len, <span class="kw-2">&amp;</span>stmt.range)<span class="question-mark">?</span>;
+        check_range_nonempty_and_in_bounds(
+            stmt.common.payload_byte_len.try_into().map_err(vid)<span class="question-mark">?</span>,
+            <span class="kw-2">&amp;</span>stmt.range,
+        )<span class="question-mark">?</span>;
         <span class="kw">if </span>stmt.payload_subslice.len() != stmt.range.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">&quot;payload_subslice length {} inconsistent with range length {}&quot;</span>,
