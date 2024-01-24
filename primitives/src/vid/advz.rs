@@ -190,7 +190,8 @@ where
     #[serde(with = "canonical")]
     all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
-    bytes_len: usize, // TODO don't use usize in serializable struct?
+    bytes_len: usize,         // TODO don't use usize in serializable struct?
+    num_storage_nodes: usize, // TODO don't use usize in serializable struct?
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -301,6 +302,7 @@ where
             poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             bytes_len: payload_len,
+            num_storage_nodes: self.num_storage_nodes,
         };
         end_timer!(common_timer);
 
@@ -482,6 +484,10 @@ where
 
     fn get_payload_byte_len(common: &Self::Common) -> usize {
         common.bytes_len
+    }
+
+    fn get_num_storage_nodes(common: &Self::Common) -> usize {
+        common.num_storage_nodes
     }
 }
 
