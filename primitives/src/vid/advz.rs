@@ -216,7 +216,7 @@ where
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len())
+        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -306,7 +306,8 @@ where
         };
         end_timer!(common_timer);
 
-        let commit = Self::derive_commit(&common.poly_commits, payload_len)?;
+        let commit =
+            Self::derive_commit(&common.poly_commits, payload_len, self.num_storage_nodes)?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -486,7 +487,13 @@ where
     }
 
     fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()> {
-        if *commit != Advz::<E, H>::derive_commit(&common.poly_commits, common.bytes_len)? {
+        if *commit
+            != Advz::<E, H>::derive_commit(
+                &common.poly_commits,
+                common.bytes_len,
+                common.num_storage_nodes,
+            )?
+        {
             return Err(VidError::Argument(
                 "common inconsistent with commit".to_string(),
             ));
@@ -562,9 +569,13 @@ where
     fn derive_commit(
         poly_commits: &[KzgCommit<E>],
         payload_byte_len: usize,
+        num_storage_nodes: usize,
     ) -> VidResult<<Self as VidScheme>::Commit> {
         let mut hasher = H::new();
         payload_byte_len
+            .serialize_uncompressed(&mut hasher)
+            .map_err(vid)?;
+        num_storage_nodes
             .serialize_uncompressed(&mut hasher)
             .map_err(vid)?;
         for poly_commit in poly_commits {
