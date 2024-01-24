@@ -27,7 +27,9 @@ use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
-    end_timer, format,
+    end_timer,
+    fmt::Debug,
+    format,
     marker::PhantomData,
     ops::{Add, Mul},
     start_timer, vec,
@@ -106,6 +108,14 @@ where
             return Err(VidError::Argument(format!(
                 "payload_chunk_size {} exceeds num_storage_nodes {}",
                 payload_chunk_size, num_storage_nodes
+            )));
+        }
+        // Later we will convert num_storage_nodes to u32.
+        // Better to know now whether that conversion will succeed.
+        if <usize as TryInto<u32>>::try_into(num_storage_nodes).is_err() {
+            return Err(VidError::Argument(format!(
+                "num_storage nodes {} should be convertible to u32",
+                num_storage_nodes
             )));
         }
         let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, payload_chunk_size - 1).map_err(vid)?;
@@ -190,8 +200,8 @@ where
     #[serde(with = "canonical")]
     all_evals_digest: KzgEvalsMerkleTreeNode<E, H>,
 
-    bytes_len: usize,         // TODO don't use usize in serializable struct?
-    num_storage_nodes: usize, // TODO don't use usize in serializable struct?
+    payload_byte_len: u32,
+    num_storage_nodes: u32,
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -224,7 +234,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let payload_len = payload.len();
+        let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let disperse_time = start_timer!(|| format!(
             "VID disperse {} payload bytes to {} nodes",
             payload_len, self.num_storage_nodes
@@ -301,13 +311,16 @@ where
         let common = Common {
             poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
-            bytes_len: payload_len,
-            num_storage_nodes: self.num_storage_nodes,
+            payload_byte_len,
+            num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
         };
         end_timer!(common_timer);
 
-        let commit =
-            Self::derive_commit(&common.poly_commits, payload_len, self.num_storage_nodes)?;
+        let commit = Self::derive_commit(
+            &common.poly_commits,
+            payload_byte_len,
+            self.num_storage_nodes,
+        )?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
         // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
@@ -371,7 +384,7 @@ where
                 common.poly_commits.len()
             )));
         }
-        if common.num_storage_nodes != self.num_storage_nodes {
+        if common.num_storage_nodes != self.num_storage_nodes.try_into().map_err(vid)? {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
@@ -435,7 +448,7 @@ where
                 self.payload_chunk_size
             )));
         }
-        if common.num_storage_nodes != self.num_storage_nodes {
+        if common.num_storage_nodes != self.num_storage_nodes.try_into().map_err(vid)? {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
@@ -482,7 +495,7 @@ where
         assert_eq!(elems.len(), elems_capacity);
 
         let mut payload: Vec<_> = field_to_bytes(elems).collect();
-        payload.truncate(common.bytes_len);
+        payload.truncate(common.payload_byte_len.try_into().map_err(vid)?);
         Ok(payload)
     }
 
@@ -490,7 +503,7 @@ where
         if *commit
             != Advz::<E, H>::derive_commit(
                 &common.poly_commits,
-                common.bytes_len,
+                common.payload_byte_len,
                 common.num_storage_nodes,
             )?
         {
@@ -502,11 +515,17 @@ where
     }
 
     fn get_payload_byte_len(common: &Self::Common) -> usize {
-        common.bytes_len
+        common
+            .payload_byte_len
+            .try_into()
+            .expect("u32 should be convertible to usize")
     }
 
     fn get_num_storage_nodes(common: &Self::Common) -> usize {
-        common.num_storage_nodes
+        common
+            .num_storage_nodes
+            .try_into()
+            .expect("u32 should be convertible to usize")
     }
 }
 
@@ -566,11 +585,23 @@ where
     }
 
     /// Derive a commitment from whatever data is needed.
-    fn derive_commit(
+    ///
+    /// Generic types `T`, `U` allow caller to pass `usize` or anything else.
+    /// Yes, Rust really wants these horrible trait bounds on
+    /// `<T as TryInto<u32>>::Error`.
+    fn derive_commit<T, U>(
         poly_commits: &[KzgCommit<E>],
-        payload_byte_len: usize,
-        num_storage_nodes: usize,
-    ) -> VidResult<<Self as VidScheme>::Commit> {
+        payload_byte_len: T,
+        num_storage_nodes: U,
+    ) -> VidResult<<Self as VidScheme>::Commit>
+    where
+        T: TryInto<u32>,
+        <T as TryInto<u32>>::Error: ark_std::fmt::Display + Debug + Send + Sync + 'static,
+        U: TryInto<u32>,
+        <U as TryInto<u32>>::Error: ark_std::fmt::Display + Debug + Send + Sync + 'static,
+    {
+        let payload_byte_len: u32 = payload_byte_len.try_into().map_err(vid)?;
+        let num_storage_nodes: u32 = num_storage_nodes.try_into().map_err(vid)?;
         let mut hasher = H::new();
         payload_byte_len
             .serialize_uncompressed(&mut hasher)
