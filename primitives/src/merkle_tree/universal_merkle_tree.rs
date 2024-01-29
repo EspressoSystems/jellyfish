@@ -6,7 +6,7 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
@@ -24,14 +24,14 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
-impl_merkle_tree_scheme!(UniversalMerkleTree, build_tree_internal);
+impl_merkle_tree_scheme!(UniversalMerkleTree);
 impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -73,7 +73,7 @@ where
         BI: Borrow<Self::Index>,
         BE: Borrow<Self::Element>,
     {
-        let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
+        let mut mt = Self::new(height);
         for tuple in data.into_iter() {
             let (key, value) = tuple.borrow();
             UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
@@ -124,7 +124,7 @@ impl<E, H, I, Arity, T> ForgetableUniversalMerkleTreeScheme
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -274,7 +274,7 @@ mod mt_tests {
 
     fn test_update_and_lookup_helper<I, F>()
     where
-        I: Index + ToTraversalPath<U3> + From<u64>,
+        I: Index + ToTraversalPath<U3>,
         F: RescueParameter + ToTraversalPath<U3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {

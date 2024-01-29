@@ -25,7 +25,7 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-impl_merkle_tree_scheme!(MerkleTree, build_tree_internal);
+impl_merkle_tree_scheme!(MerkleTree);
 impl_forgetable_merkle_tree_scheme!(MerkleTree);
 
 impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
@@ -36,6 +36,19 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
+    fn from_elems(
+        height: usize,
+        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
+    ) -> Result<Self, PrimitivesError> {
+        let (root, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, elems)?;
+        Ok(Self {
+            root,
+            height,
+            num_leaves,
+            _phantom: PhantomData,
+        })
+    }
+
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
         <Self as AppendableMerkleTreeScheme>::extend(self, [elem])
     }

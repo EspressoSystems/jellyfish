@@ -903,7 +903,7 @@ where
 impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
 where
     E: Element,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<Arity>,
     T: NodeValue,
     Arity: Unsigned,
 {

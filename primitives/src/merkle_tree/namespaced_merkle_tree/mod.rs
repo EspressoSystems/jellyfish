@@ -168,20 +168,6 @@ where
         }
     }
 
-    fn from_elems(
-        height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError> {
-        let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
-        let leaves =
-            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
-        let inner = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::from_elems(height, leaves)?;
-        Ok(NMT {
-            inner,
-            namespace_ranges,
-        })
-    }
-
     fn height(&self) -> usize {
         self.inner.height()
     }
@@ -222,6 +208,22 @@ where
     N: Namespace,
     Arity: Unsigned,
 {
+    fn from_elems(
+        height: usize,
+        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
+    ) -> Result<Self, PrimitivesError> {
+        let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
+        let leaves =
+            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
+        let inner = <InnerTree<E, H, T, N, Arity> as AppendableMerkleTreeScheme>::from_elems(
+            height, leaves,
+        )?;
+        Ok(NMT {
+            inner,
+            namespace_ranges,
+        })
+    }
+
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,

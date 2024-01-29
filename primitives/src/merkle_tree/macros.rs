@@ -9,7 +9,7 @@
 /// Macro for generating a standard merkle tree implementation
 #[macro_export]
 macro_rules! impl_merkle_tree_scheme {
-    ($name: ident, $builder: ident) => {
+    ($name: ident) => {
         /// A standard append only Merkle tree implementation
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(
@@ -35,7 +35,7 @@ macro_rules! impl_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {
@@ -56,19 +56,6 @@ macro_rules! impl_merkle_tree_scheme {
                     num_leaves: 0,
                     _phantom: PhantomData,
                 }
-            }
-
-            fn from_elems(
-                height: usize,
-                elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-            ) -> Result<Self, PrimitivesError> {
-                let (root, num_leaves) = $builder::<E, H, I, Arity, T>(height, elems)?;
-                Ok($name {
-                    root,
-                    height,
-                    num_leaves,
-                    _phantom: PhantomData,
-                })
             }
 
             fn height(&self) -> usize {
@@ -124,7 +111,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {

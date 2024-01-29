@@ -199,12 +199,6 @@ pub trait MerkleTreeScheme: Sized {
     /// Initialize an empty Merkle tree
     fn new(height: usize) -> Self;
 
-    /// Construct a new Merkle tree with given height from a data slice
-    fn from_elems(
-        height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError>;
-
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
@@ -249,6 +243,12 @@ pub trait MerkleTreeScheme: Sized {
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
 pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
+    /// Construct a new Merkle tree with given height from a data slice
+    fn from_elems(
+        height: usize,
+        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
+    ) -> Result<Self, PrimitivesError>;
+
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful

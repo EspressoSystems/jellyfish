@@ -13,7 +13,7 @@ use crate::{
     alloc::string::ToString,
     merkle_tree::{
         hasher::{HasherDigest, HasherMerkleTree, HasherNode},
-        MerkleCommitment, MerkleTreeScheme,
+        AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
         prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
