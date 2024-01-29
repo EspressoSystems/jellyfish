@@ -61,8 +61,11 @@ where
     {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        self.root
-            .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)
+        let delta =
+            self.root
+                .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
+        self.num_leaves = (delta + self.num_leaves as i64) as u64;
+        Ok(())
     }
 
     fn from_kv_set<BI, BE>(
@@ -278,8 +281,7 @@ mod mt_tests {
         F: RescueParameter + ToTraversalPath<U3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
-        let mut mt =
-            RescueSparseMerkleTree::<F, F>::from_kv_set(10, HashMap::<F, F>::new()).unwrap();
+        let mut mt = RescueSparseMerkleTree::<F, F>::new(10);
         for i in 0..2 {
             mt.update(F::from(i as u64), F::from(i as u64)).unwrap();
         }
@@ -295,6 +297,30 @@ mod mt_tests {
             .unwrap()
             .is_ok());
         }
+        for i in 0..10 {
+            mt.update_with(F::from(i as u64), |elem| match elem {
+                Some(elem) => Some(*elem),
+                None => Some(F::from(i as u64)),
+            })
+            .unwrap();
+        }
+        assert_eq!(mt.num_leaves(), 10);
+        // test lookup at index 7
+        let (val, proof) = mt.universal_lookup(F::from(7u64)).expect_ok().unwrap();
+        assert_eq!(val, &F::from(7u64));
+        assert_eq!(proof.elem().unwrap(), val);
+        assert!(
+            RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), F::from(7u64), &proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        // Remove index 8
+        mt.update_with(F::from(8u64), |_| None).unwrap();
+        assert!(mt
+            .universal_lookup(F::from(8u64))
+            .expect_not_found()
+            .is_ok());
     }
 
     #[test]

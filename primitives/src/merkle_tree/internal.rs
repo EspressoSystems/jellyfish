@@ -618,13 +618,14 @@ where
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         f: F,
-    ) -> Result<(), PrimitivesError>
+    ) -> Result<i64, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
         F: FnOnce(Option<&E>) -> Option<E>,
     {
         let pos = pos.borrow();
+        let mut delta = 0;
         match self {
             MerkleNode::Leaf {
                 elem: node_elem,
@@ -637,11 +638,12 @@ where
                 },
                 None => {
                     *self = MerkleNode::Empty;
+                    delta = -1;
                 },
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
-                children[branch].update_with_internal::<H, Arity, _>(
+                delta = children[branch].update_with_internal::<H, Arity, _>(
                     height - 1,
                     pos,
                     traversal_path,
@@ -671,12 +673,13 @@ where
                             value: H::digest_leaf(pos, &elem)?,
                             pos: pos.clone(),
                             elem,
-                        }
+                        };
+                        delta = 1;
                     }
                 } else {
                     let branch = traversal_path[height - 1];
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
-                    children[branch].update_with_internal::<H, Arity, _>(
+                    delta = children[branch].update_with_internal::<H, Arity, _>(
                         height - 1,
                         pos,
                         traversal_path,
@@ -698,7 +701,7 @@ where
                 ))
             },
         }
-        Ok(())
+        Ok(delta)
     }
 }
 
