@@ -100,14 +100,45 @@ macro_rules! impl_merkle_tree_scheme {
                 proof.borrow().verify_membership_proof::<H>(root.borrow())
             }
 
-            fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
+            fn iter(&self) -> MerkleTreeIter<E, I, T> {
                 MerkleTreeIter::new(&self.root)
             }
+        }
 
-            fn into_iter(self) -> MerkleTreeIntoIter<Self::Element, Self::Index, Self::NodeValue> {
+        impl<'a, E, H, I, Arity, T> IntoIterator for &'a $name<E, H, I, Arity, T>
+        where
+            E: Element,
+            H: DigestAlgorithm<E, I, T>,
+            I: Index + ToTraversalPath<Arity>,
+            Arity: Unsigned,
+            T: NodeValue,
+        {
+            type Item = (&'a I, &'a E);
+
+            type IntoIter = MerkleTreeIter<'a, E, I, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                MerkleTreeIter::new(&self.root)
+            }
+        }
+
+        impl<E, H, I, Arity, T> IntoIterator for $name<E, H, I, Arity, T>
+        where
+            E: Element,
+            H: DigestAlgorithm<E, I, T>,
+            I: Index + ToTraversalPath<Arity>,
+            Arity: Unsigned,
+            T: NodeValue,
+        {
+            type Item = (I, E);
+
+            type IntoIter = MerkleTreeIntoIter<E, I, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
                 MerkleTreeIntoIter::new(self.root)
             }
         }
+
     };
 }
 

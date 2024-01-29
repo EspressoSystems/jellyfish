@@ -22,7 +22,7 @@ use self::{
 
 use super::{
     append_only::MerkleTree,
-    internal::{MerkleProof, MerkleTreeIntoIter, MerkleTreeIter},
+    internal::{MerkleProof, MerkleTreeIter},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
     MerkleTreeScheme, NodeValue,
 };
@@ -203,10 +203,6 @@ where
 
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
         self.inner.iter()
-    }
-
-    fn into_iter(self) -> MerkleTreeIntoIter<Self::Element, Self::Index, Self::NodeValue> {
-        self.inner.into_iter()
     }
 }
 

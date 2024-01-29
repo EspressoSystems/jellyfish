@@ -544,6 +544,10 @@ where
     }
 
     /// Update the element at the given index.
+    /// * `returns` - `Err()` if any error happens internally. `Ok(delta,
+    ///   result)`, `delta` represents the changes to the overall number of
+    ///   leaves of the tree, `result` contains the original lookup information
+    ///   at the given location.
     pub(crate) fn update_with_internal<H, Arity, F>(
         &mut self,
         height: usize,
@@ -562,17 +566,19 @@ where
                 elem: node_elem,
                 value,
                 pos,
-            } => match f(Some(node_elem)) {
-                Some(elem) => {
-                    let result = (0i64, LookupResult::Ok(node_elem.clone(), ()));
-                    *value = H::digest_leaf(pos, &elem)?;
-                    *node_elem = elem;
-                    Ok(result)
-                },
-                None => {
-                    *self = MerkleNode::Empty;
-                    Ok((-1i64, LookupResult::NotFound(())))
-                },
+            } => {
+                let result = LookupResult::Ok(node_elem.clone(), ());
+                match f(Some(node_elem)) {
+                    Some(elem) => {
+                        *value = H::digest_leaf(pos, &elem)?;
+                        *node_elem = elem;
+                        Ok((0i64, result))
+                    },
+                    None => {
+                        *self = MerkleNode::Empty;
+                        Ok((-1i64, result))
+                    },
+                }
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
