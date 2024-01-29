@@ -250,8 +250,12 @@ pub trait MerkleTreeScheme: Sized {
 /// append-only vector.
 pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
     /// Construct a new Merkle tree with given height from a data slice
+    /// * `height` - height of the Merkle tree, if `None`, it will calculate the
+    ///   minimum height that could hold all elements.
+    /// * `elems` - an iterator to all elements
+    /// * `returns` - A constructed Merkle tree, or `Err()` if errors
     fn from_elems(
-        height: usize,
+        height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError>;
 

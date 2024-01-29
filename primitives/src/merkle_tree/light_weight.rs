@@ -41,10 +41,10 @@ where
     T: NodeValue,
 {
     fn from_elems(
-        height: usize,
+        height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
-        let (root, num_leaves) =
+        let (root, height, num_leaves) =
             build_light_weight_tree_internal::<E, H, I, Arity, T>(height, elems)?;
         Ok(Self {
             root,
@@ -105,9 +105,9 @@ mod mt_tests {
     fn test_light_mt_builder_helper<F: RescueParameter>() {
         let arity: usize = RescueLightWeightMerkleTree::<F>::ARITY;
         let mut data = vec![F::from(0u64); arity];
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_ok());
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(Some(1), &data).is_ok());
         data.push(F::from(0u64));
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_err());
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(Some(1), &data).is_err());
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod mt_tests {
     }
 
     fn test_light_mt_insertion_helper<F: RescueParameter>() {
-        let mut mt = RescueLightWeightMerkleTree::<F>::from_elems(2, &[]).unwrap();
+        let mut mt = RescueLightWeightMerkleTree::<F>::from_elems(Some(2), &[]).unwrap();
         assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
@@ -144,10 +144,10 @@ mod mt_tests {
 
     fn test_light_mt_lookup_helper<F: RescueParameter>() {
         let mut mt =
-            RescueLightWeightMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)])
+            RescueLightWeightMerkleTree::<F>::from_elems(Some(2), &[F::from(3u64), F::from(1u64)])
                 .unwrap();
         let mut mock_mt =
-            RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+            RescueMerkleTree::<F>::from_elems(Some(2), &[F::from(3u64), F::from(1u64)]).unwrap();
         assert!(mt.lookup(0).expect_not_in_memory().is_ok());
         assert!(mt.lookup(1).expect_ok().is_ok());
         assert!(mt.extend(&[F::from(3u64), F::from(1u64)]).is_ok());
@@ -204,8 +204,9 @@ mod mt_tests {
     }
 
     fn test_light_mt_serde_helper<F: RescueParameter>() {
-        let mt = RescueLightWeightMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)])
-            .unwrap();
+        let mt =
+            RescueLightWeightMerkleTree::<F>::from_elems(Some(2), &[F::from(3u64), F::from(1u64)])
+                .unwrap();
         let proof = mt.lookup(1).expect_ok().unwrap().1;
         let node = &proof.proof[0];
 

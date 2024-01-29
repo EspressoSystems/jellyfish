@@ -290,21 +290,8 @@ where
         // TODO why do I need to compute the height of the merkle tree?
         let all_evals_commit_timer =
             start_timer!(|| "compute merkle root of all storage node evals");
-        let height: usize = all_storage_node_evals
-            .len()
-            .checked_ilog(KzgEvalsMerkleTree::<E, H>::ARITY)
-            .ok_or_else(|| {
-                VidError::Argument(format!(
-                    "num_storage_nodes {} log base {} invalid",
-                    all_storage_node_evals.len(),
-                    KzgEvalsMerkleTree::<E, H>::ARITY
-                ))
-            })?
-            .try_into()
-            .expect("num_storage_nodes log base arity should fit into usize");
-        let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit =
-            KzgEvalsMerkleTree::<E, H>::from_elems(height, &all_storage_node_evals).map_err(vid)?;
+            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));

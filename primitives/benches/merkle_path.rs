@@ -26,7 +26,7 @@ fn twenty_hashes(c: &mut Criterion) {
 
     let leaf: Fq381 = rng.gen();
 
-    let mt = RescueMerkleTree::<Fq381>::from_elems(20, [leaf, leaf]).unwrap();
+    let mt = RescueMerkleTree::<Fq381>::from_elems(Some(20), [leaf, leaf]).unwrap();
     let root = mt.commitment().digest();
     let (_, proof) = mt.lookup(0).expect_ok().unwrap();
 

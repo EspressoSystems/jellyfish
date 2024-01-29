@@ -215,7 +215,7 @@ where
     Arity: Unsigned,
 {
     fn from_elems(
-        height: usize,
+        height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
     ) -> Result<Self, PrimitivesError> {
         let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
@@ -453,7 +453,7 @@ mod nmt_tests {
 
     fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
         match build_type {
-            BuildType::FromElems => TestNMT::from_elems(3, leaves).unwrap(),
+            BuildType::FromElems => TestNMT::from_elems(Some(3), leaves).unwrap(),
             BuildType::Extend => {
                 let mut nmt = TestNMT::new(3);
                 nmt.extend(leaves).unwrap();

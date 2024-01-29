@@ -566,7 +566,7 @@ mod test {
             let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
             let mut elements = (1u64..=9u64).map(|x| F::from(x)).collect::<Vec<_>>();
             elements[uid as usize] = elem;
-            let mt = RescueMerkleTree::<F>::from_elems(2, elements).unwrap();
+            let mt = RescueMerkleTree::<F>::from_elems(Some(2), elements).unwrap();
             let expected_root = mt.commitment().digest();
             let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
             assert_eq!(retrieved_elem, &elem);

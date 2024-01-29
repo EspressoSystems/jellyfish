@@ -176,9 +176,9 @@ where
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn build_tree_internal<E, H, I, Arity, T>(
-    height: usize,
+    height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Box<MerkleNode<E, I, T>>, u64), PrimitivesError>
+) -> Result<(Box<MerkleNode<E, I, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -188,6 +188,15 @@ where
 {
     let leaves: Vec<_> = elems.into_iter().collect();
     let num_leaves = leaves.len() as u64;
+    let height = height.unwrap_or_else(|| {
+        let mut height = 0usize;
+        let mut capacity = 1;
+        while capacity < num_leaves {
+            height += 1;
+            capacity *= Arity::to_u64();
+        }
+        height
+    });
     let capacity = BigUint::from(Arity::to_u64()).pow(height as u32);
 
     if BigUint::from(num_leaves) > capacity {
@@ -236,17 +245,17 @@ where
                 })
                 .collect::<Result<Vec<_>, PrimitivesError>>()?;
         }
-        Ok((cur_nodes[0].clone(), num_leaves))
+        Ok((cur_nodes[0].clone(), height, num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, I, T>::Empty), 0))
+        Ok((Box::new(MerkleNode::<E, I, T>::Empty), height, 0))
     }
 }
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn build_light_weight_tree_internal<E, H, I, Arity, T>(
-    height: usize,
+    height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Box<MerkleNode<E, I, T>>, u64), PrimitivesError>
+) -> Result<(Box<MerkleNode<E, I, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -256,6 +265,15 @@ where
 {
     let leaves: Vec<_> = elems.into_iter().collect();
     let num_leaves = leaves.len() as u64;
+    let height = height.unwrap_or_else(|| {
+        let mut height = 0usize;
+        let mut capacity = 1;
+        while capacity < num_leaves {
+            height += 1;
+            capacity *= Arity::to_u64();
+        }
+        height
+    });
     let capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or_else(|| {
         PrimitivesError::ParameterError("Merkle tree size too large.".to_string())
     })?;
@@ -322,9 +340,9 @@ where
                 })
             }
         }
-        Ok((cur_nodes[0].clone(), num_leaves))
+        Ok((cur_nodes[0].clone(), height, num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, I, T>::Empty), 0))
+        Ok((Box::new(MerkleNode::<E, I, T>::Empty), height, 0))
     }
 }
 
