@@ -8,7 +8,7 @@
 //!
 //! ```
 //! # use jf_primitives::errors::PrimitivesError;
-//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme};
+//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -> Result<(), PrimitivesError> {
@@ -79,7 +79,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 ///
 /// Do this:
 /// ```
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
@@ -94,7 +94,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 /// ```
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
@@ -110,7 +110,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 /// ```compile_fail
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where

@@ -33,7 +33,7 @@ use super::rescue::RescueNativeGadget;
 /// use ark_bls12_377::Fq;
 /// use jf_primitives::circuit::merkle_tree::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleTreeScheme, MerkleCommitment};
+/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
 ///
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
