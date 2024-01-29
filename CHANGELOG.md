@@ -14,6 +14,12 @@ and follow [semantic versioning](https://semver.org/) for our releases.
   - Switch from `crypto_box` to `chacha20poly1305` (with `crypto_kx` to establish shared secret) for AEAD.
   - Supports `--cfg curve25519_dalek_backend="u32_backend"` RUSTFLAGS to select Curve25519 backend.
   - Remove `Canonical(De)Serialize` on AEAD-related structs, and directly expose `serde::(De)Serialize` instead.
+- [#475](https://github.com/EspressoSystems/jellyfish/pull/475) (`jf-primitives`) Ergonomics changes for Merkle tree
+  - Remove the unnecessary trait bound `From<u64>` to the merkle tree index
+    - Move the `from_elems` interfaces to `AppendableMerkleTreeScheme`
+    - Add `new()` interfaces for `MerkleTreeScheme`
+  - Add new `update_with()` and `remove()` interface for the universal Merkle tree
+  - Add new `iter()` interface for Merkle tree scheme, allows user to iterate through all elements that are in memory.
 
 ### Fixed
 

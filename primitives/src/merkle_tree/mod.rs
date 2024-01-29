@@ -241,7 +241,8 @@ pub trait MerkleTreeScheme: Sized {
     //     proof: impl Borrow<Self::BatchProof>,
     // ) -> Result<(), PrimitivesError>;
 
-    /// Return an iterator that iterates through all element that's not forgetton
+    /// Return an iterator that iterates through all element that are not
+    /// forgetton
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
