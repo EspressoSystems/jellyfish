@@ -589,10 +589,9 @@ where
                     f,
                 )?;
                 if matches!(*children[branch], MerkleNode::ForgettenSubtree { .. }) {
-                    // If the branch containing the update was not in memory,
-                    // the update failed and nothing was
-                    // changed, so we can short-circuit without recomputing this
-                    // node's value.
+                    // If the branch containing the update was forgotten by
+                    // user, the update failed and nothing was changed, so we
+                    // can short-circuit without recomputing this node's value.
                 } else if children
                     .iter()
                     .all(|child| matches!(**child, MerkleNode::Empty))
