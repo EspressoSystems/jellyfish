@@ -28,8 +28,7 @@ macro_rules! impl_merkle_tree_scheme {
             height: usize,
             num_leaves: u64,
 
-            _phantom_h: PhantomData<H>,
-            _phantom_ta: PhantomData<Arity>,
+            _phantom: PhantomData<(H, Arity)>,
         }
 
         impl<E, H, I, Arity, T> MerkleTreeScheme for $name<E, H, I, Arity, T>
@@ -50,6 +49,15 @@ macro_rules! impl_merkle_tree_scheme {
 
             const ARITY: usize = Arity::USIZE;
 
+            fn new(height: usize) -> Self {
+                Self {
+                    root: Box::new(MerkleNode::<E, I, T>::Empty),
+                    height,
+                    num_leaves: 0,
+                    _phantom: PhantomData,
+                }
+            }
+
             fn from_elems(
                 height: usize,
                 elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
@@ -59,8 +67,7 @@ macro_rules! impl_merkle_tree_scheme {
                     root,
                     height,
                     num_leaves,
-                    _phantom_h: PhantomData,
-                    _phantom_ta: PhantomData,
+                    _phantom: PhantomData,
                 })
             }
 
@@ -129,8 +136,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                     }),
                     height: com.height(),
                     num_leaves: com.size(),
-                    _phantom_h: PhantomData,
-                    _phantom_ta: PhantomData,
+                    _phantom: PhantomData,
                 }
             }
 

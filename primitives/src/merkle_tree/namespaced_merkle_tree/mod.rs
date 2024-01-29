@@ -159,6 +159,15 @@ where
     const ARITY: usize = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::ARITY;
     type Commitment = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::Commitment;
 
+    fn new(height: usize) -> Self {
+        let namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
+        let inner = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::new(height);
+        NMT {
+            inner,
+            namespace_ranges,
+        }
+    }
+
     fn from_elems(
         height: usize,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
@@ -438,12 +447,12 @@ mod nmt_tests {
         match build_type {
             BuildType::FromElems => TestNMT::from_elems(3, leaves).unwrap(),
             BuildType::Extend => {
-                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                let mut nmt = TestNMT::new(3);
                 nmt.extend(leaves).unwrap();
                 nmt
             },
             BuildType::Push => {
-                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                let mut nmt = TestNMT::new(3);
                 for leaf in leaves {
                     nmt.push(leaf).unwrap();
                 }

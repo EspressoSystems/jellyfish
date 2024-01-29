@@ -706,7 +706,7 @@ mod tests {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
-        let _ = advz.disperse(&payload_random);
+        let _ = advz.disperse(payload_random);
     }
 
     // #[test]
@@ -720,13 +720,13 @@ mod tests {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
-        let _ = advz.commit_only(&payload_random);
+        let _ = advz.commit_only(payload_random);
     }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         for (i, share) in shares.iter().enumerate() {
@@ -792,7 +792,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         // missing commit
@@ -838,7 +838,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();

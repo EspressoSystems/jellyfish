@@ -504,10 +504,10 @@ mod tests {
 
     #[test]
     fn test_agg_sig_trait() {
-        let m1 = vec![87u8, 32u8];
-        let m2 = vec![12u8, 2u8, 7u8];
-        let m3 = vec![3u8, 6u8];
-        let m4 = vec![72u8];
+        let m1 = [87u8, 32u8];
+        let m2 = [12u8, 2u8, 7u8];
+        let m3 = [3u8, 6u8];
+        let m4 = [72u8];
         let messages = vec![&m1[..], &m2[..], &m3[..], &m4[..]];
         let wrong_message = vec![255u8];
         agg_sign_and_verify::<BLSOverBN254CurveSignatureScheme>(
@@ -565,7 +565,7 @@ mod tests {
             // Generate two group elements that are equal but have different projective
             // representation.
             let mut vk = VerKey::from(&SignKey::generate(&mut rng));
-            let vk_copy = vk.clone();
+            let vk_copy = vk;
             let scalar = ark_bn254::Fq::rand(&mut rng);
             let scalar_sq = scalar * scalar;
             let scalar_cube = scalar_sq * scalar;

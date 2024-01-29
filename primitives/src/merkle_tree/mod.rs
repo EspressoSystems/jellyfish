@@ -196,7 +196,10 @@ pub trait MerkleTreeScheme: Sized {
     /// Tree arity
     const ARITY: usize;
 
-    /// Construct a new merkle tree with given height from a data slice
+    /// Initialize an empty Merkle tree
+    fn new(height: usize) -> Self;
+
+    /// Construct a new Merkle tree with given height from a data slice
     fn from_elems(
         height: usize,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
