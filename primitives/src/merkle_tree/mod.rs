@@ -294,25 +294,34 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
-    ///   original element at the given `pos`. Err() if the update fails.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
 
+    /// Remove a leaf at the given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
+    fn remove(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+
     /// Apply an update function `f` at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `f` - the update function, `None` means the given leaf doesn't exist
     ///   or should be removed.
-    /// * `returns` - Ok(()) if the update is success, Err() if the update
-    ///   fails.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
     fn update_with<F>(
         &mut self,
         pos: impl Borrow<Self::Index>,
         f: F,
-    ) -> Result<(), PrimitivesError>
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 

@@ -43,29 +43,31 @@ where
         pos: impl Borrow<I>,
         elem: impl Borrow<E>,
     ) -> Result<LookupResult<E, (), ()>, PrimitivesError> {
-        let pos = pos.borrow();
-        let elem = elem.borrow();
-        let traversal_path = pos.to_traversal_path(self.height);
-        let ret = self
-            .root
-            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)?;
-        if let LookupResult::NotFound(_) = ret {
-            self.num_leaves += 1;
-        }
-        Ok(ret)
+        self.update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
-    fn update_with<F>(&mut self, pos: impl Borrow<Self::Index>, f: F) -> Result<(), PrimitivesError>
+    fn remove(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| None)
+    }
+
+    fn update_with<F>(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<LookupResult<E, (), ()>, PrimitivesError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
     {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        let delta =
+        let (delta, result) =
             self.root
                 .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
         self.num_leaves = (delta + self.num_leaves as i64) as u64;
-        Ok(())
+        Ok(result)
     }
 
     fn from_kv_set<BI, BE>(

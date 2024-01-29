@@ -544,88 +544,19 @@ where
     }
 
     /// Update the element at the given index.
-    pub(crate) fn update_internal<H, Arity>(
-        &mut self,
-        height: usize,
-        pos: impl Borrow<I>,
-        traversal_path: &[usize],
-        elem: impl Borrow<E>,
-    ) -> Result<LookupResult<E, (), ()>, PrimitivesError>
-    where
-        H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
-    {
-        let pos = pos.borrow();
-        let elem = elem.borrow();
-        match self {
-            MerkleNode::Leaf {
-                elem: node_elem,
-                value,
-                pos,
-            } => {
-                let ret = ark_std::mem::replace(node_elem, elem.clone());
-                *value = H::digest_leaf(pos, elem)?;
-                Ok(LookupResult::Ok(ret, ()))
-            },
-            MerkleNode::Branch { value, children } => {
-                let res = (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
-                    height - 1,
-                    pos,
-                    traversal_path,
-                    elem,
-                )?;
-                // If the branch containing the update was not in memory, the update failed and
-                // nothing was changed, so we can short-circuit without recomputing this node's
-                // value.
-                if res == LookupResult::NotInMemory {
-                    return Ok(res);
-                }
-                // Otherwise, an entry has been updated and the value of one of our children has
-                // changed, so we must recompute our own value.
-                *value = digest_branch::<E, H, I, T>(children)?;
-                Ok(res)
-            },
-            MerkleNode::Empty => {
-                *self = if height == 0 {
-                    MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem)?,
-                        pos: pos.clone(),
-                        elem: elem.clone(),
-                    }
-                } else {
-                    let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
-                    (*children[traversal_path[height - 1]]).update_internal::<H, Arity>(
-                        height - 1,
-                        pos,
-                        traversal_path,
-                        elem,
-                    )?;
-                    MerkleNode::Branch {
-                        value: digest_branch::<E, H, I, T>(&children)?,
-                        children,
-                    }
-                };
-                Ok(LookupResult::NotFound(()))
-            },
-            MerkleNode::ForgettenSubtree { .. } => Ok(LookupResult::NotInMemory),
-        }
-    }
-
-    /// Update the element at the given index.
     pub(crate) fn update_with_internal<H, Arity, F>(
         &mut self,
         height: usize,
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         f: F,
-    ) -> Result<i64, PrimitivesError>
+    ) -> Result<(i64, LookupResult<E, (), ()>), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
         F: FnOnce(Option<&E>) -> Option<E>,
     {
         let pos = pos.borrow();
-        let mut delta = 0;
         match self {
             MerkleNode::Leaf {
                 elem: node_elem,
@@ -633,17 +564,19 @@ where
                 pos,
             } => match f(Some(node_elem)) {
                 Some(elem) => {
+                    let result = (0i64, LookupResult::Ok(node_elem.clone(), ()));
                     *value = H::digest_leaf(pos, &elem)?;
                     *node_elem = elem;
+                    Ok(result)
                 },
                 None => {
                     *self = MerkleNode::Empty;
-                    delta = -1;
+                    Ok((-1i64, LookupResult::NotFound(())))
                 },
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
-                delta = children[branch].update_with_internal::<H, Arity, _>(
+                let result = children[branch].update_with_internal::<H, Arity, _>(
                     height - 1,
                     pos,
                     traversal_path,
@@ -665,6 +598,7 @@ where
                     // changed, so we must recompute our own value.
                     *value = digest_branch::<E, H, I, T>(children)?;
                 }
+                Ok(result)
             },
             MerkleNode::Empty => {
                 if height == 0 {
@@ -674,12 +608,14 @@ where
                             pos: pos.clone(),
                             elem,
                         };
-                        delta = 1;
+                        Ok((1, LookupResult::NotFound(())))
+                    } else {
+                        Ok((0, LookupResult::NotFound(())))
                     }
                 } else {
                     let branch = traversal_path[height - 1];
                     let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
-                    delta = children[branch].update_with_internal::<H, Arity, _>(
+                    let result = children[branch].update_with_internal::<H, Arity, _>(
                         height - 1,
                         pos,
                         traversal_path,
@@ -693,15 +629,11 @@ where
                             children,
                         };
                     }
+                    Ok(result)
                 }
             },
-            MerkleNode::ForgettenSubtree { .. } => {
-                return Err(PrimitivesError::InternalError(
-                    "Given leaf is not in memory".to_string(),
-                ))
-            },
+            MerkleNode::ForgettenSubtree { .. } => Ok((0, LookupResult::NotInMemory)),
         }
-        Ok(delta)
     }
 }
 
