@@ -970,3 +970,46 @@ where
         None
     }
 }
+
+/// An owned iterator type for a merkle tree
+pub struct MerkleTreeIntoIter<E: Element, I: Index, T: NodeValue> {
+    stack: Vec<Box<MerkleNode<E, I, T>>>,
+}
+
+impl<E: Element, I: Index, T: NodeValue> MerkleTreeIntoIter<E, I, T> {
+    /// Initialize an iterator
+    pub fn new(root: Box<MerkleNode<E, I, T>>) -> Self {
+        Self { stack: vec![root] }
+    }
+}
+
+impl<E, I, T> Iterator for MerkleTreeIntoIter<E, I, T>
+where
+    E: Element,
+    I: Index,
+    T: NodeValue,
+{
+    type Item = (I, E);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.stack.pop() {
+            match *node {
+                MerkleNode::Branch { value: _, children } => {
+                    children
+                        .into_iter()
+                        .rev()
+                        .for_each(|child| self.stack.push(child));
+                },
+                MerkleNode::Leaf {
+                    value: _,
+                    pos,
+                    elem,
+                } => {
+                    return Some((pos, elem));
+                },
+                _ => {},
+            }
+        }
+        None
+    }
+}

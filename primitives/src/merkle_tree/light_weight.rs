@@ -12,7 +12,7 @@ use core::ops::AddAssign;
 use super::{
     internal::{
         build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment,
-        MerkleTreeIter,
+        MerkleTreeIntoIter, MerkleTreeIter,
     },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,

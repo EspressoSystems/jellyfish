@@ -6,7 +6,7 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIter},
+    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,

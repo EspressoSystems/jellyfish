@@ -103,6 +103,10 @@ macro_rules! impl_merkle_tree_scheme {
             fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
                 MerkleTreeIter::new(&self.root)
             }
+
+            fn into_iter(self) -> MerkleTreeIntoIter<Self::Element, Self::Index, Self::NodeValue> {
+                MerkleTreeIntoIter::new(self.root)
+            }
         }
     };
 }

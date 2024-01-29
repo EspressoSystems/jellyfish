@@ -28,7 +28,7 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-use self::internal::MerkleTreeIter;
+use self::internal::{MerkleTreeIntoIter, MerkleTreeIter};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -244,6 +244,10 @@ pub trait MerkleTreeScheme: Sized {
     /// Return an iterator that iterates through all element that are not
     /// forgetton
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
+
+    /// Return an owned iterator that iterates through all element that are not
+    /// forgetton
+    fn into_iter(self) -> MerkleTreeIntoIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
