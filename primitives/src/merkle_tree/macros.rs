@@ -99,6 +99,10 @@ macro_rules! impl_merkle_tree_scheme {
                 }
                 proof.borrow().verify_membership_proof::<H>(root.borrow())
             }
+
+            fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
+                MerkleTreeIter::new(&self.root)
+            }
         }
     };
 }

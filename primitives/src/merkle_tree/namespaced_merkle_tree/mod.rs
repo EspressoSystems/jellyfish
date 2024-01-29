@@ -21,8 +21,10 @@ use self::{
 };
 
 use super::{
-    append_only::MerkleTree, internal::MerkleProof, AppendableMerkleTreeScheme, DigestAlgorithm,
-    Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    append_only::MerkleTree,
+    internal::{MerkleProof, MerkleTreeIter},
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
+    MerkleTreeScheme, NodeValue,
 };
 
 mod hash;
@@ -197,6 +199,10 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, PrimitivesError> {
         <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::verify(root, pos, proof)
+    }
+
+    fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
+        self.inner.iter()
     }
 }
 

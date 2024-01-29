@@ -927,3 +927,46 @@ where
         }
     }
 }
+
+/// Iterator type for a merkle tree
+pub struct MerkleTreeIter<'a, E: Element, I: Index, T: NodeValue> {
+    stack: Vec<&'a MerkleNode<E, I, T>>,
+}
+
+impl<'a, E: Element, I: Index, T: NodeValue> MerkleTreeIter<'a, E, I, T> {
+    /// Initialize an iterator
+    pub fn new(root: &'a MerkleNode<E, I, T>) -> Self {
+        Self { stack: vec![root] }
+    }
+}
+
+impl<'a, E, I, T> Iterator for MerkleTreeIter<'a, E, I, T>
+where
+    E: Element,
+    I: Index,
+    T: NodeValue,
+{
+    type Item = (&'a I, &'a E);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while let Some(node) = self.stack.pop() {
+            match node {
+                MerkleNode::Branch { value: _, children } => {
+                    children
+                        .iter()
+                        .rev()
+                        .for_each(|child| self.stack.push(child));
+                },
+                MerkleNode::Leaf {
+                    value: _,
+                    pos,
+                    elem,
+                } => {
+                    return Some((pos, elem));
+                },
+                _ => {},
+            }
+        }
+        None
+    }
+}

@@ -28,6 +28,8 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
+use self::internal::MerkleTreeIter;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
 /// Typically, F for element type, P for membership proof type and N for
@@ -238,6 +240,9 @@ pub trait MerkleTreeScheme: Sized {
     //     pos: impl Iterator<Item = usize>,
     //     proof: impl Borrow<Self::BatchProof>,
     // ) -> Result<(), PrimitivesError>;
+
+    /// Return an iterator that iterates through all element that's not forgetton
+    fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for

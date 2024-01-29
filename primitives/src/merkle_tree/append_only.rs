@@ -9,7 +9,9 @@
 use core::ops::AddAssign;
 
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{
+        build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIter,
+    },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
@@ -259,5 +261,19 @@ mod mt_tests {
             *node,
             bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
         );
+    }
+
+    #[test]
+    fn test_mt_iter() {
+        test_mt_iter_helper::<Fq254>();
+        test_mt_iter_helper::<Fq377>();
+        test_mt_iter_helper::<Fq381>();
+    }
+
+    fn test_mt_iter_helper<F: RescueParameter>() {
+        let mt =
+            RescueMerkleTree::<F>::from_elems(2, &[F::from(0u64), F::from(1u64), F::from(2u64)])
+                .unwrap();
+        assert!(mt.iter().all(|(index, elem)| { elem == &F::from(*index) }));
     }
 }
