@@ -299,6 +299,20 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         elem: impl Borrow<Self::Element>,
     ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
 
+    /// Apply an update function `f` at a given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `f` - the update function, `None` means the given leaf doesn't exist
+    ///   or should be removed.
+    /// * `returns` - Ok(()) if the update is success, Err() if the update
+    ///   fails.
+    fn update_with<F>(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<(), PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
+
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `returns` - Leaf value at the position along with a proof.

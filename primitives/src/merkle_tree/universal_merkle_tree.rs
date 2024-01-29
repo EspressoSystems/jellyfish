@@ -55,6 +55,16 @@ where
         Ok(ret)
     }
 
+    fn update_with<F>(&mut self, pos: impl Borrow<Self::Index>, f: F) -> Result<(), PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
+    {
+        let pos = pos.borrow();
+        let traversal_path = pos.to_traversal_path(self.height);
+        self.root
+            .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)
+    }
+
     fn from_kv_set<BI, BE>(
         height: usize,
         data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
