@@ -57,6 +57,7 @@ where
 {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
+    multiplicity: Option<usize>,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
     multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
@@ -98,8 +99,9 @@ where
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
     pub fn new(
-        payload_chunk_size: usize,
-        num_storage_nodes: usize,
+        payload_chunk_size: usize,   // k
+        num_storage_nodes: usize,    // n (code rate: r = k/n)
+        multiplicity: Option<usize>, // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         // TODO support any degree, give multiple shares to nodes if needed
@@ -110,6 +112,12 @@ where
                 payload_chunk_size, num_storage_nodes
             )));
         }
+
+        let (chunk_size, num_nodes) = match multiplicity {
+            Some(m) => (m * payload_chunk_size, m * num_storage_nodes),
+            None => (payload_chunk_size, num_storage_nodes),
+        };
+
         // Later we will convert num_storage_nodes to u32.
         // Better to know now whether that conversion will succeed.
         if <usize as TryInto<u32>>::try_into(num_storage_nodes).is_err() {
@@ -118,26 +126,24 @@ where
                 num_storage_nodes
             )));
         }
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, payload_chunk_size - 1).map_err(vid)?;
-        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
-            payload_chunk_size - 1,
-            num_storage_nodes,
-        )
-        .map_err(vid)?;
-        let eval_domain = Radix2EvaluationDomain::new(payload_chunk_size).ok_or_else(|| {
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, chunk_size - 1).map_err(vid)?;
+        let multi_open_domain =
+            UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(chunk_size - 1, num_nodes)
+                .map_err(vid)?;
+        let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
                 "fail to construct doman of size {}",
-                payload_chunk_size
+                chunk_size
             ))
         })?;
 
         // TODO TEMPORARY: enforce power-of-2 chunk size
         // Remove this restriction after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        if payload_chunk_size != eval_domain.size() {
+        if chunk_size != eval_domain.size() {
             return Err(VidError::Argument(format!(
                 "payload_chunk_size {} currently unsupported, round to {} instead",
-                payload_chunk_size,
+                chunk_size,
                 eval_domain.size()
             )));
         }
@@ -145,6 +151,7 @@ where
         Ok(Self {
             payload_chunk_size,
             num_storage_nodes,
+            multiplicity,
             ck,
             vk,
             multi_open_domain,
@@ -202,6 +209,7 @@ where
 
     payload_byte_len: u32,
     num_storage_nodes: u32,
+    multiplicity: u32,
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -220,13 +228,14 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
+        let m = self.multiplicity.unwrap_or(1);
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
-            .chunks(self.payload_chunk_size)
+            .chunks(self.payload_chunk_size * m)
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
+        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes * m)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -235,6 +244,7 @@ where
     {
         let payload = payload.as_ref();
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
+        let m = self.multiplicity.unwrap_or(1);
         let disperse_time = start_timer!(|| format!(
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
@@ -245,7 +255,7 @@ where
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
         let polys: Vec<_> = elems_iter
-            .chunks(self.payload_chunk_size)
+            .chunks(self.payload_chunk_size * m)
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
@@ -255,16 +265,16 @@ where
         let all_storage_node_evals_timer = start_timer!(|| format!(
             "compute all storage node evals for {} polynomials of degree {}",
             polys.len(),
-            self.payload_chunk_size
+            self.payload_chunk_size * m
         ));
         let all_storage_node_evals = {
             let mut all_storage_node_evals =
-                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
+                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes * m];
 
             for poly in polys.iter() {
                 let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
-                    self.num_storage_nodes,
+                    self.num_storage_nodes * m,
                     &self.multi_open_domain,
                 )
                 .map_err(vid)?;
@@ -277,7 +287,7 @@ where
             }
 
             // sanity checks
-            assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
+            assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes * m);
             for storage_node_evals in all_storage_node_evals.iter() {
                 assert_eq!(storage_node_evals.len(), polys.len());
             }
@@ -300,6 +310,7 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
+            multiplicity: m.try_into().unwrap_or(1),
         };
         end_timer!(common_timer);
 
@@ -323,14 +334,14 @@ where
         let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
-            self.num_storage_nodes,
+            self.num_storage_nodes * m,
             &self.multi_open_domain,
         )
         .map_err(vid)?;
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares = all_storage_node_evals
+        let mut shares: Vec<_> = all_storage_node_evals
             .into_iter()
             .zip(aggregate_proofs)
             .enumerate()
@@ -347,11 +358,19 @@ where
                 })
             })
             .collect::<Result<_, VidError>>()?;
+
+        // TODO: make fancy (and efficient) use of itertools above (group_by)
+        let mut multi_shares = vec![Vec::with_capacity(shares.len() / m); m];
+
+        for i in 0..shares.len() {
+            let l = i % m;
+            multi_shares[l].push(shares.remove(i))
+        }
         end_timer!(assemblage_timer);
 
         end_timer!(disperse_time);
         Ok(VidDisperse {
-            shares,
+            shares: multi_shares,
             common,
             commit,
         })

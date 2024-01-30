@@ -99,7 +99,7 @@ pub trait VidScheme {
 )]
 pub struct VidDisperse<V: VidScheme + ?Sized> {
     /// VID disperse shares to send to the storage nodes.
-    pub shares: Vec<V::Share>,
+    pub shares: Vec<Vec<V::Share>>,
     /// VID common data to send to all storage nodes.
     pub common: V::Common,
     /// VID payload commitment.
