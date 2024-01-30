@@ -87,7 +87,7 @@ mod mt_tests {
     use crate::{
         merkle_tree::{
             internal::{MerkleNode, MerkleProof},
-            prelude::RescueMerkleTree,
+            prelude::{RescueMerkleTree, RescueSparseMerkleTree},
             *,
         },
         rescue::RescueParameter,
@@ -275,11 +275,42 @@ mod mt_tests {
     }
 
     fn test_mt_iter_helper<F: RescueParameter>() {
-        let mt = RescueMerkleTree::<F>::from_elems(
+        let mut mt = RescueMerkleTree::<F>::from_elems(
             Some(2),
             &[F::from(0u64), F::from(1u64), F::from(2u64)],
         )
         .unwrap();
         assert!(mt.iter().all(|(index, elem)| { elem == &F::from(*index) }));
+
+        // Forget index 1
+        assert!(mt.forget(1).expect_ok().is_ok());
+        // Number of leaves shall not change
+        assert_eq!(mt.num_leaves(), 3);
+        // Leaves that are forgotten doesn't appear here
+        let leaves = mt.into_iter().collect::<Vec<_>>();
+        assert_eq!(leaves, [(0u64, F::from(0u64)), (2u64, F::from(2u64))]);
+
+        let kv_set = [
+            (BigUint::from(64u64), F::from(32u64)),
+            (BigUint::from(123u64), F::from(234u64)),
+        ];
+        let mut mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(10, &kv_set).unwrap();
+        let kv_refs = kv_set
+            .iter()
+            .map(|tuple| (&tuple.0, &tuple.1))
+            .collect::<Vec<_>>();
+        assert_eq!(mt.iter().collect::<Vec<_>>(), kv_refs);
+        // insert a new key-value pair
+        mt.update(BigUint::from(32u64), F::from(16u64)).unwrap();
+        // forget a leave
+        mt.forget(BigUint::from(123u64)).expect_ok().unwrap();
+        // Check that new insertion and forgeting are reflected
+        assert_eq!(
+            mt.into_iter().collect::<Vec<_>>(),
+            [
+                (BigUint::from(32u64), F::from(16u64)),
+                (BigUint::from(64u64), F::from(32u64)),
+            ]
+        );
     }
 }

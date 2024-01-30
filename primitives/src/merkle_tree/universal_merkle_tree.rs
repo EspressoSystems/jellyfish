@@ -323,6 +323,7 @@ mod mt_tests {
             .universal_lookup(F::from(8u64))
             .expect_not_found()
             .is_ok());
+        assert_eq!(mt.num_leaves(), 9);
     }
 
     #[test]
