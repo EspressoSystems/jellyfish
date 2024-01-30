@@ -978,6 +978,12 @@ where
                     children
                         .iter()
                         .rev()
+                        .filter(|child| {
+                            matches!(
+                                ***child,
+                                MerkleNode::Branch { .. } | MerkleNode::Leaf { .. }
+                            )
+                        })
                         .for_each(|child| self.stack.push(child));
                 },
                 MerkleNode::Leaf {
@@ -1021,6 +1027,9 @@ where
                     children
                         .into_iter()
                         .rev()
+                        .filter(|child| {
+                            matches!(**child, MerkleNode::Branch { .. } | MerkleNode::Leaf { .. })
+                        })
                         .for_each(|child| self.stack.push(child));
                 },
                 MerkleNode::Leaf {
