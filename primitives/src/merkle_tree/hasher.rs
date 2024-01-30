@@ -15,7 +15,7 @@
 //! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 //!
 //! // payload type is `usize`, hash function is `Sha256`.
-//! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(2, &my_data)?;
+//! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &my_data)?;
 //!
 //! let root = mt.commitment().digest();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
@@ -86,7 +86,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 ///     H: HasherDigest,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
 ///
@@ -102,7 +102,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 ///     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
 ///
@@ -117,7 +117,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 ///     H: Digest + Write,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(2, &my_data).unwrap();
+///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
 pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write {

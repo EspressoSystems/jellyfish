@@ -38,7 +38,7 @@ use super::rescue::RescueNativeGadget;
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
 /// let elements = vec![Fq::from(1_u64), Fq::from(2_u64), Fq::from(100_u64)];
-/// let mt = RescueMerkleTree::<Fq>::from_elems(1, elements).unwrap();
+/// let mt = RescueMerkleTree::<Fq>::from_elems(Some(1), elements).unwrap();
 /// let expected_root = mt.commitment().digest();
 /// // Get a proof for the element in position 2
 /// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
