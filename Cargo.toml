@@ -13,5 +13,5 @@ documentation = "https://jellyfish.docs.espressosys.com"
 repository = "https://github.com/EspressoSystems/jellyfish"
 
 [workspace.dependencies]
-itertools = { version = "0.10.1", default-features = false }
+itertools = { version = "0.12.1", default-features = false }
 tagged-base64 = { git = "https://github.com/EspressoSystems/tagged-base64.git", tag = "0.3.4" }
