@@ -32,7 +32,8 @@ fn round_trip() {
 
     vid::round_trip(
         |payload_chunk_size, num_storage_nodes| {
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, &srs).unwrap()
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, None, &srs)
+                .unwrap()
         },
         &vid_sizes,
         &payload_byte_lens,

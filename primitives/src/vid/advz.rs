@@ -463,7 +463,11 @@ where
             .collect()
     }
 
-    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
+    fn recover_payload(
+        &self,
+        shares: &[Vec<Self::Share>],
+        common: &Self::Common,
+    ) -> VidResult<Vec<u8>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -483,10 +487,13 @@ where
         let num_polys = shares
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
+            .first()
+            .ok_or_else(|| VidError::Argument("multiplicity is zero".into()))?
             .evals
             .len();
         if let Some((index, share)) = shares
             .iter()
+            .flatten()
             .enumerate()
             .find(|(_, s)| s.evals.len() != num_polys)
         {
@@ -499,11 +506,12 @@ where
             )));
         }
 
-        let elems_capacity = num_polys * self.payload_chunk_size;
+        let elems_capacity = num_polys * self.payload_chunk_size * common.multiplicity;
         let mut elems = Vec::with_capacity(elems_capacity);
+        let flattend_shares: Vec<_> = shares.iter().flatten().collect();
         for i in 0..num_polys {
             let mut coeffs = reed_solomon_erasure_decode_rou(
-                shares.iter().map(|s| (s.index, s.evals[i])),
+                flattend_shares.iter().map(|s| (s.index, s.evals[i])),
                 self.payload_chunk_size,
                 &self.multi_open_domain,
             )
@@ -550,6 +558,10 @@ where
             .num_storage_nodes
             .try_into()
             .expect("u32 should be convertible to usize")
+    }
+
+    fn get_multiplicity(common: &Self::Common) -> usize {
+        common.multiplicity
     }
 }
 

@@ -63,7 +63,11 @@ pub trait VidScheme {
 
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
-    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
+    fn recover_payload(
+        &self,
+        shares: &[Vec<Self::Share>],
+        common: &Self::Common,
+    ) -> VidResult<Vec<u8>>;
 
     /// Check that a [`VidScheme::Common`] is consistent with a
     /// [`VidScheme::Commit`].
@@ -77,6 +81,9 @@ pub trait VidScheme {
 
     /// Extract the number of storage nodes from a [`VidScheme::Common`].
     fn get_num_storage_nodes(common: &Self::Common) -> usize;
+
+    /// Extract multiplicity; number of shares per poly [`VidScheme::Common`].
+    fn get_multiplicity(common: &Self::Common) -> usize;
 }
 
 /// Convenience struct to aggregate disperse data.
