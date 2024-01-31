@@ -209,7 +209,7 @@ where
 
     payload_byte_len: u32,
     num_storage_nodes: u32,
-    multiplicity: u32,
+    multiplicity: usize,
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -341,7 +341,7 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let mut shares: Vec<_> = all_storage_node_evals
+        let shares = all_storage_node_evals
             .into_iter()
             .zip(aggregate_proofs)
             .enumerate()
@@ -357,20 +357,16 @@ where
                         .1,
                 })
             })
+            .chunks(m)
+            .into_iter()
+            .map(|iter| iter.collect::<Result<_, VidError>>())
             .collect::<Result<_, VidError>>()?;
 
-        // TODO: make fancy (and efficient) use of itertools above (group_by)
-        let mut multi_shares = vec![Vec::with_capacity(shares.len() / m); m];
-
-        for i in 0..shares.len() {
-            let l = i % m;
-            multi_shares[l].push(shares.remove(i))
-        }
         end_timer!(assemblage_timer);
 
         end_timer!(disperse_time);
         Ok(VidDisperse {
-            shares: multi_shares,
+            shares,
             common,
             commit,
         })
@@ -378,18 +374,27 @@ where
 
     fn verify_share(
         &self,
-        share: &Self::Share,
+        share: &Vec<Self::Share>,
         common: &Self::Common,
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
-        if share.evals.len() != common.poly_commits.len() {
+        let share_length = share.len();
+        if share_length != common.multiplicity {
+            return Err(VidError::Argument(format!(
+                "(shares per poly, multiplicity) differ ({},{})",
+                share_length, common.multiplicity
+            )));
+        }
+
+        if share[0].evals.len() != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "(share eval, common poly commit) lengths differ ({},{})",
-                share.evals.len(),
+                share[0].evals.len(),
                 common.poly_commits.len()
             )));
         }
+
         let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
         if common.num_storage_nodes != num_storage_nodes {
             return Err(VidError::Argument(format!(
@@ -397,23 +402,27 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-        if share.index >= self.num_storage_nodes {
-            return Ok(Err(())); // not an arg error
+        for i in 0..common.multiplicity {
+            if share[i].index >= self.num_storage_nodes * common.multiplicity {
+                return Ok(Err(())); // not an arg error
+            }
         }
         Self::is_consistent(commit, common)?;
 
         // verify eval proof
-        if KzgEvalsMerkleTree::<E, H>::verify(
-            common.all_evals_digest,
-            &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
-            &share.evals_proof,
-        )
-        .map_err(vid)?
-        .is_err()
-        {
-            return Ok(Err(()));
-        }
 
+        for i in 0..common.multiplicity {
+            if KzgEvalsMerkleTree::<E, H>::verify(
+                common.all_evals_digest,
+                &KzgEvalsMerkleTreeIndex::<E, H>::from(share[i].index as u64),
+                &share[i].evals_proof,
+            )
+            .map_err(vid)?
+            .is_err()
+            {
+                return Ok(Err(()));
+            }
+        }
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
@@ -431,20 +440,27 @@ where
             )
             .into(),
         );
-        let aggregate_eval =
-            polynomial_eval(share.evals.iter().map(FieldMultiplier), pseudorandom_scalar);
 
         // verify aggregate proof
-        Ok(UnivariateKzgPCS::verify(
-            &self.vk,
-            &aggregate_poly_commit,
-            &self.multi_open_domain.element(share.index),
-            &aggregate_eval,
-            &share.aggregate_proof,
-        )
-        .map_err(vid)?
-        .then_some(())
-        .ok_or(()))
+        (0..common.multiplicity)
+            .map(|i| {
+                let aggregate_eval = polynomial_eval(
+                    share[i].evals.iter().map(FieldMultiplier),
+                    pseudorandom_scalar,
+                );
+                Ok(UnivariateKzgPCS::verify(
+                    &self.vk,
+                    &aggregate_poly_commit,
+                    &self.multi_open_domain.element(share[i].index),
+                    &aggregate_eval,
+                    &share[i].aggregate_proof,
+                )
+                .map_err(vid)?
+                .then_some(())
+                .ok_or(()))
+            })
+            .into_iter()
+            .collect()
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
@@ -708,8 +724,8 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let advz = Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, None, srs)
+            .unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
         let _ = advz.disperse(payload_random);
@@ -722,8 +738,8 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let advz = Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, None, srs)
+            .unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
         let _ = advz.commit_only(payload_random);
@@ -739,11 +755,13 @@ mod tests {
             // missing share eval
             {
                 let share_missing_eval = Share {
-                    evals: share.evals[1..].to_vec(),
-                    ..share.clone()
+                    evals: share[0].evals[1..].to_vec(),
+                    ..share[0].clone()
                 };
+                let mut shares_missing_eval = Vec::with_capacity(1);
+                shares_missing_eval.push(share_missing_eval);
                 assert_arg_err(
-                    advz.verify_share(&share_missing_eval, &common, &commit),
+                    advz.verify_share(&shares_missing_eval, &common, &commit),
                     "1 missing share should be arg error",
                 );
             }
@@ -751,7 +769,7 @@ mod tests {
             // corrupted share eval
             {
                 let mut share_bad_eval = share.clone();
-                share_bad_eval.evals[0].double_in_place();
+                share_bad_eval[0].evals[0].double_in_place();
                 advz.verify_share(&share_bad_eval, &common, &commit)
                     .unwrap()
                     .expect_err("bad share value should fail verification");
@@ -760,10 +778,12 @@ mod tests {
             // corrupted index, in bounds
             {
                 let share_bad_index = Share {
-                    index: (share.index + 1) % advz.num_storage_nodes,
-                    ..share.clone()
+                    index: (share[0].index + 1) % advz.num_storage_nodes,
+                    ..share[0].clone()
                 };
-                advz.verify_share(&share_bad_index, &common, &commit)
+                let mut shares_bad_index = Vec::with_capacity(1);
+                shares_bad_index.push(share_bad_index);
+                advz.verify_share(&shares_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -771,10 +791,12 @@ mod tests {
             // corrupted index, out of bounds
             {
                 let share_bad_index = Share {
-                    index: share.index + advz.num_storage_nodes,
-                    ..share.clone()
+                    index: share[0].index + advz.num_storage_nodes,
+                    ..share[0].clone()
                 };
-                advz.verify_share(&share_bad_index, &common, &commit)
+                let mut shares_bad_index = Vec::with_capacity(1);
+                shares_bad_index.push(share_bad_index);
+                advz.verify_share(&shares_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -785,10 +807,12 @@ mod tests {
                 // (without also causing a deserialization failure).
                 // So we use another share's proof instead.
                 let share_bad_evals_proof = Share {
-                    evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
-                    ..share.clone()
+                    evals_proof: shares[(i + 1) % shares.len()][0].evals_proof.clone(),
+                    ..share[0].clone()
                 };
-                advz.verify_share(&share_bad_evals_proof, &common, &commit)
+                let mut shares_bad_evals_proof = Vec::with_capacity(1);
+                shares_bad_evals_proof.push(share_bad_evals_proof);
+                advz.verify_share(&shares_bad_evals_proof, &common, &commit)
                     .unwrap()
                     .expect_err("bad share evals proof should fail verification");
             }
@@ -848,7 +872,7 @@ mod tests {
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();
-        shares[0].evals.pop();
+        shares[0][0].evals.pop();
 
         // equal nonzero lengths for common, share
         assert_arg_err(
@@ -857,7 +881,7 @@ mod tests {
         );
 
         common.poly_commits.clear();
-        shares[0].evals.clear();
+        shares[0][0].evals.clear();
 
         // zero length for common, share
         assert_arg_err(
@@ -874,7 +898,11 @@ mod tests {
 
         {
             // unequal share eval lengths
-            let mut shares_missing_evals = shares.clone();
+            let mut shares_missing_evals: Vec<_> = shares
+                .clone()
+                .into_iter()
+                .map(|share| share[0].clone())
+                .collect();
             for i in 0..shares_missing_evals.len() - 1 {
                 shares_missing_evals[i].evals.pop();
                 assert_arg_err(
@@ -893,7 +921,11 @@ mod tests {
 
         // corrupted index, in bounds
         {
-            let mut shares_bad_indices = shares.clone();
+            let mut shares_bad_indices: Vec<_> = shares
+                .clone()
+                .into_iter()
+                .map(|share| share[0].clone())
+                .collect();
 
             // permute indices to avoid duplicates and keep them in bounds
             for share in &mut shares_bad_indices {
@@ -908,7 +940,11 @@ mod tests {
 
         // corrupted index, out of bounds
         {
-            let mut shares_bad_indices = shares;
+            let mut shares_bad_indices: Vec<_> = shares
+                .clone()
+                .into_iter()
+                .map(|share| share[0].clone())
+                .collect();
             for i in 0..shares_bad_indices.len() {
                 shares_bad_indices[i].index += advz.multi_open_domain.size();
                 advz.recover_payload(&shares_bad_indices, &common)
@@ -926,7 +962,7 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz = Advz::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let advz = Advz::new(payload_chunk_size, num_storage_nodes, None, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }

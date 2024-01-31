@@ -408,7 +408,7 @@ mod tests {
         let poly_bytes_len = payload_chunk_size * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_elems_len, &mut rng);
-        let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, None, srs).unwrap();
 
         // TEST: different payload byte lengths
         let payload_byte_len_noise_cases = vec![0, poly_bytes_len / 2, poly_bytes_len - 1];

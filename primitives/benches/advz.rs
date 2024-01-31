@@ -103,7 +103,7 @@ where
                 |b, _| {
                     // verify only the 0th share
                     b.iter(|| {
-                        advz.verify_share(&shares[0], &common, &commit)
+                        advz.verify_share(&shares, &common, &commit)
                             .unwrap()
                             .unwrap()
                     });
