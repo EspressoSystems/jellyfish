@@ -910,13 +910,9 @@ mod tests {
 
         {
             // unequal share eval lengths
-            let mut shares_missing_evals: Vec<_> = shares
-                .clone()
-                .into_iter()
-                .map(|share| share[0].clone())
-                .collect();
+            let mut shares_missing_evals = shares.clone();
             for i in 0..shares_missing_evals.len() - 1 {
-                shares_missing_evals[i].evals.pop();
+                shares_missing_evals[i][0].evals.pop();
                 assert_arg_err(
                     advz.recover_payload(&shares_missing_evals, &common),
                     format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
@@ -924,7 +920,7 @@ mod tests {
             }
 
             // 1 eval missing from all shares
-            shares_missing_evals.last_mut().unwrap().evals.pop();
+            shares_missing_evals.last_mut().unwrap()[0].evals.pop();
             let bytes_recovered = advz
                 .recover_payload(&shares_missing_evals, &common)
                 .expect("recover_payload should succeed when shares have equal eval lengths");
@@ -933,15 +929,11 @@ mod tests {
 
         // corrupted index, in bounds
         {
-            let mut shares_bad_indices: Vec<_> = shares
-                .clone()
-                .into_iter()
-                .map(|share| share[0].clone())
-                .collect();
+            let mut shares_bad_indices = shares.clone();
 
             // permute indices to avoid duplicates and keep them in bounds
             for share in &mut shares_bad_indices {
-                share.index = (share.index + 1) % advz.num_storage_nodes;
+                share[0].index = (share[0].index + 1) % advz.num_storage_nodes;
             }
 
             let bytes_recovered = advz
@@ -952,13 +944,9 @@ mod tests {
 
         // corrupted index, out of bounds
         {
-            let mut shares_bad_indices: Vec<_> = shares
-                .clone()
-                .into_iter()
-                .map(|share| share[0].clone())
-                .collect();
+            let mut shares_bad_indices = shares.clone();
             for i in 0..shares_bad_indices.len() {
-                shares_bad_indices[i].index += advz.multi_open_domain.size();
+                shares_bad_indices[i][0].index += advz.multi_open_domain.size();
                 advz.recover_payload(&shares_bad_indices, &common)
                     .expect_err("recover_payload should fail when indices are out of bounds");
             }
