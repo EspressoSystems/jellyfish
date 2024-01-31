@@ -21,7 +21,7 @@ derivative = { version = "2", features = ["use_core"] }
 displaydoc = { version = "0.2.3", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
-hashbrown = "0.13.2"
+hashbrown = "0.14.3"
 itertools = { version = "0.10.1", default-features = false }
 jf-utils = { path = "../utilities" }
 num-bigint = { version = "0.4", default-features = false }
