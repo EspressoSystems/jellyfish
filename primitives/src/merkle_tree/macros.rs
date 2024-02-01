@@ -49,15 +49,6 @@ macro_rules! impl_merkle_tree_scheme {
 
             const ARITY: usize = Arity::USIZE;
 
-            fn new(height: usize) -> Self {
-                Self {
-                    root: Box::new(MerkleNode::<E, I, T>::Empty),
-                    height,
-                    num_leaves: 0,
-                    _phantom: PhantomData,
-                }
-            }
-
             fn height(&self) -> usize {
                 self.height
             }

@@ -10,9 +10,7 @@ extern crate criterion;
 use ark_ed_on_bls12_381::Fq as Fq381;
 use ark_std::rand::Rng;
 use criterion::Criterion;
-use jf_primitives::merkle_tree::{
-    prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme,
-};
+use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme};
 use std::time::Duration;
 
 const BENCH_NAME: &str = "merkle_path_height_20";

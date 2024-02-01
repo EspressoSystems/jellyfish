@@ -27,6 +27,44 @@ use typenum::Unsigned;
 impl_merkle_tree_scheme!(UniversalMerkleTree);
 impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
+impl<E, H, I, Arity, T> UniversalMerkleTree<E, H, I, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, I, T>,
+    I: Index + ToTraversalPath<Arity>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Initialize an empty Merkle tree.
+    pub fn new(height: usize) -> Self {
+        Self {
+            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            height,
+            num_leaves: 0,
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Build a universal merkle tree from a key-value set.
+    /// * `height` - height of the merkle tree
+    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
+    ///   an array or a slice of (key, value) pairs
+    pub fn from_kv_set<BI, BE>(
+        height: usize,
+        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
+    ) -> Result<Self, PrimitivesError>
+    where
+        BI: Borrow<I>,
+        BE: Borrow<E>,
+    {
+        let mut mt = Self::new(height);
+        for tuple in data.into_iter() {
+            let (key, value) = tuple.borrow();
+            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
+        }
+        Ok(mt)
+    }
+}
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
@@ -68,22 +106,6 @@ where
                 .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
         self.num_leaves = (delta + self.num_leaves as i64) as u64;
         Ok(result)
-    }
-
-    fn from_kv_set<BI, BE>(
-        height: usize,
-        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
-    ) -> Result<Self, PrimitivesError>
-    where
-        BI: Borrow<Self::Index>,
-        BE: Borrow<Self::Element>,
-    {
-        let mut mt = Self::new(height);
-        for tuple in data.into_iter() {
-            let (key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
-        }
-        Ok(mt)
     }
 
     fn non_membership_verify(
@@ -223,7 +245,7 @@ mod mt_tests {
     fn test_universal_mt_builder_helper<F: RescueParameter>() {
         let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(
             1,
-            &[(BigUint::from(1u64), F::from(1u64))],
+            [(BigUint::from(1u64), F::from(1u64))],
         )
         .unwrap();
         assert_eq!(mt.num_leaves(), 1);

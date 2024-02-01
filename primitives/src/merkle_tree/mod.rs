@@ -198,9 +198,6 @@ pub trait MerkleTreeScheme: Sized {
     /// Tree arity
     const ARITY: usize;
 
-    /// Initialize an empty Merkle tree
-    fn new(height: usize) -> Self;
-
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
@@ -249,16 +246,6 @@ pub trait MerkleTreeScheme: Sized {
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
 pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
-    /// Construct a new Merkle tree with given height from a data slice
-    /// * `height` - height of the Merkle tree, if `None`, it will calculate the
-    ///   minimum height that could hold all elements.
-    /// * `elems` - an iterator to all elements
-    /// * `returns` - A constructed Merkle tree, or `Err()` if errors
-    fn from_elems(
-        height: Option<usize>,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError>;
-
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
@@ -288,18 +275,6 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     type NonMembershipProof;
     /// Batch non membership proof
     type BatchNonMembershipProof;
-
-    /// Build a universal merkle tree from a key-value set.
-    /// * `height` - height of the merkle tree
-    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
-    ///   an array or a slice of (key, value) pairs
-    fn from_kv_set<BI, BE>(
-        height: usize,
-        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
-    ) -> Result<Self, PrimitivesError>
-    where
-        BI: Borrow<Self::Index>,
-        BE: Borrow<Self::Element>;
 
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree

@@ -1,8 +1,6 @@
 use jf_primitives::{
     errors::PrimitivesError,
-    merkle_tree::{
-        hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme,
-    },
+    merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
 };
 use sha2::Sha256;
 

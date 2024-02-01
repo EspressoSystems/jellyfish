@@ -447,8 +447,7 @@ mod test {
             constrain_sibling_order, Merkle3AryMembershipProofVar, MerkleTreeGadget,
         },
         merkle_tree::{
-            internal::MerkleNode, prelude::RescueMerkleTree, AppendableMerkleTreeScheme as _,
-            MerkleCommitment, MerkleTreeScheme,
+            internal::MerkleNode, prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
