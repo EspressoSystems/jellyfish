@@ -25,7 +25,7 @@ pub type VerificationResult = Result<(), ()>;
 /// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]
 pub enum PrimitivesError {
-    /// Verify fail (proof, sig), {0} [DEPRACATED: use [`VerificationResult`]]
+    /// Verify fail (proof, sig), {0} [DEPRECATED: use [`VerificationResult`]]
     VerificationError(String),
     /// Bad parameter in function call, {0}
     ParameterError(String),

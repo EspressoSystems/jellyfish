@@ -556,7 +556,7 @@ mod test {
     }
 
     fn test_mt_gadget_helper<F: RescueParameter>() {
-        // An elemement we care about
+        // An element we care about
         let elem = F::from(310_u64);
 
         // Iterate over the positions for the given element
