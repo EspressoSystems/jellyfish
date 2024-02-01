@@ -6,8 +6,6 @@
 
 //! Implementation of a typical append only merkle tree
 
-use core::ops::AddAssign;
-
 use super::{
     internal::{
         build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter,
@@ -35,7 +33,7 @@ impl<E, H, I, Arity, T> MerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    I: Index,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -48,7 +46,15 @@ where
             _phantom: PhantomData,
         }
     }
+}
 
+impl<E, H, Arity, T> MerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
     /// Construct a new Merkle tree with given height from a data slice
     /// * `height` - height of the Merkle tree, if `None`, it will calculate the
     ///   minimum height that could hold all elements.
@@ -58,7 +64,7 @@ where
         height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<E>>,
     ) -> Result<Self, PrimitivesError> {
-        let (root, height, num_leaves) = build_tree_internal::<E, H, I, Arity, T>(height, elems)?;
+        let (root, height, num_leaves) = build_tree_internal::<E, H, Arity, T>(height, elems)?;
         Ok(Self {
             root,
             height,
@@ -68,11 +74,10 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
+impl<E, H, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, u64, Arity, T>
 where
     E: Element,
-    H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    H: DigestAlgorithm<E, u64, T>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -86,10 +91,11 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
+        let traversal_path =
+            ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
-            &I::from(self.num_leaves),
+            &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
@@ -105,7 +111,6 @@ where
 
 // TODO(Chengyu): extract a merkle frontier
 
-// TODO(Chengyu): unit tests
 #[cfg(test)]
 mod mt_tests {
     use crate::{
@@ -183,7 +188,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueMerkleTree::<F>::verify(&root, 0u64, &bad_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -198,7 +203,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueMerkleTree::<F>::verify(&root, 2u64, &forge_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, 0, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
@@ -242,7 +247,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = mt.remember(0u64, elem, &bad_proof);
+        let result = mt.remember(0, elem, &bad_proof);
         assert!(result.is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof.clone());
@@ -257,7 +262,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = mt.remember(2u64, elem, &forge_proof);
+        let result = mt.remember(2, elem, &forge_proof);
         assert!(result.is_err());
 
         assert!(mt.remember(0, elem, &proof).is_ok());
@@ -312,7 +317,7 @@ mod mt_tests {
         assert_eq!(mt.num_leaves(), 3);
         // Leaves that are forgotten doesn't appear here
         let leaves = mt.into_iter().collect::<Vec<_>>();
-        assert_eq!(leaves, [(0u64, F::from(0u64)), (2u64, F::from(2u64))]);
+        assert_eq!(leaves, [(0, F::from(0u64)), (2, F::from(2u64))]);
 
         let kv_set = [
             (BigUint::from(64u64), F::from(32u64)),

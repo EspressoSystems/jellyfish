@@ -245,7 +245,7 @@ pub trait MerkleTreeScheme: Sized {
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
-pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
+pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful

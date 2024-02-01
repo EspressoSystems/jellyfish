@@ -7,8 +7,6 @@
 //! A light weight merkle tree is an append only merkle tree who only keeps its
 //! frontier -- the right-most path.
 
-use core::ops::AddAssign;
-
 use super::{
     internal::{
         build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment,
@@ -36,7 +34,7 @@ impl<E, H, I, Arity, T> LightWeightMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    I: Index,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -49,7 +47,15 @@ where
             _phantom: PhantomData,
         }
     }
+}
 
+impl<E, H, Arity, T> LightWeightMerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
     /// Construct a new Merkle tree with given height from a data slice
     /// * `height` - height of the Merkle tree, if `None`, it will calculate the
     ///   minimum height that could hold all elements.
@@ -60,7 +66,7 @@ where
         elems: impl IntoIterator<Item = impl Borrow<E>>,
     ) -> Result<Self, PrimitivesError> {
         let (root, height, num_leaves) =
-            build_light_weight_tree_internal::<E, H, I, Arity, T>(height, elems)?;
+            build_light_weight_tree_internal::<E, H, Arity, T>(height, elems)?;
         Ok(Self {
             root,
             height,
@@ -70,11 +76,10 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, H, I, Arity, T>
+impl<E, H, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, H, u64, Arity, T>
 where
     E: Element,
-    H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    H: DigestAlgorithm<E, u64, T>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -88,10 +93,11 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
+        let traversal_path =
+            ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
         self.num_leaves += self.root.extend_and_forget_internal::<H, Arity>(
             self.height,
-            &I::from(self.num_leaves),
+            &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
@@ -147,7 +153,7 @@ mod mt_tests {
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
         assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first 7 items will be inserted
-        assert_eq!(mt.num_leaves(), 9u64); // full merkle tree
+        assert_eq!(mt.num_leaves(), 9); // full merkle tree
 
         // Now unable to insert more data
         assert!(mt.push(F::from(0u64)).is_err());
@@ -184,7 +190,7 @@ mod mt_tests {
         assert_eq!(elem, &F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         assert!(
-            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &proof)
+            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &proof)
                 .unwrap()
                 .is_ok()
         );
@@ -201,7 +207,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &bad_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -216,7 +222,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2u64, &forge_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
