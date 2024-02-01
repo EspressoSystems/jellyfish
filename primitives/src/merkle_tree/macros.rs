@@ -9,7 +9,7 @@
 /// Macro for generating a standard merkle tree implementation
 #[macro_export]
 macro_rules! impl_merkle_tree_scheme {
-    ($name: ident, $builder: ident) => {
+    ($name: ident) => {
         /// A standard append only Merkle tree implementation
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(
@@ -28,15 +28,14 @@ macro_rules! impl_merkle_tree_scheme {
             height: usize,
             num_leaves: u64,
 
-            _phantom_h: PhantomData<H>,
-            _phantom_ta: PhantomData<Arity>,
+            _phantom: PhantomData<(H, Arity)>,
         }
 
         impl<E, H, I, Arity, T> MerkleTreeScheme for $name<E, H, I, Arity, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {
@@ -49,20 +48,6 @@ macro_rules! impl_merkle_tree_scheme {
             type Commitment = MerkleTreeCommitment<T>;
 
             const ARITY: usize = Arity::USIZE;
-
-            fn from_elems(
-                height: usize,
-                elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-            ) -> Result<Self, PrimitivesError> {
-                let (root, num_leaves) = $builder::<E, H, I, Arity, T>(height, elems)?;
-                Ok($name {
-                    root,
-                    height,
-                    num_leaves,
-                    _phantom_h: PhantomData,
-                    _phantom_ta: PhantomData,
-                })
-            }
 
             fn height(&self) -> usize {
                 self.height
@@ -105,7 +90,46 @@ macro_rules! impl_merkle_tree_scheme {
                 }
                 proof.borrow().verify_membership_proof::<H>(root.borrow())
             }
+
+            fn iter(&self) -> MerkleTreeIter<E, I, T> {
+                MerkleTreeIter::new(&self.root)
+            }
         }
+
+        impl<'a, E, H, I, Arity, T> IntoIterator for &'a $name<E, H, I, Arity, T>
+        where
+            E: Element,
+            H: DigestAlgorithm<E, I, T>,
+            I: Index + ToTraversalPath<Arity>,
+            Arity: Unsigned,
+            T: NodeValue,
+        {
+            type Item = (&'a I, &'a E);
+
+            type IntoIter = MerkleTreeIter<'a, E, I, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                MerkleTreeIter::new(&self.root)
+            }
+        }
+
+        impl<E, H, I, Arity, T> IntoIterator for $name<E, H, I, Arity, T>
+        where
+            E: Element,
+            H: DigestAlgorithm<E, I, T>,
+            I: Index + ToTraversalPath<Arity>,
+            Arity: Unsigned,
+            T: NodeValue,
+        {
+            type Item = (I, E);
+
+            type IntoIter = MerkleTreeIntoIter<E, I, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                MerkleTreeIntoIter::new(self.root)
+            }
+        }
+
     };
 }
 
@@ -117,7 +141,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + From<u64> + ToTraversalPath<Arity>,
+            I: Index + ToTraversalPath<Arity>,
             Arity: Unsigned,
             T: NodeValue,
         {
@@ -129,8 +153,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                     }),
                     height: com.height(),
                     num_leaves: com.size(),
-                    _phantom_h: PhantomData,
-                    _phantom_ta: PhantomData,
+                    _phantom: PhantomData,
                 }
             }
 

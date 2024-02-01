@@ -290,21 +290,8 @@ where
         // TODO why do I need to compute the height of the merkle tree?
         let all_evals_commit_timer =
             start_timer!(|| "compute merkle root of all storage node evals");
-        let height: usize = all_storage_node_evals
-            .len()
-            .checked_ilog(KzgEvalsMerkleTree::<E, H>::ARITY)
-            .ok_or_else(|| {
-                VidError::Argument(format!(
-                    "num_storage_nodes {} log base {} invalid",
-                    all_storage_node_evals.len(),
-                    KzgEvalsMerkleTree::<E, H>::ARITY
-                ))
-            })?
-            .try_into()
-            .expect("num_storage_nodes log base arity should fit into usize");
-        let height = height + 1; // avoid fully qualified syntax for try_into()
         let all_evals_commit =
-            KzgEvalsMerkleTree::<E, H>::from_elems(height, &all_storage_node_evals).map_err(vid)?;
+            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
@@ -706,7 +693,7 @@ mod tests {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
-        let _ = advz.disperse(&payload_random);
+        let _ = advz.disperse(payload_random);
     }
 
     // #[test]
@@ -720,13 +707,13 @@ mod tests {
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
-        let _ = advz.commit_only(&payload_random);
+        let _ = advz.commit_only(payload_random);
     }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         for (i, share) in shares.iter().enumerate() {
@@ -792,7 +779,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         // missing commit
@@ -838,7 +825,7 @@ mod tests {
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
         let (advz, bytes_random) = avdz_init();
-        let disperse = advz.disperse(&bytes_random).unwrap();
+        let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();

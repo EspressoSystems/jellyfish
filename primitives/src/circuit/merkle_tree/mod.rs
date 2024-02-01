@@ -33,12 +33,12 @@ use super::rescue::RescueNativeGadget;
 /// use ark_bls12_377::Fq;
 /// use jf_primitives::circuit::merkle_tree::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleTreeScheme, MerkleCommitment};
+/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
 ///
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
 /// let elements = vec![Fq::from(1_u64), Fq::from(2_u64), Fq::from(100_u64)];
-/// let mt = RescueMerkleTree::<Fq>::from_elems(1, elements).unwrap();
+/// let mt = RescueMerkleTree::<Fq>::from_elems(Some(1), elements).unwrap();
 /// let expected_root = mt.commitment().digest();
 /// // Get a proof for the element in position 2
 /// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
@@ -565,7 +565,7 @@ mod test {
             let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
             let mut elements = (1u64..=9u64).map(|x| F::from(x)).collect::<Vec<_>>();
             elements[uid as usize] = elem;
-            let mt = RescueMerkleTree::<F>::from_elems(2, elements).unwrap();
+            let mt = RescueMerkleTree::<F>::from_elems(Some(2), elements).unwrap();
             let expected_root = mt.commitment().digest();
             let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
             assert_eq!(retrieved_elem, &elem);

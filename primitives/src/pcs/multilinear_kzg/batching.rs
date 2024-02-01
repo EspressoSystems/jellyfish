@@ -338,7 +338,7 @@ mod tests {
 
         let evals = generate_evaluations(polys, &points)?;
 
-        let com = MultilinearKzgPCS::batch_commit(&(ml_ck.clone(), uni_ck.clone()), polys)?;
+        let com = MultilinearKzgPCS::batch_commit((ml_ck.clone(), uni_ck.clone()), polys)?;
         let (batch_proof, evaluations) =
             batch_open_internal(&uni_ck, &ml_ck, polys, &com, &points)?;
 

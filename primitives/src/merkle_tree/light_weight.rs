@@ -7,10 +7,11 @@
 //! A light weight merkle tree is an append only merkle tree who only keeps its
 //! frontier -- the right-most path.
 
-use core::ops::AddAssign;
-
 use super::{
-    internal::{build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{
+        build_light_weight_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment,
+        MerkleTreeIntoIter, MerkleTreeIter,
+    },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
@@ -26,14 +27,59 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-impl_merkle_tree_scheme!(LightWeightMerkleTree, build_light_weight_tree_internal);
+impl_merkle_tree_scheme!(LightWeightMerkleTree);
 impl_forgetable_merkle_tree_scheme!(LightWeightMerkleTree);
 
-impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, Arity, T> LightWeightMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    I: Index,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Initialize an empty Merkle tree.
+    pub fn new(height: usize) -> Self {
+        Self {
+            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            height,
+            num_leaves: 0,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<E, H, Arity, T> LightWeightMerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Construct a new Merkle tree with given height from a data slice
+    /// * `height` - height of the Merkle tree, if `None`, it will calculate the
+    ///   minimum height that could hold all elements.
+    /// * `elems` - an iterator to all elements
+    /// * `returns` - A constructed Merkle tree, or `Err()` if errors
+    pub fn from_elems(
+        height: Option<usize>,
+        elems: impl IntoIterator<Item = impl Borrow<E>>,
+    ) -> Result<Self, PrimitivesError> {
+        let (root, height, num_leaves) =
+            build_light_weight_tree_internal::<E, H, Arity, T>(height, elems)?;
+        Ok(Self {
+            root,
+            height,
+            num_leaves,
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<E, H, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -47,10 +93,11 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
+        let traversal_path =
+            ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
         self.num_leaves += self.root.extend_and_forget_internal::<H, Arity>(
             self.height,
-            &I::from(self.num_leaves),
+            &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
@@ -88,9 +135,9 @@ mod mt_tests {
     fn test_light_mt_builder_helper<F: RescueParameter>() {
         let arity: usize = RescueLightWeightMerkleTree::<F>::ARITY;
         let mut data = vec![F::from(0u64); arity];
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_ok());
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(Some(1), &data).is_ok());
         data.push(F::from(0u64));
-        assert!(RescueLightWeightMerkleTree::<F>::from_elems(1, &data).is_err());
+        assert!(RescueLightWeightMerkleTree::<F>::from_elems(Some(1), &data).is_err());
     }
 
     #[test]
@@ -101,12 +148,12 @@ mod mt_tests {
     }
 
     fn test_light_mt_insertion_helper<F: RescueParameter>() {
-        let mut mt = RescueLightWeightMerkleTree::<F>::from_elems(2, &[]).unwrap();
+        let mut mt = RescueLightWeightMerkleTree::<F>::new(2);
         assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
         assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first 7 items will be inserted
-        assert_eq!(mt.num_leaves(), 9u64); // full merkle tree
+        assert_eq!(mt.num_leaves(), 9); // full merkle tree
 
         // Now unable to insert more data
         assert!(mt.push(F::from(0u64)).is_err());
@@ -127,10 +174,10 @@ mod mt_tests {
 
     fn test_light_mt_lookup_helper<F: RescueParameter>() {
         let mut mt =
-            RescueLightWeightMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)])
+            RescueLightWeightMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)])
                 .unwrap();
         let mut mock_mt =
-            RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+            RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         assert!(mt.lookup(0).expect_not_in_memory().is_ok());
         assert!(mt.lookup(1).expect_ok().is_ok());
         assert!(mt.extend(&[F::from(3u64), F::from(1u64)]).is_ok());
@@ -143,7 +190,7 @@ mod mt_tests {
         assert_eq!(elem, &F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         assert!(
-            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &proof)
+            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &proof)
                 .unwrap()
                 .is_ok()
         );
@@ -160,7 +207,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0u64, &bad_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -175,7 +222,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2u64, &forge_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
@@ -187,8 +234,9 @@ mod mt_tests {
     }
 
     fn test_light_mt_serde_helper<F: RescueParameter>() {
-        let mt = RescueLightWeightMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)])
-            .unwrap();
+        let mt =
+            RescueLightWeightMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)])
+                .unwrap();
         let proof = mt.lookup(1).expect_ok().unwrap().1;
         let node = &proof.proof[0];
 

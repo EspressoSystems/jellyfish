@@ -308,7 +308,7 @@ mod tests {
 
         // bad path
         // mismatched matrix.col.len() and msgs.len() should fail
-        let bad_msg = vec![msgs.to_vec(), vec![G1Projective::rand(&mut rng)]].concat();
+        let bad_msg = [msgs.to_vec(), vec![G1Projective::rand(&mut rng)]].concat();
         assert!(cir_matrix.fast_vec_mul(&bad_msg).is_err());
 
         // non power-of-two matrix fast mul should fail

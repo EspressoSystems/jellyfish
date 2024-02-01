@@ -53,16 +53,15 @@ fn bench_bls12381(c: &mut Criterion) {
     benchmark_group.sample_size(500);
     benchmark_group.throughput(Throughput::Elements(1u64));
     let rng = &mut test_rng();
-    let pp = BLSSignatureScheme::param_gen(Some(rng)).unwrap();
-    let (sk, vk) = BLSSignatureScheme::key_gen(&pp, rng).unwrap();
+    let (sk, vk) = BLSSignatureScheme::key_gen(&(), rng).unwrap();
     let msg = String::from_utf8(vec![b'X'; 1024]).unwrap();
-    let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, rng).unwrap();
+    let sig = BLSSignatureScheme::sign(&(), &sk, &msg, rng).unwrap();
 
     benchmark_group.bench_function("Sign", |b| {
-        b.iter(|| BLSSignatureScheme::sign(&pp, &sk, &msg, rng).unwrap())
+        b.iter(|| BLSSignatureScheme::sign(&(), &sk, &msg, rng).unwrap())
     });
     benchmark_group.bench_function("Verification", |b| {
-        b.iter(|| BLSSignatureScheme::verify(&pp, &vk, &msg, &sig).unwrap())
+        b.iter(|| BLSSignatureScheme::verify(&(), &vk, &msg, &sig).unwrap())
     });
 
     // TODO: aggregate signature benchmark not implemented
@@ -75,17 +74,16 @@ fn bench_bn254(c: &mut Criterion) {
     benchmark_group.sample_size(100);
     benchmark_group.throughput(Throughput::Elements(1u64));
     let rng = &mut test_rng();
-    let pp = BLSOverBN254CurveSignatureScheme::param_gen(Some(rng)).unwrap();
-    let (sk, vk) = BLSOverBN254CurveSignatureScheme::key_gen(&pp, rng).unwrap();
+    let (sk, vk) = BLSOverBN254CurveSignatureScheme::key_gen(&(), rng).unwrap();
     let msg = vec![12u8; 1000];
     let msgs = vec![msg.as_slice(); 1000];
-    let sig = BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, &msgs[0], rng).unwrap();
+    let sig = BLSOverBN254CurveSignatureScheme::sign(&(), &sk, msgs[0], rng).unwrap();
 
     benchmark_group.bench_function("Sign", |b| {
-        b.iter(|| BLSOverBN254CurveSignatureScheme::sign(&pp, &sk, &msgs[0], rng).unwrap())
+        b.iter(|| BLSOverBN254CurveSignatureScheme::sign(&(), &sk, msgs[0], rng).unwrap())
     });
     benchmark_group.bench_function("Verification", |b| {
-        b.iter(|| BLSOverBN254CurveSignatureScheme::verify(&pp, &vk, &msgs[0], &sig).unwrap())
+        b.iter(|| BLSOverBN254CurveSignatureScheme::verify(&(), &vk, msgs[0], &sig).unwrap())
     });
 
     bench_aggregate::<BLSOverBN254CurveSignatureScheme, _>(
