@@ -935,19 +935,6 @@
 <a href="#935" id="935">935</a>
 <a href="#936" id="936">936</a>
 <a href="#937" id="937">937</a>
-<a href="#938" id="938">938</a>
-<a href="#939" id="939">939</a>
-<a href="#940" id="940">940</a>
-<a href="#941" id="941">941</a>
-<a href="#942" id="942">942</a>
-<a href="#943" id="943">943</a>
-<a href="#944" id="944">944</a>
-<a href="#945" id="945">945</a>
-<a href="#946" id="946">946</a>
-<a href="#947" id="947">947</a>
-<a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1240,21 +1227,8 @@
         // TODO why do I need to compute the height of the merkle tree?
         </span><span class="kw">let </span>all_evals_commit_timer =
             <span class="macro">start_timer!</span>(|| <span class="string">&quot;compute merkle root of all storage node evals&quot;</span>);
-        <span class="kw">let </span>height: usize = all_storage_node_evals
-            .len()
-            .checked_ilog(KzgEvalsMerkleTree::&lt;E, H&gt;::ARITY)
-            .ok_or_else(|| {
-                VidError::Argument(<span class="macro">format!</span>(
-                    <span class="string">&quot;num_storage_nodes {} log base {} invalid&quot;</span>,
-                    all_storage_node_evals.len(),
-                    KzgEvalsMerkleTree::&lt;E, H&gt;::ARITY
-                ))
-            })<span class="question-mark">?
-            </span>.try_into()
-            .expect(<span class="string">&quot;num_storage_nodes log base arity should fit into usize&quot;</span>);
-        <span class="kw">let </span>height = height + <span class="number">1</span>; <span class="comment">// avoid fully qualified syntax for try_into()
-        </span><span class="kw">let </span>all_evals_commit =
-            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(height, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>all_evals_commit =
+            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(all_evals_commit_timer);
 
         <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;compute {} KZG commitments&quot;</span>, polys.len()));
@@ -1656,7 +1630,7 @@
             Advz::&lt;Bls12_381, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">20</span>, <span class="kw-2">&amp;mut </span>rng);
 
-        <span class="kw">let _ </span>= advz.disperse(<span class="kw-2">&amp;</span>payload_random);
+        <span class="kw">let _ </span>= advz.disperse(payload_random);
     }
 
     <span class="comment">// #[test]
@@ -1670,13 +1644,13 @@
             Advz::&lt;Bls12_381, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">20</span>, <span class="kw-2">&amp;mut </span>rng);
 
-        <span class="kw">let _ </span>= advz.commit_only(<span class="kw-2">&amp;</span>payload_random);
+        <span class="kw">let _ </span>= advz.commit_only(payload_random);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_share() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(bytes_random).unwrap();
         <span class="kw">let </span>(shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         <span class="kw">for </span>(i, share) <span class="kw">in </span>shares.iter().enumerate() {
@@ -1742,7 +1716,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_commit() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(bytes_random).unwrap();
         <span class="kw">let </span>(shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         <span class="comment">// missing commit
@@ -1788,7 +1762,7 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>sad_path_verify_share_corrupt_share_and_commit() {
         <span class="kw">let </span>(advz, bytes_random) = avdz_init();
-        <span class="kw">let </span>disperse = advz.disperse(<span class="kw-2">&amp;</span>bytes_random).unwrap();
+        <span class="kw">let </span>disperse = advz.disperse(bytes_random).unwrap();
         <span class="kw">let </span>(<span class="kw-2">mut </span>shares, <span class="kw-2">mut </span>common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();

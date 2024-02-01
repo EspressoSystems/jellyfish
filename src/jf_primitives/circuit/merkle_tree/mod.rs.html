@@ -669,12 +669,12 @@
 /// use ark_bls12_377::Fq;
 /// use jf_primitives::circuit::merkle_tree::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleTreeScheme, MerkleCommitment};
+/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
 ///
 /// let mut circuit = PlonkCircuit::&lt;Fq&gt;::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
 /// let elements = vec![Fq::from(1_u64), Fq::from(2_u64), Fq::from(100_u64)];
-/// let mt = RescueMerkleTree::&lt;Fq&gt;::from_elems(1, elements).unwrap();
+/// let mt = RescueMerkleTree::&lt;Fq&gt;::from_elems(Some(1), elements).unwrap();
 /// let expected_root = mt.commitment().digest();
 /// // Get a proof for the element in position 2
 /// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
@@ -1201,7 +1201,7 @@
             </span><span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_turbo_plonk();
             <span class="kw">let </span><span class="kw-2">mut </span>elements = (<span class="number">1u64</span>..=<span class="number">9u64</span>).map(|x| F::from(x)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
             elements[uid <span class="kw">as </span>usize] = elem;
-            <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="number">2</span>, elements).unwrap();
+            <span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), elements).unwrap();
             <span class="kw">let </span>expected_root = mt.commitment().digest();
             <span class="kw">let </span>(retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
             <span class="macro">assert_eq!</span>(retrieved_elem, <span class="kw-2">&amp;</span>elem);

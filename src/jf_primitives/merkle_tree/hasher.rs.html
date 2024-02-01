@@ -248,14 +248,14 @@
 //!
 //! ```
 //! # use jf_primitives::errors::PrimitivesError;
-//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme};
+//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -&gt; Result&lt;(), PrimitivesError&gt; {
 //! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 //!
 //! // payload type is `usize`, hash function is `Sha256`.
-//! let mt = HasherMerkleTree::&lt;Sha256, usize&gt;::from_elems(2, &amp;my_data)?;
+//! let mt = HasherMerkleTree::&lt;Sha256, usize&gt;::from_elems(Some(2), &amp;my_data)?;
 //!
 //! let root = mt.commitment().digest();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
@@ -319,14 +319,14 @@
 ///
 /// Do this:
 /// ```
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher&lt;H&gt;()
 /// where
 ///     H: HasherDigest,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(None, &amp;my_data).unwrap();
 /// }
 /// ```
 ///
@@ -334,7 +334,7 @@
 /// ```
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher&lt;H&gt;()
 /// where
@@ -342,7 +342,7 @@
 ///     &lt;&lt;H as OutputSizeUser&gt;::OutputSize as ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(None, &amp;my_data).unwrap();
 /// }
 /// ```
 ///
@@ -350,14 +350,14 @@
 /// ```compile_fail
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, MerkleTreeScheme};
+/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher&lt;H&gt;()
 /// where
 ///     H: Digest + Write,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(2, &amp;my_data).unwrap();
+///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(None, &amp;my_data).unwrap();
 /// }
 /// ```
 </span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::Foo&gt; + Write {

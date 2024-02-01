@@ -386,6 +386,17 @@
 <a href="#386" id="386">386</a>
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -415,6 +426,8 @@
 <span class="kw">use </span>num_traits::ToPrimitive;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>typenum::Unsigned;
+
+<span class="kw">use </span><span class="self">self</span>::internal::MerkleTreeIter;
 
 <span class="attr">#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 </span><span class="doccomment">/// The result of querying at an index in the tree
@@ -584,12 +597,6 @@
     <span class="doccomment">/// Tree arity
     </span><span class="kw">const </span>ARITY: usize;
 
-    <span class="doccomment">/// Construct a new merkle tree with given height from a data slice
-    </span><span class="kw">fn </span>from_elems(
-        height: usize,
-        elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;;
-
     <span class="doccomment">/// Return the height of this merkle tree
     </span><span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
     <span class="doccomment">/// Return the maximum allowed number leaves
@@ -629,11 +636,15 @@
     //     pos: impl Iterator&lt;Item = usize&gt;,
     //     proof: impl Borrow&lt;Self::BatchProof&gt;,
     // ) -&gt; Result&lt;(), PrimitivesError&gt;;
-</span>}
+
+    </span><span class="doccomment">/// Return an iterator that iterates through all element that are not
+    /// forgetton
+    </span><span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MerkleTreeIter&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::Index, <span class="self">Self</span>::NodeValue&gt;;
+}
 
 <span class="doccomment">/// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
-</span><span class="kw">pub trait </span>AppendableMerkleTreeScheme: MerkleTreeScheme {
+</span><span class="kw">pub trait </span>AppendableMerkleTreeScheme: MerkleTreeScheme&lt;Index = u64&gt; {
     <span class="doccomment">/// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
@@ -664,28 +675,39 @@
     <span class="doccomment">/// Batch non membership proof
     </span><span class="kw">type </span>BatchNonMembershipProof;
 
-    <span class="doccomment">/// Build a universal merkle tree from a key-value set.
-    /// * `height` - height of the merkle tree
-    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
-    ///   an array or a slice of (key, value) pairs
-    </span><span class="kw">fn </span>from_kv_set&lt;BI, BE&gt;(
-        height: usize,
-        data: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;(BI, BE)&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;
-    <span class="kw">where
-        </span>BI: Borrow&lt;<span class="self">Self</span>::Index&gt;,
-        BE: Borrow&lt;<span class="self">Self</span>::Element&gt;;
-
     <span class="doccomment">/// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
-    ///   original element at the given `pos`. Err() if the update fails.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
     </span><span class="kw">fn </span>update(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         elem: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;;
+
+    <span class="doccomment">/// Remove a leaf at the given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
+    </span><span class="kw">fn </span>remove(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;;
+
+    <span class="doccomment">/// Apply an update function `f` at a given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `f` - the update function, `None` means the given leaf doesn&#39;t exist
+    ///   or should be removed.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
+    </span><span class="kw">fn </span>update_with&lt;F&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        f: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;
+    <span class="kw">where
+        </span>F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Element&gt;;
 
     <span class="doccomment">/// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree

@@ -450,7 +450,7 @@
 
         <span class="comment">// empty input -&gt; empty output
         </span><span class="kw">let </span>bytes = Vec::new();
-        <span class="macro">assert!</span>(bytes.iter().next().is_none());
+        <span class="macro">assert!</span>(bytes.first().is_none());
         <span class="kw">let </span><span class="kw-2">mut </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, F&gt;(bytes.iter());
         <span class="macro">assert!</span>(elems_iter.next().is_none());
 

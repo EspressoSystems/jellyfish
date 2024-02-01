@@ -30,12 +30,12 @@
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>ark_bls12_377::Fq;
 <span class="kw">use </span>jf_primitives::circuit::merkle_tree::MerkleTreeGadget;
 <span class="kw">use </span>jf_relation::{Circuit, PlonkCircuit};
-<span class="kw">use </span>jf_primitives::merkle_tree::{prelude::RescueMerkleTree, MerkleTreeScheme, MerkleCommitment};
+<span class="kw">use </span>jf_primitives::merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
 
 <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;Fq&gt;::new_turbo_plonk();
 <span class="comment">// Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
 </span><span class="kw">let </span>elements = <span class="macro">vec!</span>[Fq::from(<span class="number">1_u64</span>), Fq::from(<span class="number">2_u64</span>), Fq::from(<span class="number">100_u64</span>)];
-<span class="kw">let </span>mt = RescueMerkleTree::&lt;Fq&gt;::from_elems(<span class="number">1</span>, elements).unwrap();
+<span class="kw">let </span>mt = RescueMerkleTree::&lt;Fq&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">1</span>), elements).unwrap();
 <span class="kw">let </span>expected_root = mt.commitment().digest();
 <span class="comment">// Get a proof for the element in position 2
 </span><span class="kw">let </span>(<span class="kw">_</span>, proof) = mt.lookup(<span class="number">2</span>).expect_ok().unwrap();

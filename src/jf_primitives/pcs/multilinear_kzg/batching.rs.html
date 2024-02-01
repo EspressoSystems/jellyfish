@@ -775,7 +775,7 @@
 
         <span class="kw">let </span>evals = generate_evaluations(polys, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>com = MultilinearKzgPCS::batch_commit(<span class="kw-2">&amp;</span>(ml_ck.clone(), uni_ck.clone()), polys)<span class="question-mark">?</span>;
+        <span class="kw">let </span>com = MultilinearKzgPCS::batch_commit((ml_ck.clone(), uni_ck.clone()), polys)<span class="question-mark">?</span>;
         <span class="kw">let </span>(batch_proof, evaluations) =
             batch_open_internal(<span class="kw-2">&amp;</span>uni_ck, <span class="kw-2">&amp;</span>ml_ck, polys, <span class="kw-2">&amp;</span>com, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
 

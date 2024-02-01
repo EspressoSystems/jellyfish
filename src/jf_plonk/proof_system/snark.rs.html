@@ -2463,7 +2463,7 @@
         <span class="kw">for </span>i <span class="kw">in </span>a0..(a0 + <span class="number">4 </span>* m) {
             a.push(cs.create_variable(F::from(i <span class="kw">as </span>u64))<span class="question-mark">?</span>);
         }
-        <span class="kw">let </span>b = <span class="macro">vec!</span>[
+        <span class="kw">let </span>b = [
             cs.create_public_variable(F::from(m <span class="kw">as </span>u64 * <span class="number">2</span>))<span class="question-mark">?</span>,
             cs.create_public_variable(F::from(a0 <span class="kw">as </span>u64 * <span class="number">2 </span>+ m <span class="kw">as </span>u64 * <span class="number">4 </span>- <span class="number">1</span>))<span class="question-mark">?</span>,
         ];
@@ -3496,7 +3496,7 @@
         <span class="kw">for </span>i <span class="kw">in </span>a0..(a0 + <span class="number">4 </span>* m) {
             a.push(cs.create_variable(F::from(i <span class="kw">as </span>u64))<span class="question-mark">?</span>);
         }
-        <span class="kw">let </span>b = <span class="macro">vec!</span>[
+        <span class="kw">let </span>b = [
             cs.create_public_variable(F::from(m <span class="kw">as </span>u64 * <span class="number">2</span>))<span class="question-mark">?</span>,
             cs.create_public_variable(F::from(a0 <span class="kw">as </span>u64 * <span class="number">2 </span>+ m <span class="kw">as </span>u64 * <span class="number">4 </span>- <span class="number">1</span>))<span class="question-mark">?</span>,
         ];

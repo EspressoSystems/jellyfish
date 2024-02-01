@@ -671,7 +671,7 @@
 
         <span class="comment">// bad path
         // mismatched matrix.col.len() and msgs.len() should fail
-        </span><span class="kw">let </span>bad_msg = <span class="macro">vec!</span>[msgs.to_vec(), <span class="macro">vec!</span>[G1Projective::rand(<span class="kw-2">&amp;mut </span>rng)]].concat();
+        </span><span class="kw">let </span>bad_msg = [msgs.to_vec(), <span class="macro">vec!</span>[G1Projective::rand(<span class="kw-2">&amp;mut </span>rng)]].concat();
         <span class="macro">assert!</span>(cir_matrix.fast_vec_mul(<span class="kw-2">&amp;</span>bad_msg).is_err());
 
         <span class="comment">// non power-of-two matrix fast mul should fail

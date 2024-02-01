@@ -516,6 +516,67 @@
 <a href="#516" id="516">516</a>
 <a href="#517" id="517">517</a>
 <a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -524,7 +585,7 @@
 
 </span><span class="doccomment">//! Implementation of a typical Sparse Merkle Tree.
 </span><span class="kw">use super</span>::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
@@ -542,14 +603,52 @@
 <span class="kw">use </span>typenum::Unsigned;
 
 <span class="comment">// A standard Universal Merkle tree implementation
-</span><span class="macro">impl_merkle_tree_scheme!</span>(UniversalMerkleTree, build_tree_internal);
+</span><span class="macro">impl_merkle_tree_scheme!</span>(UniversalMerkleTree);
 <span class="macro">impl_forgetable_merkle_tree_scheme!</span>(UniversalMerkleTree);
 
+<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">where
+    </span>E: Element,
+    H: DigestAlgorithm&lt;E, I, T&gt;,
+    I: Index + ToTraversalPath&lt;Arity&gt;,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    <span class="doccomment">/// Initialize an empty Merkle tree.
+    </span><span class="kw">pub fn </span>new(height: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            root: Box::new(MerkleNode::&lt;E, I, T&gt;::Empty),
+            height,
+            num_leaves: <span class="number">0</span>,
+            _phantom: PhantomData,
+        }
+    }
+
+    <span class="doccomment">/// Build a universal merkle tree from a key-value set.
+    /// * `height` - height of the merkle tree
+    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
+    ///   an array or a slice of (key, value) pairs
+    </span><span class="kw">pub fn </span>from_kv_set&lt;BI, BE&gt;(
+        height: usize,
+        data: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;(BI, BE)&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;
+    <span class="kw">where
+        </span>BI: Borrow&lt;I&gt;,
+        BE: Borrow&lt;E&gt;,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>mt = <span class="self">Self</span>::new(height);
+        <span class="kw">for </span>tuple <span class="kw">in </span>data.into_iter() {
+            <span class="kw">let </span>(key, value) = tuple.borrow();
+            UniversalMerkleTreeScheme::update(<span class="kw-2">&amp;mut </span>mt, key.borrow(), value.borrow())<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(mt)
+    }
+}
 <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; UniversalMerkleTreeScheme <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + From&lt;u64&gt; + ToTraversalPath&lt;Arity&gt;,
+    I: Index + ToTraversalPath&lt;Arity&gt;,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -561,32 +660,31 @@
         pos: <span class="kw">impl </span>Borrow&lt;I&gt;,
         elem: <span class="kw">impl </span>Borrow&lt;E&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;E, (), ()&gt;, PrimitivesError&gt; {
-        <span class="kw">let </span>pos = pos.borrow();
-        <span class="kw">let </span>elem = elem.borrow();
-        <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-        <span class="kw">let </span>ret = <span class="self">self
-            </span>.root
-            .update_internal::&lt;H, Arity&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, elem)<span class="question-mark">?</span>;
-        <span class="kw">if let </span>LookupResult::NotFound(<span class="kw">_</span>) = ret {
-            <span class="self">self</span>.num_leaves += <span class="number">1</span>;
-        }
-        <span class="prelude-val">Ok</span>(ret)
+        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">Some</span>(elem.borrow().clone()))
     }
 
-    <span class="kw">fn </span>from_kv_set&lt;BI, BE&gt;(
-        height: usize,
-        data: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;(BI, BE)&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;
+    <span class="kw">fn </span>remove(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt; {
+        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">None</span>)
+    }
+
+    <span class="kw">fn </span>update_with&lt;F&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        f: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;E, (), ()&gt;, PrimitivesError&gt;
     <span class="kw">where
-        </span>BI: Borrow&lt;<span class="self">Self</span>::Index&gt;,
-        BE: Borrow&lt;<span class="self">Self</span>::Element&gt;,
+        </span>F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Element&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt = <span class="self">Self</span>::from_elems(height, [] <span class="kw">as </span>[<span class="kw-2">&amp;</span><span class="self">Self</span>::Element; <span class="number">0</span>])<span class="question-mark">?</span>;
-        <span class="kw">for </span>tuple <span class="kw">in </span>data.into_iter() {
-            <span class="kw">let </span>(key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(<span class="kw-2">&amp;mut </span>mt, key.borrow(), value.borrow())<span class="question-mark">?</span>;
-        }
-        <span class="prelude-val">Ok</span>(mt)
+        <span class="kw">let </span>pos = pos.borrow();
+        <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
+        <span class="kw">let </span>(delta, result) =
+            <span class="self">self</span>.root
+                .update_with_internal::&lt;H, Arity, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
+        <span class="self">self</span>.num_leaves = (delta + <span class="self">self</span>.num_leaves <span class="kw">as </span>i64) <span class="kw">as </span>u64;
+        <span class="prelude-val">Ok</span>(result)
     }
 
     <span class="kw">fn </span>non_membership_verify(
@@ -632,7 +730,7 @@
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + From&lt;u64&gt; + ToTraversalPath&lt;Arity&gt;,
+    I: Index + ToTraversalPath&lt;Arity&gt;,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -726,7 +824,7 @@
     <span class="kw">fn </span>test_universal_mt_builder_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(
             <span class="number">1</span>,
-            <span class="kw-2">&amp;</span>[(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">1u64</span>))],
+            [(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">1u64</span>))],
         )
         .unwrap();
         <span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">1</span>);
@@ -782,12 +880,11 @@
 
     <span class="kw">fn </span>test_update_and_lookup_helper&lt;I, F&gt;()
     <span class="kw">where
-        </span>I: Index + ToTraversalPath&lt;U3&gt; + From&lt;u64&gt;,
+        </span>I: Index + ToTraversalPath&lt;U3&gt;,
         F: RescueParameter + ToTraversalPath&lt;U3&gt;,
         RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
     {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt =
-            RescueSparseMerkleTree::&lt;F, F&gt;::from_kv_set(<span class="number">10</span>, HashMap::&lt;F, F&gt;::new()).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::new(<span class="number">10</span>);
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
             mt.update(F::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64)).unwrap();
         }
@@ -803,6 +900,31 @@
             .unwrap()
             .is_ok());
         }
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">10 </span>{
+            mt.update_with(F::from(i <span class="kw">as </span>u64), |elem| <span class="kw">match </span>elem {
+                <span class="prelude-val">Some</span>(elem) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>elem),
+                <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>(F::from(i <span class="kw">as </span>u64)),
+            })
+            .unwrap();
+        }
+        <span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">10</span>);
+        <span class="comment">// test lookup at index 7
+        </span><span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(<span class="number">7u64</span>)).expect_ok().unwrap();
+        <span class="macro">assert_eq!</span>(val, <span class="kw-2">&amp;</span>F::from(<span class="number">7u64</span>));
+        <span class="macro">assert_eq!</span>(proof.elem().unwrap(), val);
+        <span class="macro">assert!</span>(
+            RescueSparseMerkleTree::&lt;F, F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), F::from(<span class="number">7u64</span>), <span class="kw-2">&amp;</span>proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        <span class="comment">// Remove index 8
+        </span>mt.update_with(F::from(<span class="number">8u64</span>), |<span class="kw">_</span>| <span class="prelude-val">None</span>).unwrap();
+        <span class="macro">assert!</span>(mt
+            .universal_lookup(F::from(<span class="number">8u64</span>))
+            .expect_not_found()
+            .is_ok());
+        <span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">9</span>);
     }
 
     <span class="attr">#[test]
@@ -828,7 +950,7 @@
             .universal_lookup(BigUint::from(<span class="number">0u64</span>))
             .expect_ok()
             .unwrap();
-        <span class="kw">let </span>lookup_elem = lookup_elem.clone();
+        <span class="kw">let </span>lookup_elem = <span class="kw-2">*</span>lookup_elem;
         <span class="kw">let </span>(elem, mem_proof) = mt.universal_forget(<span class="number">0u64</span>.into()).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(lookup_elem, elem);
         <span class="macro">assert_eq!</span>(lookup_mem_proof, mem_proof);

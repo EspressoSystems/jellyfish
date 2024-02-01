@@ -735,7 +735,7 @@
         <span class="kw">let </span>scalar_bits = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
 
         <span class="kw">let </span><span class="kw-2">mut </span>eq: LinkedList&lt;DenseMultilinearExtension&lt;E::ScalarField&gt;&gt; =
-            LinkedList::from_iter(eq_extension(<span class="kw-2">&amp;</span>t).into_iter());
+            LinkedList::from_iter(eq_extension(<span class="kw-2">&amp;</span>t));
         <span class="kw">let </span><span class="kw-2">mut </span>eq_arr = LinkedList::new();
         <span class="kw">let </span><span class="kw-2">mut </span>base = eq.pop_back().unwrap().evaluations;
 

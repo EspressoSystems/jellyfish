@@ -1083,10 +1083,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_agg_sig_trait() {
-        <span class="kw">let </span>m1 = <span class="macro">vec!</span>[<span class="number">87u8</span>, <span class="number">32u8</span>];
-        <span class="kw">let </span>m2 = <span class="macro">vec!</span>[<span class="number">12u8</span>, <span class="number">2u8</span>, <span class="number">7u8</span>];
-        <span class="kw">let </span>m3 = <span class="macro">vec!</span>[<span class="number">3u8</span>, <span class="number">6u8</span>];
-        <span class="kw">let </span>m4 = <span class="macro">vec!</span>[<span class="number">72u8</span>];
+        <span class="kw">let </span>m1 = [<span class="number">87u8</span>, <span class="number">32u8</span>];
+        <span class="kw">let </span>m2 = [<span class="number">12u8</span>, <span class="number">2u8</span>, <span class="number">7u8</span>];
+        <span class="kw">let </span>m3 = [<span class="number">3u8</span>, <span class="number">6u8</span>];
+        <span class="kw">let </span>m4 = [<span class="number">72u8</span>];
         <span class="kw">let </span>messages = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>m1[..], <span class="kw-2">&amp;</span>m2[..], <span class="kw-2">&amp;</span>m3[..], <span class="kw-2">&amp;</span>m4[..]];
         <span class="kw">let </span>wrong_message = <span class="macro">vec!</span>[<span class="number">255u8</span>];
         agg_sign_and_verify::&lt;BLSOverBN254CurveSignatureScheme&gt;(
@@ -1144,7 +1144,7 @@
             <span class="comment">// Generate two group elements that are equal but have different projective
             // representation.
             </span><span class="kw">let </span><span class="kw-2">mut </span>vk = VerKey::from(<span class="kw-2">&amp;</span>SignKey::generate(<span class="kw-2">&amp;mut </span>rng));
-            <span class="kw">let </span>vk_copy = vk.clone();
+            <span class="kw">let </span>vk_copy = vk;
             <span class="kw">let </span>scalar = ark_bn254::Fq::rand(<span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>scalar_sq = scalar * scalar;
             <span class="kw">let </span>scalar_cube = scalar_sq * scalar;

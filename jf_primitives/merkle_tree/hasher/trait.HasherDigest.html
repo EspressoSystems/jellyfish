@@ -11,7 +11,7 @@
     </span>H: HasherDigest,
 {
     <span class="kw">let </span>my_data = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>];
-    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
+    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
 }</code></pre></div>
 <p>Instead of this:</p>
 
@@ -21,7 +21,7 @@
     &lt;&lt;H <span class="kw">as </span>OutputSizeUser&gt;::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 {
     <span class="kw">let </span>my_data = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>];
-    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
+    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
 }</code></pre></div>
 <p>Note that the complex trait bound for <a href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Copy.html" title="trait core::marker::Copy"><code>Copy</code></a> is necessary:</p>
 
@@ -30,7 +30,7 @@
     </span>H: Digest + Write,
 {
     <span class="kw">let </span>my_data = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>];
-    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="number">2</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
+    <span class="kw">let </span>mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>my_data).unwrap();
 }</code></pre></div>
 </div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor">§</a></h2><div class="methods"><details class="toggle" open><summary><section id="associatedtype.Foo" class="method"><a class="src rightside" href="../../../src/jf_primitives/merkle_tree/hasher.rs.html#125">source</a><h4 class="code-header">type <a href="#associatedtype.Foo" class="associatedtype">Foo</a>: ArrayLength&lt;<a class="primitive" href="https://doc.rust-lang.org/1.75.0/std/primitive.u8.html">u8</a>, ArrayType = Self::<a class="associatedtype" href="trait.HasherDigest.html#associatedtype.Bar" title="type jf_primitives::merkle_tree::hasher::HasherDigest::Bar">Bar</a>&gt;</h4></section></summary><div class="docblock"><p>Associated type needed to express trait bounds.</p>
 </div></details><details class="toggle" open><summary><section id="associatedtype.Bar" class="method"><a class="src rightside" href="../../../src/jf_primitives/merkle_tree/hasher.rs.html#127">source</a><h4 class="code-header">type <a href="#associatedtype.Bar" class="associatedtype">Bar</a>: <a class="trait" href="https://doc.rust-lang.org/1.75.0/core/marker/trait.Copy.html" title="trait core::marker::Copy">Copy</a></h4></section></summary><div class="docblock"><p>Associated type needed to express trait bounds.</p>

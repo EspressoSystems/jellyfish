@@ -586,6 +586,32 @@
 <a href="#586" id="586">586</a>
 <a href="#587" id="587">587</a>
 <a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -609,8 +635,10 @@
 };
 
 <span class="kw">use super</span>::{
-    append_only::MerkleTree, internal::MerkleProof, AppendableMerkleTreeScheme, DigestAlgorithm,
-    Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    append_only::MerkleTree,
+    internal::{MerkleProof, MerkleTreeIter},
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
+    MerkleTreeScheme, NodeValue,
 };
 
 <span class="kw">mod </span>hash;
@@ -730,6 +758,40 @@
     inner: InnerTree&lt;E, H, T, N, Arity&gt;,
 }
 
+<span class="kw">impl</span>&lt;E, H, Arity, N, T&gt; NMT&lt;E, H, Arity, N, T&gt;
+<span class="kw">where
+    </span>H: DigestAlgorithm&lt;E, u64, T&gt; + BindNamespace&lt;E, u64, T, N&gt;,
+    E: Element + Namespaced&lt;Namespace = N&gt;,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    <span class="doccomment">/// Initializze an empty NMT
+    </span><span class="kw">pub fn </span>new(height: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>namespace_ranges: BTreeMap&lt;N, Range&lt;u64&gt;&gt; = BTreeMap::new();
+        <span class="kw">let </span>inner = InnerTree::&lt;E, H, T, N, Arity&gt;::new(height);
+        NMT {
+            inner,
+            namespace_ranges,
+        }
+    }
+
+    <span class="doccomment">/// Construct an NMT from elements.
+    </span><span class="kw">pub fn </span>from_elems(
+        height: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+        elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;E&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>namespace_ranges: BTreeMap&lt;N, Range&lt;u64&gt;&gt; = BTreeMap::new();
+        <span class="kw">let </span>leaves =
+            NMT::&lt;E, H, Arity, N, T&gt;::update_namespace_metadata(<span class="kw-2">&amp;mut </span>namespace_ranges, elems)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inner = InnerTree::&lt;E, H, T, N, Arity&gt;::from_elems(height, leaves)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(NMT {
+            inner,
+            namespace_ranges,
+        })
+    }
+}
+
 <span class="kw">impl</span>&lt;E, H, Arity, N, T&gt; MerkleTreeScheme <span class="kw">for </span>NMT&lt;E, H, Arity, N, T&gt;
 <span class="kw">where
     </span>H: DigestAlgorithm&lt;E, u64, T&gt; + BindNamespace&lt;E, u64, T, N&gt;,
@@ -746,20 +808,6 @@
         &lt;InnerTree&lt;E, H, T, N, Arity&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::BatchMembershipProof;
     <span class="kw">const </span>ARITY: usize = &lt;InnerTree&lt;E, H, T, N, Arity&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::ARITY;
     <span class="kw">type </span>Commitment = &lt;InnerTree&lt;E, H, T, N, Arity&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::Commitment;
-
-    <span class="kw">fn </span>from_elems(
-        height: usize,
-        elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>namespace_ranges: BTreeMap&lt;N, Range&lt;u64&gt;&gt; = BTreeMap::new();
-        <span class="kw">let </span>leaves =
-            NMT::&lt;E, H, Arity, N, T&gt;::update_namespace_metadata(<span class="kw-2">&amp;mut </span>namespace_ranges, elems)<span class="question-mark">?</span>;
-        <span class="kw">let </span>inner = &lt;InnerTree&lt;E, H, T, N, Arity&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::from_elems(height, leaves)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(NMT {
-            inner,
-            namespace_ranges,
-        })
-    }
 
     <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.inner.height()
@@ -790,6 +838,10 @@
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, PrimitivesError&gt; {
         &lt;InnerTree&lt;E, H, T, N, Arity&gt; <span class="kw">as </span>MerkleTreeScheme&gt;::verify(root, pos, proof)
+    }
+
+    <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MerkleTreeIter&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::Index, <span class="self">Self</span>::NodeValue&gt; {
+        <span class="self">self</span>.inner.iter()
     }
 }
 
@@ -1024,14 +1076,14 @@
 
     <span class="kw">fn </span>build_tree(leaves: <span class="kw-2">&amp;</span>[Leaf], build_type: BuildType) -&gt; TestNMT {
         <span class="kw">match </span>build_type {
-            BuildType::FromElems =&gt; TestNMT::from_elems(<span class="number">3</span>, leaves).unwrap(),
+            BuildType::FromElems =&gt; TestNMT::from_elems(<span class="prelude-val">Some</span>(<span class="number">3</span>), leaves).unwrap(),
             BuildType::Extend =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::from_elems(<span class="number">3</span>, <span class="kw-2">&amp;</span>[]).unwrap();
+                <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::new(<span class="number">3</span>);
                 nmt.extend(leaves).unwrap();
                 nmt
             },
             BuildType::Push =&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::from_elems(<span class="number">3</span>, <span class="kw-2">&amp;</span>[]).unwrap();
+                <span class="kw">let </span><span class="kw-2">mut </span>nmt = TestNMT::new(<span class="number">3</span>);
                 <span class="kw">for </span>leaf <span class="kw">in </span>leaves {
                     nmt.push(leaf).unwrap();
                 }
