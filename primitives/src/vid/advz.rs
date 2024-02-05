@@ -395,13 +395,6 @@ where
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
-        let share_length = share.len();
-        if share_length != self.multiplicity {
-            return Err(VidError::Argument(format!(
-                "(shares per poly, multiplicity) differ ({},{})",
-                share_length, common.multiplicity
-            )));
-        }
 
         if share[0].evals.len() != common.poly_commits.len() {
             return Err(VidError::Argument(format!(

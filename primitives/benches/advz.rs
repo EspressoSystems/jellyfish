@@ -64,7 +64,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("commit"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
+            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -79,7 +79,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("disperse"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
+            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -94,16 +94,17 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("verify"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
+            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+            let flatten_shares: Vec<_> = shares.into_iter().flatten().collect();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
                 |b, _| {
                     // verify only the 0th share
                     b.iter(|| {
-                        advz.verify_share(&shares, &common, &commit)
+                        advz.verify_share(&flatten_shares, &common, &commit)
                             .unwrap()
                             .unwrap()
                     });
@@ -116,7 +117,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("recover"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, &srs).unwrap();
+            let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common) = (disperse.shares, disperse.common);
             grp.bench_with_input(
