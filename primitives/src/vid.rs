@@ -56,7 +56,7 @@ pub trait VidScheme {
     /// - VidResult::Ok(Result::Ok) if verification succeeds
     fn verify_share(
         &self,
-        share: &Vec<Self::Share>,
+        share: &[Self::Share],
         common: &Self::Common,
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>>;
