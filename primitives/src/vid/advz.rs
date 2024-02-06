@@ -137,12 +137,12 @@ where
 
         // erasure code params
         let chunk_size = multiplicity * payload_chunk_size; // message length m
-        let num_nodes = multiplicity * num_storage_nodes; // code word length n
+        let code_word_size = multiplicity * num_storage_nodes; // code word length n
         let poly_degree = chunk_size - 1;
 
         let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree).map_err(vid)?;
         let multi_open_domain =
-            UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(poly_degree, num_nodes)
+            UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(poly_degree, code_word_size)
                 .map_err(vid)?;
         let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
@@ -196,7 +196,7 @@ where
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
-    aggregate_proof: KzgProof<E>,
+    aggregate_proofs: Vec<KzgProof<E>>,
 
     evals_proof: KzgEvalsMerkleTreeProof<E, H>,
 }
@@ -243,7 +243,7 @@ where
     {
         let payload = payload.as_ref();
         let chunk_size = self.multiplicity * self.payload_chunk_size;
-        let code_size = self.multiplicity * self.num_storage_nodes;
+        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
             .chunks(chunk_size)
@@ -251,7 +251,7 @@ where
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len(), code_size)
+        Self::derive_commit(&poly_commits, payload.len(), code_word_size)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -265,7 +265,7 @@ where
             payload_byte_len, self.num_storage_nodes
         ));
         let chunk_size = self.multiplicity * self.payload_chunk_size;
-        let code_size = self.multiplicity * self.num_storage_nodes;
+        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
@@ -285,12 +285,12 @@ where
             chunk_size
         ));
         let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_size];
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
 
             for poly in polys.iter() {
                 let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
-                    code_size,
+                    code_word_size,
                     &self.multi_open_domain,
                 )
                 .map_err(vid)?;
@@ -303,7 +303,7 @@ where
             }
 
             // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_size);
+            assert_eq!(all_storage_node_evals.len(), code_word_size);
             for storage_node_evals in all_storage_node_evals.iter() {
                 assert_eq!(storage_node_evals.len(), polys.len());
             }
@@ -350,33 +350,35 @@ where
         let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
-            code_size,
+            code_word_size,
             &self.multi_open_domain,
         )
         .map_err(vid)?;
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(index, (evals, aggregate_proof))| {
-                Ok(Share {
+
+        let mut shares = Vec::with_capacity(code_word_size);
+        let mut evals = Vec::new();
+        let mut proofs = Vec::new();
+        for index in 0..code_word_size {
+            evals.extend(all_storage_node_evals[index].iter());
+            proofs.push(aggregate_proofs[index].clone());
+            if (index + 1) % self.multiplicity == 0 {
+                shares.push(Share {
                     index,
-                    evals,
-                    aggregate_proof,
-                    evals_proof: all_evals_commit
+                    evals: evals.clone(),
+                    aggregate_proofs: proofs.clone(),
+                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
                         .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
                         .expect_ok()
                         .map_err(vid)?
                         .1,
-                })
-            })
-            .chunks(self.multiplicity)
-            .into_iter()
-            .map(|iter| iter.collect::<Result<_, VidError>>())
-            .collect::<Result<_, VidError>>()?;
+                });
+                evals = Vec::new();
+                proofs = Vec::new()
+            }
+        }
 
         end_timer!(assemblage_timer);
 
@@ -390,16 +392,16 @@ where
 
     fn verify_share(
         &self,
-        share: &[Self::Share],
+        share: &Self::Share,
         common: &Self::Common,
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
-
-        if share[0].evals.len() != common.poly_commits.len() {
+        let multiplicity: usize = common.multiplicity.try_into().map_err(vid)?;
+        if share.evals.len() / multiplicity != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "(share eval, common poly commit) lengths differ ({},{})",
-                share[0].evals.len(),
+                share.evals.len() / multiplicity,
                 common.poly_commits.len()
             )));
         }
@@ -411,27 +413,28 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-        for sub_share in share {
-            if sub_share.index >= self.num_storage_nodes * self.multiplicity {
-                return Ok(Err(())); // not an arg error
-            }
+
+        let polys_len = common.poly_commits.len();
+
+        if share.index >= self.num_storage_nodes {
+            return Ok(Err(())); // not an arg error
         }
+
         Self::is_consistent(commit, common)?;
 
         // verify eval proof
-
-        for sub_share in share {
-            if KzgEvalsMerkleTree::<E, H>::verify(
-                common.all_evals_digest,
-                &KzgEvalsMerkleTreeIndex::<E, H>::from(sub_share.index as u64),
-                &sub_share.evals_proof,
-            )
-            .map_err(vid)?
-            .is_err()
-            {
-                return Ok(Err(()));
-            }
+        // TODO: check all indices that represents the shares
+        if KzgEvalsMerkleTree::<E, H>::verify(
+            common.all_evals_digest,
+            &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
+            &share.evals_proof,
+        )
+        .map_err(vid)?
+        .is_err()
+        {
+            return Ok(Err(()));
         }
+
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
@@ -454,15 +457,17 @@ where
         (0..self.multiplicity)
             .map(|i| {
                 let aggregate_eval = polynomial_eval(
-                    share[i].evals.iter().map(FieldMultiplier),
+                    share.evals[i * polys_len..(i + 1) * polys_len]
+                        .iter()
+                        .map(FieldMultiplier),
                     pseudorandom_scalar,
                 );
                 Ok(UnivariateKzgPCS::verify(
                     &self.vk,
                     &aggregate_poly_commit,
-                    &self.multi_open_domain.element(share[i].index),
+                    &self.multi_open_domain.element(share.index + i),
                     &aggregate_eval,
-                    &share[i].aggregate_proof,
+                    &share.aggregate_proofs[i],
                 )
                 .map_err(vid)?
                 .then_some(())
@@ -471,11 +476,7 @@ where
             .collect()
     }
 
-    fn recover_payload(
-        &self,
-        shares: &[Vec<Self::Share>],
-        common: &Self::Common,
-    ) -> VidResult<Vec<u8>> {
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
         if shares.len() < self.payload_chunk_size {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -492,34 +493,48 @@ where
         }
 
         // all shares must have equal evals len
-        let num_polys = shares
+        let num_evals = shares
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
-            .first()
-            .ok_or_else(|| VidError::Argument("multiplicity is zero".into()))?
             .evals
             .len();
         if let Some((index, share)) = shares
             .iter()
-            .flatten()
             .enumerate()
-            .find(|(_, s)| s.evals.len() != num_polys)
+            .find(|(_, s)| s.evals.len() != num_evals)
         {
             return Err(VidError::Argument(format!(
                 "shares do not have equal evals lengths: share {} len {}, share {} len {}",
                 0,
-                num_polys,
+                num_evals,
                 index,
                 share.evals.len()
             )));
         }
+        if num_evals % self.multiplicity > 0 {
+            return Err(VidError::Argument(format!(
+                "multiplicity does not divide num_evals: multiplicity {}, num_evals {}",
+                self.multiplicity, num_evals,
+            )));
+        }
+        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let num_polys = num_evals / self.multiplicity;
 
-        let elems_capacity = num_polys * self.payload_chunk_size * self.multiplicity;
+        let elems_capacity = num_evals * chunk_size;
         let mut elems = Vec::with_capacity(elems_capacity);
-        let flattend_shares: Vec<_> = shares.iter().flatten().collect();
-        for i in 0..num_polys {
+
+        for p in 0..num_polys {
+            // each share is guaranteed to contain the same number of evals
+            // but we don't know to which polynomial each eval belongs
+            let mut evals = Vec::new();
+            for share in shares {
+                // extract all evaluations for polynomial p from the share
+                for m in 0..self.multiplicity {
+                    evals.push((share.index + m, share.evals[(m * num_polys) + p]))
+                }
+            }
             let mut coeffs = reed_solomon_erasure_decode_rou(
-                flattend_shares.iter().map(|s| (s.index, s.evals[i])),
+                evals.clone(),
                 self.payload_chunk_size,
                 &self.multi_open_domain,
             )
@@ -778,13 +793,11 @@ mod tests {
             // missing share eval
             {
                 let share_missing_eval = Share {
-                    evals: share[0].evals[1..].to_vec(),
-                    ..share[0].clone()
+                    evals: share.evals[1..].to_vec(),
+                    ..share.clone()
                 };
-                let mut shares_missing_eval = Vec::with_capacity(1);
-                shares_missing_eval.push(share_missing_eval);
                 assert_arg_err(
-                    advz.verify_share(&shares_missing_eval, &common, &commit),
+                    advz.verify_share(&share_missing_eval, &common, &commit),
                     "1 missing share should be arg error",
                 );
             }
@@ -792,7 +805,7 @@ mod tests {
             // corrupted share eval
             {
                 let mut share_bad_eval = share.clone();
-                share_bad_eval[0].evals[0].double_in_place();
+                share_bad_eval.evals[0].double_in_place();
                 advz.verify_share(&share_bad_eval, &common, &commit)
                     .unwrap()
                     .expect_err("bad share value should fail verification");
@@ -801,12 +814,10 @@ mod tests {
             // corrupted index, in bounds
             {
                 let share_bad_index = Share {
-                    index: (share[0].index + 1) % advz.num_storage_nodes,
-                    ..share[0].clone()
+                    index: (share.index + 1) % advz.num_storage_nodes,
+                    ..share.clone()
                 };
-                let mut shares_bad_index = Vec::with_capacity(1);
-                shares_bad_index.push(share_bad_index);
-                advz.verify_share(&shares_bad_index, &common, &commit)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -814,12 +825,10 @@ mod tests {
             // corrupted index, out of bounds
             {
                 let share_bad_index = Share {
-                    index: share[0].index + advz.num_storage_nodes,
-                    ..share[0].clone()
+                    index: share.index + advz.num_storage_nodes,
+                    ..share.clone()
                 };
-                let mut shares_bad_index = Vec::with_capacity(1);
-                shares_bad_index.push(share_bad_index);
-                advz.verify_share(&shares_bad_index, &common, &commit)
+                advz.verify_share(&share_bad_index, &common, &commit)
                     .unwrap()
                     .expect_err("bad share index should fail verification");
             }
@@ -830,12 +839,10 @@ mod tests {
                 // (without also causing a deserialization failure).
                 // So we use another share's proof instead.
                 let share_bad_evals_proof = Share {
-                    evals_proof: shares[(i + 1) % shares.len()][0].evals_proof.clone(),
-                    ..share[0].clone()
+                    evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
+                    ..share.clone()
                 };
-                let mut shares_bad_evals_proof = Vec::with_capacity(1);
-                shares_bad_evals_proof.push(share_bad_evals_proof);
-                advz.verify_share(&shares_bad_evals_proof, &common, &commit)
+                advz.verify_share(&share_bad_evals_proof, &common, &commit)
                     .unwrap()
                     .expect_err("bad share evals proof should fail verification");
             }
@@ -895,7 +902,7 @@ mod tests {
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
         common.poly_commits.pop();
-        shares[0][0].evals.pop();
+        shares[0].evals.pop();
 
         // equal nonzero lengths for common, share
         assert_arg_err(
@@ -904,7 +911,7 @@ mod tests {
         );
 
         common.poly_commits.clear();
-        shares[0][0].evals.clear();
+        shares[0].evals.clear();
 
         // zero length for common, share
         assert_arg_err(
@@ -923,7 +930,7 @@ mod tests {
             // unequal share eval lengths
             let mut shares_missing_evals = shares.clone();
             for i in 0..shares_missing_evals.len() - 1 {
-                shares_missing_evals[i][0].evals.pop();
+                shares_missing_evals[i].evals.pop();
                 assert_arg_err(
                     advz.recover_payload(&shares_missing_evals, &common),
                     format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
@@ -931,10 +938,11 @@ mod tests {
             }
 
             // 1 eval missing from all shares
-            shares_missing_evals.last_mut().unwrap()[0].evals.pop();
-            let bytes_recovered = advz
-                .recover_payload(&shares_missing_evals, &common)
-                .expect("recover_payload should succeed when shares have equal eval lengths");
+            shares_missing_evals.last_mut().unwrap().evals.pop();
+            let bytes_recovered = advz.recover_payload(&shares_missing_evals, &common).expect(
+                "recover_payload should succeed when shares have
+            equal eval lengths",
+            );
             assert_ne!(bytes_recovered, bytes_random);
         }
 
@@ -944,7 +952,7 @@ mod tests {
 
             // permute indices to avoid duplicates and keep them in bounds
             for share in &mut shares_bad_indices {
-                share[0].index = (share[0].index + 1) % advz.num_storage_nodes;
+                share.index = (share.index + 1) % advz.num_storage_nodes;
             }
 
             let bytes_recovered = advz
@@ -957,7 +965,7 @@ mod tests {
         {
             let mut shares_bad_indices = shares.clone();
             for i in 0..shares_bad_indices.len() {
-                shares_bad_indices[i][0].index += advz.multi_open_domain.size();
+                shares_bad_indices[i].index += advz.multi_open_domain.size();
                 advz.recover_payload(&shares_bad_indices, &common)
                     .expect_err("recover_payload should fail when indices are out of bounds");
             }

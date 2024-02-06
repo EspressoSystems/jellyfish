@@ -38,7 +38,6 @@ pub fn round_trip<V, R>(
             let disperse = vid.disperse(&bytes_random).unwrap();
             let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             assert_eq!(shares.len(), num_storage_nodes);
-            assert_eq!(shares[0].len(), V::get_multiplicity(&common));
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
             assert_eq!(len, V::get_payload_byte_len(&common));
             assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));

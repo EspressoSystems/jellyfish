@@ -56,18 +56,14 @@ pub trait VidScheme {
     /// - VidResult::Ok(Result::Ok) if verification succeeds
     fn verify_share(
         &self,
-        share: &[Self::Share],
+        share: &Self::Share,
         common: &Self::Common,
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>>;
 
     /// Recover payload from shares.
     /// Do not verify shares or check recovered payload against anything.
-    fn recover_payload(
-        &self,
-        shares: &[Vec<Self::Share>],
-        common: &Self::Common,
-    ) -> VidResult<Vec<u8>>;
+    fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>>;
 
     /// Check that a [`VidScheme::Common`] is consistent with a
     /// [`VidScheme::Commit`].
@@ -82,7 +78,7 @@ pub trait VidScheme {
     /// Extract the number of storage nodes from a [`VidScheme::Common`].
     fn get_num_storage_nodes(common: &Self::Common) -> usize;
 
-    /// Extract multiplicity; number of shares per poly [`VidScheme::Common`].
+    /// Extract the number of poly evals per share [`VidScheme::Common`].
     fn get_multiplicity(common: &Self::Common) -> usize;
 }
 
@@ -106,7 +102,7 @@ pub trait VidScheme {
 )]
 pub struct VidDisperse<V: VidScheme + ?Sized> {
     /// VID disperse shares to send to the storage nodes.
-    pub shares: Vec<Vec<V::Share>>,
+    pub shares: Vec<V::Share>,
     /// VID common data to send to all storage nodes.
     pub common: V::Common,
     /// VID payload commitment.

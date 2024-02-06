@@ -97,14 +97,13 @@ where
             let advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-            let flatten_shares: Vec<_> = shares.into_iter().flatten().collect();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
                 |b, _| {
                     // verify only the 0th share
                     b.iter(|| {
-                        advz.verify_share(&flatten_shares, &common, &commit)
+                        advz.verify_share(&shares[0], &common, &commit)
                             .unwrap()
                             .unwrap()
                     });
