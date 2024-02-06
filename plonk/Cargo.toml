@@ -20,7 +20,7 @@ displaydoc = { version = "0.2.3", default-features = false }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
-hashbrown = "0.13.2"
+hashbrown = "0.14.3"
 itertools = { workspace = true }
 jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }

@@ -321,7 +321,10 @@ where
     }
 
     fn check_stmt_consistency(stmt: &Statement<Self>) -> VidResult<()> {
-        check_range_nonempty_and_in_bounds(stmt.common.bytes_len, &stmt.range)?;
+        check_range_nonempty_and_in_bounds(
+            stmt.common.payload_byte_len.try_into().map_err(vid)?,
+            &stmt.range,
+        )?;
         if stmt.payload_subslice.len() != stmt.range.len() {
             return Err(VidError::Argument(format!(
                 "payload_subslice length {} inconsistent with range length {}",

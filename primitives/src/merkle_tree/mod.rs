@@ -28,6 +28,8 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
+use self::internal::MerkleTreeIter;
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
 /// Typically, F for element type, P for membership proof type and N for
@@ -196,12 +198,6 @@ pub trait MerkleTreeScheme: Sized {
     /// Tree arity
     const ARITY: usize;
 
-    /// Construct a new merkle tree with given height from a data slice
-    fn from_elems(
-        height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError>;
-
     /// Return the height of this merkle tree
     fn height(&self) -> usize;
     /// Return the maximum allowed number leaves
@@ -241,11 +237,15 @@ pub trait MerkleTreeScheme: Sized {
     //     pos: impl Iterator<Item = usize>,
     //     proof: impl Borrow<Self::BatchProof>,
     // ) -> Result<(), PrimitivesError>;
+
+    /// Return an iterator that iterates through all element that are not
+    /// forgetton
+    fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
-pub trait AppendableMerkleTreeScheme: MerkleTreeScheme {
+pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
@@ -276,28 +276,39 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Batch non membership proof
     type BatchNonMembershipProof;
 
-    /// Build a universal merkle tree from a key-value set.
-    /// * `height` - height of the merkle tree
-    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
-    ///   an array or a slice of (key, value) pairs
-    fn from_kv_set<BI, BE>(
-        height: usize,
-        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
-    ) -> Result<Self, PrimitivesError>
-    where
-        BI: Borrow<Self::Index>,
-        BE: Borrow<Self::Element>;
-
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Ok(elem) if the update is success, and `elem` is the
-    ///   original element at the given `pos`. Err() if the update fails.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+
+    /// Remove a leaf at the given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
+    fn remove(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+
+    /// Apply an update function `f` at a given position
+    /// * `pos` - zero-based index of the leaf in the tree
+    /// * `f` - the update function, `None` means the given leaf doesn't exist
+    ///   or should be removed.
+    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
+    ///   update is success or the given leaf is not in memory.
+    fn update_with<F>(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 
     /// Returns the leaf value given a position
     /// * `pos` - zero-based index of the leaf in the tree

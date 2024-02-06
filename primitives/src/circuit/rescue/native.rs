@@ -937,7 +937,7 @@ mod tests {
 
         // bad path: incorrect number of inputs
         let mut circuit = PlonkCircuit::new_turbo_plonk();
-        let input_vec = vec![
+        let input_vec = [
             F::from(11_u32),
             F::from(144_u32),
             F::from(87_u32),

@@ -6,10 +6,11 @@
 
 //! Implementation of a typical append only merkle tree
 
-use core::ops::AddAssign;
-
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{
+        build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter,
+        MerkleTreeIter,
+    },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
@@ -25,14 +26,58 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
-impl_merkle_tree_scheme!(MerkleTree, build_tree_internal);
+impl_merkle_tree_scheme!(MerkleTree);
 impl_forgetable_merkle_tree_scheme!(MerkleTree);
 
-impl<E, H, I, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, I, Arity, T>
+impl<E, H, I, Arity, T> MerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + AddAssign + ToTraversalPath<Arity>,
+    I: Index,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Initialize an empty Merkle tree.
+    pub fn new(height: usize) -> Self {
+        Self {
+            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            height,
+            num_leaves: 0,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<E, H, Arity, T> MerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Construct a new Merkle tree with given height from a data slice
+    /// * `height` - height of the Merkle tree, if `None`, it will calculate the
+    ///   minimum height that could hold all elements.
+    /// * `elems` - an iterator to all elements
+    /// * `returns` - A constructed Merkle tree, or `Err()` if errors
+    pub fn from_elems(
+        height: Option<usize>,
+        elems: impl IntoIterator<Item = impl Borrow<E>>,
+    ) -> Result<Self, PrimitivesError> {
+        let (root, height, num_leaves) = build_tree_internal::<E, H, Arity, T>(height, elems)?;
+        Ok(Self {
+            root,
+            height,
+            num_leaves,
+            _phantom: PhantomData,
+        })
+    }
+}
+
+impl<E, H, Arity, T> AppendableMerkleTreeScheme for MerkleTree<E, H, u64, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, u64, T>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -46,10 +91,11 @@ where
     ) -> Result<(), PrimitivesError> {
         let mut iter = elems.into_iter().peekable();
 
-        let traversal_path = I::from(self.num_leaves).to_traversal_path(self.height);
+        let traversal_path =
+            ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
         self.num_leaves += self.root.extend_internal::<H, Arity>(
             self.height,
-            &I::from(self.num_leaves),
+            &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
@@ -65,13 +111,12 @@ where
 
 // TODO(Chengyu): extract a merkle frontier
 
-// TODO(Chengyu): unit tests
 #[cfg(test)]
 mod mt_tests {
     use crate::{
         merkle_tree::{
             internal::{MerkleNode, MerkleProof},
-            prelude::RescueMerkleTree,
+            prelude::{RescueMerkleTree, RescueSparseMerkleTree},
             *,
         },
         rescue::RescueParameter,
@@ -88,8 +133,8 @@ mod mt_tests {
     }
 
     fn test_mt_builder_helper<F: RescueParameter>() {
-        assert!(RescueMerkleTree::<F>::from_elems(1, &[F::from(0u64); 3]).is_ok());
-        assert!(RescueMerkleTree::<F>::from_elems(1, &[F::from(0u64); 4]).is_err());
+        assert!(RescueMerkleTree::<F>::from_elems(None, [F::from(0u64); 3]).is_ok());
+        assert!(RescueMerkleTree::<F>::from_elems(Some(1), [F::from(0u64); 4]).is_err());
     }
 
     #[test]
@@ -100,7 +145,7 @@ mod mt_tests {
     }
 
     fn test_mt_insertion_helper<F: RescueParameter>() {
-        let mut mt = RescueMerkleTree::<F>::from_elems(2, &[]).unwrap();
+        let mut mt = RescueMerkleTree::<F>::new(2);
         assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
@@ -121,7 +166,8 @@ mod mt_tests {
     }
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
-        let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let mt =
+            RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let root = mt.commitment().digest();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, &F::from(3u64));
@@ -142,7 +188,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueMerkleTree::<F>::verify(&root, 0u64, &bad_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -157,7 +203,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueMerkleTree::<F>::verify(&root, 2u64, &forge_proof);
+        let result = RescueMerkleTree::<F>::verify(&root, 0, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
@@ -169,10 +215,11 @@ mod mt_tests {
     }
 
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
-        let mut mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let mut mt =
+            RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let root = mt.commitment().digest();
         let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
-        let lookup_elem = lookup_elem.clone();
+        let lookup_elem = *lookup_elem;
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_proof, proof);
@@ -200,7 +247,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = mt.remember(0u64, elem, &bad_proof);
+        let result = mt.remember(0, elem, &bad_proof);
         assert!(result.is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof.clone());
@@ -215,7 +262,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = mt.remember(2u64, elem, &forge_proof);
+        let result = mt.remember(2, elem, &forge_proof);
         assert!(result.is_err());
 
         assert!(mt.remember(0, elem, &proof).is_ok());
@@ -230,7 +277,8 @@ mod mt_tests {
     }
 
     fn test_mt_serde_helper<F: RescueParameter>() {
-        let mt = RescueMerkleTree::<F>::from_elems(2, &[F::from(3u64), F::from(1u64)]).unwrap();
+        let mt =
+            RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let proof = mt.lookup(0).expect_ok().unwrap().1;
         let node = &proof.proof[0];
 
@@ -245,6 +293,53 @@ mod mt_tests {
         assert_eq!(
             *node,
             bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_mt_iter() {
+        test_mt_iter_helper::<Fq254>();
+        test_mt_iter_helper::<Fq377>();
+        test_mt_iter_helper::<Fq381>();
+    }
+
+    fn test_mt_iter_helper<F: RescueParameter>() {
+        let mut mt = RescueMerkleTree::<F>::from_elems(
+            Some(2),
+            [F::from(0u64), F::from(1u64), F::from(2u64)],
+        )
+        .unwrap();
+        assert!(mt.iter().all(|(index, elem)| { elem == &F::from(*index) }));
+
+        // Forget index 1
+        assert!(mt.forget(1).expect_ok().is_ok());
+        // Number of leaves shall not change
+        assert_eq!(mt.num_leaves(), 3);
+        // Leaves that are forgotten doesn't appear here
+        let leaves = mt.into_iter().collect::<Vec<_>>();
+        assert_eq!(leaves, [(0, F::from(0u64)), (2, F::from(2u64))]);
+
+        let kv_set = [
+            (BigUint::from(64u64), F::from(32u64)),
+            (BigUint::from(123u64), F::from(234u64)),
+        ];
+        let mut mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(10, &kv_set).unwrap();
+        let kv_refs = kv_set
+            .iter()
+            .map(|tuple| (&tuple.0, &tuple.1))
+            .collect::<Vec<_>>();
+        assert_eq!(mt.iter().collect::<Vec<_>>(), kv_refs);
+        // insert a new key-value pair
+        mt.update(BigUint::from(32u64), F::from(16u64)).unwrap();
+        // forget a leave
+        mt.forget(BigUint::from(123u64)).expect_ok().unwrap();
+        // Check that new insertion and forgeting are reflected
+        assert_eq!(
+            mt.into_iter().collect::<Vec<_>>(),
+            [
+                (BigUint::from(32u64), F::from(16u64)),
+                (BigUint::from(64u64), F::from(32u64)),
+            ]
         );
     }
 }

@@ -21,8 +21,10 @@ use self::{
 };
 
 use super::{
-    append_only::MerkleTree, internal::MerkleProof, AppendableMerkleTreeScheme, DigestAlgorithm,
-    Element, Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    append_only::MerkleTree,
+    internal::{MerkleProof, MerkleTreeIter},
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
+    MerkleTreeScheme, NodeValue,
 };
 
 mod hash;
@@ -142,6 +144,40 @@ where
     inner: InnerTree<E, H, T, N, Arity>,
 }
 
+impl<E, H, Arity, N, T> NMT<E, H, Arity, N, T>
+where
+    H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
+    E: Element + Namespaced<Namespace = N>,
+    T: NodeValue,
+    N: Namespace,
+    Arity: Unsigned,
+{
+    /// Initializze an empty NMT
+    pub fn new(height: usize) -> Self {
+        let namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
+        let inner = InnerTree::<E, H, T, N, Arity>::new(height);
+        NMT {
+            inner,
+            namespace_ranges,
+        }
+    }
+
+    /// Construct an NMT from elements.
+    pub fn from_elems(
+        height: Option<usize>,
+        elems: impl IntoIterator<Item = impl Borrow<E>>,
+    ) -> Result<Self, PrimitivesError> {
+        let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
+        let leaves =
+            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
+        let inner = InnerTree::<E, H, T, N, Arity>::from_elems(height, leaves)?;
+        Ok(NMT {
+            inner,
+            namespace_ranges,
+        })
+    }
+}
+
 impl<E, H, Arity, N, T> MerkleTreeScheme for NMT<E, H, Arity, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
@@ -158,20 +194,6 @@ where
         <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::BatchMembershipProof;
     const ARITY: usize = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::ARITY;
     type Commitment = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::Commitment;
-
-    fn from_elems(
-        height: usize,
-        elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<Self, PrimitivesError> {
-        let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
-        let leaves =
-            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
-        let inner = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::from_elems(height, leaves)?;
-        Ok(NMT {
-            inner,
-            namespace_ranges,
-        })
-    }
 
     fn height(&self) -> usize {
         self.inner.height()
@@ -202,6 +224,10 @@ where
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, PrimitivesError> {
         <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::verify(root, pos, proof)
+    }
+
+    fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
+        self.inner.iter()
     }
 }
 
@@ -436,14 +462,14 @@ mod nmt_tests {
 
     fn build_tree(leaves: &[Leaf], build_type: BuildType) -> TestNMT {
         match build_type {
-            BuildType::FromElems => TestNMT::from_elems(3, leaves).unwrap(),
+            BuildType::FromElems => TestNMT::from_elems(Some(3), leaves).unwrap(),
             BuildType::Extend => {
-                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                let mut nmt = TestNMT::new(3);
                 nmt.extend(leaves).unwrap();
                 nmt
             },
             BuildType::Push => {
-                let mut nmt = TestNMT::from_elems(3, &[]).unwrap();
+                let mut nmt = TestNMT::new(3);
                 for leaf in leaves {
                     nmt.push(leaf).unwrap();
                 }

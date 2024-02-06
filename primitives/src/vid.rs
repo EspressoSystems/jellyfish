@@ -74,6 +74,9 @@ pub trait VidScheme {
 
     /// Extract the payload byte length data from a [`VidScheme::Common`].
     fn get_payload_byte_len(common: &Self::Common) -> usize;
+
+    /// Extract the number of storage nodes from a [`VidScheme::Common`].
+    fn get_num_storage_nodes(common: &Self::Common) -> usize;
 }
 
 /// Convenience struct to aggregate disperse data.

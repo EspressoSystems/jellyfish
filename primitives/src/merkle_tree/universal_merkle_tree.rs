@@ -6,7 +6,7 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment},
+    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
@@ -24,14 +24,52 @@ use serde::{Deserialize, Serialize};
 use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
-impl_merkle_tree_scheme!(UniversalMerkleTree, build_tree_internal);
+impl_merkle_tree_scheme!(UniversalMerkleTree);
 impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
+impl<E, H, I, Arity, T> UniversalMerkleTree<E, H, I, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, I, T>,
+    I: Index + ToTraversalPath<Arity>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    /// Initialize an empty Merkle tree.
+    pub fn new(height: usize) -> Self {
+        Self {
+            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            height,
+            num_leaves: 0,
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Build a universal merkle tree from a key-value set.
+    /// * `height` - height of the merkle tree
+    /// * `data` - an iterator of key-value pairs. Could be a hashmap or simply
+    ///   an array or a slice of (key, value) pairs
+    pub fn from_kv_set<BI, BE>(
+        height: usize,
+        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
+    ) -> Result<Self, PrimitivesError>
+    where
+        BI: Borrow<I>,
+        BE: Borrow<E>,
+    {
+        let mut mt = Self::new(height);
+        for tuple in data.into_iter() {
+            let (key, value) = tuple.borrow();
+            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
+        }
+        Ok(mt)
+    }
+}
 impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -43,32 +81,31 @@ where
         pos: impl Borrow<I>,
         elem: impl Borrow<E>,
     ) -> Result<LookupResult<E, (), ()>, PrimitivesError> {
-        let pos = pos.borrow();
-        let elem = elem.borrow();
-        let traversal_path = pos.to_traversal_path(self.height);
-        let ret = self
-            .root
-            .update_internal::<H, Arity>(self.height, pos, &traversal_path, elem)?;
-        if let LookupResult::NotFound(_) = ret {
-            self.num_leaves += 1;
-        }
-        Ok(ret)
+        self.update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
-    fn from_kv_set<BI, BE>(
-        height: usize,
-        data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
-    ) -> Result<Self, PrimitivesError>
+    fn remove(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| None)
+    }
+
+    fn update_with<F>(
+        &mut self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<LookupResult<E, (), ()>, PrimitivesError>
     where
-        BI: Borrow<Self::Index>,
-        BE: Borrow<Self::Element>,
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
     {
-        let mut mt = Self::from_elems(height, [] as [&Self::Element; 0])?;
-        for tuple in data.into_iter() {
-            let (key, value) = tuple.borrow();
-            UniversalMerkleTreeScheme::update(&mut mt, key.borrow(), value.borrow())?;
-        }
-        Ok(mt)
+        let pos = pos.borrow();
+        let traversal_path = pos.to_traversal_path(self.height);
+        let (delta, result) =
+            self.root
+                .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
+        self.num_leaves = (delta + self.num_leaves as i64) as u64;
+        Ok(result)
     }
 
     fn non_membership_verify(
@@ -114,7 +151,7 @@ impl<E, H, I, Arity, T> ForgetableUniversalMerkleTreeScheme
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + From<u64> + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<Arity>,
     Arity: Unsigned,
     T: NodeValue,
 {
@@ -208,7 +245,7 @@ mod mt_tests {
     fn test_universal_mt_builder_helper<F: RescueParameter>() {
         let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(
             1,
-            &[(BigUint::from(1u64), F::from(1u64))],
+            [(BigUint::from(1u64), F::from(1u64))],
         )
         .unwrap();
         assert_eq!(mt.num_leaves(), 1);
@@ -264,12 +301,11 @@ mod mt_tests {
 
     fn test_update_and_lookup_helper<I, F>()
     where
-        I: Index + ToTraversalPath<U3> + From<u64>,
+        I: Index + ToTraversalPath<U3>,
         F: RescueParameter + ToTraversalPath<U3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
-        let mut mt =
-            RescueSparseMerkleTree::<F, F>::from_kv_set(10, HashMap::<F, F>::new()).unwrap();
+        let mut mt = RescueSparseMerkleTree::<F, F>::new(10);
         for i in 0..2 {
             mt.update(F::from(i as u64), F::from(i as u64)).unwrap();
         }
@@ -285,6 +321,31 @@ mod mt_tests {
             .unwrap()
             .is_ok());
         }
+        for i in 0..10 {
+            mt.update_with(F::from(i as u64), |elem| match elem {
+                Some(elem) => Some(*elem),
+                None => Some(F::from(i as u64)),
+            })
+            .unwrap();
+        }
+        assert_eq!(mt.num_leaves(), 10);
+        // test lookup at index 7
+        let (val, proof) = mt.universal_lookup(F::from(7u64)).expect_ok().unwrap();
+        assert_eq!(val, &F::from(7u64));
+        assert_eq!(proof.elem().unwrap(), val);
+        assert!(
+            RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), F::from(7u64), &proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        // Remove index 8
+        mt.update_with(F::from(8u64), |_| None).unwrap();
+        assert!(mt
+            .universal_lookup(F::from(8u64))
+            .expect_not_found()
+            .is_ok());
+        assert_eq!(mt.num_leaves(), 9);
     }
 
     #[test]
@@ -310,7 +371,7 @@ mod mt_tests {
             .universal_lookup(BigUint::from(0u64))
             .expect_ok()
             .unwrap();
-        let lookup_elem = lookup_elem.clone();
+        let lookup_elem = *lookup_elem;
         let (elem, mem_proof) = mt.universal_forget(0u64.into()).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_mem_proof, mem_proof);
