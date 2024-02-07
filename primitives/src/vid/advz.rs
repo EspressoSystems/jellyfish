@@ -37,6 +37,7 @@ use ark_std::{
     Zero,
 };
 use bytes_to_field::{bytes_to_field, field_to_bytes};
+use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
 use itertools::Itertools;
@@ -57,6 +58,7 @@ where
 {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
+    multiplicity: usize,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
     multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
@@ -98,8 +100,9 @@ where
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
     pub fn new(
-        payload_chunk_size: usize,
-        num_storage_nodes: usize,
+        payload_chunk_size: usize, // k
+        num_storage_nodes: usize,  // n (code rate: r = k/n)
+        multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         // TODO support any degree, give multiple shares to nodes if needed
@@ -110,34 +113,52 @@ where
                 payload_chunk_size, num_storage_nodes
             )));
         }
-        // Later we will convert num_storage_nodes to u32.
+
+        if !(1..=16).contains(&multiplicity) || !multiplicity.is_power_of_two() {
+            return Err(VidError::Argument(format!(
+                "multiplicity {} not allowed",
+                multiplicity
+            )));
+        }
+
+        // Later we will convert to u32.
         // Better to know now whether that conversion will succeed.
-        if <usize as TryInto<u32>>::try_into(num_storage_nodes).is_err() {
+        if u32::try_from(num_storage_nodes).is_err() {
             return Err(VidError::Argument(format!(
                 "num_storage nodes {} should be convertible to u32",
                 num_storage_nodes
             )));
         }
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, payload_chunk_size - 1).map_err(vid)?;
-        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
-            payload_chunk_size - 1,
-            num_storage_nodes,
-        )
-        .map_err(vid)?;
-        let eval_domain = Radix2EvaluationDomain::new(payload_chunk_size).ok_or_else(|| {
+        if u32::try_from(multiplicity).is_err() {
+            return Err(VidError::Argument(format!(
+                "multiplicity {} should be convertible to u32",
+                multiplicity
+            )));
+        }
+
+        // erasure code params
+        let chunk_size = multiplicity * payload_chunk_size; // message length m
+        let code_word_size = multiplicity * num_storage_nodes; // code word length n
+        let poly_degree = chunk_size - 1;
+
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree).map_err(vid)?;
+        let multi_open_domain =
+            UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(poly_degree, code_word_size)
+                .map_err(vid)?;
+        let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
                 "fail to construct doman of size {}",
-                payload_chunk_size
+                chunk_size
             ))
         })?;
 
         // TODO TEMPORARY: enforce power-of-2 chunk size
         // Remove this restriction after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        if payload_chunk_size != eval_domain.size() {
+        if chunk_size != eval_domain.size() {
             return Err(VidError::Argument(format!(
                 "payload_chunk_size {} currently unsupported, round to {} instead",
-                payload_chunk_size,
+                chunk_size,
                 eval_domain.size()
             )));
         }
@@ -145,6 +166,7 @@ where
         Ok(Self {
             payload_chunk_size,
             num_storage_nodes,
+            multiplicity,
             ck,
             vk,
             multi_open_domain,
@@ -175,7 +197,9 @@ where
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
-    aggregate_proof: KzgProof<E>,
+    // aggretate_proofs.len() equals self.multiplicity
+    // TODO further aggregate into a single KZG proof.
+    aggregate_proofs: Vec<KzgProof<E>>,
 
     evals_proof: KzgEvalsMerkleTreeProof<E, H>,
 }
@@ -202,6 +226,7 @@ where
 
     payload_byte_len: u32,
     num_storage_nodes: u32,
+    multiplicity: u32,
 }
 
 impl<E, H> VidScheme for Advz<E, H>
@@ -220,13 +245,16 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
+        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let code_word_size = self.multiplicity * self.num_storage_nodes;
+
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
-            .chunks(self.payload_chunk_size)
+            .chunks(chunk_size)
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
+        Self::derive_commit(&poly_commits, payload.len(), code_word_size)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -239,13 +267,15 @@ where
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
         ));
+        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
         let polys: Vec<_> = elems_iter
-            .chunks(self.payload_chunk_size)
+            .chunks(chunk_size)
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
@@ -253,18 +283,17 @@ where
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| format!(
-            "compute all storage node evals for {} polynomials of degree {}",
+            "compute all storage node evals for {} polynomials with {} coefficients",
             polys.len(),
-            self.payload_chunk_size
+            chunk_size
         ));
         let all_storage_node_evals = {
-            let mut all_storage_node_evals =
-                vec![Vec::with_capacity(polys.len()); self.num_storage_nodes];
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
 
             for poly in polys.iter() {
                 let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
-                    self.num_storage_nodes,
+                    code_word_size,
                     &self.multi_open_domain,
                 )
                 .map_err(vid)?;
@@ -277,7 +306,7 @@ where
             }
 
             // sanity checks
-            assert_eq!(all_storage_node_evals.len(), self.num_storage_nodes);
+            assert_eq!(all_storage_node_evals.len(), code_word_size);
             for storage_node_evals in all_storage_node_evals.iter() {
                 assert_eq!(storage_node_evals.len(), polys.len());
             }
@@ -300,6 +329,7 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
+            multiplicity: self.multiplicity.try_into().map_err(vid)?,
         };
         end_timer!(common_timer);
 
@@ -323,30 +353,34 @@ where
         let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
-            self.num_storage_nodes,
+            code_word_size,
             &self.multi_open_domain,
         )
         .map_err(vid)?;
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(index, (evals, aggregate_proof))| {
-                Ok(Share {
+
+        let mut shares = Vec::with_capacity(code_word_size);
+        let mut evals = Vec::new();
+        let mut proofs = Vec::new();
+        for index in 0..code_word_size {
+            evals.extend(all_storage_node_evals[index].iter());
+            proofs.push(aggregate_proofs[index].clone());
+            if (index + 1) % self.multiplicity == 0 {
+                shares.push(Share {
                     index,
-                    evals,
-                    aggregate_proof,
-                    evals_proof: all_evals_commit
+                    evals: mem::take(&mut evals),
+                    aggregate_proofs: mem::take(&mut proofs),
+                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
                         .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
                         .expect_ok()
                         .map_err(vid)?
                         .1,
-                })
-            })
-            .collect::<Result<_, VidError>>()?;
+                });
+            }
+        }
+
         end_timer!(assemblage_timer);
 
         end_timer!(disperse_time);
@@ -364,13 +398,15 @@ where
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
-        if share.evals.len() != common.poly_commits.len() {
+        let multiplicity: usize = common.multiplicity.try_into().map_err(vid)?;
+        if share.evals.len() / multiplicity != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "(share eval, common poly commit) lengths differ ({},{})",
-                share.evals.len(),
+                share.evals.len() / multiplicity,
                 common.poly_commits.len()
             )));
         }
+
         let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
         if common.num_storage_nodes != num_storage_nodes {
             return Err(VidError::Argument(format!(
@@ -378,12 +414,17 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
+
+        let polys_len = common.poly_commits.len();
+
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
+
         Self::is_consistent(commit, common)?;
 
         // verify eval proof
+        // TODO: check all indices that represents the shares
         if KzgEvalsMerkleTree::<E, H>::verify(
             common.all_evals_digest,
             &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
@@ -412,20 +453,28 @@ where
             )
             .into(),
         );
-        let aggregate_eval =
-            polynomial_eval(share.evals.iter().map(FieldMultiplier), pseudorandom_scalar);
 
         // verify aggregate proof
-        Ok(UnivariateKzgPCS::verify(
-            &self.vk,
-            &aggregate_poly_commit,
-            &self.multi_open_domain.element(share.index),
-            &aggregate_eval,
-            &share.aggregate_proof,
-        )
-        .map_err(vid)?
-        .then_some(())
-        .ok_or(()))
+        (0..self.multiplicity)
+            .map(|i| {
+                let aggregate_eval = polynomial_eval(
+                    share.evals[i * polys_len..(i + 1) * polys_len]
+                        .iter()
+                        .map(FieldMultiplier),
+                    pseudorandom_scalar,
+                );
+                Ok(UnivariateKzgPCS::verify(
+                    &self.vk,
+                    &aggregate_poly_commit,
+                    &self.multi_open_domain.element(share.index + i),
+                    &aggregate_eval,
+                    &share.aggregate_proofs[i],
+                )
+                .map_err(vid)?
+                .then_some(())
+                .ok_or(()))
+            })
+            .collect()
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
@@ -445,7 +494,7 @@ where
         }
 
         // all shares must have equal evals len
-        let num_polys = shares
+        let num_evals = shares
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
             .evals
@@ -453,22 +502,39 @@ where
         if let Some((index, share)) = shares
             .iter()
             .enumerate()
-            .find(|(_, s)| s.evals.len() != num_polys)
+            .find(|(_, s)| s.evals.len() != num_evals)
         {
             return Err(VidError::Argument(format!(
                 "shares do not have equal evals lengths: share {} len {}, share {} len {}",
                 0,
-                num_polys,
+                num_evals,
                 index,
                 share.evals.len()
             )));
         }
+        if num_evals != self.multiplicity * common.poly_commits.len() {
+            return Err(VidError::Argument(format!(
+                "num_evals should be (multiplicity * poly_commits): {} but is instead: {}",
+                self.multiplicity * common.poly_commits.len(),
+                num_evals,
+            )));
+        }
+        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let num_polys = num_evals / self.multiplicity;
 
-        let elems_capacity = num_polys * self.payload_chunk_size;
+        let elems_capacity = num_evals * chunk_size;
         let mut elems = Vec::with_capacity(elems_capacity);
-        for i in 0..num_polys {
+
+        let mut evals = Vec::with_capacity(num_evals);
+        for p in 0..num_polys {
+            for share in shares {
+                // extract all evaluations for polynomial p from the share
+                for m in 0..self.multiplicity {
+                    evals.push((share.index + m, share.evals[(m * num_polys) + p]))
+                }
+            }
             let mut coeffs = reed_solomon_erasure_decode_rou(
-                shares.iter().map(|s| (s.index, s.evals[i])),
+                mem::take(&mut evals),
                 self.payload_chunk_size,
                 &self.multi_open_domain,
             )
@@ -513,6 +579,13 @@ where
     fn get_num_storage_nodes(common: &Self::Common) -> usize {
         common
             .num_storage_nodes
+            .try_into()
+            .expect("u32 should be convertible to usize")
+    }
+
+    fn get_multiplicity(common: &Self::Common) -> usize {
+        common
+            .multiplicity
             .try_into()
             .expect("u32 should be convertible to usize")
     }
@@ -682,29 +755,29 @@ mod tests {
     };
     use sha2::Sha256;
 
-    // #[test]
-    #[allow(dead_code)]
+    #[ignore]
+    #[test]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
         let _ = advz.disperse(payload_random);
     }
 
-    // #[test]
-    #[allow(dead_code)]
+    #[ignore]
+    #[test]
     fn commit_only_timer() {
         // run with 'print-trace' feature to see timer output
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
         let payload_random = init_random_payload(1 << 20, &mut rng);
 
         let _ = advz.commit_only(payload_random);
@@ -866,10 +939,15 @@ mod tests {
 
             // 1 eval missing from all shares
             shares_missing_evals.last_mut().unwrap().evals.pop();
-            let bytes_recovered = advz
-                .recover_payload(&shares_missing_evals, &common)
-                .expect("recover_payload should succeed when shares have equal eval lengths");
-            assert_ne!(bytes_recovered, bytes_random);
+            assert_arg_err(
+                advz.recover_payload(&shares_missing_evals, &common),
+                format!(
+                    "shares contain {} but expected {}",
+                    shares_missing_evals[0].evals.len(),
+                    &common.poly_commits.len()
+                )
+                .as_str(),
+            );
         }
 
         // corrupted index, in bounds
@@ -889,7 +967,7 @@ mod tests {
 
         // corrupted index, out of bounds
         {
-            let mut shares_bad_indices = shares;
+            let mut shares_bad_indices = shares.clone();
             for i in 0..shares_bad_indices.len() {
                 shares_bad_indices[i].index += advz.multi_open_domain.size();
                 advz.recover_payload(&shares_bad_indices, &common)
@@ -907,7 +985,7 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz = Advz::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        let advz = Advz::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }

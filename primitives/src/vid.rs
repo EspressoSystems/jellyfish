@@ -77,6 +77,9 @@ pub trait VidScheme {
 
     /// Extract the number of storage nodes from a [`VidScheme::Common`].
     fn get_num_storage_nodes(common: &Self::Common) -> usize;
+
+    /// Extract the number of poly evals per share [`VidScheme::Common`].
+    fn get_multiplicity(common: &Self::Common) -> usize;
 }
 
 /// Convenience struct to aggregate disperse data.
