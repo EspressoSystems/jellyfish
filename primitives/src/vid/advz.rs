@@ -934,6 +934,18 @@ mod tests {
                     format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
                 );
             }
+
+            // 1 eval missing from all shares
+            shares_missing_evals.last_mut().unwrap().evals.pop();
+            assert_arg_err(
+                advz.recover_payload(&shares_missing_evals, &common),
+                format!(
+                    "shares contain {} but expected {}",
+                    shares_missing_evals[0].evals.len(),
+                    &common.poly_commits.len()
+                )
+                .as_str(),
+            );
         }
 
         // corrupted index, in bounds
