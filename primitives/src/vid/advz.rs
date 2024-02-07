@@ -37,6 +37,7 @@ use ark_std::{
     Zero,
 };
 use bytes_to_field::{bytes_to_field, field_to_bytes};
+use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
 use itertools::Itertools;
@@ -122,13 +123,13 @@ where
 
         // Later we will convert to u32.
         // Better to know now whether that conversion will succeed.
-        if <usize as TryInto<u32>>::try_into(num_storage_nodes).is_err() {
+        if u32::try_from(num_storage_nodes).is_err() {
             return Err(VidError::Argument(format!(
                 "num_storage nodes {} should be convertible to u32",
                 num_storage_nodes
             )));
         }
-        if <usize as TryInto<u32>>::try_into(multiplicity).is_err() {
+        if u32::try_from(multiplicity).is_err() {
             return Err(VidError::Argument(format!(
                 "multiplicity {} should be convertible to u32",
                 multiplicity
@@ -367,16 +368,14 @@ where
             if (index + 1) % self.multiplicity == 0 {
                 shares.push(Share {
                     index,
-                    evals: evals.clone(),
-                    aggregate_proofs: proofs.clone(),
+                    evals: mem::take(&mut evals),
+                    aggregate_proofs: mem::take(&mut proofs),
                     evals_proof: all_evals_commit // TODO: check MT lookup for each index
                         .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
                         .expect_ok()
                         .map_err(vid)?
                         .1,
                 });
-                evals = Vec::new();
-                proofs = Vec::new()
             }
         }
 
@@ -511,10 +510,11 @@ where
                 share.evals.len()
             )));
         }
-        if num_evals % self.multiplicity > 0 {
+        if num_evals != self.multiplicity * common.poly_commits.len() {
             return Err(VidError::Argument(format!(
-                "multiplicity does not divide num_evals: multiplicity {}, num_evals {}",
-                self.multiplicity, num_evals,
+                "num_evals should be (multiplicity * poly_commits): {} but is instead: {}",
+                self.multiplicity * common.poly_commits.len(),
+                num_evals,
             )));
         }
         let chunk_size = self.multiplicity * self.payload_chunk_size;
@@ -523,10 +523,8 @@ where
         let elems_capacity = num_evals * chunk_size;
         let mut elems = Vec::with_capacity(elems_capacity);
 
+        let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
-            // each share is guaranteed to contain the same number of evals
-            // but we don't know to which polynomial each eval belongs
-            let mut evals = Vec::new();
             for share in shares {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..self.multiplicity {
@@ -534,7 +532,7 @@ where
                 }
             }
             let mut coeffs = reed_solomon_erasure_decode_rou(
-                evals.clone(),
+                mem::take(&mut evals),
                 self.payload_chunk_size,
                 &self.multi_open_domain,
             )
@@ -936,14 +934,6 @@ mod tests {
                     format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
                 );
             }
-
-            // 1 eval missing from all shares
-            shares_missing_evals.last_mut().unwrap().evals.pop();
-            let bytes_recovered = advz.recover_payload(&shares_missing_evals, &common).expect(
-                "recover_payload should succeed when shares have
-            equal eval lengths",
-            );
-            assert_ne!(bytes_recovered, bytes_random);
         }
 
         // corrupted index, in bounds
