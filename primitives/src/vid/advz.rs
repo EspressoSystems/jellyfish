@@ -197,6 +197,8 @@ where
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
+    // aggretate_proofs.len() equals self.multiplicity
+    // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
     evals_proof: KzgEvalsMerkleTreeProof<E, H>,
