@@ -973,7 +973,7 @@
         <span class="kw">let </span>poly_bytes_len = payload_chunk_size * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(payload_elems_len, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>advz = Advz::&lt;E, H&gt;::new(payload_chunk_size, num_storage_nodes, srs).unwrap();
+        <span class="kw">let </span>advz = Advz::&lt;E, H&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
 
         <span class="comment">// TEST: different payload byte lengths
         </span><span class="kw">let </span>payload_byte_len_noise_cases = <span class="macro">vec!</span>[<span class="number">0</span>, poly_bytes_len / <span class="number">2</span>, poly_bytes_len - <span class="number">1</span>];

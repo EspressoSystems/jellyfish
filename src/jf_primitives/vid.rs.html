@@ -140,6 +140,9 @@
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -219,6 +222,9 @@
 
     <span class="doccomment">/// Extract the number of storage nodes from a [`VidScheme::Common`].
     </span><span class="kw">fn </span>get_num_storage_nodes(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize;
+
+    <span class="doccomment">/// Extract the number of poly evals per share [`VidScheme::Common`].
+    </span><span class="kw">fn </span>get_multiplicity(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize;
 }
 
 <span class="doccomment">/// Convenience struct to aggregate disperse data.
