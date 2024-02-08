@@ -981,6 +981,30 @@ mod tests {
         }
     }
 
+    #[test]
+    fn disperse_and_recover_with_multiplicity() {
+        let multiplicity = 4;
+        let bytes_per_element = bytes_to_field::elem_byte_capacity::<KzgEval<Bls12_381>>();
+        let payload_size = bytes_per_element * 1 << 7; // 128 field elements
+        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
+        let advz = Advz::new(payload_chunk_size, num_storage_nodes, multiplicity, srs).unwrap();
+        let bytes_random = init_random_payload(payload_size, &mut rng);
+
+        let disperse: VidDisperse<Advz<Bls12_381, Sha256>> = advz.disperse(&bytes_random).unwrap();
+        let (shares_multiplicity, common) = (disperse.shares, disperse.common);
+        let bytes_per_element = bytes_to_field::elem_byte_capacity::<KzgEval<Bls12_381>>();
+        let bytes_per_poly = payload_chunk_size * multiplicity * bytes_per_element;
+
+        assert_eq!(common.poly_commits.len(), payload_size / bytes_per_poly);
+
+        let bytes_recovered = advz
+            .recover_payload(&shares_multiplicity, &common)
+            .expect("recover_payload should succeed with multiplicity");
+        assert_eq!(bytes_recovered, bytes_random);
+    }
+
     /// Routine initialization tasks.
     ///
     /// Returns the following tuple:
