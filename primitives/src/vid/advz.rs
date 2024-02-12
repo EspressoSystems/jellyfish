@@ -246,7 +246,6 @@ where
     {
         let payload = payload.as_ref();
         let chunk_size = self.multiplicity * self.payload_chunk_size;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
             .chunks(chunk_size)
@@ -254,7 +253,7 @@ where
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len(), code_word_size)
+        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
@@ -360,14 +359,14 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-
-        let mut shares = Vec::with_capacity(code_word_size);
-        let mut evals = Vec::new();
-        let mut proofs = Vec::new();
-        for index in 0..code_word_size {
-            evals.extend(all_storage_node_evals[index].iter());
-            proofs.push(aggregate_proofs[index].clone());
-            if (index + 1) % self.multiplicity == 0 {
+        let mut shares = Vec::with_capacity(self.num_storage_nodes);
+        let mut evals = Vec::with_capacity(polys.len() * self.multiplicity);
+        let mut proofs = Vec::with_capacity(self.multiplicity);
+        let mut index = 0;
+        for i in 0..code_word_size {
+            evals.extend(all_storage_node_evals[i].iter());
+            proofs.push(aggregate_proofs[i].clone());
+            if (i + 1) % self.multiplicity == 0 {
                 shares.push(Share {
                     index,
                     evals: mem::take(&mut evals),
@@ -378,6 +377,7 @@ where
                         .map_err(vid)?
                         .1,
                 });
+                index += 1;
             }
         }
 
@@ -466,7 +466,9 @@ where
                 Ok(UnivariateKzgPCS::verify(
                     &self.vk,
                     &aggregate_poly_commit,
-                    &self.multi_open_domain.element(share.index + i),
+                    &self
+                        .multi_open_domain
+                        .element((share.index * multiplicity) + i),
                     &aggregate_eval,
                     &share.aggregate_proofs[i],
                 )
@@ -522,7 +524,7 @@ where
         let chunk_size = self.multiplicity * self.payload_chunk_size;
         let num_polys = num_evals / self.multiplicity;
 
-        let elems_capacity = num_evals * chunk_size;
+        let elems_capacity = num_polys * chunk_size;
         let mut elems = Vec::with_capacity(elems_capacity);
 
         let mut evals = Vec::with_capacity(num_evals);
@@ -530,12 +532,15 @@ where
             for share in shares {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..self.multiplicity {
-                    evals.push((share.index + m, share.evals[(m * num_polys) + p]))
+                    evals.push((
+                        (share.index * self.multiplicity) + m,
+                        share.evals[(m * num_polys) + p],
+                    ))
                 }
             }
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(&mut evals),
-                self.payload_chunk_size,
+                chunk_size,
                 &self.multi_open_domain,
             )
             .map_err(vid)?;
@@ -636,10 +641,10 @@ where
         self.eval_domain.ifft_in_place(&mut coeffs_vec);
 
         // sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.payload_chunk_size then we were not given the correct
-        // number of coeffs. In that case coeffs.len() could be anything, so
-        // there's nothing to sanity check.
-        if pre_fft_len == self.payload_chunk_size {
+        // If pre_fft_len != self.payload_chunk_size * self.multiplicity
+        // then we were not given the correct number of coeffs. In that case
+        // coeffs.len() could be anything, so there's nothing to sanity check.
+        if pre_fft_len == self.payload_chunk_size * self.multiplicity {
             assert_eq!(coeffs_vec.len(), pre_fft_len);
         }
 

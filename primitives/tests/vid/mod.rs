@@ -1,10 +1,10 @@
-use jf_primitives::vid::{VidError, VidResult, VidScheme};
-
 use ark_std::{
     println,
     rand::{seq::SliceRandom, CryptoRng, RngCore},
     vec,
 };
+use core::iter::zip;
+use jf_primitives::vid::{VidError, VidResult, VidScheme};
 
 /// Correctness test generic over anything that impls [`VidScheme`]
 ///
@@ -12,21 +12,24 @@ use ark_std::{
 /// because it's in an integration test.
 /// <https://doc.rust-lang.org/book/ch11-03-test-organization.html#submodules-in-integration-tests>
 pub fn round_trip<V, R>(
-    vid_factory: impl Fn(usize, usize) -> V,
+    vid_factory: impl Fn(usize, usize, usize) -> V,
     vid_sizes: &[(usize, usize)],
+    multiplicities: &[usize],
     payload_byte_lens: &[usize],
     rng: &mut R,
 ) where
     V: VidScheme,
     R: RngCore + CryptoRng,
 {
-    for &(payload_chunk_size, num_storage_nodes) in vid_sizes {
-        let vid = vid_factory(payload_chunk_size, num_storage_nodes);
+    for (&mult, &(payload_chunk_size, num_storage_nodes)) in
+        zip(multiplicities.iter().cycle(), vid_sizes)
+    {
+        let vid = vid_factory(payload_chunk_size, num_storage_nodes, mult);
 
         for &len in payload_byte_lens {
             println!(
-                "m: {} n: {} byte_len: {}",
-                payload_chunk_size, num_storage_nodes, len
+                "m: {} n: {} mult: {} byte_len: {}",
+                payload_chunk_size, num_storage_nodes, mult, len
             );
 
             let bytes_random = {
@@ -40,6 +43,7 @@ pub fn round_trip<V, R>(
             assert_eq!(shares.len(), num_storage_nodes);
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
             assert_eq!(len, V::get_payload_byte_len(&common));
+            assert_eq!(mult, V::get_multiplicity(&common));
             assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));
 
             for share in shares.iter() {
