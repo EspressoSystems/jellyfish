@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/glv.rs`."><title>glv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/glv.rs`."><title>glv.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -926,7 +927,7 @@
 
 <span class="doccomment">/// Decompose a scalar s into k1, k2, s.t.
 ///     scalar = k1 - k2_sign * k2 * lambda
-/// via a Babai&#39;s nearest plane algorithm
+/// via a Babai's nearest plane algorithm
 /// Guarantees that k1 and k2 are less than 128 bits.
 </span><span class="kw">fn </span>scalar_decomposition&lt;F: PrimeField&gt;(scalar: <span class="kw-2">&amp;</span>F) -&gt; (F, F, bool) {
     <span class="kw">let </span>scalar_z: BigUint = (<span class="kw-2">*</span>scalar).into();
@@ -1137,8 +1138,8 @@
         </span><span class="kw">let </span>k1_bits = get_bits(<span class="kw-2">&amp;</span>k1.into_bigint().to_bits_le());
         <span class="kw">let </span>k2_bits = get_bits(<span class="kw-2">&amp;</span>k1.into_bigint().to_bits_le());
 
-        <span class="macro">assert!</span>(k1_bits &lt; <span class="number">128</span>, <span class="string">&quot;k1 bits {}&quot;</span>, k1_bits);
-        <span class="macro">assert!</span>(k2_bits &lt; <span class="number">128</span>, <span class="string">&quot;k2 bits {}&quot;</span>, k1_bits);
+        <span class="macro">assert!</span>(k1_bits &lt; <span class="number">128</span>, <span class="string">"k1 bits {}"</span>, k1_bits);
+        <span class="macro">assert!</span>(k2_bits &lt; <span class="number">128</span>, <span class="string">"k2 bits {}"</span>, k1_bits);
 
         <span class="comment">//  (c) tmp1 = 0
         //  (d) tmp2 &lt; 2^128
@@ -1147,7 +1148,7 @@
         <span class="kw">let </span>tmp2_fq = F::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>tmp2_int.to_bytes_le().<span class="number">1</span>);
         <span class="kw">let </span>tmp2_bits = get_bits(<span class="kw-2">&amp;</span>tmp2_fq.into_bigint().to_bits_le());
         <span class="macro">assert!</span>(tmp1_int == BigInt::from(<span class="number">0</span>));
-        <span class="macro">assert!</span>(tmp2_bits &lt; <span class="number">128</span>, <span class="string">&quot;tmp2 bits {}&quot;</span>, tmp2_bits);
+        <span class="macro">assert!</span>(tmp2_bits &lt; <span class="number">128</span>, <span class="string">"tmp2 bits {}"</span>, tmp2_bits);
 
         <span class="comment">// equation (f): tmp1 + 2^128 tmp2 =  lambda_1 * k2_sign * k2 + s - t * t_sign *
         // r1 - k1
@@ -1327,7 +1328,7 @@
                 <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Turbo Plonk: {} constraints&quot;, circuit.num_gates());
+                <span class="comment">// ark_std::println!("Turbo Plonk: {} constraints", circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
             {
@@ -1341,7 +1342,7 @@
                 <span class="kw">let </span>result = circuit.variable_base_scalar_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Ultra Plonk: {} constraints&quot;, circuit.num_gates());
+                <span class="comment">// ark_std::println!("Ultra Plonk: {} constraints", circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
 
@@ -1356,7 +1357,7 @@
                 <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Turbo Plonk GLV: {} constraints&quot;, circuit.num_gates());
+                <span class="comment">// ark_std::println!("Turbo Plonk GLV: {} constraints", circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
 
@@ -1371,7 +1372,7 @@
                 <span class="kw">let </span>result = circuit.glv_mul::&lt;P&gt;(s_var, <span class="kw-2">&amp;</span>base_var)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(TEPoint::from(base), circuit.point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>);
 
-                <span class="comment">// ark_std::println!(&quot;Ultra Plonk GLV: {} constraints&quot;, circuit.num_gates());
+                <span class="comment">// ark_std::println!("Ultra Plonk GLV: {} constraints", circuit.num_gates());
                 </span><span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>[]).is_ok());
             }
         }
@@ -1382,16 +1383,16 @@
     </span><span class="kw">fn </span>test_endomorphism() {
         <span class="kw">let </span>base_point = EdwardsAffine::new_unchecked(
             <span class="macro">MontFp!</span>(
-                <span class="string">&quot;29627151942733444043031429156003786749302466371339015363120350521834195802525&quot;
+                <span class="string">"29627151942733444043031429156003786749302466371339015363120350521834195802525"
             </span>),
             <span class="macro">MontFp!</span>(
-                <span class="string">&quot;27488387519748396681411951718153463804682561779047093991696427532072116857978&quot;
+                <span class="string">"27488387519748396681411951718153463804682561779047093991696427532072116857978"
             </span>),
         );
         <span class="kw">let </span>endo_point = EdwardsAffine::new_unchecked(
-            <span class="macro">MontFp!</span>(<span class="string">&quot;3995099504672814451457646880854530097687530507181962222512229786736061793535&quot;</span>),
+            <span class="macro">MontFp!</span>(<span class="string">"3995099504672814451457646880854530097687530507181962222512229786736061793535"</span>),
             <span class="macro">MontFp!</span>(
-                <span class="string">&quot;33370049900732270411777328808452912493896532385897059012214433666611661340894&quot;
+                <span class="string">"33370049900732270411777328808452912493896532385897059012214433666611661340894"
             </span>),
         );
         <span class="kw">let </span>base_point: TEPoint&lt;Fq&gt; = base_point.into();

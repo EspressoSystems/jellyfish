@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz/payload_prover.rs`."><title>payload_prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz/payload_prover.rs`."><title>payload_prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -607,9 +608,9 @@
 ///
 /// TODO use batch proof instead of `Vec&lt;P&gt;` &lt;https://github.com/EspressoSystems/jellyfish/issues/387&gt;
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(bound = <span class="string">&quot;P: CanonicalSerialize + CanonicalDeserialize&quot;</span>)]
+#[serde(bound = <span class="string">"P: CanonicalSerialize + CanonicalDeserialize"</span>)]
 </span><span class="kw">pub struct </span>SmallRangeProof&lt;P&gt; {
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>proofs: Vec&lt;P&gt;,
     prefix_bytes: Vec&lt;u8&gt;,
     suffix_bytes: Vec&lt;u8&gt;,
@@ -619,11 +620,11 @@
 ///
 /// Metadata needed to recover a KZG commitment.
 </span><span class="attr">#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(bound = <span class="string">&quot;F: CanonicalSerialize + CanonicalDeserialize&quot;</span>)]
+#[serde(bound = <span class="string">"F: CanonicalSerialize + CanonicalDeserialize"</span>)]
 </span><span class="kw">pub struct </span>LargeRangeProof&lt;F&gt; {
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>prefix_elems: Vec&lt;F&gt;,
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>suffix_elems: Vec&lt;F&gt;,
     prefix_bytes: Vec&lt;u8&gt;,
     suffix_bytes: Vec&lt;u8&gt;,
@@ -709,7 +710,7 @@
 
         <span class="kw">if </span>data_elems.len() != proof.proofs.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;data len {} differs from proof len {}&quot;</span>,
+                <span class="string">"data len {} differs from proof len {}"</span>,
                 data_elems.len(),
                 proof.proofs.len()
             )));
@@ -746,11 +747,11 @@
             </span><span class="kw">for </span>point <span class="kw">in </span>points[points_range].iter() {
                 <span class="kw">let </span>data_elem = data_elems
                     .get(cur_proof_index)
-                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">&quot;ran out of data elems&quot;</span>)))<span class="question-mark">?</span>;
+                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">"ran out of data elems"</span>)))<span class="question-mark">?</span>;
                 <span class="kw">let </span>cur_proof = proof
                     .proofs
                     .get(cur_proof_index)
-                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">&quot;ran out of proofs&quot;</span>)))<span class="question-mark">?</span>;
+                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow!</span>(<span class="string">"ran out of proofs"</span>)))<span class="question-mark">?</span>;
                 <span class="kw">if </span>!UnivariateKzgPCS::verify(<span class="kw-2">&amp;</span><span class="self">self</span>.vk, poly_commit, point, data_elem, cur_proof)
                     .map_err(vid)<span class="question-mark">?
                 </span>{
@@ -892,7 +893,7 @@
         )<span class="question-mark">?</span>;
         <span class="kw">if </span>stmt.payload_subslice.len() != stmt.range.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;payload_subslice length {} inconsistent with range length {}&quot;</span>,
+                <span class="string">"payload_subslice length {} inconsistent with range length {}"</span>,
                 stmt.payload_subslice.len(),
                 stmt.range.len()
             )));
@@ -902,7 +903,7 @@
 }
 
 <span class="kw">fn </span>range_coarsen(range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, denominator: usize) -&gt; Range&lt;usize&gt; {
-    <span class="macro">assert!</span>(!range.is_empty(), <span class="string">&quot;{:?}&quot;</span>, range);
+    <span class="macro">assert!</span>(!range.is_empty(), <span class="string">"{:?}"</span>, range);
     Range {
         start: index_coarsen(range.start, denominator),
         end: index_coarsen(range.end - <span class="number">1</span>, denominator) + <span class="number">1</span>,
@@ -910,7 +911,7 @@
 }
 
 <span class="kw">fn </span>range_refine(range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, multiplier: usize) -&gt; Range&lt;usize&gt; {
-    <span class="macro">assert!</span>(!range.is_empty(), <span class="string">&quot;{:?}&quot;</span>, range);
+    <span class="macro">assert!</span>(!range.is_empty(), <span class="string">"{:?}"</span>, range);
     Range {
         start: index_refine(range.start, multiplier),
         end: index_refine(range.end, multiplier),
@@ -928,14 +929,14 @@
 <span class="kw">fn </span>check_range_nonempty_and_in_bounds(len: usize, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; VidResult&lt;()&gt; {
     <span class="kw">if </span>range.is_empty() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-            <span class="string">&quot;empty range ({}..{})&quot;</span>,
+            <span class="string">"empty range ({}..{})"</span>,
             range.start, range.end
         )));
     }
     <span class="comment">// no need to check range.start because we already checked range.is_empty()
     </span><span class="kw">if </span>range.end &gt; len {
         <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-            <span class="string">&quot;range ({}..{}) out of bounds for length {}&quot;</span>,
+            <span class="string">"range ({}..{}) out of bounds for length {}"</span>,
             range.start, range.end, len
         )));
     }
@@ -1002,23 +1003,23 @@
             }
             random_cases
         };
-        <span class="kw">let </span>all_cases = [(edge_cases, <span class="string">&quot;edge&quot;</span>), (random_cases, <span class="string">&quot;rand&quot;</span>)];
+        <span class="kw">let </span>all_cases = [(edge_cases, <span class="string">"edge"</span>), (random_cases, <span class="string">"rand"</span>)];
 
         <span class="kw">for </span>payload_len_case <span class="kw">in </span>payload_len_cases {
             <span class="kw">let </span>payload = init_random_payload(payload_len_case, <span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>d = advz.disperse(<span class="kw-2">&amp;</span>payload).unwrap();
-            <span class="macro">println!</span>(<span class="string">&quot;payload byte len case: {}&quot;</span>, payload.len());
+            <span class="macro">println!</span>(<span class="string">"payload byte len case: {}"</span>, payload.len());
 
             <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
                 <span class="kw">for </span>range <span class="kw">in </span>cases.<span class="number">0</span>.iter() {
-                    <span class="macro">print!</span>(<span class="string">&quot;{} case: {:?}&quot;</span>, cases.<span class="number">1</span>, range);
+                    <span class="macro">print!</span>(<span class="string">"{} case: {:?}"</span>, cases.<span class="number">1</span>, range);
 
                     <span class="comment">// ensure range fits inside payload
                     </span><span class="kw">let </span>range = <span class="kw">if </span>range.start &gt;= payload.len() {
-                        <span class="macro">println!</span>(<span class="string">&quot; outside payload len {}, skipping&quot;</span>, payload.len());
+                        <span class="macro">println!</span>(<span class="string">" outside payload len {}, skipping"</span>, payload.len());
                         <span class="kw">continue</span>;
                     } <span class="kw">else if </span>range.end &gt; payload.len() {
-                        <span class="macro">println!</span>(<span class="string">&quot; clamped to payload len {}&quot;</span>, payload.len());
+                        <span class="macro">println!</span>(<span class="string">" clamped to payload len {}"</span>, payload.len());
                         Range {
                             end: payload.len(),
                             ..<span class="kw-2">*</span>range

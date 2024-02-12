@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/rescue_constants/ed_on_bls12_377_base.rs`."><title>ed_on_bls12_377_base.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/rescue/rescue_constants/ed_on_bls12_377_base.rs`."><title>ed_on_bls12_377_base.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1351,7 +1352,7 @@
     <span class="comment">// 1/11 % (q371-1)
     // A_INV = 0xf466a36210d417537d9565ea88aa746ec45a72d92e8ba2f655422e8ba2e8ba3
     //       = 6909105067714121256203584040821265343853008546944234041037918282114243922851
-    </span><span class="kw">const </span>A_INV: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u64] = <span class="kw-2">&amp;</span>[
+    </span><span class="kw">const </span>A_INV: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u64] = <span class="kw-2">&amp;</span>[
         <span class="number">0x655422e8ba2e8ba3</span>,
         <span class="number">0xec45a72d92e8ba2f</span>,
         <span class="number">0x37d9565ea88aa746</span>,
@@ -1360,24 +1361,24 @@
 
     <span class="comment">// The following constants are from the output of
     // rescue377.MDS
-    // MDS[0,0]= &quot;8444461749428370424248824938781546531375899335154063827935233455917295859137&quot;
-    // MDS[0,1]= &quot;8444461749428370424248824938781546531375899335154063827935233454652656409921&quot;
-    // MDS[0,2]= &quot;8444461749428370424248824938781546531375899335154063827935219960949733275201&quot;
-    // MDS[0,3]= &quot;8444461749428370424248824938781546531375899335154063827791525545136070306881&quot;
-    // MDS[1,0]= &quot;118778440&quot;
-    // MDS[1,1]= &quot;1324860118296&quot;
-    // MDS[1,2]= &quot;14136260080508280&quot;
-    // MDS[1,3]= &quot;150537006982534008760&quot;
-    // MDS[2,0]= &quot;8444461749428370424248824938781546531375899335154063827935233455917403829351&quot;
-    // MDS[2,1]= &quot;8444461749428370424248824938781546531375899335154063827935233455857182925531&quot;
-    // MDS[2,2]= &quot;8444461749428370424248824938781546531375899335154063827935232813357514551187&quot;
-    // MDS[2,3]= &quot;8444461749428370424248824938781546531375899335154063827928390863423559055971&quot;
-    // MDS[3,0]= &quot;11155&quot;
-    // MDS[3,1]= &quot;119024335&quot;
-    // MDS[3,2]= &quot;1267490143415&quot;
-    // MDS[3,3]= &quot;13496292655106471&quot;
+    // MDS[0,0]= "8444461749428370424248824938781546531375899335154063827935233455917295859137"
+    // MDS[0,1]= "8444461749428370424248824938781546531375899335154063827935233454652656409921"
+    // MDS[0,2]= "8444461749428370424248824938781546531375899335154063827935219960949733275201"
+    // MDS[0,3]= "8444461749428370424248824938781546531375899335154063827791525545136070306881"
+    // MDS[1,0]= "118778440"
+    // MDS[1,1]= "1324860118296"
+    // MDS[1,2]= "14136260080508280"
+    // MDS[1,3]= "150537006982534008760"
+    // MDS[2,0]= "8444461749428370424248824938781546531375899335154063827935233455917403829351"
+    // MDS[2,1]= "8444461749428370424248824938781546531375899335154063827935233455857182925531"
+    // MDS[2,2]= "8444461749428370424248824938781546531375899335154063827935232813357514551187"
+    // MDS[2,3]= "8444461749428370424248824938781546531375899335154063827928390863423559055971"
+    // MDS[3,0]= "11155"
+    // MDS[3,1]= "119024335"
+    // MDS[3,2]= "1267490143415"
+    // MDS[3,3]= "13496292655106471"
     // MDS matrix in little-endian 32 bytes elements
-    </span><span class="kw">const </span>MDS_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE]; STATE_SIZE] = [
+    </span><span class="kw">const </span>MDS_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]; STATE_SIZE]; STATE_SIZE] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0xC1</span>, <span class="number">0xF5</span>, <span class="number">0x3D</span>, <span class="number">0xF9</span>, <span class="number">0xFF</span>, <span class="number">0x7F</span>, <span class="number">0x11</span>, <span class="number">0x0A</span>, <span class="number">0x01</span>, <span class="number">0x00</span>, <span class="number">0x00</span>, <span class="number">0xD0</span>, <span class="number">0xFE</span>, <span class="number">0x76</span>,
@@ -1472,15 +1473,15 @@
     // rescue377.initial_constant
     // a.k.a. INIT_VEC
     // INIT_VEC[0]=
-    // &quot;7195166260762508599252723804118999247617987830477524724582535753522743429902&quot;
+    // "7195166260762508599252723804118999247617987830477524724582535753522743429902"
     // INIT_VEC[1]=
-    // &quot;157568923057870085185801131226812508154648823377393772750758002166934615414&quot;
+    // "157568923057870085185801131226812508154648823377393772750758002166934615414"
     // INIT_VEC[2]=
-    // &quot;8368974368714179058560102222209821528142740294286535716971241458054331447299&quot;
+    // "8368974368714179058560102222209821528142740294286535716971241458054331447299"
     // INIT_VEC[3]=
-    // &quot;2193144866846120881109650827139290126159606618067745139279401080525317213903&quot;
+    // "2193144866846120881109650827139290126159606618067745139279401080525317213903"
     //
-    </span><span class="kw">const </span>INIT_VEC_LE: [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; STATE_SIZE] = [
+    </span><span class="kw">const </span>INIT_VEC_LE: [<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]; STATE_SIZE] = [
         <span class="kw-2">&amp;</span>[
             <span class="number">0x0E</span>, <span class="number">0x4B</span>, <span class="number">0x21</span>, <span class="number">0x08</span>, <span class="number">0x01</span>, <span class="number">0x45</span>, <span class="number">0xB1</span>, <span class="number">0xBE</span>, <span class="number">0x83</span>, <span class="number">0x49</span>, <span class="number">0x2B</span>, <span class="number">0xCE</span>, <span class="number">0x0B</span>, <span class="number">0x49</span>,
             <span class="number">0xB4</span>, <span class="number">0xFA</span>, <span class="number">0xDF</span>, <span class="number">0x93</span>, <span class="number">0xE2</span>, <span class="number">0x19</span>, <span class="number">0xBC</span>, <span class="number">0x27</span>, <span class="number">0x3F</span>, <span class="number">0xA3</span>, <span class="number">0x71</span>, <span class="number">0x5B</span>, <span class="number">0x13</span>, <span class="number">0x7F</span>,
@@ -1507,50 +1508,50 @@
     // sage: rescue381.constants_matrix
     // a.k.a., KEY_SCHED_MATRIX
     // KEY_SCHED_MATRIX[0,0]=
-    // &quot;7706576124239544837371600760424887325666871237646566433582815095059014199792&quot;
+    // "7706576124239544837371600760424887325666871237646566433582815095059014199792"
     // KEY_SCHED_MATRIX[0,1]=
-    // &quot;5866850164576261478222180177187623784425095431438009129648961690750738724033&quot;
+    // "5866850164576261478222180177187623784425095431438009129648961690750738724033"
     // KEY_SCHED_MATRIX[0,2]=
-    // &quot;5967963618215854522411152750142075651481461240008734293775989630299855162504&quot;
+    // "5967963618215854522411152750142075651481461240008734293775989630299855162504"
     // KEY_SCHED_MATRIX[0,3]=
-    // &quot;4846413119387162211456448903358698082073272134778198460673863015758257657569&quot;
+    // "4846413119387162211456448903358698082073272134778198460673863015758257657569"
     // KEY_SCHED_MATRIX[1,0]=
-    // &quot;1245960362769537792640019594237304364405740843817026904000374334904749831719&quot;
+    // "1245960362769537792640019594237304364405740843817026904000374334904749831719"
     // KEY_SCHED_MATRIX[1,1]=
-    // &quot;7953944257726793928692708838487408421612439320876245321369789667138797299913&quot;
+    // "7953944257726793928692708838487408421612439320876245321369789667138797299913"
     // KEY_SCHED_MATRIX[1,2]=
-    // &quot;4754797182399066897135937139456358243903942729099936743831234828037073492871&quot;
+    // "4754797182399066897135937139456358243903942729099936743831234828037073492871"
     // KEY_SCHED_MATRIX[1,3]=
-    // &quot;7499009130375379463556804089865923760153528008940973027774256635004918389563&quot;
+    // "7499009130375379463556804089865923760153528008940973027774256635004918389563"
     // KEY_SCHED_MATRIX[2,0]=
-    // &quot;6473093830626604929963072604064598990230085260662177396257715740435130466686&quot;
+    // "6473093830626604929963072604064598990230085260662177396257715740435130466686"
     // KEY_SCHED_MATRIX[2,1]=
-    // &quot;4390337253131514942705827559491664950984265110689583880841633000427121081888&quot;
+    // "4390337253131514942705827559491664950984265110689583880841633000427121081888"
     // KEY_SCHED_MATRIX[2,2]=
-    // &quot;3522051946840768458577251601407876587632962453320814154152205148191545374550&quot;
+    // "3522051946840768458577251601407876587632962453320814154152205148191545374550"
     // KEY_SCHED_MATRIX[2,3]=
-    // &quot;6319999439708992933292400869565273518174083699772881386205747820203056621547&quot;
+    // "6319999439708992933292400869565273518174083699772881386205747820203056621547"
     // KEY_SCHED_MATRIX[3,0]=
-    // &quot;5289326583391743443615481307619780473919202444935065353437083634733980820257&quot;
+    // "5289326583391743443615481307619780473919202444935065353437083634733980820257"
     // KEY_SCHED_MATRIX[3,1]=
-    // &quot;6938831675933050844113924302108891647008288148791676051457678992328784482036&quot;
+    // "6938831675933050844113924302108891647008288148791676051457678992328784482036"
     // KEY_SCHED_MATRIX[3,2]=
-    // &quot;1512276495893019861517996168661692331234716309646677384152244252805703243785&quot;
+    // "1512276495893019861517996168661692331234716309646677384152244252805703243785"
     // KEY_SCHED_MATRIX[3,3]=
-    // &quot;1059856104783947562758392666568158542266706238365295453209304533860586199352&quot;
+    // "1059856104783947562758392666568158542266706238365295453209304533860586199352"
     //
 
     // The following constants are from the output of
     // sage: rescue381.constants_constant
     // a.k.a., KEY_SCHED_VEC
     // KEY_SCHED_VEC[0]=
-    // &quot;6719983214629867114203683304402864967396584522104316535218975820603408161605&quot;
+    // "6719983214629867114203683304402864967396584522104316535218975820603408161605"
     // KEY_SCHED_VEC[1]=
-    // &quot;1631001820510975681976157041507139599858468300000865485702360346888662886649&quot;
+    // "1631001820510975681976157041507139599858468300000865485702360346888662886649"
     // KEY_SCHED_VEC[2]=
-    // &quot;6512151801847166617260532883979631278806942338258734789784404511769472570827&quot;
+    // "6512151801847166617260532883979631278806942338258734789784404511769472570827"
     // KEY_SCHED_VEC[3]=
-    // &quot;396144897873338732377306209560320349606829120111196081730035080973497562014&quot;
+    // "396144897873338732377306209560320349606829120111196081730035080973497562014"
     //
 
     // The key injection constants are precomputed computed as
@@ -1562,7 +1563,7 @@
     // Those constants can be obtained via
     //   key_injection(init_vec_377, key_sched_matrix_377, key_sched_vec_377, q377)
     // from rescue377.sage
-    </span><span class="kw">const </span>KEY_INJECTION_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">2 </span>* ROUNDS] = [
+    </span><span class="kw">const </span>KEY_INJECTION_LE: [[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]; <span class="number">4</span>]; <span class="number">2 </span>* ROUNDS] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0x83</span>, <span class="number">0x11</span>, <span class="number">0x89</span>, <span class="number">0xE1</span>, <span class="number">0x62</span>, <span class="number">0x52</span>, <span class="number">0xD6</span>, <span class="number">0x02</span>, <span class="number">0xCD</span>, <span class="number">0xC5</span>, <span class="number">0xA2</span>, <span class="number">0x95</span>, <span class="number">0xB2</span>, <span class="number">0xE3</span>,
@@ -2098,7 +2099,7 @@
     // let keys2 = rescue_perm.key_schedule(&amp;zero);
     // for e in keys2.iter() {
     //     for f in e.vec.iter() {
-    //         ark_std::println!(&quot;permutation_round_key.append(0x{})&quot;,
+    //         ark_std::println!("permutation_round_key.append(0x{})",
     // f.into_bigint());     }
     // }
     // The keys are not cross-checked with sage, however, the hash function
@@ -2109,7 +2110,7 @@
     //   - test_rescue_hash_on_0_vec()
     //   - test_rescue_perm_on_0_vec()
 
-    </span><span class="kw">const </span>PERMUTATION_ROUND_KEYS: [[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]; <span class="number">4</span>]; <span class="number">25</span>] = [
+    </span><span class="kw">const </span>PERMUTATION_ROUND_KEYS: [[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]; <span class="number">4</span>]; <span class="number">25</span>] = [
         [
             <span class="kw-2">&amp;</span>[
                 <span class="number">0x0E</span>, <span class="number">0x4B</span>, <span class="number">0x21</span>, <span class="number">0x08</span>, <span class="number">0x01</span>, <span class="number">0x45</span>, <span class="number">0xB1</span>, <span class="number">0xBE</span>, <span class="number">0x83</span>, <span class="number">0x49</span>, <span class="number">0x2B</span>, <span class="number">0xCE</span>, <span class="number">0x0B</span>, <span class="number">0x49</span>,

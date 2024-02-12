@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1124,14 +1125,14 @@
         // https://github.com/EspressoSystems/jellyfish/issues/393
         </span><span class="kw">if </span>num_storage_nodes &lt; payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;payload_chunk_size {} exceeds num_storage_nodes {}&quot;</span>,
+                <span class="string">"payload_chunk_size {} exceeds num_storage_nodes {}"</span>,
                 payload_chunk_size, num_storage_nodes
             )));
         }
 
         <span class="kw">if </span>!(<span class="number">1</span>..=<span class="number">16</span>).contains(<span class="kw-2">&amp;</span>multiplicity) || !multiplicity.is_power_of_two() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;multiplicity {} not allowed&quot;</span>,
+                <span class="string">"multiplicity {} not allowed"</span>,
                 multiplicity
             )));
         }
@@ -1140,13 +1141,13 @@
         // Better to know now whether that conversion will succeed.
         </span><span class="kw">if </span>u32::try_from(num_storage_nodes).is_err() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;num_storage nodes {} should be convertible to u32&quot;</span>,
+                <span class="string">"num_storage nodes {} should be convertible to u32"</span>,
                 num_storage_nodes
             )));
         }
         <span class="kw">if </span>u32::try_from(multiplicity).is_err() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;multiplicity {} should be convertible to u32&quot;</span>,
+                <span class="string">"multiplicity {} should be convertible to u32"</span>,
                 multiplicity
             )));
         }
@@ -1162,7 +1163,7 @@
                 .map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
-                <span class="string">&quot;fail to construct doman of size {}&quot;</span>,
+                <span class="string">"fail to construct doman of size {}"</span>,
                 chunk_size
             ))
         })<span class="question-mark">?</span>;
@@ -1172,7 +1173,7 @@
         // https://github.com/EspressoSystems/jellyfish/issues/339
         </span><span class="kw">if </span>chunk_size != eval_domain.size() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;payload_chunk_size {} currently unsupported, round to {} instead&quot;</span>,
+                <span class="string">"payload_chunk_size {} currently unsupported, round to {} instead"</span>,
                 chunk_size,
                 eval_domain.size()
             )));
@@ -1193,13 +1194,13 @@
 
 <span class="doccomment">/// The [`VidScheme::Share`] type for [`Advz`].
 </span><span class="attr">#[derive(Derivative, Deserialize, Serialize)]
-#[serde(bound = <span class="string">&quot;Output&lt;H&gt;: Serialize + for&lt;&#39;a&gt; Deserialize&lt;&#39;a&gt;&quot;</span>)]
+#[serde(bound = <span class="string">"Output&lt;H&gt;: Serialize + for&lt;'a&gt; Deserialize&lt;'a&gt;"</span>)]
 #[derivative(
-    Clone(bound = <span class="string">&quot;&quot;</span>),
-    Debug(bound = <span class="string">&quot;&quot;</span>),
-    Eq(bound = <span class="string">&quot;&quot;</span>),
-    Hash(bound = <span class="string">&quot;&quot;</span>),
-    PartialEq(bound = <span class="string">&quot;&quot;</span>)
+    Clone(bound = <span class="string">""</span>),
+    Debug(bound = <span class="string">""</span>),
+    Eq(bound = <span class="string">""</span>),
+    Hash(bound = <span class="string">""</span>),
+    PartialEq(bound = <span class="string">""</span>)
 )]
 </span><span class="kw">pub struct </span>Share&lt;E, H&gt;
 <span class="kw">where
@@ -1208,10 +1209,10 @@
 {
     index: usize,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>evals: Vec&lt;KzgEval&lt;E&gt;&gt;,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span><span class="comment">// aggretate_proofs.len() equals self.multiplicity
     // TODO further aggregate into a single KZG proof.
     </span>aggregate_proofs: Vec&lt;KzgProof&lt;E&gt;&gt;,
@@ -1222,21 +1223,21 @@
 <span class="doccomment">/// The [`VidScheme::Common`] type for [`Advz`].
 </span><span class="attr">#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
 #[derivative(
-    Clone(bound = <span class="string">&quot;&quot;</span>),
-    Debug(bound = <span class="string">&quot;&quot;</span>),
-    Eq(bound = <span class="string">&quot;&quot;</span>),
-    Hash(bound = <span class="string">&quot;&quot;</span>),
-    PartialEq(bound = <span class="string">&quot;&quot;</span>)
+    Clone(bound = <span class="string">""</span>),
+    Debug(bound = <span class="string">""</span>),
+    Eq(bound = <span class="string">""</span>),
+    Hash(bound = <span class="string">""</span>),
+    PartialEq(bound = <span class="string">""</span>)
 )]
 </span><span class="kw">pub struct </span>Common&lt;E, H&gt;
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
 {
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>poly_commits: Vec&lt;KzgCommit&lt;E&gt;&gt;,
 
-    <span class="attr">#[serde(with = <span class="string">&quot;canonical&quot;</span>)]
+    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>all_evals_digest: KzgEvalsMerkleTreeNode&lt;E, H&gt;,
 
     payload_byte_len: u32,
@@ -1279,7 +1280,7 @@
         <span class="kw">let </span>payload = payload.as_ref();
         <span class="kw">let </span>payload_byte_len = payload.len().try_into().map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">let </span>disperse_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">&quot;VID disperse {} payload bytes to {} nodes&quot;</span>,
+            <span class="string">"VID disperse {} payload bytes to {} nodes"</span>,
             payload_byte_len, <span class="self">self</span>.num_storage_nodes
         ));
         <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
@@ -1287,7 +1288,7 @@
 
         <span class="comment">// partition payload into polynomial coefficients
         // and count `elems_len` for later
-        </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;encode payload bytes into polynomials&quot;</span>);
+        </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
         <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload);
         <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = elems_iter
             .chunks(chunk_size)
@@ -1298,7 +1299,7 @@
 
         <span class="comment">// evaluate polynomials
         </span><span class="kw">let </span>all_storage_node_evals_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">&quot;compute all storage node evals for {} polynomials with {} coefficients&quot;</span>,
+            <span class="string">"compute all storage node evals for {} polynomials with {} coefficients"</span>,
             polys.len(),
             chunk_size
         ));
@@ -1333,12 +1334,12 @@
         <span class="comment">// vector commitment to polynomial evaluations
         // TODO why do I need to compute the height of the merkle tree?
         </span><span class="kw">let </span>all_evals_commit_timer =
-            <span class="macro">start_timer!</span>(|| <span class="string">&quot;compute merkle root of all storage node evals&quot;</span>);
+            <span class="macro">start_timer!</span>(|| <span class="string">"compute merkle root of all storage node evals"</span>);
         <span class="kw">let </span>all_evals_commit =
             KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(all_evals_commit_timer);
 
-        <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;compute {} KZG commitments&quot;</span>, polys.len()));
+        <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"compute {} KZG commitments"</span>, polys.len()));
         <span class="kw">let </span>common = Common {
             poly_commits: UnivariateKzgPCS::batch_commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polys).map_err(vid)<span class="question-mark">?</span>,
             all_evals_digest: all_evals_commit.commitment().digest(),
@@ -1362,7 +1363,7 @@
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
         <span class="kw">let </span>agg_proofs_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">&quot;compute aggregate proofs for {} storage nodes&quot;</span>,
+            <span class="string">"compute aggregate proofs for {} storage nodes"</span>,
             <span class="self">self</span>.num_storage_nodes
         ));
         <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
@@ -1374,7 +1375,7 @@
         .map_err(vid)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(agg_proofs_timer);
 
-        <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;assemble shares for dispersal&quot;</span>);
+        <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">"assemble shares for dispersal"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(code_word_size);
         <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::new();
@@ -1416,7 +1417,7 @@
         </span><span class="kw">let </span>multiplicity: usize = common.multiplicity.try_into().map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">if </span>share.evals.len() / multiplicity != common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;(share eval, common poly commit) lengths differ ({},{})&quot;</span>,
+                <span class="string">"(share eval, common poly commit) lengths differ ({},{})"</span>,
                 share.evals.len() / multiplicity,
                 common.poly_commits.len()
             )));
@@ -1425,7 +1426,7 @@
         <span class="kw">let </span>num_storage_nodes: u32 = <span class="self">self</span>.num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>; <span class="comment">// pacify cargo check --target wasm32-unknown-unknown --no-default-features
         </span><span class="kw">if </span>common.num_storage_nodes != num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;common num_storage_nodes differs from self ({},{})&quot;</span>,
+                <span class="string">"common num_storage_nodes differs from self ({},{})"</span>,
                 common.num_storage_nodes, <span class="self">self</span>.num_storage_nodes
             )));
         }
@@ -1495,7 +1496,7 @@
     <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
         <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.payload_chunk_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;not enough shares {}, expected at least {}&quot;</span>,
+                <span class="string">"not enough shares {}, expected at least {}"</span>,
                 shares.len(),
                 <span class="self">self</span>.payload_chunk_size
             )));
@@ -1503,7 +1504,7 @@
         <span class="kw">let </span>num_storage_nodes: u32 = <span class="self">self</span>.num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>; <span class="comment">// pacify cargo check --target wasm32-unknown-unknown --no-default-features
         </span><span class="kw">if </span>common.num_storage_nodes != num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;common num_storage_nodes differs from self ({},{})&quot;</span>,
+                <span class="string">"common num_storage_nodes differs from self ({},{})"</span>,
                 common.num_storage_nodes, <span class="self">self</span>.num_storage_nodes
             )));
         }
@@ -1511,7 +1512,7 @@
         <span class="comment">// all shares must have equal evals len
         </span><span class="kw">let </span>num_evals = shares
             .first()
-            .ok_or_else(|| VidError::Argument(<span class="string">&quot;shares is empty&quot;</span>.into()))<span class="question-mark">?
+            .ok_or_else(|| VidError::Argument(<span class="string">"shares is empty"</span>.into()))<span class="question-mark">?
             </span>.evals
             .len();
         <span class="kw">if let </span><span class="prelude-val">Some</span>((index, share)) = shares
@@ -1520,7 +1521,7 @@
             .find(|(<span class="kw">_</span>, s)| s.evals.len() != num_evals)
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;shares do not have equal evals lengths: share {} len {}, share {} len {}&quot;</span>,
+                <span class="string">"shares do not have equal evals lengths: share {} len {}, share {} len {}"</span>,
                 <span class="number">0</span>,
                 num_evals,
                 index,
@@ -1529,7 +1530,7 @@
         }
         <span class="kw">if </span>num_evals != <span class="self">self</span>.multiplicity * common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">&quot;num_evals should be (multiplicity * poly_commits): {} but is instead: {}&quot;</span>,
+                <span class="string">"num_evals should be (multiplicity * poly_commits): {} but is instead: {}"</span>,
                 <span class="self">self</span>.multiplicity * common.poly_commits.len(),
                 num_evals,
             )));
@@ -1578,7 +1579,7 @@
             )<span class="question-mark">?
         </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(
-                <span class="string">&quot;common inconsistent with commit&quot;</span>.to_string(),
+                <span class="string">"common inconsistent with commit"</span>.to_string(),
             ));
         }
         <span class="prelude-val">Ok</span>(())
@@ -1588,21 +1589,21 @@
         common
             .payload_byte_len
             .try_into()
-            .expect(<span class="string">&quot;u32 should be convertible to usize&quot;</span>)
+            .expect(<span class="string">"u32 should be convertible to usize"</span>)
     }
 
     <span class="kw">fn </span>get_num_storage_nodes(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
         common
             .num_storage_nodes
             .try_into()
-            .expect(<span class="string">&quot;u32 should be convertible to usize&quot;</span>)
+            .expect(<span class="string">"u32 should be convertible to usize"</span>)
     }
 
     <span class="kw">fn </span>get_multiplicity(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
         common
             .multiplicity
             .try_into()
-            .expect(<span class="string">&quot;u32 should be convertible to usize&quot;</span>)
+            .expect(<span class="string">"u32 should be convertible to usize"</span>)
     }
 }
 
@@ -1623,16 +1624,16 @@
             .map_err(vid)<span class="question-mark">?</span>;
 
         <span class="comment">// Notes on hash-to-field:
-        // - Can&#39;t use `Field::from_random_bytes` because it&#39;s fallible. (In what sense
-        //   is it from &quot;random&quot; bytes?!). This despite the docs explicitly say: &quot;This
+        // - Can't use `Field::from_random_bytes` because it's fallible. (In what sense
+        //   is it from "random" bytes?!). This despite the docs explicitly say: "This
         //   function is primarily intended for sampling random field elements from a
-        //   hash-function or RNG output.&quot;
+        //   hash-function or RNG output."
         // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces
         //   us to add additional trait bounds `Clone + Default + DynDigest` everywhere.
         //   Also, `HashToField` does not expose an incremental API (ie. `update`) so we
         //   would need to use an ordinary hasher and pipe `hasher.finalize()` through
         //   `hash_to_field`. (Ugh!)
-        // - We don&#39;t need the resulting field element to be cryptographically
+        // - We don't need the resulting field element to be cryptographically
         //   indistinguishable from uniformly random. We only need it to be
         //   unpredictable. So it suffices to use
         </span><span class="prelude-val">Ok</span>(PrimeField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>hasher.finalize()))
@@ -1653,7 +1654,7 @@
         <span class="comment">// sanity check: the fft did not resize coeffs.
         // If pre_fft_len != self.payload_chunk_size then we were not given the correct
         // number of coeffs. In that case coeffs.len() could be anything, so
-        // there&#39;s nothing to sanity check.
+        // there's nothing to sanity check.
         </span><span class="kw">if </span>pre_fft_len == <span class="self">self</span>.payload_chunk_size {
             <span class="macro">assert_eq!</span>(coeffs_vec.len(), pre_fft_len);
         }
@@ -1673,9 +1674,9 @@
     ) -&gt; VidResult&lt;&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit&gt;
     <span class="kw">where
         </span>T: TryInto&lt;u32&gt;,
-        &lt;T <span class="kw">as </span>TryInto&lt;u32&gt;&gt;::Error: ark_std::fmt::Display + Debug + Send + Sync + <span class="lifetime">&#39;static</span>,
+        &lt;T <span class="kw">as </span>TryInto&lt;u32&gt;&gt;::Error: ark_std::fmt::Display + Debug + Send + Sync + <span class="lifetime">'static</span>,
         U: TryInto&lt;u32&gt;,
-        &lt;U <span class="kw">as </span>TryInto&lt;u32&gt;&gt;::Error: ark_std::fmt::Display + Debug + Send + Sync + <span class="lifetime">&#39;static</span>,
+        &lt;U <span class="kw">as </span>TryInto&lt;u32&gt;&gt;::Error: ark_std::fmt::Display + Debug + Send + Sync + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span>payload_byte_len: u32 = payload_byte_len.try_into().map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">let </span>num_storage_nodes: u32 = num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>;
@@ -1695,14 +1696,14 @@
     }
 }
 
-<span class="doccomment">/// Evaluate a generalized polynomial at a given point using Horner&#39;s method.
+<span class="doccomment">/// Evaluate a generalized polynomial at a given point using Horner's method.
 ///
 /// Coefficients can be anything that can be multiplied by a point
 /// and such that the result of such multiplications can be added.
 </span><span class="kw">fn </span>polynomial_eval&lt;U, F, I&gt;(coeffs: I, point: <span class="kw">impl </span>Borrow&lt;F&gt;) -&gt; U
 <span class="kw">where
     </span>I: IntoIterator,
-    I::Item: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, Output = U&gt;,
+    I::Item: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>F, Output = U&gt;,
     U: Add&lt;Output = U&gt; + Zero,
 {
     coeffs
@@ -1710,10 +1711,10 @@
         .fold(U::zero(), |res, coeff| coeff * point.borrow() + res)
 }
 
-<span class="kw">struct </span>FieldMultiplier&lt;<span class="lifetime">&#39;a</span>, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F);
+<span class="kw">struct </span>FieldMultiplier&lt;<span class="lifetime">'a</span>, F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>F);
 
 <span class="doccomment">/// Arkworks does not provide (&amp;F,&amp;F) multiplication
-</span><span class="kw">impl</span>&lt;F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>FieldMultiplier&lt;<span class="lifetime">&#39;_</span>, F&gt;
+</span><span class="kw">impl</span>&lt;F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>FieldMultiplier&lt;<span class="lifetime">'_</span>, F&gt;
 <span class="kw">where
     </span>F: Field,
 {
@@ -1725,9 +1726,9 @@
 }
 
 <span class="doccomment">/// Arkworks does not provide (&amp;C,&amp;F) multiplication
-</span><span class="kw">struct </span>CurveMultiplier&lt;<span class="lifetime">&#39;a</span>, C&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>C);
+</span><span class="kw">struct </span>CurveMultiplier&lt;<span class="lifetime">'a</span>, C&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>C);
 
-<span class="kw">impl</span>&lt;C, F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>CurveMultiplier&lt;<span class="lifetime">&#39;_</span>, C&gt;
+<span class="kw">impl</span>&lt;C, F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>CurveMultiplier&lt;<span class="lifetime">'_</span>, C&gt;
 <span class="kw">where
     </span>C: AffineRepr&lt;ScalarField = F&gt;,
 {
@@ -1739,9 +1740,9 @@
 }
 
 <span class="doccomment">/// Arkworks does not provide (&amp;P,&amp;F) multiplication
-</span><span class="kw">struct </span>PolynomialMultiplier&lt;<span class="lifetime">&#39;a</span>, P&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>P);
+</span><span class="kw">struct </span>PolynomialMultiplier&lt;<span class="lifetime">'a</span>, P&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>P);
 
-<span class="kw">impl</span>&lt;P, F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>PolynomialMultiplier&lt;<span class="lifetime">&#39;_</span>, P&gt;
+<span class="kw">impl</span>&lt;P, F&gt; Mul&lt;<span class="kw-2">&amp;</span>F&gt; <span class="kw">for </span>PolynomialMultiplier&lt;<span class="lifetime">'_</span>, P&gt;
 <span class="kw">where
     </span>P: DenseUVPolynomial&lt;F&gt;,
     F: Field,
@@ -1773,7 +1774,7 @@
     <span class="attr">#[ignore]
     #[test]
     </span><span class="kw">fn </span>disperse_timer() {
-        <span class="comment">// run with &#39;print-trace&#39; feature to see timer output
+        <span class="comment">// run with 'print-trace' feature to see timer output
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
@@ -1787,7 +1788,7 @@
     <span class="attr">#[ignore]
     #[test]
     </span><span class="kw">fn </span>commit_only_timer() {
-        <span class="comment">// run with &#39;print-trace&#39; feature to see timer output
+        <span class="comment">// run with 'print-trace' feature to see timer output
         </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
@@ -1813,7 +1814,7 @@
                 };
                 assert_arg_err(
                     advz.verify_share(<span class="kw-2">&amp;</span>share_missing_eval, <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit),
-                    <span class="string">&quot;1 missing share should be arg error&quot;</span>,
+                    <span class="string">"1 missing share should be arg error"</span>,
                 );
             }
 
@@ -1823,7 +1824,7 @@
                 share_bad_eval.evals[<span class="number">0</span>].double_in_place();
                 advz.verify_share(<span class="kw-2">&amp;</span>share_bad_eval, <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)
                     .unwrap()
-                    .expect_err(<span class="string">&quot;bad share value should fail verification&quot;</span>);
+                    .expect_err(<span class="string">"bad share value should fail verification"</span>);
             }
 
             <span class="comment">// corrupted index, in bounds
@@ -1834,7 +1835,7 @@
                 };
                 advz.verify_share(<span class="kw-2">&amp;</span>share_bad_index, <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)
                     .unwrap()
-                    .expect_err(<span class="string">&quot;bad share index should fail verification&quot;</span>);
+                    .expect_err(<span class="string">"bad share index should fail verification"</span>);
             }
 
             <span class="comment">// corrupted index, out of bounds
@@ -1845,21 +1846,21 @@
                 };
                 advz.verify_share(<span class="kw-2">&amp;</span>share_bad_index, <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)
                     .unwrap()
-                    .expect_err(<span class="string">&quot;bad share index should fail verification&quot;</span>);
+                    .expect_err(<span class="string">"bad share index should fail verification"</span>);
             }
 
             <span class="comment">// corrupt eval proof
             </span>{
                 <span class="comment">// We have no way to corrupt a proof
                 // (without also causing a deserialization failure).
-                // So we use another share&#39;s proof instead.
+                // So we use another share's proof instead.
                 </span><span class="kw">let </span>share_bad_evals_proof = Share {
                     evals_proof: shares[(i + <span class="number">1</span>) % shares.len()].evals_proof.clone(),
                     ..share.clone()
                 };
                 advz.verify_share(<span class="kw-2">&amp;</span>share_bad_evals_proof, <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)
                     .unwrap()
-                    .expect_err(<span class="string">&quot;bad share evals proof should fail verification&quot;</span>);
+                    .expect_err(<span class="string">"bad share evals proof should fail verification"</span>);
             }
         }
     }
@@ -1877,7 +1878,7 @@
         };
         assert_arg_err(
             advz.verify_share(<span class="kw-2">&amp;</span>shares[<span class="number">0</span>], <span class="kw-2">&amp;</span>common_missing_item, <span class="kw-2">&amp;</span>commit),
-            <span class="string">&quot;1 missing commit should be arg error&quot;</span>,
+            <span class="string">"1 missing commit should be arg error"</span>,
         );
 
         <span class="comment">// 1 corrupt commit, poly_commit
@@ -1888,7 +1889,7 @@
         };
         assert_arg_err(
             advz.verify_share(<span class="kw-2">&amp;</span>shares[<span class="number">0</span>], <span class="kw-2">&amp;</span>common_1_poly_corruption, <span class="kw-2">&amp;</span>commit),
-            <span class="string">&quot;corrupted commit should be arg error&quot;</span>,
+            <span class="string">"corrupted commit should be arg error"</span>,
         );
 
         <span class="comment">// 1 corrupt commit, all_evals_digest
@@ -1898,16 +1899,16 @@
             corrupted
                 .all_evals_digest
                 .serialize_uncompressed(<span class="kw-2">&amp;mut </span>digest_bytes)
-                .expect(<span class="string">&quot;digest serialization should succeed&quot;</span>);
+                .expect(<span class="string">"digest serialization should succeed"</span>);
             digest_bytes[<span class="number">0</span>] += <span class="number">1</span>;
             corrupted.all_evals_digest =
                 HasherNode::deserialize_uncompressed(digest_bytes.as_slice())
-                    .expect(<span class="string">&quot;digest deserialization should succeed&quot;</span>);
+                    .expect(<span class="string">"digest deserialization should succeed"</span>);
             corrupted
         };
         advz.verify_share(<span class="kw-2">&amp;</span>shares[<span class="number">0</span>], <span class="kw-2">&amp;</span>common_1_digest_corruption, <span class="kw-2">&amp;</span>commit)
             .unwrap()
-            .expect_err(<span class="string">&quot;1 corrupt all_evals_digest should fail verification&quot;</span>);
+            .expect_err(<span class="string">"1 corrupt all_evals_digest should fail verification"</span>);
     }
 
     <span class="attr">#[test]
@@ -1922,7 +1923,7 @@
         <span class="comment">// equal nonzero lengths for common, share
         </span>assert_arg_err(
             advz.verify_share(<span class="kw-2">&amp;</span>shares[<span class="number">0</span>], <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit),
-            <span class="string">&quot;common inconsistent with commit should be arg error&quot;</span>,
+            <span class="string">"common inconsistent with commit should be arg error"</span>,
         );
 
         common.poly_commits.clear();
@@ -1931,7 +1932,7 @@
         <span class="comment">// zero length for common, share
         </span>assert_arg_err(
             advz.verify_share(<span class="kw-2">&amp;</span>shares[<span class="number">0</span>], <span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit),
-            <span class="string">&quot;expect arg error for common inconsistent with commit&quot;</span>,
+            <span class="string">"expect arg error for common inconsistent with commit"</span>,
         );
     }
 
@@ -1948,7 +1949,7 @@
                 shares_missing_evals[i].evals.pop();
                 assert_arg_err(
                     advz.recover_payload(<span class="kw-2">&amp;</span>shares_missing_evals, <span class="kw-2">&amp;</span>common),
-                    <span class="macro">format!</span>(<span class="string">&quot;{} shares missing 1 eval should be arg error&quot;</span>, i + <span class="number">1</span>).as_str(),
+                    <span class="macro">format!</span>(<span class="string">"{} shares missing 1 eval should be arg error"</span>, i + <span class="number">1</span>).as_str(),
                 );
             }
 
@@ -1957,7 +1958,7 @@
             assert_arg_err(
                 advz.recover_payload(<span class="kw-2">&amp;</span>shares_missing_evals, <span class="kw-2">&amp;</span>common),
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;shares contain {} but expected {}&quot;</span>,
+                    <span class="string">"shares contain {} but expected {}"</span>,
                     shares_missing_evals[<span class="number">0</span>].evals.len(),
                     <span class="kw-2">&amp;</span>common.poly_commits.len()
                 )
@@ -1976,7 +1977,7 @@
 
             <span class="kw">let </span>bytes_recovered = advz
                 .recover_payload(<span class="kw-2">&amp;</span>shares_bad_indices, <span class="kw-2">&amp;</span>common)
-                .expect(<span class="string">&quot;recover_payload should succeed when indices are in bounds&quot;</span>);
+                .expect(<span class="string">"recover_payload should succeed when indices are in bounds"</span>);
             <span class="macro">assert_ne!</span>(bytes_recovered, bytes_random);
         }
 
@@ -1986,7 +1987,7 @@
             <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..shares_bad_indices.len() {
                 shares_bad_indices[i].index += advz.multi_open_domain.size();
                 advz.recover_payload(<span class="kw-2">&amp;</span>shares_bad_indices, <span class="kw-2">&amp;</span>common)
-                    .expect_err(<span class="string">&quot;recover_payload should fail when indices are out of bounds&quot;</span>);
+                    .expect_err(<span class="string">"recover_payload should fail when indices are out of bounds"</span>);
             }
         }
     }
@@ -2007,7 +2008,7 @@
 
     <span class="doccomment">/// Convenience wrapper to assert [`VidError::Argument`] return value.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>assert_arg_err&lt;T&gt;(res: VidResult&lt;T&gt;, msg: <span class="kw-2">&amp;</span>str) {
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(res, <span class="prelude-val">Err</span>(Argument(<span class="kw">_</span>))), <span class="string">&quot;{}&quot;</span>, msg);
+        <span class="macro">assert!</span>(<span class="macro">matches!</span>(res, <span class="prelude-val">Err</span>(Argument(<span class="kw">_</span>))), <span class="string">"{}"</span>, msg);
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init_random_payload&lt;R&gt;(len: usize, rng: <span class="kw-2">&amp;mut </span>R) -&gt; Vec&lt;u8&gt;

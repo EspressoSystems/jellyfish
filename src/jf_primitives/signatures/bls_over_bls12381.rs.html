@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/bls_over_bls12381.rs`."><title>bls_over_bls12381.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/signatures/bls_over_bls12381.rs`."><title>bls_over_bls12381.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -500,7 +501,7 @@
 //! let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
 //! let (sk, pk) = BLSSignatureScheme::key_gen(&amp;pp, &amp;mut rng)?;
 //!
-//! let msg = &quot;The quick brown fox jumps over the lazy dog&quot;;
+//! let msg = "The quick brown fox jumps over the lazy dog";
 //! let sig = BLSSignatureScheme::sign(&amp;pp, &amp;sk, &amp;msg, &amp;mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&amp;pp, &amp;pk, &amp;msg, &amp;sig).is_ok());
 //!
@@ -526,17 +527,17 @@
 //! rng.fill_bytes(&amp;mut ikm);
 //!
 //! let mut hasher = Sha256::new();
-//! hasher.update(b&quot;MY-BLS-SIG-KEYGEN-SALT-DOM-SEP&quot;);
+//! hasher.update(b"MY-BLS-SIG-KEYGEN-SALT-DOM-SEP");
 //! let salt = hasher.finalize();
 //!
-//! let (sk1, pk1) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b&quot;banking&quot;.as_ref())?;
-//! let (sk2, pk2) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b&quot;legal&quot;.as_ref())?;
+//! let (sk1, pk1) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b"banking".as_ref())?;
+//! let (sk2, pk2) = BLSSignatureScheme::key_gen_v5(&amp;ikm, &amp;salt, b"legal".as_ref())?;
 //!
-//! let msg = &quot;I authorize transferring 10 dollars to Alice&quot;;
+//! let msg = "I authorize transferring 10 dollars to Alice";
 //! let sig = BLSSignatureScheme::sign(&amp;pp, &amp;sk1, &amp;msg, &amp;mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&amp;pp, &amp;pk1, &amp;msg, &amp;sig).is_ok());
 //!
-//! let msg = &quot;I agree to the Terms and Conditions.&quot;;
+//! let msg = "I agree to the Terms and Conditions.";
 //! let sig = BLSSignatureScheme::sign(&amp;pp, &amp;sk2, &amp;msg, &amp;mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&amp;pp, &amp;pk2, &amp;msg, &amp;sig).is_ok());
 //!
@@ -801,7 +802,7 @@
 </span><span class="kw">pub struct </span>BLSSignatureScheme;
 
 <span class="kw">impl </span>SignatureScheme <span class="kw">for </span>BLSSignatureScheme {
-    <span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = CS_ID_BLS_MIN_SIG;
+    <span class="kw">const </span>CS_ID: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str = CS_ID_BLS_MIN_SIG;
 
     <span class="doccomment">/// Signing key
     </span><span class="kw">type </span>SigningKey = BLSSignKey;
@@ -863,7 +864,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
         <span class="kw">match </span>sig.verify(<span class="bool-val">false</span>, msg.as_ref(), <span class="self">Self</span>::CS_ID.as_bytes(), <span class="kw-2">&amp;</span>[], vk, <span class="bool-val">true</span>) {
             BLST_ERROR::BLST_SUCCESS =&gt; <span class="prelude-val">Ok</span>(()),
-            e =&gt; <span class="prelude-val">Err</span>(PrimitivesError::VerificationError(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>))),
+            e =&gt; <span class="prelude-val">Err</span>(PrimitivesError::VerificationError(<span class="macro">format!</span>(<span class="string">"{e:?}"</span>))),
         }
     }
 }
@@ -908,8 +909,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_bls_sig() {
-        <span class="kw">let </span>message = <span class="string">&quot;this is a test message&quot;</span>;
-        <span class="kw">let </span>message_bad = <span class="string">&quot;this is a wrong message&quot;</span>;
+        <span class="kw">let </span>message = <span class="string">"this is a test message"</span>;
+        <span class="kw">let </span>message_bad = <span class="string">"this is a wrong message"</span>;
         sign_and_verify::&lt;BLSSignatureScheme&gt;(message.as_ref());
         failed_verification::&lt;BLSSignatureScheme&gt;(message.as_ref(), message_bad.as_ref());
     }
@@ -918,7 +919,7 @@
     </span><span class="kw">fn </span>test_canonical_serde() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>(sk, pk) = BLSSignatureScheme::key_gen(<span class="kw-2">&amp;</span>(), <span class="kw-2">&amp;mut </span>rng).unwrap();
-        <span class="kw">let </span>msg = <span class="string">&quot;The quick brown fox jumps over the lazy dog&quot;</span>;
+        <span class="kw">let </span>msg = <span class="string">"The quick brown fox jumps over the lazy dog"</span>;
         <span class="kw">let </span>sig = BLSSignatureScheme::sign(<span class="kw-2">&amp;</span>(), <span class="kw-2">&amp;</span>sk, msg, <span class="kw-2">&amp;mut </span>rng).unwrap();
 
         test_canonical_serde_helper(sk);

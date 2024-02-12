@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/univariate_kzg/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -933,7 +934,7 @@
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
 <span class="kw">use </span>ark_ff::{FftField, Field, PrimeField};
-<span class="attr">#[cfg(not(feature = <span class="string">&quot;seq-fk-23&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">"seq-fk-23"</span>))]
 </span><span class="kw">use </span>ark_poly::EvaluationDomain;
 <span class="kw">use </span>ark_poly::{
     univariate::DensePolynomial, DenseUVPolynomial, Polynomial, Radix2EvaluationDomain,
@@ -952,7 +953,7 @@
     One, UniformRand, Zero,
 };
 <span class="kw">use </span>jf_utils::par_utils::parallelizable_slice_iter;
-<span class="attr">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
 </span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
@@ -997,7 +998,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(UnivariateProverParam&lt;E&gt;, UnivariateVerifierParam&lt;E&gt;), PCSError&gt; {
         <span class="kw">if </span>supported_num_vars.is_some() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                <span class="string">&quot;univariate should not receive a num_var param&quot;</span>.to_string(),
+                <span class="string">"univariate should not receive a num_var param"</span>.to_string(),
             ));
         }
         srs.borrow().trim(supported_degree)
@@ -1011,13 +1012,13 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="kw">let </span>commit_time =
-            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Committing to polynomial of degree {} &quot;</span>, poly.degree()));
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"Committing to polynomial of degree {} "</span>, poly.degree()));
 
         <span class="kw">if </span>poly.degree() &gt; prover_param.powers_of_g.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-                <span class="string">&quot;poly degree {} is larger than allowed {}&quot;</span>,
+                <span class="string">"poly degree {} is larger than allowed {}"</span>,
                 poly.degree(),
                 prover_param.powers_of_g.len()
             )));
@@ -1025,9 +1026,9 @@
 
         <span class="kw">let </span>(num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
-        </span><span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;MSM to compute commitment to plaintext
-        poly&quot;</span>);
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
+        </span><span class="kw">let </span>msm_time = <span class="macro">start_timer!</span>(|| <span class="string">"MSM to compute commitment to plaintext
+        poly"</span>);
 
         <span class="kw">let </span>commitment = E::G1::msm_bigint(
             <span class="kw-2">&amp;</span>prover_param.powers_of_g[num_leading_zeros..],
@@ -1035,10 +1036,10 @@
         )
         .into_affine();
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="macro">end_timer!</span>(msm_time);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="macro">end_timer!</span>(commit_time);
         <span class="prelude-val">Ok</span>(Commitment(commitment))
     }
@@ -1049,7 +1050,7 @@
         polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::BatchCommitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
-        <span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;batch commit {} polynomials&quot;</span>, polys.len()));
+        <span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"batch commit {} polynomials"</span>, polys.len()));
         <span class="kw">let </span>res = parallelizable_slice_iter(polys)
             .map(|poly| <span class="self">Self</span>::commit(prover_param, poly))
             .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Commitment&gt;, PCSError&gt;&gt;()<span class="question-mark">?</span>;
@@ -1065,18 +1066,18 @@
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
         point: <span class="kw-2">&amp;</span><span class="self">Self</span>::Point,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, <span class="self">Self</span>::Evaluation), PCSError&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="kw">let </span>open_time =
-            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Opening polynomial of degree {}&quot;</span>, polynomial.degree()));
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"Opening polynomial of degree {}"</span>, polynomial.degree()));
 
         <span class="kw">let </span>divisor = <span class="self">Self</span>::Polynomial::from_coefficients_vec(<span class="macro">vec!</span>[-<span class="kw-2">*</span>point, E::ScalarField::one()]);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
-        </span><span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
+        </span><span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">"Computing witness polynomial"</span>);
 
         <span class="kw">let </span>witness_polynomial = polynomial / <span class="kw-2">&amp;</span>divisor;
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="macro">end_timer!</span>(witness_time);
 
         <span class="kw">let </span>(num_leading_zeros, witness_coeffs) =
@@ -1088,11 +1089,11 @@
         )
         .into_affine();
 
-        <span class="comment">// TODO offer an `open()` that doesn&#39;t also evaluate
+        <span class="comment">// TODO offer an `open()` that doesn't also evaluate
         // https://github.com/EspressoSystems/jellyfish/issues/426
         </span><span class="kw">let </span>eval = polynomial.evaluate(point);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="macro">end_timer!</span>(open_time);
 
         <span class="prelude-val">Ok</span>((<span class="self">Self</span>::Proof { proof }, eval))
@@ -1109,10 +1110,10 @@
         polynomials: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
         points: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Point],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::BatchProof, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
-        <span class="kw">let </span>open_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;batch opening {} polynomials&quot;</span>, polynomials.len()));
+        <span class="kw">let </span>open_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"batch opening {} polynomials"</span>, polynomials.len()));
         <span class="kw">if </span>polynomials.len() != points.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-                <span class="string">&quot;poly length {} is different from points length {}&quot;</span>,
+                <span class="string">"poly length {} is different from points length {}"</span>,
                 polynomials.len(),
                 points.len()
             )));
@@ -1137,7 +1138,7 @@
         value: <span class="kw-2">&amp;</span>E::ScalarField,
         proof: <span class="kw-2">&amp;</span><span class="self">Self</span>::Proof,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
-        <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Checking evaluation&quot;</span>);
+        <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">"Checking evaluation"</span>);
         <span class="kw">let </span>pairing_inputs_l: Vec&lt;E::G1Prepared&gt; = <span class="macro">vec!</span>[
             (verifier_param.g * value - proof.proof * point - commitment.<span class="number">0</span>.into_group())
                 .into_affine()
@@ -1151,7 +1152,7 @@
             .<span class="number">0
             </span>.is_one();
 
-        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {res}&quot;</span>));
+        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">"Result: {res}"</span>));
         <span class="prelude-val">Ok</span>(res)
     }
 
@@ -1169,12 +1170,12 @@
         rng: <span class="kw-2">&amp;mut </span>R,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
         <span class="kw">let </span>check_time =
-            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;Checking {} evaluation proofs&quot;</span>, multi_commitment.len()));
+            <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"Checking {} evaluation proofs"</span>, multi_commitment.len()));
 
         <span class="kw">let </span><span class="kw-2">mut </span>total_c = &lt;E::G1&gt;::zero();
         <span class="kw">let </span><span class="kw-2">mut </span>total_w = &lt;E::G1&gt;::zero();
 
-        <span class="kw">let </span>combination_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Combining commitments and proofs&quot;</span>);
+        <span class="kw">let </span>combination_time = <span class="macro">start_timer!</span>(|| <span class="string">"Combining commitments and proofs"</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>randomizer = E::ScalarField::one();
         <span class="comment">// Instead of multiplying g and gamma_g in each turn, we simply accumulate
         // their coefficients and perform a final multiplication at the end.
@@ -1192,19 +1193,19 @@
             g_multiplier += <span class="kw-2">&amp;</span>(randomizer * v);
             total_c += c * randomizer;
             total_w += w * randomizer;
-            <span class="comment">// We don&#39;t need to sample randomizers from the full field,
+            <span class="comment">// We don't need to sample randomizers from the full field,
             // only from 128-bit strings.
             </span>randomizer = u128::rand(rng).into();
         }
         total_c -= <span class="kw-2">&amp;</span>verifier_param.g.mul(g_multiplier);
         <span class="macro">end_timer!</span>(combination_time);
 
-        <span class="kw">let </span>to_affine_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting results to affine for pairing&quot;</span>);
+        <span class="kw">let </span>to_affine_time = <span class="macro">start_timer!</span>(|| <span class="string">"Converting results to affine for pairing"</span>);
         <span class="kw">let </span>affine_points = E::G1::normalize_batch(<span class="kw-2">&amp;</span>[-total_w, total_c]);
         <span class="kw">let </span>(total_w, total_c) = (affine_points[<span class="number">0</span>], affine_points[<span class="number">1</span>]);
         <span class="macro">end_timer!</span>(to_affine_time);
 
-        <span class="kw">let </span>pairing_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Performing product of pairings&quot;</span>);
+        <span class="kw">let </span>pairing_time = <span class="macro">start_timer!</span>(|| <span class="string">"Performing product of pairings"</span>);
         <span class="kw">let </span>result = E::multi_pairing(
             [total_w, total_c],
             [verifier_param.beta_h, verifier_param.h],
@@ -1212,7 +1213,7 @@
         .<span class="number">0
         </span>.is_one();
         <span class="macro">end_timer!</span>(pairing_time);
-        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {result}&quot;</span>));
+        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">"Result: {result}"</span>));
         <span class="prelude-val">Ok</span>(result)
     }
 
@@ -1250,15 +1251,15 @@
         num_points: usize,
         domain: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="self">Self</span>::Proof&gt;, PCSError&gt; {
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;seq-fk-23&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">"seq-fk-23"</span>))]
         </span>{
-            <span class="kw">let </span>h_poly_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;compute h_poly&quot;</span>);
+            <span class="kw">let </span>h_poly_timer = <span class="macro">start_timer!</span>(|| <span class="string">"compute h_poly"</span>);
             <span class="kw">let </span>h_poly = <span class="self">Self</span>::compute_h_poly_parallel(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
             <span class="macro">end_timer!</span>(h_poly_timer);
             <span class="kw">let </span>small_domain: Radix2EvaluationDomain&lt;<span class="self">Self</span>::Evaluation&gt; =
                 Radix2EvaluationDomain::new(h_poly.degree() + <span class="number">1</span>).ok_or_else(|| {
                     PCSError::InvalidParameters(<span class="macro">format!</span>(
-                        <span class="string">&quot;failed to create a domain of size {}&quot;</span>,
+                        <span class="string">"failed to create a domain of size {}"</span>,
                         h_poly.degree() + <span class="number">1</span>,
                     ))
                 })<span class="question-mark">?</span>;
@@ -1270,7 +1271,7 @@
                 offsets.push(domain.group_gen() * offsets.last().unwrap());
             }
             <span class="kw">let </span>proofs_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-                <span class="string">&quot;gen eval proofs with parallel_factor {} and num_points {}&quot;</span>,
+                <span class="string">"gen eval proofs with parallel_factor {} and num_points {}"</span>,
                 parallel_factor, num_points,
             ));
             <span class="kw">let </span>proofs: Vec&lt;Vec&lt;<span class="kw">_</span>&gt;&gt; = parallelizable_slice_iter(<span class="kw-2">&amp;</span>offsets)
@@ -1294,12 +1295,12 @@
             <span class="prelude-val">Ok</span>(res)
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;seq-fk-23&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"seq-fk-23"</span>)]
         </span>{
-            <span class="kw">let </span>h_poly_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;compute h_poly&quot;</span>);
+            <span class="kw">let </span>h_poly_timer = <span class="macro">start_timer!</span>(|| <span class="string">"compute h_poly"</span>);
             <span class="kw">let </span><span class="kw-2">mut </span>h_poly = <span class="self">Self</span>::compute_h_poly_in_fk23(prover_param, <span class="kw-2">&amp;</span>polynomial.coeffs)<span class="question-mark">?</span>;
             <span class="macro">end_timer!</span>(h_poly_timer);
-            <span class="kw">let </span>proofs_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;gen eval proofs&quot;</span>);
+            <span class="kw">let </span>proofs_timer = <span class="macro">start_timer!</span>(|| <span class="string">"gen eval proofs"</span>);
             <span class="kw">let </span>proofs: Vec&lt;<span class="kw">_</span>&gt; = h_poly
                 .batch_evaluate_rou(domain)<span class="question-mark">?
                 </span>.into_iter()
@@ -1331,7 +1332,7 @@
     /// compute a batch opening proof for the multiple points of the same
     /// polynomial.
     ///
-    /// Warning: don&#39;t use it when `points.len()` is large
+    /// Warning: don't use it when `points.len()` is large
     </span><span class="kw">fn </span>multi_point_open(
         prover_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam&gt;,
         polynomial: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
@@ -1339,16 +1340,16 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::Proof, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt; {
         <span class="kw">if </span>points.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                <span class="string">&quot;no point to evaluate and open&quot;</span>.to_string(),
+                <span class="string">"no point to evaluate and open"</span>.to_string(),
             ));
         }
         <span class="kw">let </span>open_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">&quot;Opening polynomial of degree {} at {} points&quot;</span>,
+            <span class="string">"Opening polynomial of degree {} at {} points"</span>,
             polynomial.degree(),
             points.len()
         ));
 
-        <span class="kw">let </span>evals_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing polynomial evaluations&quot;</span>);
+        <span class="kw">let </span>evals_time = <span class="macro">start_timer!</span>(|| <span class="string">"Computing polynomial evaluations"</span>);
         <span class="kw">let </span>evals: Vec&lt;<span class="self">Self</span>::Evaluation&gt; = points
             .iter()
             .map(|point| polynomial.evaluate(point))
@@ -1369,7 +1370,7 @@
         // Quadratic complexity as Arkworks is using naive long division
         // TODO: using FFTs for division
         // https://github.com/EspressoSystems/jellyfish/issues/436
-        </span><span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Computing witness polynomial&quot;</span>);
+        </span><span class="kw">let </span>witness_time = <span class="macro">start_timer!</span>(|| <span class="string">"Computing witness polynomial"</span>);
         <span class="kw">let </span>witness_polynomial = polynomial / <span class="kw-2">&amp;</span>divisor;
         <span class="macro">end_timer!</span>(witness_time);
 
@@ -1389,7 +1390,7 @@
     <span class="doccomment">/// Verifies that `values` are the evaluation at the `points` of the
     /// polynomial committed inside `comm`.
     ///
-    /// Warning: don&#39;t use it when `points.len()` is large
+    /// Warning: don't use it when `points.len()` is large
     </span><span class="kw">fn </span>multi_point_verify(
         verifier_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::VerifierParam&gt;,
         commitment: <span class="kw-2">&amp;</span><span class="self">Self</span>::Commitment,
@@ -1399,25 +1400,25 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
         <span class="kw">if </span>points.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                <span class="string">&quot;no evaluation to check&quot;</span>.to_string(),
+                <span class="string">"no evaluation to check"</span>.to_string(),
             ));
         }
         <span class="kw">if </span>points.len() != values.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of points {} is different from the number of evaluation values {}&quot;</span>,
+                <span class="string">"the number of points {} is different from the number of evaluation values {}"</span>,
                 points.len(),
                 values.len(),
             )));
         }
         <span class="kw">if </span>verifier_param.borrow().powers_of_h.len() &lt; points.len() + <span class="number">1 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of powers of beta times h {} in SRS &lt;= the number of evaluation points {}&quot;</span>,
+                <span class="string">"the number of powers of beta times h {} in SRS &lt;= the number of evaluation points {}"</span>,
                 verifier_param.borrow().powers_of_h.len(),
                 points.len(),
             )));
         }
 
-        <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Checking evaluations&quot;</span>);
+        <span class="kw">let </span>check_time = <span class="macro">start_timer!</span>(|| <span class="string">"Checking evaluations"</span>);
 
         <span class="comment">// Compute the commitment to I(X) = sum_i eval_i * L_{point_i}(X)
         // O(|points|^2) complexity and we assume the number of points is small
@@ -1476,7 +1477,7 @@
             .<span class="number">0
             </span>.is_one();
 
-        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">&quot;Result: {res}&quot;</span>));
+        <span class="macro">end_timer!</span>(check_time, || <span class="macro">format!</span>(<span class="string">"Result: {res}"</span>));
         <span class="prelude-val">Ok</span>(res)
     }
 }
@@ -1487,7 +1488,7 @@
     F: FftField,
 {
     <span class="comment">// Computes h_poly as the matrix-vector product on page 3 of https://eprint.iacr.org/2023/033.pdf via naive row-column inner products in parallel
-    </span><span class="attr">#[cfg(not(feature = <span class="string">&quot;seq-fk-23&quot;</span>))]
+    </span><span class="attr">#[cfg(not(feature = <span class="string">"seq-fk-23"</span>))]
     </span><span class="kw">fn </span>compute_h_poly_parallel(
         prover_param: <span class="kw">impl </span>Borrow&lt;UnivariateProverParam&lt;E&gt;&gt;,
         poly_coeffs: <span class="kw-2">&amp;</span>[E::ScalarField],
@@ -1534,7 +1535,7 @@
             .checked_next_power_of_two()
             .ok_or_else(|| {
                 PCSError::InvalidParameters(<span class="macro">ark_std::format!</span>(
-                    <span class="string">&quot;Next power of two overflows! Got: {}&quot;</span>,
+                    <span class="string">"Next power of two overflows! Got: {}"</span>,
                     padded_coeffs.len().saturating_sub(<span class="number">1</span>)
                 ))
             })<span class="question-mark">?</span>;
@@ -1545,7 +1546,7 @@
         // 1.1 Toeplitz matrix A (named `poly_coeff_matrix` here)
         </span><span class="kw">let </span><span class="kw-2">mut </span>toep_col = <span class="macro">vec!</span>[<span class="kw-2">*</span>padded_coeffs
             .last()
-            .ok_or_else(|| PCSError::InvalidParameters(<span class="string">&quot;poly degree should &gt;= 1&quot;</span>.to_string()))<span class="question-mark">?</span>];
+            .ok_or_else(|| PCSError::InvalidParameters(<span class="string">"poly degree should &gt;= 1"</span>.to_string()))<span class="question-mark">?</span>];
         toep_col.resize(padded_degree, &lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField <span class="kw">as </span>Field&gt;::ZERO);
         <span class="kw">let </span>toep_row = padded_coeffs.iter().skip(<span class="number">1</span>).rev().cloned().collect();
         <span class="kw">let </span>poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)<span class="question-mark">?</span>;
@@ -1580,13 +1581,13 @@
 }
 
 <span class="kw">fn </span>convert_to_bigints&lt;F: PrimeField&gt;(p: <span class="kw-2">&amp;</span>[F]) -&gt; Vec&lt;F::BigInt&gt; {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
-    </span><span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Converting polynomial coeffs to
-    bigints&quot;</span>);
+    <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
+    </span><span class="kw">let </span>to_bigint_time = <span class="macro">start_timer!</span>(|| <span class="string">"Converting polynomial coeffs to
+    bigints"</span>);
 
     <span class="kw">let </span>coeffs = p.iter().map(|s| s.into_bigint()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;kzg-print-trace&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
     </span><span class="macro">end_timer!</span>(to_bigint_time);
 
     coeffs
@@ -1636,7 +1637,7 @@
             <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
-                <span class="string">&quot;proof was incorrect for max_degree = {}, polynomial_degree = {}&quot;</span>,
+                <span class="string">"proof was incorrect for max_degree = {}, polynomial_degree = {}"</span>,
                 degree,
                 p.degree(),
             );
@@ -1662,7 +1663,7 @@
             <span class="kw">let </span>(proof, value) = UnivariateKzgPCS::&lt;E&gt;::open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p, <span class="kw-2">&amp;</span>point)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 UnivariateKzgPCS::&lt;E&gt;::verify(<span class="kw-2">&amp;</span>vk, <span class="kw-2">&amp;</span>comm, <span class="kw-2">&amp;</span>point, <span class="kw-2">&amp;</span>value, <span class="kw-2">&amp;</span>proof)<span class="question-mark">?</span>,
-                <span class="string">&quot;proof was incorrect for max_degree = {}, polynomial_degree = {}&quot;</span>,
+                <span class="string">"proof was incorrect for max_degree = {}, polynomial_degree = {}"</span>,
                 degree,
                 p.degree(),
             );
@@ -1746,21 +1747,21 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>end_to_end_test() {
-        end_to_end_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+        end_to_end_test_template::&lt;Bls12_381&gt;().expect(<span class="string">"test failed for bls12-381"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>linear_polynomial_test() {
-        linear_polynomial_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+        linear_polynomial_test_template::&lt;Bls12_381&gt;().expect(<span class="string">"test failed for bls12-381"</span>);
     }
     <span class="attr">#[test]
     </span><span class="kw">fn </span>batch_check_test() {
-        batch_check_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+        batch_check_test_template::&lt;Bls12_381&gt;().expect(<span class="string">"test failed for bls12-381"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>multi_point_open_test() {
-        multi_point_open_test_template::&lt;Bls12_381&gt;().expect(<span class="string">&quot;test failed for bls12-381&quot;</span>);
+        multi_point_open_test_template::&lt;Bls12_381&gt;().expect(<span class="string">"test failed for bls12-381"</span>);
     }
 
     <span class="attr">#[test]
@@ -1776,7 +1777,7 @@
         <span class="kw">for </span>degree <span class="kw">in </span>degrees {
             <span class="kw">let </span>num_points = rng.gen_range(<span class="number">5</span>..<span class="number">30</span>); <span class="comment">// should allow more points than degree
             </span><span class="macro">ark_std::println!</span>(
-                <span class="string">&quot;Multi-opening: poly deg: {}, num of points: {}&quot;</span>,
+                <span class="string">"Multi-opening: poly deg: {}, num of points: {}"</span>,
                 degree,
                 num_points
             );
@@ -1792,7 +1793,7 @@
             </span><span class="kw">let </span>(proofs, evals) = UnivariateKzgPCS::&lt;E&gt;::multi_open(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, <span class="kw-2">&amp;</span>points)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 proofs.len() == evals.len() &amp;&amp; proofs.len() == num_points,
-                <span class="string">&quot;fn multi_open() should return the correct number of proofs and evals&quot;
+                <span class="string">"fn multi_open() should return the correct number of proofs and evals"
             </span>);
             points
                 .iter()
@@ -1811,7 +1812,7 @@
                 UnivariateKzgPCS::&lt;E&gt;::multi_open_rou(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>poly, num_points, <span class="kw-2">&amp;</span>domain)<span class="question-mark">?</span>;
             <span class="macro">assert!</span>(
                 proofs.len() == evals.len() &amp;&amp; proofs.len() == num_points,
-                <span class="string">&quot;fn multi_open_rou() should return the correct number of proofs and evals&quot;
+                <span class="string">"fn multi_open_rou() should return the correct number of proofs and evals"
             </span>);
 
             domain

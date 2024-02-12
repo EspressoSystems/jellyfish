@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/verifier.rs`."><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/verifier.rs`."><title>verifier.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1011,7 +1012,7 @@
             || verify_keys.is_empty()
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}&quot;</span>,
+                <span class="string">"the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}"</span>,
                 verify_keys.len(),
                 batch_proof.len(),
                 public_inputs.len(),
@@ -1021,19 +1022,19 @@
         <span class="kw">for </span>(i, (<span class="kw-2">&amp;</span>pub_input, <span class="kw-2">&amp;</span>vk)) <span class="kw">in </span>public_inputs.iter().zip(verify_keys.iter()).enumerate() {
             <span class="kw">if </span>pub_input.len() != vk.num_inputs {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                    <span class="macro">format!</span>(<span class="string">&quot;the circuit public input length {} != the {}-th verification key public input length {}&quot;</span>, pub_input.len(), i, vk.num_inputs)
+                    <span class="macro">format!</span>(<span class="string">"the circuit public input length {} != the {}-th verification key public input length {}"</span>, pub_input.len(), i, vk.num_inputs)
                 )
                 .into());
             }
             <span class="kw">if </span>vk.plookup_vk.is_some() != batch_proof.plookup_proofs_vec[i].is_some() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                    <span class="string">&quot;Mismatched proof type and verification key type for the {i}-th instance&quot;</span>,
+                    <span class="string">"Mismatched proof type and verification key type for the {i}-th instance"</span>,
                 ))
                 .into());
             }
             <span class="kw">if </span>vk.domain_size != <span class="self">self</span>.domain.size() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                    <span class="string">&quot;the domain size {} of the {}-th verification key is different from {}&quot;</span>,
+                    <span class="string">"the domain size {} of the {}-th verification key is different from {}"</span>,
                     vk.domain_size,
                     i,
                     <span class="self">self</span>.domain.size(),
@@ -1125,7 +1126,7 @@
     /// - `Ai = [open_proof_i] + u_i * [shifted_open_proof_i]` and
     /// - `Bi = eval_point_i * [open_proof_i] + u_i * next_eval_point_i *
     ///   [shifted_open_proof_i] + comm_i - eval_i * [1]1`.
-    /// By Schwartz-Zippel lemma, it&#39;s equivalent to check that for a random r:
+    /// By Schwartz-Zippel lemma, it's equivalent to check that for a random r:
     /// - `e(A0 + ... + r^{m-1} * Am, [x]2) = e(B0 + ... + r^{m-1} * Bm, [1]2)`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>batch_verify_opening_proofs&lt;T&gt;(
         open_key: <span class="kw-2">&amp;</span>OpenKey&lt;E&gt;,
@@ -1139,14 +1140,14 @@
             <span class="comment">// No need to use `r` when there is only a single proof.
             </span>E::ScalarField::one()
         } <span class="kw">else </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b&quot;batch verify&quot;</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b"batch verify"</span>);
             <span class="comment">// r := hash(u1||u2||...||u_m), where u_i is the hash output of the i-th Plonk
             // protocol transcript. This approach is more secure as `r` depends not only
             // on the proofs, but also the list of public inputs and verifying keys.
             </span><span class="kw">for </span>pcs_info <span class="kw">in </span>pcs_infos {
-                transcript.append_challenge::&lt;E&gt;(<span class="string">b&quot;u&quot;</span>, <span class="kw-2">&amp;</span>pcs_info.u)<span class="question-mark">?</span>;
+                transcript.append_challenge::&lt;E&gt;(<span class="string">b"u"</span>, <span class="kw-2">&amp;</span>pcs_info.u)<span class="question-mark">?</span>;
             }
-            transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;r&quot;</span>)<span class="question-mark">?
+            transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"r"</span>)<span class="question-mark">?
         </span>};
 
         <span class="comment">// Compute A := A0 + r * A1 + ... + r^{m-1} * Am
@@ -1186,7 +1187,7 @@
     }
 
     <span class="doccomment">/// Compute verifier challenges `tau`, `beta`, `gamma`, `alpha`, `zeta`,
-    /// &#39;v&#39;, &#39;u&#39;.
+    /// 'v', 'u'.
     </span><span class="attr">#[inline]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>compute_challenges&lt;T&gt;(
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
@@ -1199,14 +1200,14 @@
     {
         <span class="kw">if </span>verify_keys.len() != batch_proof.len() || verify_keys.len() != public_inputs.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}&quot;</span>,
+                <span class="string">"the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}"</span>,
                 verify_keys.len(),
                 batch_proof.len(),
                 public_inputs.len(),
             ))
             .into());
         }
-        <span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b&quot;PlonkProof&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b"PlonkProof"</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(msg) = extra_transcript_init_msg {
             transcript.append_message(EXTRA_TRANSCRIPT_MSG_LABEL, msg)<span class="question-mark">?</span>;
         }
@@ -1214,31 +1215,31 @@
             transcript.append_vk_and_pub_input(vk, pi)<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>wires_poly_comms <span class="kw">in </span>batch_proof.wires_poly_comms_vec.iter() {
-            transcript.append_commitments(<span class="string">b&quot;witness_poly_comms&quot;</span>, wires_poly_comms)<span class="question-mark">?</span>;
+            transcript.append_commitments(<span class="string">b"witness_poly_comms"</span>, wires_poly_comms)<span class="question-mark">?</span>;
         }
-        <span class="kw">let </span>tau = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;tau&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tau = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>;
 
         <span class="kw">for </span>plookup_proof <span class="kw">in </span>batch_proof.plookup_proofs_vec.iter() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(proof_lkup) = plookup_proof.as_ref() {
-                transcript.append_commitments(<span class="string">b&quot;h_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>proof_lkup.h_poly_comms)<span class="question-mark">?</span>;
+                transcript.append_commitments(<span class="string">b"h_poly_comms"</span>, <span class="kw-2">&amp;</span>proof_lkup.h_poly_comms)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="kw">let </span>beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;beta&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;gamma&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>prod_perm_poly_comm <span class="kw">in </span>batch_proof.prod_perm_poly_comms_vec.iter() {
-            transcript.append_commitment(<span class="string">b&quot;perm_poly_comms&quot;</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
+            transcript.append_commitment(<span class="string">b"perm_poly_comms"</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
         }
         <span class="kw">for </span>plookup_proof <span class="kw">in </span>batch_proof.plookup_proofs_vec.iter() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(proof_lkup) = plookup_proof.as_ref() {
                 transcript
-                    .append_commitment(<span class="string">b&quot;plookup_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>proof_lkup.prod_lookup_poly_comm)<span class="question-mark">?</span>;
+                    .append_commitment(<span class="string">b"plookup_poly_comms"</span>, <span class="kw-2">&amp;</span>proof_lkup.prod_lookup_poly_comm)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="kw">let </span>alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;alpha&quot;</span>)<span class="question-mark">?</span>;
-        transcript.append_commitments(<span class="string">b&quot;quot_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
-        <span class="kw">let </span>zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;zeta&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
+        transcript.append_commitments(<span class="string">b"quot_poly_comms"</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
+        <span class="kw">let </span>zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>poly_evals <span class="kw">in </span>batch_proof.poly_evals_vec.iter() {
             transcript.append_proof_evaluations::&lt;E&gt;(poly_evals)<span class="question-mark">?</span>;
         }
@@ -1248,10 +1249,10 @@
             }
         }
 
-        <span class="kw">let </span>v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;v&quot;</span>)<span class="question-mark">?</span>;
-        transcript.append_commitment(<span class="string">b&quot;open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
-        transcript.append_commitment(<span class="string">b&quot;shifted_open_proof&quot;</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
-        <span class="kw">let </span>u = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;u&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
+        transcript.append_commitment(<span class="string">b"open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
+        transcript.append_commitment(<span class="string">b"shifted_open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
+        <span class="kw">let </span>u = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"u"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Challenges {
             tau,
             alpha,
@@ -1297,7 +1298,7 @@
             || verify_keys.len() != alpha_bases.len()
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}; the number of alpha bases = {}&quot;</span>,
+                <span class="string">"the number of verification keys = {}; the number of instances = {}; the number of public inputs = {}; the number of alpha bases = {}"</span>,
                 verify_keys.len(),
                 batch_proof.len(),
                 public_inputs.len(),
@@ -1375,7 +1376,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(ScalarsAndBases&lt;E&gt;, Vec&lt;E::ScalarField&gt;), PlonkError&gt; {
         <span class="kw">if </span>vks.len() != batch_proof.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of verification keys {} != the number of instances {}&quot;</span>,
+                <span class="string">"the number of verification keys {} != the number of instances {}"</span>,
                 vks.len(),
                 batch_proof.len()
             ))
@@ -1477,7 +1478,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ScalarsAndBases&lt;E&gt;, PlonkError&gt; {
         <span class="kw">if </span>vks.len() != batch_proof.len() || alpha_bases.len() != vks.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of verification keys {} != the number of instances {} or alpha bases {}&quot;</span>,
+                <span class="string">"the number of verification keys {} != the number of instances {} or alpha bases {}"</span>,
                 vks.len(),
                 batch_proof.len(),
                 alpha_bases.len()

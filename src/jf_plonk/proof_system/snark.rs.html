@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/snark.rs`."><title>snark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `plonk/src/proof_system/snark.rs`."><title>snark.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_plonk" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1803,7 +1804,7 @@
     constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization,
 };
 <span class="kw">use </span>jf_utils::par_utils::parallelizable_slice_iter;
-<span class="attr">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
 </span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// A Plonk instantiated with KZG PCS
@@ -1847,7 +1848,7 @@
         </span>T: PlonkTranscript&lt;F&gt;,
     {
         <span class="kw">if </span>verify_keys.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;empty verification keys&quot;</span>.to_string()).into());
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">"empty verification keys"</span>.to_string()).into());
         }
         <span class="kw">let </span>verifier = Verifier::new(verify_keys[<span class="number">0</span>].domain_size)<span class="question-mark">?</span>;
         <span class="kw">let </span>pcs_info =
@@ -1876,8 +1877,8 @@
             || extra_transcript_init_msgs.len() != proofs.len()
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;verify_keys.len: {}, public_inputs.len: {}, proofs.len: {}, \
-                 extra_transcript_msg.len: {}&quot;</span>,
+                <span class="string">"verify_keys.len: {}, public_inputs.len: {}, proofs.len: {}, \
+                 extra_transcript_msg.len: {}"</span>,
                 verify_keys.len(),
                 public_inputs.len(),
                 proofs.len(),
@@ -1887,7 +1888,7 @@
         }
         <span class="kw">if </span>verify_keys.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
-                ParameterError(<span class="string">&quot;the number of instances cannot be zero&quot;</span>.to_string()).into(),
+                ParameterError(<span class="string">"the number of instances cannot be zero"</span>.to_string()).into(),
             );
         }
 
@@ -1943,11 +1944,11 @@
         T: PlonkTranscript&lt;F&gt;,
     {
         <span class="kw">if </span>circuits.is_empty() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;zero number of circuits/proving keys&quot;</span>.to_string()).into());
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">"zero number of circuits/proving keys"</span>.to_string()).into());
         }
         <span class="kw">if </span>circuits.len() != prove_keys.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;the number of circuits {} != the number of proving keys {}&quot;</span>,
+                <span class="string">"the number of circuits {} != the number of proving keys {}"</span>,
                 circuits.len(),
                 prove_keys.len()
             ))
@@ -1958,7 +1959,7 @@
         <span class="kw">for </span>(circuit, pk) <span class="kw">in </span>circuits.iter().zip(prove_keys.iter()) {
             <span class="kw">if </span>circuit.eval_domain_size()<span class="question-mark">? </span>!= n {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                    <span class="string">&quot;circuit domain size {} != expected domain size {}&quot;</span>,
+                    <span class="string">"circuit domain size {} != expected domain size {}"</span>,
                     circuit.eval_domain_size()<span class="question-mark">?</span>,
                     n
                 ))
@@ -1966,7 +1967,7 @@
             }
             <span class="kw">if </span>pk.domain_size() != n {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                    <span class="string">&quot;proving key domain size {} != expected domain size {}&quot;</span>,
+                    <span class="string">"proving key domain size {} != expected domain size {}"</span>,
                     pk.domain_size(),
                     n
                 ))
@@ -1974,7 +1975,7 @@
             }
             <span class="kw">if </span>circuit.num_inputs() != pk.vk.num_inputs {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                    <span class="string">&quot;circuit.num_inputs {} != prove_key.num_inputs {}&quot;</span>,
+                    <span class="string">"circuit.num_inputs {} != prove_key.num_inputs {}"</span>,
                     circuit.num_inputs(),
                     pk.vk.num_inputs
                 ))
@@ -1982,17 +1983,17 @@
             }
             <span class="kw">if </span>circuit.support_lookup() != pk.plookup_pk.is_some() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                    <span class="string">&quot;Mismatched Plonk types between the proving key and the circuit&quot;</span>.to_string(),
+                    <span class="string">"Mismatched Plonk types between the proving key and the circuit"</span>.to_string(),
                 )
                 .into());
             }
             <span class="kw">if </span>circuit.num_wire_types() != num_wire_types {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;inconsistent plonk circuit types&quot;</span>.to_string()).into());
+                <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">"inconsistent plonk circuit types"</span>.to_string()).into());
             }
         }
 
         <span class="comment">// Initialize transcript
-        </span><span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b&quot;PlonkProof&quot;</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>transcript = T::new(<span class="string">b"PlonkProof"</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(msg) = extra_transcript_init_msg {
             transcript.append_message(EXTRA_TRANSCRIPT_MSG_LABEL, <span class="kw-2">&amp;</span>msg)<span class="question-mark">?</span>;
         }
@@ -2011,14 +2012,14 @@
                 prover.run_1st_round(prng, <span class="kw-2">&amp;</span>prove_keys[i].commit_key, circuits[i])<span class="question-mark">?</span>;
             online_oracles[i].wire_polys = wire_polys;
             online_oracles[i].pub_inp_poly = pi_poly;
-            transcript.append_commitments(<span class="string">b&quot;witness_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>wires_poly_comms)<span class="question-mark">?</span>;
+            transcript.append_commitments(<span class="string">b"witness_poly_comms"</span>, <span class="kw-2">&amp;</span>wires_poly_comms)<span class="question-mark">?</span>;
             wires_poly_comms_vec.push(wires_poly_comms);
         }
 
         <span class="comment">// Round 1.5
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
-        </span>challenges.tau = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;tau&quot;</span>)<span class="question-mark">?</span>;
+        </span>challenges.tau = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>h_poly_comms_vec = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>sorted_vec_list = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>merged_table_list = <span class="macro">vec!</span>[];
@@ -2032,7 +2033,7 @@
                         challenges.tau,
                     )<span class="question-mark">?</span>;
                 online_oracles[i].plookup_oracles.h_polys = h_polys;
-                transcript.append_commitments(<span class="string">b&quot;h_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>h_poly_comms)<span class="question-mark">?</span>;
+                transcript.append_commitments(<span class="string">b"h_poly_comms"</span>, <span class="kw-2">&amp;</span>h_poly_comms)<span class="question-mark">?</span>;
                 (<span class="prelude-val">Some</span>(sorted_vec), <span class="prelude-val">Some</span>(h_poly_comms), <span class="prelude-val">Some</span>(merged_table))
             } <span class="kw">else </span>{
                 (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
@@ -2043,14 +2044,14 @@
         }
 
         <span class="comment">// Round 2
-        </span>challenges.beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;beta&quot;</span>)<span class="question-mark">?</span>;
-        challenges.gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;gamma&quot;</span>)<span class="question-mark">?</span>;
+        </span>challenges.beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
+        challenges.gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>prod_perm_poly_comms_vec = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..circuits.len() {
             <span class="kw">let </span>(prod_perm_poly_comm, prod_perm_poly) =
                 prover.run_2nd_round(prng, <span class="kw-2">&amp;</span>prove_keys[i].commit_key, circuits[i], <span class="kw-2">&amp;</span>challenges)<span class="question-mark">?</span>;
             online_oracles[i].prod_perm_poly = prod_perm_poly;
-            transcript.append_commitment(<span class="string">b&quot;perm_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>prod_perm_poly_comm)<span class="question-mark">?</span>;
+            transcript.append_commitment(<span class="string">b"perm_poly_comms"</span>, <span class="kw-2">&amp;</span>prod_perm_poly_comm)<span class="question-mark">?</span>;
             prod_perm_poly_comms_vec.push(prod_perm_poly_comm);
         }
 
@@ -2068,7 +2069,7 @@
                     sorted_vec_list[i].as_ref(),
                 )<span class="question-mark">?</span>;
                 online_oracles[i].plookup_oracles.prod_lookup_poly = prod_lookup_poly;
-                transcript.append_commitment(<span class="string">b&quot;plookup_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>prod_lookup_poly_comm)<span class="question-mark">?</span>;
+                transcript.append_commitment(<span class="string">b"plookup_poly_comms"</span>, <span class="kw-2">&amp;</span>prod_lookup_poly_comm)<span class="question-mark">?</span>;
                 <span class="prelude-val">Some</span>(prod_lookup_poly_comm)
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
@@ -2077,7 +2078,7 @@
         }
 
         <span class="comment">// Round 3
-        </span>challenges.alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;alpha&quot;</span>)<span class="question-mark">?</span>;
+        </span>challenges.alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>(split_quot_poly_comms, split_quot_polys) = prover.run_3rd_round(
             prng,
             <span class="kw-2">&amp;</span>prove_keys[<span class="number">0</span>].commit_key,
@@ -2086,10 +2087,10 @@
             <span class="kw-2">&amp;</span>online_oracles,
             num_wire_types,
         )<span class="question-mark">?</span>;
-        transcript.append_commitments(<span class="string">b&quot;quot_poly_comms&quot;</span>, <span class="kw-2">&amp;</span>split_quot_poly_comms)<span class="question-mark">?</span>;
+        transcript.append_commitments(<span class="string">b"quot_poly_comms"</span>, <span class="kw-2">&amp;</span>split_quot_poly_comms)<span class="question-mark">?</span>;
 
         <span class="comment">// Round 4
-        </span>challenges.zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;zeta&quot;</span>)<span class="question-mark">?</span>;
+        </span>challenges.zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>poly_evals_vec = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..circuits.len() {
             <span class="kw">let </span>poly_evals = prover.compute_evaluations(
@@ -2148,7 +2149,7 @@
         }
 
         <span class="comment">// Round 5
-        </span>challenges.v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b&quot;v&quot;</span>)<span class="question-mark">?</span>;
+        </span>challenges.v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>(opening_proof, shifted_opening_proof) = prover.compute_opening_proofs(
             <span class="kw-2">&amp;</span>prove_keys[<span class="number">0</span>].commit_key,
             prove_keys,
@@ -2202,7 +2203,7 @@
     <span class="kw">type </span>Error = PlonkError;
 
     <span class="comment">// FIXME: (alex) see &lt;https://github.com/EspressoSystems/jellyfish/issues/249&gt;
-    </span><span class="attr">#[cfg(any(test, feature = <span class="string">&quot;test-srs&quot;</span>))]
+    </span><span class="attr">#[cfg(any(test, feature = <span class="string">"test-srs"</span>))]
     </span><span class="kw">fn </span>universal_setup_for_testing&lt;R: RngCore + CryptoRng&gt;(
         max_degree: usize,
         rng: <span class="kw-2">&amp;mut </span>R,
@@ -2211,7 +2212,7 @@
         <span class="kw">use </span>ark_ff::PrimeField;
         <span class="kw">use </span>ark_std::{end_timer, start_timer, UniformRand};
 
-        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;KZG10::Setup with degree {}&quot;</span>, max_degree));
+        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"KZG10::Setup with degree {}"</span>, max_degree));
         <span class="kw">let </span>beta = E::ScalarField::rand(rng);
         <span class="kw">let </span>g = E::G1::rand(rng);
         <span class="kw">let </span>h = E::G2::rand(rng);
@@ -2227,7 +2228,7 @@
         <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(max_degree + <span class="number">1</span>);
 
         <span class="kw">let </span>scalar_bits = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
-        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">&quot;Generating powers of G&quot;</span>);
+        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">"Generating powers of G"</span>);
         <span class="comment">// TODO: parallelization
         </span><span class="kw">let </span>g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
         <span class="kw">let </span>powers_of_g =
@@ -2691,7 +2692,7 @@
             <span class="kw">let </span>extra_msg = <span class="kw">if </span>i % <span class="number">2 </span>== <span class="number">0 </span>{
                 <span class="prelude-val">None
             </span>} <span class="kw">else </span>{
-                <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">&quot;extra message: {}&quot;</span>, i).into_bytes())
+                <span class="prelude-val">Some</span>(<span class="macro">format!</span>(<span class="string">"extra message: {}"</span>, i).into_bytes())
             };
             proofs.push(
                 PlonkKzgSnark::&lt;E&gt;::prove::&lt;<span class="kw">_</span>, <span class="kw">_</span>, T&gt;(rng, cs, pk_ref, extra_msg.clone()).unwrap(),
@@ -2729,7 +2730,7 @@
                 vk_ref,
                 <span class="kw-2">&amp;</span>bad_pub_input,
                 proof,
-                <span class="prelude-val">Some</span>(<span class="string">&quot;wrong message&quot;</span>.to_string().into_bytes()),
+                <span class="prelude-val">Some</span>(<span class="string">"wrong message"</span>.to_string().into_bytes()),
             )
             .is_err());
 
@@ -3230,7 +3231,7 @@
                 * (gamma_mul_beta_plus_one
                     + h_polys[<span class="number">1</span>].evaluate(<span class="kw-2">&amp;</span>point)
                     + beta * h_polys[<span class="number">1</span>].evaluate(<span class="kw-2">&amp;</span>next_point));
-            <span class="macro">assert_eq!</span>(eval_1, eval_2, <span class="string">&quot;i={}, domain_size={}&quot;</span>, i, domain.size());
+            <span class="macro">assert_eq!</span>(eval_1, eval_2, <span class="string">"i={}, domain_size={}"</span>, i, domain.size());
         }
 
         <span class="prelude-val">Ok</span>(())

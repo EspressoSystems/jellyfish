@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/pcs/multilinear_kzg/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -504,7 +505,7 @@
     univariate_kzg::UnivariateKzgProof,
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,
 };
-<span class="attr">#[cfg(target_has_atomic = <span class="string">&quot;ptr&quot;</span>)]
+<span class="attr">#[cfg(target_has_atomic = <span class="string">"ptr"</span>)]
 </span><span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>ark_ec::{
     pairing::Pairing,
@@ -566,9 +567,9 @@
 /// concurrency is supported. And set to `Arc&lt;DenseMultilinearExtension&gt;` for
 /// platforms that supports atomic operations (e.g. mostly non-wasm, MIPS, x86
 /// etc.)
-</span><span class="attr">#[cfg(target_has_atomic = <span class="string">&quot;ptr&quot;</span>)]
+</span><span class="attr">#[cfg(target_has_atomic = <span class="string">"ptr"</span>)]
 </span><span class="kw">pub type </span>MLE&lt;F&gt; = Arc&lt;DenseMultilinearExtension&lt;F&gt;&gt;;
-<span class="attr">#[cfg(not(target_has_atomic = <span class="string">&quot;ptr&quot;</span>))]
+<span class="attr">#[cfg(not(target_has_atomic = <span class="string">"ptr"</span>))]
 </span><span class="kw">pub type </span>MLE&lt;F&gt; = DenseMultilinearExtension&lt;F&gt;;
 
 <span class="kw">impl</span>&lt;E: Pairing&gt; PolynomialCommitmentScheme <span class="kw">for </span>MultilinearKzgPCS&lt;E&gt; {
@@ -596,7 +597,7 @@
             <span class="prelude-val">Some</span>(p) =&gt; p,
             <span class="prelude-val">None </span>=&gt; {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                    <span class="string">&quot;multilinear should receive a num_var param&quot;</span>.to_string(),
+                    <span class="string">"multilinear should receive a num_var param"</span>.to_string(),
                 ))
             },
         };
@@ -615,10 +616,10 @@
         poly: <span class="kw-2">&amp;</span><span class="self">Self</span>::Polynomial,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
-        <span class="kw">let </span>commit_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;commit&quot;</span>);
+        <span class="kw">let </span>commit_timer = <span class="macro">start_timer!</span>(|| <span class="string">"commit"</span>);
         <span class="kw">if </span>prover_param.<span class="number">0</span>.num_vars &lt; poly.num_vars {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-                <span class="string">&quot;Poly length ({}) exceeds param limit ({})&quot;</span>,
+                <span class="string">"Poly length ({}) exceeds param limit ({})"</span>,
                 poly.num_vars, prover_param.<span class="number">0</span>.num_vars
             )));
         }
@@ -647,7 +648,7 @@
         polys: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Polynomial],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Commitment, PCSError&gt; {
         <span class="kw">let </span>prover_param = prover_param.borrow();
-        <span class="kw">let </span>commit_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;multi commit&quot;</span>);
+        <span class="kw">let </span>commit_timer = <span class="macro">start_timer!</span>(|| <span class="string">"multi commit"</span>);
         <span class="kw">let </span>poly = merge_polynomials(polys)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>scalars: Vec&lt;<span class="kw">_</span>&gt; = poly
@@ -706,7 +707,7 @@
     /// 2. build MLE `w` which is the merge of all MLEs.
     /// 3. build `q(x)` which is a univariate polynomial `W circ l`
     /// 4. commit to q(x) and sample r from transcript
-    /// transcript contains: w commitment, points, q(x)&#39;s commitment
+    /// transcript contains: w commitment, points, q(x)'s commitment
     /// 5. build q(omega^i) and their openings
     /// 6. build q(r) and its opening
     /// 7. get a point `p := l(r)`
@@ -747,7 +748,7 @@
     /// `poly_i` committed inside `commitment`.
     /// steps:
     ///
-    /// 1. put `q(x)`&#39;s evaluations over `(1, omega,...)` into transcript
+    /// 1. put `q(x)`'s evaluations over `(1, omega,...)` into transcript
     /// 2. sample `r` from transcript
     /// 3. check `q(r) == value`
     /// 4. build `l(points)` which is a list of univariate polynomials that goes
@@ -786,18 +787,18 @@
     polynomial: <span class="kw-2">&amp;</span>DenseMultilinearExtension&lt;E::ScalarField&gt;,
     point: <span class="kw-2">&amp;</span>[E::ScalarField],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(MultilinearKzgProof&lt;E&gt;, E::ScalarField), PCSError&gt; {
-    <span class="kw">let </span>open_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;open mle with {} variable&quot;</span>, polynomial.num_vars));
+    <span class="kw">let </span>open_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"open mle with {} variable"</span>, polynomial.num_vars));
 
     <span class="kw">if </span>polynomial.num_vars() &gt; prover_param.num_vars {
         <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-            <span class="string">&quot;Polynomial num_vars {} exceed the limit {}&quot;</span>,
+            <span class="string">"Polynomial num_vars {} exceed the limit {}"</span>,
             polynomial.num_vars, prover_param.num_vars
         )));
     }
 
     <span class="kw">if </span>polynomial.num_vars() != point.len() {
         <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-            <span class="string">&quot;Polynomial num_vars {} does not match point len {}&quot;</span>,
+            <span class="string">"Polynomial num_vars {} does not match point len {}"</span>,
             polynomial.num_vars,
             point.len()
         )));
@@ -816,14 +817,14 @@
         .zip(prover_param.powers_of_g[ignored..ignored + nv].iter())
         .enumerate()
     {
-        <span class="kw">let </span>ith_round = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;{}-th round&quot;</span>, i));
+        <span class="kw">let </span>ith_round = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"{}-th round"</span>, i));
 
         <span class="kw">let </span>k = nv - <span class="number">1 </span>- i;
         <span class="kw">let </span>cur_dim = <span class="number">1 </span>&lt;&lt; k;
         <span class="kw">let </span><span class="kw-2">mut </span>q = <span class="macro">vec!</span>[E::ScalarField::zero(); cur_dim];
         <span class="kw">let </span><span class="kw-2">mut </span>r = <span class="macro">vec!</span>[E::ScalarField::zero(); cur_dim];
 
-        <span class="kw">let </span>ith_round_eval = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;{}-th round eval&quot;</span>, i));
+        <span class="kw">let </span>ith_round_eval = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"{}-th round eval"</span>, i));
         <span class="kw">for </span>b <span class="kw">in </span><span class="number">0</span>..(<span class="number">1 </span>&lt;&lt; k) {
             <span class="comment">// q[b] = f[1, b] - f[0, b]
             </span>q[b] = f[(b &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>] - f[b &lt;&lt; <span class="number">1</span>];
@@ -836,7 +837,7 @@
         <span class="kw">let </span>scalars: Vec&lt;<span class="kw">_</span>&gt; = q.iter().map(|x| x.into_bigint()).collect();
 
         <span class="comment">// this is a MSM over G1 and is likely to be the bottleneck
-        </span><span class="kw">let </span>msm_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">&quot;msm of size {} at round {}&quot;</span>, gi.evals.len(), i));
+        </span><span class="kw">let </span>msm_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"msm of size {} at round {}"</span>, gi.evals.len(), i));
 
         proofs.push(E::G1::msm_bigint(<span class="kw-2">&amp;</span>gi.evals, <span class="kw-2">&amp;</span>scalars).into_affine());
         <span class="macro">end_timer!</span>(msm_timer);
@@ -845,7 +846,7 @@
     }
     <span class="kw">let </span>eval = polynomial
         .evaluate(point)
-        .ok_or_else(|| PCSError::InvalidParameters(<span class="string">&quot;fail to eval poly at the point&quot;</span>.to_string()))<span class="question-mark">?</span>;
+        .ok_or_else(|| PCSError::InvalidParameters(<span class="string">"fail to eval poly at the point"</span>.to_string()))<span class="question-mark">?</span>;
     <span class="macro">end_timer!</span>(open_timer);
     <span class="prelude-val">Ok</span>((MultilinearKzgProof { proofs }, eval))
 }
@@ -863,17 +864,17 @@
     value: <span class="kw-2">&amp;</span>E::ScalarField,
     proof: <span class="kw-2">&amp;</span>MultilinearKzgProof&lt;E&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, PCSError&gt; {
-    <span class="kw">let </span>verify_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;verify&quot;</span>);
+    <span class="kw">let </span>verify_timer = <span class="macro">start_timer!</span>(|| <span class="string">"verify"</span>);
     <span class="kw">let </span>num_var = point.len();
 
     <span class="kw">if </span>num_var &gt; verifier_param.num_vars {
         <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
-            <span class="string">&quot;point length ({}) exceeds param limit ({})&quot;</span>,
+            <span class="string">"point length ({}) exceeds param limit ({})"</span>,
             num_var, verifier_param.num_vars
         )));
     }
 
-    <span class="kw">let </span>prepare_inputs_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;prepare pairing inputs&quot;</span>);
+    <span class="kw">let </span>prepare_inputs_timer = <span class="macro">start_timer!</span>(|| <span class="string">"prepare pairing inputs"</span>);
 
     <span class="kw">let </span>scalar_size = E::ScalarField::MODULUS_BIT_SIZE <span class="kw">as </span>usize;
     <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(num_var);
@@ -890,7 +891,7 @@
     <span class="kw">let </span>h_vec: Vec&lt;E::G2Affine&gt; = E::G2::normalize_batch(<span class="kw-2">&amp;</span>h_vec);
     <span class="macro">end_timer!</span>(prepare_inputs_timer);
 
-    <span class="kw">let </span>pairing_product_timer = <span class="macro">start_timer!</span>(|| <span class="string">&quot;pairing product&quot;</span>);
+    <span class="kw">let </span>pairing_product_timer = <span class="macro">start_timer!</span>(|| <span class="string">"pairing product"</span>);
 
     <span class="kw">let </span><span class="kw-2">mut </span>pairings_l: Vec&lt;E::G1Prepared&gt; = proof
         .proofs

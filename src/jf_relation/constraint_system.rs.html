@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/constraint_system.rs`."><title>constraint_system.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/constraint_system.rs`."><title>constraint_system.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2437,7 +2438,7 @@
 <span class="kw">use </span>ark_std::{boxed::Box, cmp::max, format, string::ToString, vec, vec::Vec};
 <span class="kw">use </span>hashbrown::{HashMap, HashSet};
 <span class="kw">use </span>jf_utils::par_utils::parallelizable_slice_iter;
-<span class="attr">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
 </span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// An index to a gate in circuit.
@@ -2461,7 +2462,7 @@
 
 <span class="kw">impl </span>BoolVar {
     <span class="doccomment">/// Create a `BoolVar` without any check. Be careful!
-    /// This is an internal API, shouldn&#39;t be used unless you know what you are
+    /// This is an internal API, shouldn't be used unless you know what you are
     /// doing. Normally you should only construct `BoolVar` through
     /// `Circuit::create_boolean_variable()`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_unchecked(inner: usize) -&gt; <span class="self">Self </span>{
@@ -2749,7 +2750,7 @@
         }
         <span class="kw">if </span>range_bit_len.is_none() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;range bit len cannot be none for UltraPlonk&quot;</span>.to_string(),
+                <span class="string">"range bit len cannot be none for UltraPlonk"</span>.to_string(),
             ));
         }
 
@@ -2949,7 +2950,7 @@
     </span><span class="kw">pub fn </span>range_bit_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, CircuitError&gt; {
         <span class="kw">if </span><span class="self">self</span>.plonk_params.plonk_type != PlonkType::UltraPlonk {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;call range_bit_len() with non-ultraplonk circuit&quot;</span>.to_string(),
+                <span class="string">"call range_bit_len() with non-ultraplonk circuit"</span>.to_string(),
             ));
         }
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.plonk_params.range_bit_len.unwrap()) <span class="comment">// safe unwrap
@@ -3057,7 +3058,7 @@
                         <span class="kw">return </span><span class="prelude-val">Err</span>(GateCheckFailure(
                             gate_id,
                             <span class="macro">format!</span>(
-                                <span class="string">&quot;Lookup gate failed: ({q_dom_sep}, {key}, {val0}, {val1}) not in the table&quot;</span>,
+                                <span class="string">"Lookup gate failed: ({q_dom_sep}, {key}, {val0}, {val1}) not in the table"</span>,
                             ),
                         ));
                     }
@@ -3228,7 +3229,7 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(GateCheckFailure(
                 idx,
                 <span class="macro">format!</span>(
-                    <span class="string">&quot;Range gate failed: {} &gt;= {}&quot;</span>,
+                    <span class="string">"Range gate failed: {} &gt;= {}"</span>,
                     <span class="self">self</span>.witness[<span class="self">self</span>.wire_variables[RANGE_WIRE_ID][idx]], range_size
                 ),
             ));
@@ -3264,7 +3265,7 @@
             <span class="comment">// move lookup gates to the rear, the relative order of the lookup gates
             // should not change
             </span><span class="kw">let </span>n = <span class="self">self</span>.eval_domain.size();
-            <span class="comment">// be careful that we can&#39;t put a lookup gates at the very last slot.
+            <span class="comment">// be careful that we can't put a lookup gates at the very last slot.
             </span><span class="kw">let </span><span class="kw-2">mut </span>cur_gate_id = n - <span class="number">2</span>;
             <span class="kw">for </span><span class="kw-2">&amp;</span>(table_gate_id, table_size) <span class="kw">in </span><span class="self">self</span>.table_gate_ids.iter().rev() {
                 <span class="kw">for </span>gate_id <span class="kw">in </span>(table_gate_id..table_gate_id + table_size).rev() {
@@ -3301,7 +3302,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Check that the `gate_id`-th gate is satisfied by the circuit&#39;s witness
+    <span class="doccomment">/// Check that the `gate_id`-th gate is satisfied by the circuit's witness
     /// and the public input value `pub_input`. `gate_id` is guaranteed to
     /// be in the range. The gate equation:
     /// qo * wo = pub_input + q_c +
@@ -3343,7 +3344,7 @@
                 GateCheckFailure(
                     gate_id,
                     <span class="macro">format!</span>(
-                        <span class="string">&quot;gate: {:?}, wire values: {:?}, pub_input: {}, expected_gate_output: {}, gate_output: {}&quot;</span>,
+                        <span class="string">"gate: {:?}, wire values: {:?}, pub_input: {}, expected_gate_output: {}, gate_output: {}"</span>,
                         <span class="self">self</span>.gates[gate_id],
                         w_vals,
                         pub_input,
@@ -3364,7 +3365,7 @@
         <span class="kw">let </span>m = <span class="self">self</span>.num_vars();
 
         <span class="comment">// Compute the mapping from variables to wires.
-        // NOTE: we can use a vector as a map because our variable (the intended &quot;key&quot;
+        // NOTE: we can use a vector as a map because our variable (the intended "key"
         // value type of the Map) is sorted and match exactly as the
         // non-negative integer ranged from 0 to m. Our current implementation should be
         // slightly faster than using a `HashMap&lt;Variable, Vec&lt;(WireId, GateId)&gt;&gt;` as we
@@ -3570,8 +3571,8 @@
             .collect();
         <span class="kw">if </span>extended_perm.len() != <span class="self">self</span>.num_wire_types * n {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Length of the extended permutation vector should be number of gate \
-                         (including padded dummy gates) * number of wire types&quot;
+                <span class="string">"Length of the extended permutation vector should be number of gate \
+                         (including padded dummy gates) * number of wire types"
                     </span>.to_string(),
             ));
         }
@@ -3670,7 +3671,7 @@
         other.check_finalize_flag(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="kw">if </span><span class="self">self</span>.eval_domain_size()<span class="question-mark">? </span>!= other.eval_domain_size()<span class="question-mark">? </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;cannot merge circuits with different domain sizes: {}, {}&quot;</span>,
+                <span class="string">"cannot merge circuits with different domain sizes: {}, {}"</span>,
                 <span class="self">self</span>.eval_domain_size()<span class="question-mark">?</span>,
                 other.eval_domain_size()<span class="question-mark">?
             </span>)));
@@ -3679,24 +3680,24 @@
             || other.plonk_params.plonk_type != PlonkType::TurboPlonk
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;do not support merging non-TurboPlonk circuits.&quot;</span>.to_string(),
+                <span class="string">"do not support merging non-TurboPlonk circuits."</span>.to_string(),
             ));
         }
         <span class="kw">if </span><span class="self">self</span>.num_inputs() != other.num_inputs() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;self.num_inputs = {} different from other.num_inputs = {}&quot;</span>,
+                <span class="string">"self.num_inputs = {} different from other.num_inputs = {}"</span>,
                 <span class="self">self</span>.num_inputs(),
                 other.num_inputs()
             )));
         }
         <span class="kw">if </span><span class="self">self</span>.pub_input_gate_ids[<span class="number">0</span>] != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;the first circuit is not type A&quot;</span>.to_string(),
+                <span class="string">"the first circuit is not type A"</span>.to_string(),
             ));
         }
         <span class="kw">if </span>other.pub_input_gate_ids[<span class="number">0</span>] != other.eval_domain_size()<span class="question-mark">? </span>- <span class="number">1 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;the second circuit is not type B&quot;</span>.to_string(),
+                <span class="string">"the second circuit is not type B"</span>.to_string(),
             ));
         }
         <span class="kw">let </span>num_vars = <span class="self">self</span>.num_vars + other.num_vars;
@@ -3779,7 +3780,7 @@
         <span class="kw">let </span>domain = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
         <span class="kw">if </span>domain.size() &lt; <span class="self">self</span>.num_gates() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Domain size should be bigger than number of constraint&quot;</span>.to_string(),
+                <span class="string">"Domain size should be bigger than number of constraint"</span>.to_string(),
             ));
         }
         <span class="comment">// order: (lc, mul, hash, o, c, ecc) as specified in spec
@@ -3842,7 +3843,7 @@
         <span class="kw">let </span>domain = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
         <span class="kw">if </span>domain.size() &lt; <span class="self">self</span>.num_gates() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;Domain size {} should be bigger than number of constraint {}&quot;</span>,
+                <span class="string">"Domain size {} should be bigger than number of constraint {}"</span>,
                 domain.size(),
                 <span class="self">self</span>.num_gates()
             )));
@@ -3945,18 +3946,18 @@
         <span class="kw">let </span>n = domain.size();
         <span class="kw">if </span>n != <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Domain size should match the size of the padded lookup variables vector&quot;
+                <span class="string">"Domain size should match the size of the padded lookup variables vector"
                     </span>.to_string(),
             ));
         }
         <span class="kw">if </span>n != merged_lookup_table.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Domain size should match the size of the padded lookup table&quot;</span>.to_string(),
+                <span class="string">"Domain size should match the size of the padded lookup table"</span>.to_string(),
             ));
         }
         <span class="kw">if </span><span class="number">2 </span>* n - <span class="number">1 </span>!= sorted_vec.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;The sorted vector has wrong length&quot;</span>.to_string(),
+                <span class="string">"The sorted vector has wrong length"</span>.to_string(),
             ));
         }
 
@@ -4003,13 +4004,13 @@
         <span class="kw">let </span>n = domain.size();
         <span class="kw">if </span>n != <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Domain size should match the size of the padded lookup variables vector&quot;
+                <span class="string">"Domain size should match the size of the padded lookup variables vector"
                     </span>.to_string(),
             ));
         }
         <span class="kw">if </span>n != merged_lookup_table.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
-                <span class="string">&quot;Domain size should match the size of the padded lookup table&quot;</span>.to_string(),
+                <span class="string">"Domain size should match the size of the padded lookup table"</span>.to_string(),
             ));
         }
         <span class="comment">// only the first n-1 variables are for lookup
@@ -4034,7 +4035,7 @@
         }
 
         <span class="kw">if </span>sorted_vec.len() != <span class="number">2 </span>* n - <span class="number">1 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">&quot;The sorted vector has wrong length, some lookup variables might be outside the table&quot;</span>.to_string()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="string">"The sorted vector has wrong length, some lookup variables might be outside the table"</span>.to_string()));
         }
         <span class="kw">let </span>h1_poly = DensePolynomial::from_coefficients_vec(domain.ifft(<span class="kw-2">&amp;</span>sorted_vec[..n]));
         <span class="kw">let </span>h2_poly = DensePolynomial::from_coefficients_vec(domain.ifft(<span class="kw-2">&amp;</span>sorted_vec[n - <span class="number">1</span>..]));
@@ -4052,7 +4053,7 @@
         <span class="kw">let </span>range_size = <span class="self">self</span>.range_size()<span class="question-mark">?</span>;
         <span class="kw">if </span>domain.size() &lt; range_size {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;Domain size {} &lt; range size {}&quot;</span>,
+                <span class="string">"Domain size {} &lt; range size {}"</span>,
                 domain.size(),
                 range_size
             )));
@@ -4157,7 +4158,7 @@
         <span class="comment">// Check circuit satisfiability
         </span><span class="kw">let </span>pub_input = <span class="kw-2">&amp;</span>[F::from(<span class="number">8u32</span>)];
         <span class="kw">let </span>verify = circuit.check_circuit_satisfiability(pub_input);
-        <span class="macro">assert!</span>(verify.is_ok(), <span class="string">&quot;{:?}&quot;</span>, verify.unwrap_err());
+        <span class="macro">assert!</span>(verify.is_ok(), <span class="string">"{:?}"</span>, verify.unwrap_err());
         <span class="kw">let </span>bad_pub_input = <span class="kw-2">&amp;</span>[F::from(<span class="number">0u32</span>)];
         <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(bad_pub_input).is_err());
         <span class="comment">// Wrong public input length
@@ -4486,7 +4487,7 @@
         <span class="kw">let </span>n = domain.size();
         circuit.eval_domain = domain;
 
-        <span class="comment">// Check wire permutation&#39;s correctness
+        <span class="comment">// Check wire permutation's correctness
         </span>circuit.pad()<span class="question-mark">?</span>;
         circuit.compute_wire_permutation();
         <span class="kw">let </span><span class="kw-2">mut </span>visit_wire = <span class="macro">vec!</span>[<span class="bool-val">false</span>; circuit.num_wire_types * n];
@@ -4497,9 +4498,9 @@
                 <span class="kw">if </span>visit_wire[i * n + j] {
                     <span class="kw">continue</span>;
                 }
-                <span class="comment">// Compute the cycle&#39;s variable.
+                <span class="comment">// Compute the cycle's variable.
                 </span><span class="kw">let </span>cycle_var = circuit.wire_variable(i, j);
-                <span class="comment">// The variable shouldn&#39;t have been marked yet.
+                <span class="comment">// The variable shouldn't have been marked yet.
                 </span><span class="macro">assert!</span>(!visit_variable[cycle_var]);
                 visit_variable[cycle_var] = <span class="bool-val">true</span>;
 
@@ -4515,9 +4516,9 @@
                         <span class="kw">break</span>;
                     }
                     <span class="kw">let </span>next_var = circuit.wire_variable(next_wire_id, next_gate_id);
-                    <span class="comment">// The adjacent wire&#39;s variable should be the same.
+                    <span class="comment">// The adjacent wire's variable should be the same.
                     </span><span class="macro">assert_eq!</span>(cycle_var, next_var);
-                    <span class="comment">// The adjacent wire shouldn&#39;t have been marked yet.
+                    <span class="comment">// The adjacent wire shouldn't have been marked yet.
                     </span><span class="macro">assert!</span>(!visit_wire[next_wire_id * n + next_gate_id]);
                     visit_wire[next_wire_id * n + next_gate_id] = <span class="bool-val">true</span>;
                     wire_id = next_wire_id;

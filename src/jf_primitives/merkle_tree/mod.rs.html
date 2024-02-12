@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -450,10 +451,10 @@
         <span class="kw">match </span><span class="self">self </span>{
             LookupResult::Ok(x, proof) =&gt; <span class="prelude-val">Ok</span>((x, proof)),
             LookupResult::NotInMemory =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected Ok, found NotInMemory&quot;</span>.to_string(),
+                <span class="string">"Expected Ok, found NotInMemory"</span>.to_string(),
             )),
             LookupResult::NotFound(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected Ok, found NotFound&quot;</span>.to_string(),
+                <span class="string">"Expected Ok, found NotFound"</span>.to_string(),
             )),
         }
     }
@@ -463,10 +464,10 @@
         <span class="kw">match </span><span class="self">self </span>{
             LookupResult::NotFound(n) =&gt; <span class="prelude-val">Ok</span>(n),
             LookupResult::Ok(..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected NotFound, found Ok&quot;</span>.to_string(),
+                <span class="string">"Expected NotFound, found Ok"</span>.to_string(),
             )),
             LookupResult::NotInMemory =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected NotFound, found NotInMemory&quot;</span>.to_string(),
+                <span class="string">"Expected NotFound, found NotInMemory"</span>.to_string(),
             )),
         }
     }
@@ -476,10 +477,10 @@
         <span class="kw">match </span><span class="self">self </span>{
             LookupResult::NotInMemory =&gt; <span class="prelude-val">Ok</span>(()),
             LookupResult::Ok(..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected NotInMemory, found Ok&quot;</span>.to_string(),
+                <span class="string">"Expected NotInMemory, found Ok"</span>.to_string(),
             )),
             LookupResult::NotFound(..) =&gt; <span class="prelude-val">Err</span>(PrimitivesError::InternalError(
-                <span class="string">&quot;Expected NotInMemory, found NotFound&quot;</span>.to_string(),
+                <span class="string">"Expected NotInMemory, found NotFound"</span>.to_string(),
             )),
         }
     }
@@ -565,7 +566,7 @@
     + Clone
     + Copy
     + Serialize
-    + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt;
+    + <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Deserialize&lt;<span class="lifetime">'a</span>&gt;
     + CanonicalDeserialize
     + CanonicalSerialize
 {
@@ -697,7 +698,7 @@
 
     <span class="doccomment">/// Apply an update function `f` at a given position
     /// * `pos` - zero-based index of the leaf in the tree
-    /// * `f` - the update function, `None` means the given leaf doesn&#39;t exist
+    /// * `f` - the update function, `None` means the given leaf doesn't exist
     ///   or should be removed.
     /// * `returns` - Err() if any error occurs internally. Ok(result) if the
     ///   update is success or the given leaf is not in memory.
@@ -744,7 +745,7 @@
         pos: <span class="self">Self</span>::Index,
     ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
 
-    <span class="doccomment">/// &quot;Re-insert&quot; a leaf into the tree using its proof.
+    <span class="doccomment">/// "Re-insert" a leaf into the tree using its proof.
     /// Returns Ok(()) if insertion is successful, or Err(err) if the
     /// proof disagrees with the merkle tree
     </span><span class="kw">fn </span>remember(
@@ -786,7 +787,7 @@
         pos: <span class="self">Self</span>::Index,
     ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt;;
 
-    <span class="doccomment">/// &quot;Re-insert&quot; an empty leaf into the tree using its proof.
+    <span class="doccomment">/// "Re-insert" an empty leaf into the tree using its proof.
     ///
     /// Returns `Ok(())` if insertion is successful, or `Err(err)` if the proof
     /// disagrees with the merkle tree

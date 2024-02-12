@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/toeplitz.rs`."><title>toeplitz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/toeplitz.rs`."><title>toeplitz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -400,28 +401,28 @@
     <span class="doccomment">/// Fast multiplication of a Circulant matrix by a vector via FFT
     /// Details see Section 2.2.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     </span><span class="comment">// TODO: (alex) think of ways to extend to arbitrary length vector (simply
-    // truncate doesn&#39;t work).
+    // truncate doesn't work).
     </span><span class="kw">pub fn </span>fast_vec_mul&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, m: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;T&gt;, PrimitivesError&gt;
     <span class="kw">where
-        </span>T: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, Output = T&gt; + DomainCoeff&lt;F&gt;,
+        </span>T: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>F, Output = T&gt; + DomainCoeff&lt;F&gt;,
     {
         <span class="kw">if </span>!m.len().is_power_of_two() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                <span class="string">&quot;Fast Circulant Matrix mul only supports vector size of power of two.&quot;</span>.to_string(),
+                <span class="string">"Fast Circulant Matrix mul only supports vector size of power of two."</span>.to_string(),
             ));
         }
         <span class="kw">if </span>m.len() != <span class="self">self</span>.col.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                <span class="string">&quot;Wrong input dimension for matrix mul.&quot;</span>.to_string(),
+                <span class="string">"Wrong input dimension for matrix mul."</span>.to_string(),
             ));
         }
         <span class="kw">let </span>domain: GeneralEvaluationDomain&lt;F&gt; =
-            GeneralEvaluationDomain::new(m.len()).expect(<span class="string">&quot;Should init an evaluation domain&quot;</span>);
+            GeneralEvaluationDomain::new(m.len()).expect(<span class="string">"Should init an evaluation domain"</span>);
 
         <span class="kw">let </span>m_evals = domain.fft(m); <span class="comment">// DFT(m)
         </span><span class="kw">let </span>col_evals = domain.fft(<span class="kw-2">&amp;</span><span class="self">self</span>.col); <span class="comment">// DFT(c_N)
         </span><span class="kw">let </span>eval_prod = <span class="comment">// DFT(c_N) * DFT(m)
-            </span>hadamard_product(col_evals, m_evals).expect(<span class="string">&quot;Hadamard product should succeed&quot;</span>);
+            </span>hadamard_product(col_evals, m_evals).expect(<span class="string">"Hadamard product should succeed"</span>);
         <span class="kw">let </span>res = domain.ifft(<span class="kw-2">&amp;</span>eval_prod); <span class="comment">// iDFT(DFT(c_N) * DFT(m))
         </span><span class="prelude-val">Ok</span>(res)
     }
@@ -447,14 +448,14 @@
     </span><span class="kw">pub fn </span>new(col: Vec&lt;F&gt;, row: Vec&lt;F&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
         <span class="kw">if </span>col.is_empty() || col.len() != row.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;row: {}, col: {} should be both positive and equal&quot;</span>,
+                <span class="string">"row: {}, col: {} should be both positive and equal"</span>,
                 row.len(),
                 col.len()
             )));
         }
         <span class="kw">if </span>col[<span class="number">0</span>] != row[<span class="number">0</span>] {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
-                <span class="string">&quot;1st value in 1st col: {:?} should be the same as that in 1st row: {:?}&quot;</span>,
+                <span class="string">"1st value in 1st col: {:?} should be the same as that in 1st row: {:?}"</span>,
                 col[<span class="number">0</span>], row[<span class="number">0</span>]
             )));
         }
@@ -482,16 +483,16 @@
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     </span><span class="kw">pub fn </span>fast_vec_mul&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, v: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;T&gt;, PrimitivesError&gt;
     <span class="kw">where
-        </span>T: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, Output = T&gt; + DomainCoeff&lt;F&gt;,
+        </span>T: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>F, Output = T&gt; + DomainCoeff&lt;F&gt;,
     {
         <span class="kw">if </span>!v.len().is_power_of_two() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                <span class="string">&quot;Fast Toeplitz Matrix mul only supports vector size of power of two.&quot;</span>.to_string(),
+                <span class="string">"Fast Toeplitz Matrix mul only supports vector size of power of two."</span>.to_string(),
             ));
         }
         <span class="kw">if </span>v.len() != <span class="self">self</span>.col.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                <span class="string">&quot;Wrong input dimension for matrix mul.&quot;</span>.to_string(),
+                <span class="string">"Wrong input dimension for matrix mul."</span>.to_string(),
             ));
         }
 
@@ -524,7 +525,7 @@
         expected_col.rotate_right(<span class="number">1</span>);
         <span class="kw">if </span>expected_col != t.col {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
-                <span class="string">&quot;Not a Circulant Matrix&quot;</span>.to_string(),
+                <span class="string">"Not a Circulant Matrix"</span>.to_string(),
             ));
         }
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ col: t.col })
@@ -618,7 +619,7 @@
     ) -&gt; Matrix&lt;T, M, K&gt;
     <span class="kw">where
         </span>F: Field,
-        T: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>F, Output = T&gt; + AddAssign&lt;T&gt; + Copy + Default,
+        T: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Mul&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>F, Output = T&gt; + AddAssign&lt;T&gt; + Copy + Default,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>c = [[T::default(); K]; M];
 
@@ -652,7 +653,7 @@
         <span class="macro">assert_eq!</span>(
             &lt;Vector&lt;G1Projective, N&gt; <span class="kw">as </span>Into&lt;Vec&lt;G1Projective&gt;&gt;&gt;::into(expected),
             got,
-            <span class="string">&quot;Fast Circulant Matrix mul for EC group is incorrect.&quot;
+            <span class="string">"Fast Circulant Matrix mul for EC group is incorrect."
         </span>);
 
         <span class="kw">let </span>f_msgs = [Fr::rand(<span class="kw-2">&amp;mut </span>rng); N];
@@ -666,7 +667,7 @@
         <span class="macro">assert_eq!</span>(
             &lt;Vector&lt;Fr, N&gt; <span class="kw">as </span>Into&lt;Vec&lt;Fr&gt;&gt;&gt;::into(expected),
             got,
-            <span class="string">&quot;Fast Circulant Matrix mul for field is incorrect.&quot;
+            <span class="string">"Fast Circulant Matrix mul for field is incorrect."
         </span>);
 
         <span class="comment">// bad path
@@ -718,7 +719,7 @@
         <span class="macro">assert_eq!</span>(
             &lt;Vector&lt;G1Projective, N&gt; <span class="kw">as </span>Into&lt;Vec&lt;G1Projective&gt;&gt;&gt;::into(expected),
             got,
-            <span class="string">&quot;Fast Toeplitz Matrix mul is incorrect.&quot;
+            <span class="string">"Fast Toeplitz Matrix mul is incorrect."
         </span>);
 
         <span class="prelude-val">Ok</span>(())

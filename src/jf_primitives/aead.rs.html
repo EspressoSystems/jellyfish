@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/aead.rs`."><title>aead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/aead.rs`."><title>aead.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -476,7 +477,7 @@
 //! (`xchacha20poly1305`) for authenticated encryption with associated data.
 //!
 //! We only provide an ultra-thin wrapper for stable APIs for jellyfish users,
-//! independent of RustCrypto&#39;s upstream changes.
+//! independent of RustCrypto's upstream changes.
 
 </span><span class="kw">use </span><span class="kw">crate</span>::errors::PrimitivesError;
 <span class="kw">use </span>ark_serialize::<span class="kw-2">*</span>;
@@ -521,8 +522,8 @@
     }
 }
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>EncKey {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;aead::EncKey&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"aead::EncKey"</span>)
             .field(<span class="self">self</span>.<span class="number">0</span>.as_ref())
             .finish()
     }
@@ -533,7 +534,7 @@
     /// optional bytestring which is not encrypted, but is authenticated
     /// along with the message. Failure to pass the same AAD that was used
     /// during encryption will cause decryption to fail, which is useful if you
-    /// would like to &quot;bind&quot; the ciphertext to some identifier, like a
+    /// would like to "bind" the ciphertext to some identifier, like a
     /// digital signature key.
     </span><span class="kw">pub fn </span>encrypt(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -553,7 +554,7 @@
         <span class="comment">// encrypt the message and associated data using crypto box
         </span><span class="kw">let </span>ct = cipher
             .encrypt(<span class="kw-2">&amp;</span>nonce, Payload { msg: message, aad })
-            .map_err(|e| PrimitivesError::InternalError(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>)))<span class="question-mark">?</span>;
+            .map_err(|e| PrimitivesError::InternalError(<span class="macro">format!</span>(<span class="string">"{e:?}"</span>)))<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(Ciphertext {
             nonce: Nonce(nonce),
@@ -585,8 +586,8 @@
     }
 }
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>DecKey {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_tuple(<span class="string">&quot;aead::DecKey&quot;</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_tuple(<span class="string">"aead::DecKey"</span>)
             .field(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>.to_bytes())
             .finish()
     }
@@ -643,7 +644,7 @@
                     aad,
                 },
             )
-            .map_err(|e| PrimitivesError::FailedDecryption(<span class="macro">format!</span>(<span class="string">&quot;{e:?}&quot;</span>)))<span class="question-mark">?</span>;
+            .map_err(|e| PrimitivesError::FailedDecryption(<span class="macro">format!</span>(<span class="string">"{e:?}"</span>)))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(plaintext)
     }
 }
@@ -661,18 +662,18 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Nonce {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; Deserialize&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>Nonce {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
-        </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
+        </span>D: Deserializer&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">struct </span>NonceVisitor;
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; serde::de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NonceVisitor {
+        <span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; serde::de::Visitor&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>NonceVisitor {
             <span class="kw">type </span>Value = Nonce;
 
             <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-                formatter.write_str(<span class="string">&quot;byte array&quot;</span>)
+                formatter.write_str(<span class="string">"byte array"</span>)
             }
 
             <span class="kw">fn </span>visit_byte_buf&lt;E&gt;(<span class="self">self</span>, v: Vec&lt;u8&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
@@ -684,7 +685,7 @@
 
             <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
             <span class="kw">where
-                </span>A: serde::de::SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
+                </span>A: serde::de::SeqAccess&lt;<span class="lifetime">'de</span>&gt;,
             {
                 <span class="kw">let </span>bytes: Vec&lt;u8&gt; = seq
                     .next_element()<span class="question-mark">?
@@ -843,8 +844,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>rng = ChaCha20Rng::from_seed([<span class="number">0u8</span>; <span class="number">32</span>]);
         <span class="kw">let </span>keypair1 = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>keypair2 = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>msg = <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.to_vec();
-        <span class="kw">let </span>aad = <span class="string">b&quot;my associated data&quot;</span>.to_vec();
+        <span class="kw">let </span>msg = <span class="string">b"The quick brown fox jumps over the lazy dog"</span>.to_vec();
+        <span class="kw">let </span>aad = <span class="string">b"my associated data"</span>.to_vec();
 
         <span class="comment">// check correctness
         </span><span class="kw">let </span>ct1 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
@@ -854,12 +855,12 @@
 
         <span class="comment">// check soundness
         </span><span class="macro">assert!</span>(keypair2.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="kw-2">&amp;</span>aad).is_err());
-        <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="string">b&quot;wrong associated data&quot;</span>).is_err());
-        <span class="kw">let </span>ct2 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="string">b&quot;wrong message&quot;</span>, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
+        <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct1, <span class="string">b"wrong associated data"</span>).is_err());
+        <span class="kw">let </span>ct2 = keypair1.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="string">b"wrong message"</span>, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
         <span class="kw">let </span>plaintext2 = keypair1.decrypt(<span class="kw-2">&amp;</span>ct2, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(msg != plaintext2);
 
-        <span class="comment">// rng or nounce shouldn&#39;t affect decryption
+        <span class="comment">// rng or nounce shouldn't affect decryption
         </span><span class="kw">let </span>rng = ChaCha20Rng::from_seed([<span class="number">1u8</span>; <span class="number">32</span>]);
         <span class="kw">let </span>ct3 = keypair1.enc_key.encrypt(rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad)<span class="question-mark">?</span>;
         <span class="macro">assert!</span>(keypair1.decrypt(<span class="kw-2">&amp;</span>ct3, <span class="kw-2">&amp;</span>aad).is_ok());
@@ -873,8 +874,8 @@
     </span><span class="kw">fn </span>test_serde() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>msg = <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.to_vec();
-        <span class="kw">let </span>aad = <span class="string">b&quot;my associated data&quot;</span>.to_vec();
+        <span class="kw">let </span>msg = <span class="string">b"The quick brown fox jumps over the lazy dog"</span>.to_vec();
+        <span class="kw">let </span>aad = <span class="string">b"my associated data"</span>.to_vec();
         <span class="kw">let </span>ciphertext = keypair.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad).unwrap();
 
         <span class="comment">// serde for Keypair
@@ -912,8 +913,8 @@
     </span><span class="kw">fn </span>test_canonical_serde() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>keypair = KeyPair::generate(<span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>msg = <span class="string">b&quot;The quick brown fox jumps over the lazy dog&quot;</span>.to_vec();
-        <span class="kw">let </span>aad = <span class="string">b&quot;my associated data&quot;</span>.to_vec();
+        <span class="kw">let </span>msg = <span class="string">b"The quick brown fox jumps over the lazy dog"</span>.to_vec();
+        <span class="kw">let </span>aad = <span class="string">b"my associated data"</span>.to_vec();
         <span class="kw">let </span>ciphertext = keypair.enc_key.encrypt(<span class="kw-2">&amp;mut </span>rng, <span class="kw-2">&amp;</span>msg, <span class="kw-2">&amp;</span>aad).unwrap();
 
         <span class="comment">// when testing keypair, already tests serde on pk and sk

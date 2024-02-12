@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/gadgets/ecc/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1689,7 +1690,7 @@
     }
 
     <span class="doccomment">/// Obtain a variable to the point addition result of `point_a` + `point_b`
-    /// where &quot;+&quot; is the group operation over an elliptic curve.
+    /// where "+" is the group operation over an elliptic curve.
     /// Currently only supports `Affine::&lt;P&gt;` addition.
     ///
     /// Returns error if inputs are invalid
@@ -1732,22 +1733,22 @@
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_bits / <span class="number">2 </span>{
             <span class="kw">let </span>b0 = scalar_bits_le.get(<span class="number">2 </span>* i).ok_or_else(|| {
                 CircuitError::InternalError(
-                    <span class="string">&quot;scalar binary representation has the wrong length&quot;</span>.to_string(),
+                    <span class="string">"scalar binary representation has the wrong length"</span>.to_string(),
                 )
             })<span class="question-mark">?</span>;
             <span class="kw">let </span>b1 = scalar_bits_le.get(<span class="number">2 </span>* i + <span class="number">1</span>).ok_or_else(|| {
                 CircuitError::InternalError(
-                    <span class="string">&quot;scalar binary representation has the wrong length&quot;</span>.to_string(),
+                    <span class="string">"scalar binary representation has the wrong length"</span>.to_string(),
                 )
             })<span class="question-mark">?</span>;
             <span class="kw">let </span>p1 = fixed_bases[<span class="number">0</span>].get(i).ok_or_else(|| {
-                CircuitError::InternalError(<span class="string">&quot;fixed_bases_1 has the wrong length&quot;</span>.to_string())
+                CircuitError::InternalError(<span class="string">"fixed_bases_1 has the wrong length"</span>.to_string())
             })<span class="question-mark">?</span>;
             <span class="kw">let </span>p2 = fixed_bases[<span class="number">1</span>].get(i).ok_or_else(|| {
-                CircuitError::InternalError(<span class="string">&quot;fixed_bases_2 has the wrong length&quot;</span>.to_string())
+                CircuitError::InternalError(<span class="string">"fixed_bases_2 has the wrong length"</span>.to_string())
             })<span class="question-mark">?</span>;
             <span class="kw">let </span>p3 = fixed_bases[<span class="number">2</span>].get(i).ok_or_else(|| {
-                CircuitError::InternalError(<span class="string">&quot;fixed_bases_3 has the wrong length&quot;</span>.to_string())
+                CircuitError::InternalError(<span class="string">"fixed_bases_3 has the wrong length"</span>.to_string())
             })<span class="question-mark">?</span>;
             <span class="kw">let </span>selected = <span class="self">self</span>.quaternary_point_select::&lt;P&gt;(
                 <span class="kw-2">*</span>b0,
@@ -1832,13 +1833,13 @@
 </span><span class="kw">fn </span>compute_base_points&lt;E: ScalarMul&gt;(base: <span class="kw-2">&amp;</span>E, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;[Vec&lt;E&gt;; <span class="number">3</span>], CircuitError&gt; {
     <span class="kw">if </span>len == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::InternalError(
-            <span class="string">&quot;compute base points length input parameter must be positive&quot;</span>.to_string(),
+            <span class="string">"compute base points length input parameter must be positive"</span>.to_string(),
         ));
     }
     <span class="kw">fn </span>next_base&lt;E: ScalarMul&gt;(bases: <span class="kw-2">&amp;</span>[E]) -&gt; <span class="prelude-ty">Result</span>&lt;E, CircuitError&gt; {
         <span class="kw">let </span>last = <span class="kw-2">*</span>bases.last().ok_or_else(|| {
             CircuitError::InternalError(
-                <span class="string">&quot;Initialize the fixed base vector before calling this function&quot;</span>.to_string(),
+                <span class="string">"Initialize the fixed base vector before calling this function"</span>.to_string(),
             )
         })<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(last.double().double())
@@ -1860,7 +1861,7 @@
     <span class="comment">// base3 = (3*B, 3*4*B, ..., 3*4^(l-1)*B)
     </span><span class="kw">let </span><span class="kw-2">mut </span>bases3 = <span class="macro">vec!</span>[b];
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;parallel&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
     </span>{
         rayon::join(
             || {
@@ -1873,7 +1874,7 @@
         );
     }
 
-    <span class="attr">#[cfg(not(feature = <span class="string">&quot;parallel&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">"parallel"</span>))]
     </span>{
         fill_bases(<span class="kw-2">&amp;mut </span>bases1, len).ok();
         fill_bases(<span class="kw-2">&amp;mut </span>bases2, len).ok();
@@ -1989,55 +1990,55 @@
         <span class="comment">// generator for ed_on_bn254 curve
         </span><span class="kw">let </span>ed_on_254_gen = TEPoint(
             FqEd354::from_str(
-                <span class="string">&quot;19698561148652590122159747500897617769866003486955115824547446575314762165298&quot;</span>,
+                <span class="string">"19698561148652590122159747500897617769866003486955115824547446575314762165298"</span>,
             )
             .unwrap(),
             FqEd354::from_str(
-                <span class="string">&quot;19298250018296453272277890825869354524455968081175474282777126169995084727839&quot;</span>,
+                <span class="string">"19298250018296453272277890825869354524455968081175474282777126169995084727839"</span>,
             )
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls377 curve
         </span><span class="kw">let </span>ed_on_377_gen = TEPoint(
             FqEd377::from_str(
-                <span class="string">&quot;4497879464030519973909970603271755437257548612157028181994697785683032656389&quot;</span>,
+                <span class="string">"4497879464030519973909970603271755437257548612157028181994697785683032656389"</span>,
             )
             .unwrap(),
             FqEd377::from_str(
-                <span class="string">&quot;4357141146396347889246900916607623952598927460421559113092863576544024487809&quot;</span>,
+                <span class="string">"4357141146396347889246900916607623952598927460421559113092863576544024487809"</span>,
             )
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls381 curve
         </span><span class="kw">let </span>ed_on_381_gen = TEPoint(
             FqEd381::from_str(
-                <span class="string">&quot;8076246640662884909881801758704306714034609987455869804520522091855516602923&quot;</span>,
+                <span class="string">"8076246640662884909881801758704306714034609987455869804520522091855516602923"</span>,
             )
             .unwrap(),
             FqEd381::from_str(
-                <span class="string">&quot;13262374693698910701929044844600465831413122818447359594527400194675274060458&quot;</span>,
+                <span class="string">"13262374693698910701929044844600465831413122818447359594527400194675274060458"</span>,
             )
             .unwrap(),
         );
         <span class="comment">// generator for ed_on_bls381_bandersnatch curve
         </span><span class="kw">let </span>ed_on_381b_gen = TEPoint(
             FqEd381::from_str(
-                <span class="string">&quot;18886178867200960497001835917649091219057080094937609519140440539760939937304&quot;</span>,
+                <span class="string">"18886178867200960497001835917649091219057080094937609519140440539760939937304"</span>,
             )
             .unwrap(),
             FqEd381::from_str(
-                <span class="string">&quot;19188667384257783945677642223292697773471335439753913231509108946878080696678&quot;</span>,
+                <span class="string">"19188667384257783945677642223292697773471335439753913231509108946878080696678"</span>,
             )
             .unwrap(),
         );
         <span class="comment">// generator for bls377 G1 curve
         </span><span class="kw">let </span>bls377_gen = TEPoint(
             Fq377::from_str(
-                <span class="string">&quot;71222569531709137229370268896323705690285216175189308202338047559628438110820800641278662592954630774340654489393&quot;</span>,
+                <span class="string">"71222569531709137229370268896323705690285216175189308202338047559628438110820800641278662592954630774340654489393"</span>,
             )
             .unwrap(),
             Fq377::from_str(
-                <span class="string">&quot;6177051365529633638563236407038680211609544222665285371549726196884440490905471891908272386851767077598415378235&quot;</span>,
+                <span class="string">"6177051365529633638563236407038680211609544222665285371549726196884440490905471891908272386851767077598415378235"</span>,
             )
             .unwrap(),
         );
