@@ -36,9 +36,8 @@ pub fn compute_coset_representatives<F: PrimeField>(
         // check (a^-1 * b)^`N` = 1
         pow_a_N
             .inverse()
-            .expect("Unreachable: all elements in a prime field should have inverse")
-            * pow_b_N
-            == F::one()
+            .map(|inv_a| inv_a * pow_b_N == F::one())
+            .unwrap_or(false)
     }
 
     // check if a new k is valid: i.e. doesn't represent the same coset as any
