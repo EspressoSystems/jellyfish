@@ -159,12 +159,13 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 
             fn forget(
                 &mut self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
             ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
+                let pos = pos.borrow();
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.forget_internal(self.height, &traversal_path) {
                     LookupResult::Ok(elem, proof) => {
-                        LookupResult::Ok(elem, MerkleProof::new(pos, proof))
+                        LookupResult::Ok(elem, MerkleProof::new(pos.clone(), proof))
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
@@ -173,12 +174,12 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 
             fn remember(
                 &mut self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<(), PrimitivesError> {
                 let proof = proof.borrow();
-                let traversal_path = pos.to_traversal_path(self.height);
+                let traversal_path = pos.borrow().to_traversal_path(self.height);
                 if let MerkleNode::<E, I, T>::Leaf {
                     value: _,
                     pos,

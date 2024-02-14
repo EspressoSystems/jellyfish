@@ -342,7 +342,7 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// call.
     fn forget(
         &mut self,
-        pos: Self::Index,
+        pos: impl Borrow<Self::Index>,
     ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// "Re-insert" a leaf into the tree using its proof.
@@ -350,7 +350,7 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// proof disagrees with the merkle tree
     fn remember(
         &mut self,
-        pos: Self::Index,
+        pos: impl Borrow<Self::Index>,
         element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError>;
@@ -396,4 +396,35 @@ pub trait ForgetableUniversalMerkleTreeScheme:
         pos: Self::Index,
         proof: impl Borrow<Self::NonMembershipProof>,
     ) -> Result<(), PrimitivesError>;
+}
+
+/// A universal merkle tree that allows persistent updates.
+/// A persistent update doesn't directly modify the existing content, it creates
+/// a new copy about the update so that people could access both the old version
+/// and the new.
+pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
+    /// A persistent update interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update].
+    fn persistent_update(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        elem: impl Borrow<Self::Element>,
+    ) -> Result<Self, PrimitivesError>;
+
+    /// A persistent remove interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::remove].
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
+
+    /// A persistent update_with interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update_with].
+    fn persistent_update_with<F>(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<Self, PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 }

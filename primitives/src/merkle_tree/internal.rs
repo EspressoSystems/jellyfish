@@ -655,6 +655,123 @@ where
             MerkleNode::ForgettenSubtree { .. } => Ok((0, LookupResult::NotInMemory)),
         }
     }
+
+    /// Persistently update the element at the given index.
+    /// * `returns` - `Err()` if any error happens internally. `Ok(delta,
+    ///   result)`, `delta` represents the changes to the overall number of
+    ///   leaves of the tree, `result` contains the original lookup information
+    ///   at the given location.
+    pub(crate) fn persistent_update_with_internal<H, Arity, F>(
+        &self,
+        height: usize,
+        pos: impl Borrow<I>,
+        traversal_path: &[usize],
+        f: F,
+    ) -> Result<(Box<Self>, i64), PrimitivesError>
+    where
+        H: DigestAlgorithm<E, I, T>,
+        Arity: Unsigned,
+        F: FnOnce(Option<&E>) -> Option<E>,
+    {
+        let pos = pos.borrow();
+        match self {
+            MerkleNode::Leaf {
+                elem: node_elem,
+                value: _,
+                pos,
+            } => match f(Some(node_elem)) {
+                Some(elem) => Ok((
+                    Box::new(MerkleNode::Leaf {
+                        value: H::digest_leaf(pos, &elem)?,
+                        pos: pos.clone(),
+                        elem,
+                    }),
+                    0i64,
+                )),
+                None => Ok((Box::new(MerkleNode::Empty), -1i64)),
+            },
+            MerkleNode::Branch { value, children } => {
+                let branch = traversal_path[height - 1];
+                let result = children[branch].persistent_update_with_internal::<H, Arity, _>(
+                    height - 1,
+                    pos,
+                    traversal_path,
+                    f,
+                )?;
+                let mut children = children.clone();
+                children[branch] = result.0;
+                if matches!(*children[branch], MerkleNode::ForgettenSubtree { .. }) {
+                    // If the branch containing the update was forgotten by
+                    // user, the update failed and nothing was changed, so we
+                    // can short-circuit without recomputing this node's value.
+                    Ok((
+                        Box::new(MerkleNode::Branch {
+                            value: *value,
+                            children,
+                        }),
+                        result.1,
+                    ))
+                } else if children
+                    .iter()
+                    .all(|child| matches!(**child, MerkleNode::Empty))
+                {
+                    Ok((Box::new(MerkleNode::Empty), result.1))
+                } else {
+                    // Otherwise, an entry has been updated and the value of one of our children has
+                    // changed, so we must recompute our own value.
+                    // *value = digest_branch::<E, H, I, T>(&children)?;
+                    Ok((
+                        Box::new(MerkleNode::Branch {
+                            value: digest_branch::<E, H, I, T>(&children)?,
+                            children,
+                        }),
+                        result.1,
+                    ))
+                }
+            },
+            MerkleNode::Empty => {
+                if height == 0 {
+                    if let Some(elem) = f(None) {
+                        Ok((
+                            Box::new(MerkleNode::Leaf {
+                                value: H::digest_leaf(pos, &elem)?,
+                                pos: pos.clone(),
+                                elem,
+                            }),
+                            1i64,
+                        ))
+                    } else {
+                        Ok((Box::new(MerkleNode::Empty), 0i64))
+                    }
+                } else {
+                    let branch = traversal_path[height - 1];
+                    let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
+                    // Inserting new leave here, shortcutting
+                    let result = children[branch].update_with_internal::<H, Arity, _>(
+                        height - 1,
+                        pos,
+                        traversal_path,
+                        f,
+                    )?;
+                    if matches!(*children[branch], MerkleNode::Empty) {
+                        // No update performed.
+                        Ok((Box::new(MerkleNode::Empty), 0i64))
+                    } else {
+                        Ok((
+                            Box::new(MerkleNode::Branch {
+                                value: digest_branch::<E, H, I, T>(&children)?,
+                                children,
+                            }),
+                            result.0,
+                        ))
+                    }
+                }
+            },
+            MerkleNode::ForgettenSubtree { .. } => Err(PrimitivesError::InternalError(
+                "Given leaf is not in memory".to_string(),
+            )),
+        }
+    }
 }
 
 impl<E, T> MerkleNode<E, u64, T>

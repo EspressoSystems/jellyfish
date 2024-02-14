@@ -8,8 +8,8 @@
 use super::{
     internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
-    UniversalMerkleTreeScheme,
+    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
     errors::{PrimitivesError, VerificationResult},
@@ -146,6 +146,53 @@ where
     }
 }
 
+impl<E, H, I, Arity, T> PersistentUniversalMerkleTreeScheme
+    for UniversalMerkleTree<E, H, I, Arity, T>
+where
+    E: Element,
+    H: DigestAlgorithm<E, I, T>,
+    I: Index + ToTraversalPath<Arity>,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    fn persistent_update(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        elem: impl Borrow<Self::Element>,
+    ) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
+    }
+
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| None)
+    }
+
+    fn persistent_update_with<F>(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<Self, PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
+    {
+        let pos = pos.borrow();
+        let traversal_path = pos.to_traversal_path(self.height);
+        let (root, delta) = self.root.persistent_update_with_internal::<H, Arity, F>(
+            self.height,
+            pos,
+            &traversal_path,
+            f,
+        )?;
+        let num_leaves = (delta + self.num_leaves as i64) as u64;
+        Ok(Self {
+            root,
+            height: self.height,
+            num_leaves,
+            _phantom: PhantomData,
+        })
+    }
+}
+
 impl<E, H, I, Arity, T> ForgetableUniversalMerkleTreeScheme
     for UniversalMerkleTree<E, H, I, Arity, T>
 where
@@ -223,8 +270,8 @@ mod mt_tests {
             internal::{MerkleNode, MerkleProof},
             prelude::{RescueHash, RescueSparseMerkleTree},
             DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-            Index, LookupResult, MerkleCommitment, MerkleTreeScheme, ToTraversalPath,
-            UniversalMerkleTreeScheme,
+            Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
+            PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -484,7 +531,7 @@ mod mt_tests {
         } else {
             panic!("expected membership proof to end in a Leaf");
         }
-        mt.remember(0u64.into(), F::from(1u64), &bad_mem_proof)
+        mt.remember(BigUint::from(0u64), F::from(1u64), &bad_mem_proof)
             .unwrap_err();
 
         let mut bad_non_mem_proof = non_mem_proof.clone();
@@ -512,7 +559,8 @@ mod mt_tests {
             .unwrap_err();
 
         // Remember an occupied and an empty  sub-tree.
-        mt.remember(0u64.into(), F::from(1u64), &mem_proof).unwrap();
+        mt.remember(BigUint::from(0u64), F::from(1u64), &mem_proof)
+            .unwrap();
         mt.non_membership_remember(1u64.into(), &non_mem_proof)
             .unwrap();
 
@@ -538,6 +586,49 @@ mod mt_tests {
                 panic!("expected NotFound, got {:?}", res);
             },
         }
+    }
+
+    #[test]
+    fn test_persistent_update() {
+        test_persistent_update_helper::<BigUint, Fq254>();
+        test_persistent_update_helper::<BigUint, Fq377>();
+        test_persistent_update_helper::<BigUint, Fq381>();
+
+        test_persistent_update_helper::<Fq254, Fq254>();
+        test_persistent_update_helper::<Fq377, Fq377>();
+        test_persistent_update_helper::<Fq381, Fq381>();
+    }
+
+    fn test_persistent_update_helper<I, F>()
+    where
+        I: Index + ToTraversalPath<U3>,
+        F: RescueParameter + ToTraversalPath<U3>,
+        RescueHash<F>: DigestAlgorithm<F, I, F>,
+    {
+        let mt = RescueSparseMerkleTree::<F, F>::new(10);
+        let mut mts = ark_std::vec![mt];
+        for i in 1..10u64 {
+            mts.push(
+                mts.last()
+                    .unwrap()
+                    .persistent_update(F::from(i), F::from(i))
+                    .unwrap(),
+            );
+            assert_eq!(mts.last().unwrap().num_leaves(), i);
+        }
+        for i in 1..10u64 {
+            mts.iter().enumerate().for_each(|(j, mt)| {
+                if j as u64 >= i {
+                    assert!(mt.lookup(F::from(i)).expect_ok().is_ok());
+                } else {
+                    assert!(mt.lookup(F::from(i)).expect_not_found().is_ok());
+                }
+            });
+        }
+
+        assert_eq!(mts[5].num_leaves(), 5);
+        let mt = mts[5].persistent_remove(F::from(1u64)).unwrap();
+        assert_eq!(mt.num_leaves(), 4);
     }
 
     #[test]
