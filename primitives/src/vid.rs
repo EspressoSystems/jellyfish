@@ -108,6 +108,7 @@ pub struct VidDisperse<V: VidScheme + ?Sized> {
     /// VID payload commitment.
     pub commit: V::Commit,
 }
+pub mod precomputable;
 
 pub mod payload_prover;
 

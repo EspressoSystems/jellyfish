@@ -46,6 +46,7 @@ use serde::{Deserialize, Serialize};
 
 mod bytes_to_field;
 pub mod payload_prover;
+pub mod precomputable;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
@@ -253,7 +254,8 @@ where
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
-        let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
+        let poly_commits: Vec<crate::pcs::prelude::Commitment<E>> =
+            UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Self::derive_commit(&poly_commits, payload.len(), code_word_size)
     }
 
