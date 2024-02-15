@@ -45,7 +45,6 @@ where
     {
         let payload = payload.as_ref();
         let chunk_size = self.multiplicity * self.payload_chunk_size;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
             .chunks(chunk_size)
@@ -54,7 +53,7 @@ where
             .collect();
         let poly_commits: Vec<crate::pcs::prelude::Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        let commit = Self::derive_commit(&poly_commits, payload.len(), code_word_size);
+        let commit = Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes);
 
         commit.map(|c| (c, PrecomputeData { poly_commits }))
     }
@@ -275,7 +274,7 @@ mod tests {
             srs,
         )
         .unwrap();
-        let payload_random = init_random_payload(1 << 22, &mut rng);
+        let payload_random = init_random_payload(1 << 20, &mut rng);
         let (_commit, data) = advz.commit_only_precompute(&payload_random).unwrap();
         let _ = advz.disperse_precompute(payload_random, &data);
     }

@@ -247,7 +247,6 @@ where
     {
         let payload = payload.as_ref();
         let chunk_size = self.multiplicity * self.payload_chunk_size;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
             .chunks(chunk_size)
@@ -256,7 +255,7 @@ where
             .collect();
         let poly_commits: Vec<crate::pcs::prelude::Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        Self::derive_commit(&poly_commits, payload.len(), code_word_size)
+        Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
     fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
