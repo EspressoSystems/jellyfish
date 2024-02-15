@@ -70,7 +70,7 @@ where
         let payload = payload.as_ref();
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let disperse_time = start_timer!(|| ark_std::format!(
-            "VID disperse {} payload bytes to {} nodes",
+            "(PRECOMPUTE): VID disperse {} payload bytes to {} nodes",
             payload_byte_len,
             self.num_storage_nodes
         ));
@@ -79,15 +79,16 @@ where
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
-        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into
-        polynomials");
+        let bytes_to_elems = start_timer!(|| "encode payload into field elements");
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
+        end_timer!(bytes_to_elems);
+        let inverse_fft = start_timer!(|| "field elements into polynomials (inverse FFT)");
         let polys: Vec<_> = elems_iter
             .chunks(chunk_size)
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
-        end_timer!(bytes_to_polys_time);
+        end_timer!(inverse_fft);
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| ark_std::format!(
@@ -131,8 +132,10 @@ where
             KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
-        let common_timer =
-            start_timer!(|| ark_std::format!("compute {} KZG commitments", polys.len()));
+        let common_timer = start_timer!(|| ark_std::format!(
+            "(PRECOMPUTE): compute {} KZG commitments",
+            polys.len()
+        ));
         let common = Common {
             poly_commits: data.poly_commits.clone(), /* UnivariateKzgPCS::batch_commit(&self.ck,
                                                       * &polys).map_err(vid)?, */
@@ -261,12 +264,18 @@ mod tests {
     #[test]
     fn disperse_with_data_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (payload_chunk_size, num_storage_nodes) = (64, 128);
+        let multiplicity = 4;
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        let payload_random = init_random_payload(1 << 25, &mut rng);
+        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
+        let advz = Advz::<Bls12_381, Sha256>::new(
+            payload_chunk_size,
+            num_storage_nodes,
+            multiplicity,
+            srs,
+        )
+        .unwrap();
+        let payload_random = init_random_payload(1 << 22, &mut rng);
         let (_commit, data) = advz.commit_only_precompute(&payload_random).unwrap();
         let _ = advz.disperse_precompute(payload_random, &data);
     }
@@ -279,12 +288,12 @@ mod tests {
         let (shares, common) = (disperse.shares, disperse.common);
         for share in &shares {
             let v = advz.verify_share(share, &common, &commit);
-            assert!(v.is_ok(), "all advz shares should verify");
+            assert!(v.is_ok(), "share verification should succeed");
         }
 
         let bytes_recovered = advz
             .recover_payload(&shares, &common)
-            .expect("recover_payload should succeed when indices are in bounds");
+            .expect("recover_payload should succeed");
         assert_eq!(bytes_recovered, bytes_random);
     }
 }
