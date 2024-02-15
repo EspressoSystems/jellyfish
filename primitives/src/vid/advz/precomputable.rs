@@ -241,6 +241,7 @@ mod tests {
         VidScheme,
     };
 
+    #[ignore]
     #[test]
     fn commit_only_with_data_timer() {
         // run with 'print-trace' feature to see timer output
@@ -260,6 +261,7 @@ mod tests {
         let (_commit, _data) = advz.commit_only_precompute(payload_random).unwrap();
     }
 
+    #[ignore]
     #[test]
     fn disperse_with_data_timer() {
         // run with 'print-trace' feature to see timer output
