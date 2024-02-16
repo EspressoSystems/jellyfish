@@ -550,7 +550,7 @@ where
 {
     fn evaluate_polys(
         &self,
-        polys: &Vec<DensePolynomial<<E as Pairing>::ScalarField>>,
+        polys: &[DensePolynomial<<E as Pairing>::ScalarField>],
     ) -> Result<Vec<Vec<<E as Pairing>::ScalarField>>, VidError>
     where
         E: Pairing,
