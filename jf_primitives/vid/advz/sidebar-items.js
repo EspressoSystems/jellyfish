@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["payload_prover"],"struct":["Advz","Common","Share"]};
+window.SIDEBAR_ITEMS = {"mod":["payload_prover","precomputable"],"struct":["Advz","Common","Share"]};

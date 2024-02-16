@@ -1019,6 +1019,43 @@
 <a href="#1018" id="1018">1018</a>
 <a href="#1019" id="1019">1019</a>
 <a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1037,14 +1074,16 @@
         MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
-        prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
-        UnivariatePCS,
+        prelude::{UnivariateKzgPCS, UnivariateKzgProof},
+        PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
     },
     reed_solomon_code::reed_solomon_erasure_decode_rou,
 };
 <span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr};
 <span class="kw">use </span>ark_ff::{Field, PrimeField};
-<span class="kw">use </span>ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
+<span class="kw">use </span>ark_poly::{
+    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain,
+};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{
     borrow::Borrow,
@@ -1067,6 +1106,7 @@
 
 <span class="kw">mod </span>bytes_to_field;
 <span class="kw">pub mod </span>payload_prover;
+<span class="kw">pub mod </span>precomputable;
 
 <span class="doccomment">/// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
@@ -1266,13 +1306,7 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
-
-        <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload)
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
-            .collect();
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
         <span class="kw">let </span>poly_commits = UnivariateKzgPCS::batch_commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polys).map_err(vid)<span class="question-mark">?</span>;
         <span class="self">Self</span>::derive_commit(<span class="kw-2">&amp;</span>poly_commits, payload.len(), <span class="self">self</span>.num_storage_nodes)
     }
@@ -1287,56 +1321,24 @@
             <span class="string">"VID disperse {} payload bytes to {} nodes"</span>,
             payload_byte_len, <span class="self">self</span>.num_storage_nodes
         ));
-        <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
+        <span class="kw">let </span>_chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
         <span class="kw">let </span>code_word_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.num_storage_nodes;
 
         <span class="comment">// partition payload into polynomial coefficients
-        // and count `elems_len` for later
         </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
-        <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload);
-        <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = elems_iter
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
-            .collect();
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
         <span class="macro">end_timer!</span>(bytes_to_polys_time);
 
         <span class="comment">// evaluate polynomials
         </span><span class="kw">let </span>all_storage_node_evals_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
             <span class="string">"compute all storage node evals for {} polynomials with {} coefficients"</span>,
             polys.len(),
-            chunk_size
+            _chunk_size
         ));
-        <span class="kw">let </span>all_storage_node_evals = {
-            <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
-
-            <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
-                <span class="kw">let </span>poly_evals = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
-                )
-                .map_err(vid)<span class="question-mark">?</span>;
-
-                <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in
-                    </span>all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
-            }
-
-            <span class="comment">// sanity checks
-            </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
-            <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
-                <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
-            }
-
-            all_storage_node_evals
-        };
+        <span class="kw">let </span>all_storage_node_evals = <span class="self">self</span>.evaluate_polys(<span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(all_storage_node_evals_timer);
 
         <span class="comment">// vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
         </span><span class="kw">let </span>all_evals_commit_timer =
             <span class="macro">start_timer!</span>(|| <span class="string">"compute merkle root of all storage node evals"</span>);
         <span class="kw">let </span>all_evals_commit =
@@ -1380,31 +1382,11 @@
         <span class="macro">end_timer!</span>(agg_proofs_timer);
 
         <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">"assemble shares for dispersal"</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(<span class="self">self</span>.num_storage_nodes);
-        <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(polys.len() * <span class="self">self</span>.multiplicity);
-        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(<span class="self">self</span>.multiplicity);
-        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..code_word_size {
-            evals.extend(all_storage_node_evals[i].iter());
-            proofs.push(aggregate_proofs[i].clone());
-            <span class="kw">if </span>(i + <span class="number">1</span>) % <span class="self">self</span>.multiplicity == <span class="number">0 </span>{
-                shares.push(Share {
-                    index,
-                    evals: mem::take(<span class="kw-2">&amp;mut </span>evals),
-                    aggregate_proofs: mem::take(<span class="kw-2">&amp;mut </span>proofs),
-                    evals_proof: all_evals_commit <span class="comment">// TODO: check MT lookup for each index
-                        </span>.lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(index <span class="kw">as </span>u64))
-                        .expect_ok()
-                        .map_err(vid)<span class="question-mark">?
-                        </span>.<span class="number">1</span>,
-                });
-                index += <span class="number">1</span>;
-            }
-        }
-
+        <span class="kw">let </span>shares =
+            <span class="self">self</span>.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)<span class="question-mark">?</span>;
         <span class="macro">end_timer!</span>(assemblage_timer);
-
         <span class="macro">end_timer!</span>(disperse_time);
+
         <span class="prelude-val">Ok</span>(VidDisperse {
             shares,
             common,
@@ -1622,6 +1604,44 @@
     </span>E: Pairing,
     H: HasherDigest,
 {
+    <span class="kw">fn </span>evaluate_polys(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;, VidError&gt;
+    <span class="kw">where
+        </span>E: Pairing,
+        H: HasherDigest,
+    {
+        <span class="kw">let </span>code_word_size = <span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>all_storage_node_evals = {
+            <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
+
+            <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
+                <span class="kw">let </span>poly_evals = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
+                    poly,
+                    code_word_size,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
+                )
+                .map_err(vid)<span class="question-mark">?</span>;
+
+                <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in
+                    </span>all_storage_node_evals.iter_mut().zip(poly_evals)
+                {
+                    storage_node_evals.push(poly_eval);
+                }
+            }
+
+            <span class="comment">// sanity checks
+            </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
+            <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
+                <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
+            }
+
+            all_storage_node_evals
+        };
+        <span class="prelude-val">Ok</span>(all_storage_node_evals)
+    }
+
     <span class="kw">fn </span>pseudorandom_scalar(
         common: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Common,
         commit: <span class="kw-2">&amp;</span>&lt;<span class="self">Self </span><span class="kw">as </span>VidScheme&gt;::Commit,
@@ -1647,6 +1667,18 @@
         //   indistinguishable from uniformly random. We only need it to be
         //   unpredictable. So it suffices to use
         </span><span class="prelude-val">Ok</span>(PrimeField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>hasher.finalize()))
+    }
+
+    <span class="kw">fn </span>bytes_to_polys(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;
+    <span class="kw">where
+        </span>E: Pairing,
+    {
+        <span class="kw">let </span>chunk_size = <span class="self">self</span>.payload_chunk_size * <span class="self">self</span>.multiplicity;
+        bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload)
+            .chunks(chunk_size)
+            .into_iter()
+            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
+            .collect()
     }
 
     <span class="kw">fn </span>polynomial&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coeffs: I) -&gt; KzgPolynomial&lt;E&gt;
@@ -1703,6 +1735,48 @@
                 .map_err(vid)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(hasher.finalize().into())
+    }
+
+    <span class="doccomment">/// Assemble shares from evaluations and proofs.
+    ///
+    /// Each share contains (for multiplicity m):
+    /// 1. (m * num_poly) evaluations.
+    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
+    /// 3. a merkle tree membership proof.
+    </span><span class="kw">fn </span>assemble_shares(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        all_storage_node_evals: Vec&lt;Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;,
+        aggregate_proofs: Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;,
+        all_evals_commit: KzgEvalsMerkleTree&lt;E, H&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Share&lt;E, H&gt;&gt;, VidError&gt;
+    <span class="kw">where
+        </span>E: Pairing,
+        H: HasherDigest,
+    {
+        <span class="kw">let </span>code_word_size = <span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>num_of_polys = all_storage_node_evals[<span class="number">0</span>].len();
+        <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(<span class="self">self</span>.num_storage_nodes);
+        <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_of_polys * <span class="self">self</span>.multiplicity);
+        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(<span class="self">self</span>.multiplicity);
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..code_word_size {
+            evals.extend(all_storage_node_evals[i].iter());
+            proofs.push(aggregate_proofs[i].clone());
+            <span class="kw">if </span>(i + <span class="number">1</span>) % <span class="self">self</span>.multiplicity == <span class="number">0 </span>{
+                shares.push(Share {
+                    index,
+                    evals: mem::take(<span class="kw-2">&amp;mut </span>evals),
+                    aggregate_proofs: mem::take(<span class="kw-2">&amp;mut </span>proofs),
+                    evals_proof: all_evals_commit <span class="comment">// TODO: check MT lookup for each index
+                        </span>.lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(index <span class="kw">as </span>u64))
+                        .expect_ok()
+                        .map_err(vid)<span class="question-mark">?
+                        </span>.<span class="number">1</span>,
+                });
+                index += <span class="number">1</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(shares)
     }
 }
 
