@@ -6,24 +6,21 @@
 
 //! Implementations of [`Precomputable`] for `Advz`.
 
-use core::mem;
-
 use crate::{
     merkle_tree::{MerkleCommitment, MerkleTreeScheme},
     pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS},
     vid::{
         advz::{
-            bytes_to_field, polynomial_eval, Advz, Common, HasherDigest, KzgEval,
-            KzgEvalsMerkleTree, KzgEvalsMerkleTreeIndex, Pairing, PolynomialMultiplier, Share,
-            UnivariateKzgPCS,
+            polynomial_eval, Advz, Common, HasherDigest, KzgEvalsMerkleTree, Pairing,
+            PolynomialMultiplier, UnivariateKzgPCS,
         },
         precomputable::Precomputable,
         vid, VidDisperse, VidResult,
     },
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{end_timer, start_timer, vec, vec::Vec};
-use itertools::Itertools;
+use ark_std::{end_timer, start_timer, vec::Vec};
+
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
 
@@ -44,13 +41,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let chunk_size = self.multiplicity * self.payload_chunk_size;
-
-        let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| self.polynomial(evals_iter))
-            .collect();
+        let polys = self.bytes_to_polys(payload);
         let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Ok((
@@ -74,54 +65,22 @@ where
             payload_byte_len,
             self.num_storage_nodes
         ));
-        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let _chunk_size = self.multiplicity * self.payload_chunk_size;
         let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
-        let bytes_to_elems = start_timer!(|| "encode payload into field elements");
-        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
-        end_timer!(bytes_to_elems);
-        let inverse_fft = start_timer!(|| "field elements into polynomials (inverse FFT)");
-        let polys: Vec<_> = elems_iter
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| self.polynomial(evals_iter))
-            .collect();
-        end_timer!(inverse_fft);
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
+        let polys = self.bytes_to_polys(payload);
+        end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| ark_std::format!(
             "compute all storage node evals for {} polynomials with {} coefficients",
             polys.len(),
-            chunk_size
+            _chunk_size
         ));
-        let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
-
-            for poly in polys.iter() {
-                let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    &self.multi_open_domain,
-                )
-                .map_err(vid)?;
-
-                for (storage_node_evals, poly_eval) in
-                    all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
-            }
-
-            // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_word_size);
-            for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
-            }
-
-            all_storage_node_evals
-        };
+        let all_storage_node_evals = self.evaluate_polys(&polys)?;
         end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
@@ -172,30 +131,11 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-
-        let mut shares = Vec::with_capacity(code_word_size);
-        let mut evals = Vec::new();
-        let mut proofs = Vec::new();
-        for index in 0..code_word_size {
-            evals.extend(all_storage_node_evals[index].iter());
-            proofs.push(aggregate_proofs[index].clone());
-            if (index + 1) % self.multiplicity == 0 {
-                shares.push(Share {
-                    index,
-                    evals: mem::take(&mut evals),
-                    aggregate_proofs: mem::take(&mut proofs),
-                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
-                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
-                        .expect_ok()
-                        .map_err(vid)?
-                        .1,
-                });
-            }
-        }
-
+        let shares =
+            self.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)?;
         end_timer!(assemblage_timer);
-
         end_timer!(disperse_time);
+
         Ok(VidDisperse {
             shares,
             common,
