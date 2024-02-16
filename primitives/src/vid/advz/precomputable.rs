@@ -10,7 +10,7 @@ use core::mem;
 
 use crate::{
     merkle_tree::{MerkleCommitment, MerkleTreeScheme},
-    pcs::{PolynomialCommitmentScheme, UnivariatePCS},
+    pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS},
     vid::{
         advz::{
             bytes_to_field, polynomial_eval, Advz, Common, HasherDigest, KzgEval,
@@ -51,11 +51,12 @@ where
             .into_iter()
             .map(|evals_iter| self.polynomial(evals_iter))
             .collect();
-        let poly_commits: Vec<crate::pcs::prelude::Commitment<E>> =
+        let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
-        let commit = Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes);
-
-        commit.map(|c| (c, PrecomputeData { poly_commits }))
+        Ok((
+            Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)?,
+            PrecomputeData { poly_commits },
+        ))
     }
 
     fn disperse_precompute<B>(
