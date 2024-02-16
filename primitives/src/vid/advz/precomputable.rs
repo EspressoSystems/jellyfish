@@ -18,7 +18,7 @@ use crate::{
             UnivariateKzgPCS,
         },
         precomputable::Precomputable,
-        vid, VidDisperse,
+        vid, VidDisperse, VidResult,
     },
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -39,7 +39,7 @@ where
     fn commit_only_precompute<B>(
         &self,
         payload: B,
-    ) -> crate::vid::VidResult<(Self::Commit, Self::PrecomputeData)>
+    ) -> VidResult<(Self::Commit, Self::PrecomputeData)>
     where
         B: AsRef<[u8]>,
     {
@@ -63,7 +63,7 @@ where
         &self,
         payload: B,
         data: &Self::PrecomputeData,
-    ) -> crate::vid::VidResult<crate::vid::VidDisperse<Self>>
+    ) -> VidResult<VidDisperse<Self>>
     where
         B: AsRef<[u8]>,
     {
