@@ -137,8 +137,7 @@ where
             polys.len()
         ));
         let common = Common {
-            poly_commits: data.poly_commits.clone(), /* UnivariateKzgPCS::batch_commit(&self.ck,
-                                                      * &polys).map_err(vid)?, */
+            poly_commits: data.poly_commits.clone(),
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
