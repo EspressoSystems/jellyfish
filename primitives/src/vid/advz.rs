@@ -685,7 +685,7 @@ where
     ///
     /// Each share contains (for multiplicity m):
     /// 1. (m * num_poly) evaluations.
-    /// 2. m aggregated KZG proofs.
+    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
     /// 3. a merkle tree membership proof.
     fn assemble_shares(
         &self,
