@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Espresso Systems (espressosys.com)
+// Copyright (c) 2024 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
