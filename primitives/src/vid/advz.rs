@@ -267,7 +267,6 @@ where
         let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
-        // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload);
         end_timer!(bytes_to_polys_time);
