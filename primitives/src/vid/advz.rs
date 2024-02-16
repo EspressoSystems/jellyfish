@@ -16,14 +16,16 @@ use crate::{
         MerkleCommitment, MerkleTreeScheme,
     },
     pcs::{
-        prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString,
-        UnivariatePCS,
+        prelude::{UnivariateKzgPCS, UnivariateKzgProof},
+        PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
     },
     reed_solomon_code::reed_solomon_erasure_decode_rou,
 };
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{Field, PrimeField};
-use ark_poly::{DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain};
+use ark_poly::{
+    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, Radix2EvaluationDomain,
+};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
@@ -46,6 +48,7 @@ use serde::{Deserialize, Serialize};
 
 mod bytes_to_field;
 pub mod payload_prover;
+pub mod precomputable;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
 ///
@@ -245,13 +248,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let chunk_size = self.multiplicity * self.payload_chunk_size;
-
-        let polys: Vec<_> = bytes_to_field::<_, KzgEval<E>>(payload)
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| self.polynomial(evals_iter))
-            .collect();
+        let polys = self.bytes_to_polys(payload);
         let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
@@ -266,56 +263,24 @@ where
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
         ));
-        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let _chunk_size = self.multiplicity * self.payload_chunk_size;
         let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
-        // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let elems_iter = bytes_to_field::<_, KzgEval<E>>(payload);
-        let polys: Vec<_> = elems_iter
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| self.polynomial(evals_iter))
-            .collect();
+        let polys = self.bytes_to_polys(payload);
         end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| format!(
             "compute all storage node evals for {} polynomials with {} coefficients",
             polys.len(),
-            chunk_size
+            _chunk_size
         ));
-        let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
-
-            for poly in polys.iter() {
-                let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    &self.multi_open_domain,
-                )
-                .map_err(vid)?;
-
-                for (storage_node_evals, poly_eval) in
-                    all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
-            }
-
-            // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_word_size);
-            for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
-            }
-
-            all_storage_node_evals
-        };
+        let all_storage_node_evals = self.evaluate_polys(&polys)?;
         end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
         let all_evals_commit_timer =
             start_timer!(|| "compute merkle root of all storage node evals");
         let all_evals_commit =
@@ -359,31 +324,11 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let mut shares = Vec::with_capacity(self.num_storage_nodes);
-        let mut evals = Vec::with_capacity(polys.len() * self.multiplicity);
-        let mut proofs = Vec::with_capacity(self.multiplicity);
-        let mut index = 0;
-        for i in 0..code_word_size {
-            evals.extend(all_storage_node_evals[i].iter());
-            proofs.push(aggregate_proofs[i].clone());
-            if (i + 1) % self.multiplicity == 0 {
-                shares.push(Share {
-                    index,
-                    evals: mem::take(&mut evals),
-                    aggregate_proofs: mem::take(&mut proofs),
-                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
-                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
-                        .expect_ok()
-                        .map_err(vid)?
-                        .1,
-                });
-                index += 1;
-            }
-        }
-
+        let shares =
+            self.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)?;
         end_timer!(assemblage_timer);
-
         end_timer!(disperse_time);
+
         Ok(VidDisperse {
             shares,
             common,
@@ -601,6 +546,44 @@ where
     E: Pairing,
     H: HasherDigest,
 {
+    fn evaluate_polys(
+        &self,
+        polys: &[DensePolynomial<<E as Pairing>::ScalarField>],
+    ) -> Result<Vec<Vec<<E as Pairing>::ScalarField>>, VidError>
+    where
+        E: Pairing,
+        H: HasherDigest,
+    {
+        let code_word_size = self.num_storage_nodes * self.multiplicity;
+        let all_storage_node_evals = {
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+
+            for poly in polys.iter() {
+                let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
+                    poly,
+                    code_word_size,
+                    &self.multi_open_domain,
+                )
+                .map_err(vid)?;
+
+                for (storage_node_evals, poly_eval) in
+                    all_storage_node_evals.iter_mut().zip(poly_evals)
+                {
+                    storage_node_evals.push(poly_eval);
+                }
+            }
+
+            // sanity checks
+            assert_eq!(all_storage_node_evals.len(), code_word_size);
+            for storage_node_evals in all_storage_node_evals.iter() {
+                assert_eq!(storage_node_evals.len(), polys.len());
+            }
+
+            all_storage_node_evals
+        };
+        Ok(all_storage_node_evals)
+    }
+
     fn pseudorandom_scalar(
         common: &<Self as VidScheme>::Common,
         commit: &<Self as VidScheme>::Commit,
@@ -626,6 +609,18 @@ where
         //   indistinguishable from uniformly random. We only need it to be
         //   unpredictable. So it suffices to use
         Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
+    }
+
+    fn bytes_to_polys(&self, payload: &[u8]) -> Vec<DensePolynomial<<E as Pairing>::ScalarField>>
+    where
+        E: Pairing,
+    {
+        let chunk_size = self.payload_chunk_size * self.multiplicity;
+        bytes_to_field::<_, KzgEval<E>>(payload)
+            .chunks(chunk_size)
+            .into_iter()
+            .map(|evals_iter| self.polynomial(evals_iter))
+            .collect()
     }
 
     fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
@@ -682,6 +677,48 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize().into())
+    }
+
+    /// Assemble shares from evaluations and proofs.
+    ///
+    /// Each share contains (for multiplicity m):
+    /// 1. (m * num_poly) evaluations.
+    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
+    /// 3. a merkle tree membership proof.
+    fn assemble_shares(
+        &self,
+        all_storage_node_evals: Vec<Vec<<E as Pairing>::ScalarField>>,
+        aggregate_proofs: Vec<UnivariateKzgProof<E>>,
+        all_evals_commit: KzgEvalsMerkleTree<E, H>,
+    ) -> Result<Vec<Share<E, H>>, VidError>
+    where
+        E: Pairing,
+        H: HasherDigest,
+    {
+        let code_word_size = self.num_storage_nodes * self.multiplicity;
+        let num_of_polys = all_storage_node_evals[0].len();
+        let mut shares = Vec::with_capacity(self.num_storage_nodes);
+        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity);
+        let mut proofs = Vec::with_capacity(self.multiplicity);
+        let mut index = 0;
+        for i in 0..code_word_size {
+            evals.extend(all_storage_node_evals[i].iter());
+            proofs.push(aggregate_proofs[i].clone());
+            if (i + 1) % self.multiplicity == 0 {
+                shares.push(Share {
+                    index,
+                    evals: mem::take(&mut evals),
+                    aggregate_proofs: mem::take(&mut proofs),
+                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
+                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
+                        .expect_ok()
+                        .map_err(vid)?
+                        .1,
+                });
+                index += 1;
+            }
+        }
+        Ok(shares)
     }
 }
 
