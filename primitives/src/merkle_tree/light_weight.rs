@@ -20,7 +20,7 @@ use crate::{
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
 use ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
+    borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, sync::Arc, vec, vec::Vec,
 };
 use num_bigint::BigUint;
 use num_traits::pow::pow;
@@ -41,7 +41,7 @@ where
     /// Initialize an empty Merkle tree.
     pub fn new(height: usize) -> Self {
         Self {
-            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            root: Arc::new(MerkleNode::<E, I, T>::Empty),
             height,
             num_leaves: 0,
             _phantom: PhantomData,

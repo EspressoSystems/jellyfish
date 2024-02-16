@@ -456,7 +456,7 @@ mod test {
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_std::{boxed::Box, vec::Vec};
+    use ark_std::{sync::Arc, vec::Vec};
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     #[test]
@@ -607,7 +607,7 @@ mod test {
 
             if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
                 let left_sib = if uid % 3 == 0 { 1 } else { 0 };
-                children[left_sib] = Box::new(MerkleNode::ForgettenSubtree { value: F::zero() });
+                children[left_sib] = Arc::new(MerkleNode::ForgettenSubtree { value: F::zero() });
             }
             let path_vars: Merkle3AryMembershipProofVar =
                 MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(

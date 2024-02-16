@@ -24,7 +24,7 @@ macro_rules! impl_merkle_tree_scheme {
             Arity: Unsigned,
             T: NodeValue,
         {
-            root: Box<MerkleNode<E, I, T>>,
+            root: Arc<MerkleNode<E, I, T>>,
             height: usize,
             num_leaves: u64,
 
@@ -148,7 +148,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Box::new(MerkleNode::ForgettenSubtree {
+                    root: Arc::new(MerkleNode::ForgettenSubtree {
                         value: com.digest(),
                     }),
                     height: com.height(),

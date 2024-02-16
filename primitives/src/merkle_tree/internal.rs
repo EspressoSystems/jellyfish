@@ -9,9 +9,7 @@ use super::{
 };
 use crate::errors::{PrimitivesError, VerificationResult};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{
-    borrow::Borrow, boxed::Box, format, iter::Peekable, string::ToString, vec, vec::Vec,
-};
+use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, sync::Arc, vec, vec::Vec};
 use core::marker::PhantomData;
 use itertools::Itertools;
 use jf_utils::canonical;
@@ -28,7 +26,7 @@ pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
     Branch {
         #[serde(with = "canonical")]
         value: T,
-        children: Vec<Box<MerkleNode<E, I, T>>>,
+        children: Vec<Arc<MerkleNode<E, I, T>>>,
     },
     Leaf {
         #[serde(with = "canonical")]
@@ -177,7 +175,7 @@ where
 pub(crate) fn build_tree_internal<E, H, Arity, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Box<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
+) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
@@ -211,15 +209,15 @@ where
                 let children = chunk
                     .map(|(pos, elem)| {
                         let pos = pos as u64;
-                        Ok(Box::new(MerkleNode::Leaf {
+                        Ok(Arc::new(MerkleNode::Leaf {
                             value: H::digest_leaf(&pos, elem.borrow())?,
                             pos,
                             elem: elem.borrow().clone(),
                         }))
                     })
-                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .pad_using(Arity::to_usize(), |_| Ok(Arc::new(MerkleNode::Empty)))
                     .collect::<Result<Vec<_>, PrimitivesError>>()?;
-                Ok(Box::new(MerkleNode::<E, u64, T>::Branch {
+                Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
                     children,
                 }))
@@ -233,10 +231,10 @@ where
                 .map(|chunk| {
                     let children = chunk
                         .pad_using(Arity::to_usize(), |_| {
-                            Box::new(MerkleNode::<E, u64, T>::Empty)
+                            Arc::new(MerkleNode::<E, u64, T>::Empty)
                         })
                         .collect::<Vec<_>>();
-                    Ok(Box::new(MerkleNode::<E, u64, T>::Branch {
+                    Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                         value: digest_branch::<E, H, u64, T>(&children)?,
                         children,
                     }))
@@ -245,7 +243,7 @@ where
         }
         Ok((cur_nodes[0].clone(), height, num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, u64, T>::Empty), height, 0))
+        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     }
 }
 
@@ -253,7 +251,7 @@ where
 pub(crate) fn build_light_weight_tree_internal<E, H, Arity, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Box<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
+) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
@@ -290,27 +288,27 @@ where
                     .map(|(pos, elem)| {
                         let pos = pos as u64;
                         Ok(if pos < num_leaves - 1 {
-                            Box::new(MerkleNode::ForgettenSubtree {
+                            Arc::new(MerkleNode::ForgettenSubtree {
                                 value: H::digest_leaf(&pos, elem.borrow())?,
                             })
                         } else {
-                            Box::new(MerkleNode::Leaf {
+                            Arc::new(MerkleNode::Leaf {
                                 value: H::digest_leaf(&pos, elem.borrow())?,
                                 pos,
                                 elem: elem.borrow().clone(),
                             })
                         })
                     })
-                    .pad_using(Arity::to_usize(), |_| Ok(Box::new(MerkleNode::Empty)))
+                    .pad_using(Arity::to_usize(), |_| Ok(Arc::new(MerkleNode::Empty)))
                     .collect::<Result<Vec<_>, PrimitivesError>>()?;
-                Ok(Box::new(MerkleNode::<E, u64, T>::Branch {
+                Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
                     children,
                 }))
             })
             .collect::<Result<Vec<_>, PrimitivesError>>()?;
         for i in 1..cur_nodes.len() - 1 {
-            cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
+            cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
                 value: cur_nodes[i].value(),
             })
         }
@@ -322,29 +320,29 @@ where
                 .map(|chunk| {
                     let children = chunk
                         .pad_using(Arity::to_usize(), |_| {
-                            Box::new(MerkleNode::<E, u64, T>::Empty)
+                            Arc::new(MerkleNode::<E, u64, T>::Empty)
                         })
                         .collect::<Vec<_>>();
-                    Ok(Box::new(MerkleNode::<E, u64, T>::Branch {
+                    Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                         value: digest_branch::<E, H, u64, T>(&children)?,
                         children,
                     }))
                 })
                 .collect::<Result<Vec<_>, PrimitivesError>>()?;
             for i in 1..cur_nodes.len() - 1 {
-                cur_nodes[i] = Box::new(MerkleNode::ForgettenSubtree {
+                cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
                     value: cur_nodes[i].value(),
                 })
             }
         }
         Ok((cur_nodes[0].clone(), height, num_leaves))
     } else {
-        Ok((Box::new(MerkleNode::<E, u64, T>::Empty), height, 0))
+        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     }
 }
 
 pub(crate) fn digest_branch<E, H, I, T>(
-    data: &[Box<MerkleNode<E, I, T>>],
+    data: &[Arc<MerkleNode<E, I, T>>],
 ) -> Result<T, PrimitivesError>
 where
     E: Element,
@@ -383,9 +381,9 @@ where
                                 .iter()
                                 .map(|child| {
                                     if let MerkleNode::Empty = **child {
-                                        Box::new(MerkleNode::Empty)
+                                        Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Box::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgettenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -410,9 +408,9 @@ where
                                 .iter()
                                 .map(|child| {
                                     if let MerkleNode::Empty = **child {
-                                        Box::new(MerkleNode::Empty)
+                                        Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Box::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgettenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -517,9 +515,9 @@ where
                                 .iter()
                                 .map(|child| {
                                     if let MerkleNode::Empty = **child {
-                                        Box::new(MerkleNode::Empty)
+                                        Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Box::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgettenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -536,9 +534,9 @@ where
                                 .iter()
                                 .map(|child| {
                                     if let MerkleNode::Empty = **child {
-                                        Box::new(MerkleNode::Empty)
+                                        Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Box::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgettenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -634,7 +632,7 @@ where
                     }
                 } else {
                     let branch = traversal_path[height - 1];
-                    let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
+                    let mut children = vec![Arc::new(MerkleNode::Empty); Arity::to_usize()];
                     let result = children[branch].update_with_internal::<H, Arity, _>(
                         height - 1,
                         pos,
@@ -667,7 +665,7 @@ where
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         f: F,
-    ) -> Result<(Box<Self>, i64), PrimitivesError>
+    ) -> Result<(Arc<Self>, i64), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -681,14 +679,14 @@ where
                 pos,
             } => match f(Some(node_elem)) {
                 Some(elem) => Ok((
-                    Box::new(MerkleNode::Leaf {
+                    Arc::new(MerkleNode::Leaf {
                         value: H::digest_leaf(pos, &elem)?,
                         pos: pos.clone(),
                         elem,
                     }),
                     0i64,
                 )),
-                None => Ok((Box::new(MerkleNode::Empty), -1i64)),
+                None => Ok((Arc::new(MerkleNode::Empty), -1i64)),
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
@@ -705,7 +703,7 @@ where
                     // user, the update failed and nothing was changed, so we
                     // can short-circuit without recomputing this node's value.
                     Ok((
-                        Box::new(MerkleNode::Branch {
+                        Arc::new(MerkleNode::Branch {
                             value: *value,
                             children,
                         }),
@@ -715,13 +713,13 @@ where
                     .iter()
                     .all(|child| matches!(**child, MerkleNode::Empty))
                 {
-                    Ok((Box::new(MerkleNode::Empty), result.1))
+                    Ok((Arc::new(MerkleNode::Empty), result.1))
                 } else {
                     // Otherwise, an entry has been updated and the value of one of our children has
                     // changed, so we must recompute our own value.
                     // *value = digest_branch::<E, H, I, T>(&children)?;
                     Ok((
-                        Box::new(MerkleNode::Branch {
+                        Arc::new(MerkleNode::Branch {
                             value: digest_branch::<E, H, I, T>(&children)?,
                             children,
                         }),
@@ -733,7 +731,7 @@ where
                 if height == 0 {
                     if let Some(elem) = f(None) {
                         Ok((
-                            Box::new(MerkleNode::Leaf {
+                            Arc::new(MerkleNode::Leaf {
                                 value: H::digest_leaf(pos, &elem)?,
                                 pos: pos.clone(),
                                 elem,
@@ -741,11 +739,11 @@ where
                             1i64,
                         ))
                     } else {
-                        Ok((Box::new(MerkleNode::Empty), 0i64))
+                        Ok((Arc::new(MerkleNode::Empty), 0i64))
                     }
                 } else {
                     let branch = traversal_path[height - 1];
-                    let mut children = vec![Box::new(MerkleNode::Empty); Arity::to_usize()];
+                    let mut children = vec![Arc::new(MerkleNode::Empty); Arity::to_usize()];
                     // Inserting new leave here, shortcutting
                     let result = children[branch].update_with_internal::<H, Arity, _>(
                         height - 1,
@@ -755,10 +753,10 @@ where
                     )?;
                     if matches!(*children[branch], MerkleNode::Empty) {
                         // No update performed.
-                        Ok((Box::new(MerkleNode::Empty), 0i64))
+                        Ok((Arc::new(MerkleNode::Empty), 0i64))
                     } else {
                         Ok((
-                            Box::new(MerkleNode::Branch {
+                            Arc::new(MerkleNode::Branch {
                                 value: digest_branch::<E, H, I, T>(&children)?,
                                 children,
                             }),
@@ -838,7 +836,7 @@ where
                         0
                     };
                     let cap = Arity::to_usize();
-                    let mut children = vec![Box::new(MerkleNode::Empty); cap];
+                    let mut children = vec![Arc::new(MerkleNode::Empty); cap];
                     while data.peek().is_some() && frontier < cap {
                         let increment = children[frontier].extend_internal::<H, Arity>(
                             height - 1,
@@ -897,7 +895,7 @@ where
                 while data.peek().is_some() && frontier < cap {
                     if frontier > 0 && !children[frontier - 1].is_forgotten() {
                         children[frontier - 1] =
-                            Box::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                            Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
                                 value: children[frontier - 1].value(),
                             });
                     }
@@ -933,11 +931,11 @@ where
                         0
                     };
                     let cap = Arity::to_usize();
-                    let mut children = vec![Box::new(MerkleNode::Empty); cap];
+                    let mut children = vec![Arc::new(MerkleNode::Empty); cap];
                     while data.peek().is_some() && frontier < cap {
                         if frontier > 0 && !children[frontier - 1].is_forgotten() {
                             children[frontier - 1] =
-                                Box::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                                Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
                                     value: children[frontier - 1].value(),
                                 });
                         }
@@ -1113,12 +1111,12 @@ where
 
 /// An owned iterator type for a merkle tree
 pub struct MerkleTreeIntoIter<E: Element, I: Index, T: NodeValue> {
-    stack: Vec<Box<MerkleNode<E, I, T>>>,
+    stack: Vec<Arc<MerkleNode<E, I, T>>>,
 }
 
 impl<E: Element, I: Index, T: NodeValue> MerkleTreeIntoIter<E, I, T> {
     /// Initialize an iterator
-    pub fn new(root: Box<MerkleNode<E, I, T>>) -> Self {
+    pub fn new(root: Arc<MerkleNode<E, I, T>>) -> Self {
         Self { stack: vec![root] }
     }
 }
