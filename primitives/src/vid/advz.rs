@@ -281,7 +281,6 @@ where
         end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
         let all_evals_commit_timer =
             start_timer!(|| "compute merkle root of all storage node evals");
         let all_evals_commit =
@@ -697,13 +696,15 @@ where
         H: HasherDigest,
     {
         let code_word_size = self.num_storage_nodes * self.multiplicity;
-        let mut shares = Vec::with_capacity(code_word_size);
-        let mut evals = Vec::new();
-        let mut proofs = Vec::new();
-        for index in 0..code_word_size {
-            evals.extend(all_storage_node_evals[index].iter());
-            proofs.push(aggregate_proofs[index].clone());
-            if (index + 1) % self.multiplicity == 0 {
+        let num_of_polys = all_storage_node_evals[0].len();
+        let mut shares = Vec::with_capacity(self.num_storage_nodes);
+        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity);
+        let mut proofs = Vec::with_capacity(self.multiplicity);
+        let mut index = 0;
+        for i in 0..code_word_size {
+            evals.extend(all_storage_node_evals[i].iter());
+            proofs.push(aggregate_proofs[i].clone());
+            if (i + 1) % self.multiplicity == 0 {
                 shares.push(Share {
                     index,
                     evals: mem::take(&mut evals),
@@ -714,6 +715,7 @@ where
                         .map_err(vid)?
                         .1,
                 });
+                index += 1;
             }
         }
         Ok(shares)
