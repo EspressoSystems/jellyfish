@@ -801,12 +801,12 @@ mod tests {
     #[test]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (payload_chunk_size, num_storage_nodes) = (32, 128);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let advz =
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        let payload_random = init_random_payload(1 << 20, &mut rng);
+        let payload_random = init_random_payload(1 << 25, &mut rng);
 
         let _ = advz.disperse(payload_random);
     }
