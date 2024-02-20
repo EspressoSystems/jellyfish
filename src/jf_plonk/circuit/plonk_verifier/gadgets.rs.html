@@ -598,6 +598,10 @@
 <a href="#597" id="597">597</a>
 <a href="#598" id="598">598</a>
 <a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -605,9 +609,12 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="doccomment">//! Circuits for the building blocks in Plonk verifiers.
-</span><span class="kw">use crate</span>::{
-    circuit::{plonk_verifier::<span class="kw-2">*</span>, transcript::RescueTranscriptVar},
-    constants::EXTRA_TRANSCRIPT_MSG_LABEL,
+</span><span class="kw">use super</span>::{
+    challenge_var_to_fp_elem_var, poly, BatchProofVar, ChallengesFpElemVar, ChallengesVar,
+    NonNativeFieldInfo, PcsInfoVar, ProofEvaluationsVar, ScalarsAndBasesVar, VerifyingKeyVar,
+};
+<span class="kw">use crate</span>::{
+    circuit::transcript::RescueTranscriptVar, constants::EXTRA_TRANSCRIPT_MSG_LABEL,
     errors::PlonkError,
 };
 <span class="kw">use </span>ark_ec::{
@@ -616,7 +623,7 @@
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
-<span class="kw">use </span>ark_std::{format, vec::Vec};
+<span class="kw">use </span>ark_std::{format, vec, vec::Vec};
 <span class="kw">use </span>jf_primitives::rescue::RescueParameter;
 <span class="kw">use </span>jf_relation::{
     errors::{CircuitError, CircuitError::ParameterError},
@@ -1055,16 +1062,17 @@
     <span class="kw">use crate</span>::{
         proof_system::{
             batch_arg::{new_mergeable_circuit_for_test, BatchArgument},
+            structs::VerifyingKey,
             PlonkKzgSnark, UniversalSNARK,
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
     <span class="kw">use </span>ark_bls12_377::Bls12_377;
     <span class="kw">use </span>ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
+    <span class="kw">use </span>ark_ff::BigInteger <span class="kw">as _</span>;
     <span class="kw">use </span>ark_std::{vec, UniformRand};
-    <span class="kw">use </span>jf_primitives::rescue::RescueParameter;
-    <span class="kw">use </span>jf_relation::{Circuit, MergeableCircuitType};
-    <span class="kw">use </span>jf_utils::{field_switching, test_rng};
+    <span class="kw">use </span>jf_relation::MergeableCircuitType;
+    <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">16</span>;
     <span class="attr">#[test]

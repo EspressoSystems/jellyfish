@@ -1053,9 +1053,6 @@
 <a href="#1052" id="1052">1052</a>
 <a href="#1053" id="1053">1053</a>
 <a href="#1054" id="1054">1054</a>
-<a href="#1055" id="1055">1055</a>
-<a href="#1056" id="1056">1056</a>
-<a href="#1057" id="1057">1057</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1844,10 +1841,7 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::{VidError::Argument, <span class="kw-2">*</span>};
 
-    <span class="kw">use crate</span>::{
-        merkle_tree::hasher::HasherNode,
-        pcs::{checked_fft_size, prelude::UnivariateUniversalParams},
-    };
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
     <span class="kw">use </span>ark_std::{
         rand::{CryptoRng, RngCore},

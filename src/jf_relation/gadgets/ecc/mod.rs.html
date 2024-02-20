@@ -1895,7 +1895,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{gadgets::test_utils::test_variable_independence_for_circuit, Circuit};
+    <span class="kw">use </span><span class="kw">crate</span>::gadgets::test_utils::test_variable_independence_for_circuit;
     <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param761, Fq <span class="kw">as </span>Fq377};
     <span class="kw">use </span>ark_ec::{twisted_edwards::TECurveConfig <span class="kw">as </span>Config, Group};
     <span class="kw">use </span>ark_ed_on_bls12_377::{EdwardsConfig <span class="kw">as </span>Param377, Fq <span class="kw">as </span>FqEd377};

@@ -478,7 +478,6 @@
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
-<a href="#480" id="480">480</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -849,7 +848,7 @@
 </span><span class="kw">mod </span>tests {
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{gadgets::ecc::TEPoint, Circuit, PlonkType};
+    <span class="kw">use </span><span class="kw">crate</span>::PlonkType;
     <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
     <span class="kw">use </span>ark_ec::{
         scalar_mul::variable_base::VariableBaseMSM,
@@ -859,7 +858,6 @@
     <span class="kw">use </span>ark_ed_on_bls12_381::{EdwardsConfig <span class="kw">as </span>ParamEd381, Fq <span class="kw">as </span>FqEd381};
     <span class="kw">use </span>ark_ed_on_bn254::{EdwardsConfig <span class="kw">as </span>ParamEd254, Fq <span class="kw">as </span>FqEd254};
     <span class="kw">use </span>ark_ff::UniformRand;
-    <span class="kw">use </span>ark_std::vec::Vec;
     <span class="kw">use </span>jf_utils::fr_to_fq;
 
     <span class="kw">const </span>RANGE_BIT_LEN_FOR_TEST: usize = <span class="number">8</span>;

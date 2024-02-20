@@ -430,12 +430,6 @@
 <a href="#429" id="429">429</a>
 <a href="#430" id="430">430</a>
 <a href="#431" id="431">431</a>
-<a href="#432" id="432">432</a>
-<a href="#433" id="433">433</a>
-<a href="#434" id="434">434</a>
-<a href="#435" id="435">435</a>
-<a href="#436" id="436">436</a>
-<a href="#437" id="437">437</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -741,15 +735,9 @@
         <span class="kw">super</span>::{util::get_batched_nv, <span class="kw-2">*</span>},
         <span class="kw-2">*</span>,
     };
-    <span class="kw">use </span><span class="kw">crate</span>::pcs::{
-        multilinear_kzg::util::{compute_qx_degree, generate_evaluations},
-        prelude::UnivariateUniversalParams,
-        StructuredReferenceString,
-    };
+    <span class="kw">use </span><span class="kw">crate</span>::pcs::multilinear_kzg::util::{compute_qx_degree, generate_evaluations};
     <span class="kw">use </span>ark_bls12_381::Bls12_381 <span class="kw">as </span>E;
-    <span class="kw">use </span>ark_ec::pairing::Pairing;
-    <span class="kw">use </span>ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    <span class="kw">use </span>ark_std::{log2, rand::RngCore, vec::Vec, UniformRand};
+    <span class="kw">use </span>ark_std::{log2, UniformRand};
     <span class="kw">use </span>jf_utils::test_rng;
     <span class="kw">type </span>Fr = &lt;E <span class="kw">as </span>Pairing&gt;::ScalarField;
 

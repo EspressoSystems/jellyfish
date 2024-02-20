@@ -611,9 +611,6 @@
 <a href="#610" id="610">610</a>
 <a href="#611" id="611">611</a>
 <a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1037,10 +1034,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{
-        constants::CS_ID_SCHNORR,
-        signatures::tests::{failed_verification, sign_and_verify},
-    };
+    <span class="kw">use </span><span class="kw">crate</span>::signatures::tests::{failed_verification, sign_and_verify};
     <span class="kw">use </span>ark_ed_on_bls12_377::EdwardsConfig <span class="kw">as </span>Param377;
     <span class="kw">use </span>ark_ed_on_bls12_381::EdwardsConfig <span class="kw">as </span>Param381;
     <span class="kw">use </span>ark_ed_on_bls12_381_bandersnatch::EdwardsConfig <span class="kw">as </span>Param381b;

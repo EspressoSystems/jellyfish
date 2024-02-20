@@ -912,9 +912,6 @@
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1610,11 +1607,8 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::pcs::StructuredReferenceString;
     <span class="kw">use </span>ark_bls12_381::Bls12_381;
-    <span class="kw">use </span>ark_ec::pairing::Pairing;
-    <span class="kw">use </span>ark_poly::{univariate::DensePolynomial, EvaluationDomain};
-    <span class="kw">use </span>ark_std::{rand::Rng, UniformRand};
+    <span class="kw">use </span>ark_std::rand::Rng;
     <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="kw">fn </span>end_to_end_test_template&lt;E&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
