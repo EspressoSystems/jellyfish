@@ -14,8 +14,6 @@ mod serialize;
 
 use ark_ff::Field;
 use ark_std::{
-    convert::AsRef,
-    marker::Copy,
     ops::Mul,
     rand::{self, rngs::StdRng},
     string::{String, ToString},
