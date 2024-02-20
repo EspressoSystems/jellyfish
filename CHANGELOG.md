@@ -1,12 +1,27 @@
 # CHANGELOG
 
-We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) and [arkworks](https://github.com/arkworks-rs/algebra/blob/master/CHANGELOG.md),
-and follow [semantic versioning](https://semver.org/) for our releases.
+**WARNING**: this repository is under active development. Unlike [semantic versioning](https://semver.org/), we do expect backward incompatible changes when upgrading PATCH version.
+
+We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) and [arkworks](https://github.com/arkworks-rs/algebra/blob/master/CHANGELOG.md).
 
 **Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
 **Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
 
-## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.3.0...main)
+## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.4.0...main)
+
+### Breaking Changes
+
+### Fixed
+
+### Added
+
+### Changed
+
+### Removed
+
+### Deprecated
+
+## [v0.4.0](https://github.com/EspressoSystems/jellyfish/compare/0.3.0...0.4.0) - 2024-02-20
 
 ### Breaking Changes
 
