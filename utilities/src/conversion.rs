@@ -302,7 +302,6 @@ mod tests {
     use ark_ed_on_bls12_377::{EdwardsConfig as Param377, Fr as Fr377};
     use ark_ed_on_bls12_381::{EdwardsConfig as Param381, Fr as Fr381};
     use ark_ed_on_bn254::{EdwardsConfig as Param254, Fr as Fr254};
-    use ark_ff::{Field, PrimeField};
     use ark_std::{rand::RngCore, UniformRand};
 
     #[test]

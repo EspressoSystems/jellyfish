@@ -467,9 +467,8 @@ mod test {
     use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
     use ark_ff::BigInteger as _;
     use ark_std::{vec, UniformRand};
-    use jf_primitives::rescue::RescueParameter;
-    use jf_relation::{Circuit, MergeableCircuitType};
-    use jf_utils::{field_switching, test_rng};
+    use jf_relation::MergeableCircuitType;
+    use jf_utils::test_rng;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
     #[test]

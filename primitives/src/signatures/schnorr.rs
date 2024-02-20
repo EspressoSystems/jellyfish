@@ -421,10 +421,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        constants::CS_ID_SCHNORR,
-        signatures::tests::{failed_verification, sign_and_verify},
-    };
+    use crate::signatures::tests::{failed_verification, sign_and_verify};
     use ark_ed_on_bls12_377::EdwardsConfig as Param377;
     use ark_ed_on_bls12_381::EdwardsConfig as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;

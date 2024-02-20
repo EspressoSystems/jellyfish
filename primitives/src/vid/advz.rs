@@ -786,10 +786,7 @@ where
 mod tests {
     use super::{VidError::Argument, *};
 
-    use crate::{
-        merkle_tree::hasher::HasherNode,
-        pcs::{checked_fft_size, prelude::UnivariateUniversalParams},
-    };
+    use crate::pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     use ark_bls12_381::Bls12_381;
     use ark_std::{
         rand::{CryptoRng, RngCore},

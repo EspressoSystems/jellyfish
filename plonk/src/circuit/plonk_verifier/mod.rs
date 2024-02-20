@@ -332,10 +332,8 @@ mod test {
     use ark_bls12_377::{g1::Config as Param377, Bls12_377, Fq as Fq377};
     use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig, CurveGroup};
     use ark_std::{vec, UniformRand};
-    use jf_primitives::rescue::RescueParameter;
     use jf_relation::{
-        gadgets::{ecc::TEPoint, test_utils::test_variable_independence_for_circuit},
-        Circuit, MergeableCircuitType,
+        gadgets::test_utils::test_variable_independence_for_circuit, MergeableCircuitType,
     };
     use jf_utils::{field_switching, test_rng};
 

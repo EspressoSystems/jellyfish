@@ -31,7 +31,7 @@ mod test {
     use ark_bls12_377::Bls12_377;
     use ark_bls12_381::Bls12_381;
     use ark_bn254::Bn254;
-    use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup};
+    use ark_ec::{AffineRepr, CurveGroup};
     use ark_std::{One, UniformRand};
 
     #[test]

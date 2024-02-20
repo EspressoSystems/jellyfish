@@ -693,11 +693,8 @@ fn lagrange_poly<F: PrimeField>(points: &[F], i: usize, value: F) -> DensePolyno
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pcs::StructuredReferenceString;
     use ark_bls12_381::Bls12_381;
-    use ark_ec::pairing::Pairing;
-    use ark_poly::{univariate::DensePolynomial, EvaluationDomain};
-    use ark_std::{rand::Rng, UniformRand};
+    use ark_std::rand::Rng;
     use jf_utils::test_rng;
 
     fn end_to_end_test_template<E>() -> Result<(), PCSError>

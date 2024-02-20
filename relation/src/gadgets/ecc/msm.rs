@@ -368,7 +368,7 @@ fn ln_without_floats(a: usize) -> usize {
 mod tests {
 
     use super::*;
-    use crate::{gadgets::ecc::TEPoint, Circuit, PlonkType};
+    use crate::PlonkType;
     use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
     use ark_ec::{
         scalar_mul::variable_base::VariableBaseMSM,
@@ -378,7 +378,6 @@ mod tests {
     use ark_ed_on_bls12_381::{EdwardsConfig as ParamEd381, Fq as FqEd381};
     use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
-    use ark_std::vec::Vec;
     use jf_utils::fr_to_fq;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
