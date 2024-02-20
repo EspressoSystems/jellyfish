@@ -163,7 +163,9 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
                 let pos = pos.borrow();
                 let traversal_path = pos.to_traversal_path(self.height);
-                match self.root.forget_internal(self.height, &traversal_path) {
+                let (new_root, result) = self.root.forget_internal(self.height, &traversal_path);
+                self.root = new_root;
+                match result {
                     LookupResult::Ok(elem, proof) => {
                         LookupResult::Ok(elem, MerkleProof::new(pos.clone(), proof))
                     },
@@ -214,12 +216,13 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                             }
                         },
                     )?;
-                    self.root.remember_internal::<H, Arity>(
+                    self.root = self.root.remember_internal::<H, Arity>(
                         self.height,
                         &traversal_path,
                         &path_values,
                         &proof.proof,
-                    )
+                    )?;
+                    Ok(())
                 } else {
                     Err(PrimitivesError::ParameterError(
                         "Invalid proof type".to_string(),

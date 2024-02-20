@@ -9,7 +9,7 @@ use super::{
     internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
-    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+    NonDestructiveUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
     errors::{PrimitivesError, VerificationResult},
@@ -101,9 +101,10 @@ where
     {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        let (delta, result) =
+        let (new_root, delta, result) =
             self.root
                 .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
+        self.root = new_root;
         self.num_leaves = (delta + self.num_leaves as i64) as u64;
         Ok(result)
     }
@@ -146,7 +147,7 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> PersistentUniversalMerkleTreeScheme
+impl<E, H, I, Arity, T> NonDestructiveUniversalMerkleTreeScheme
     for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
@@ -155,19 +156,19 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    fn persistent_update(
+    fn non_destructive_update(
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<Self, PrimitivesError> {
-        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
+        self.non_destructive_update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
-    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
-        self.persistent_update_with(pos, |_| None)
+    fn non_destructive_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+        self.non_destructive_update_with(pos, |_| None)
     }
 
-    fn persistent_update_with<F>(
+    fn non_destructive_update_with<F>(
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
@@ -177,12 +178,9 @@ where
     {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        let (root, delta) = self.root.persistent_update_with_internal::<H, Arity, F>(
-            self.height,
-            pos,
-            &traversal_path,
-            f,
-        )?;
+        let (root, delta, _) =
+            self.root
+                .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
         let num_leaves = (delta + self.num_leaves as i64) as u64;
         Ok(Self {
             root,
@@ -207,7 +205,9 @@ where
         pos: Self::Index,
     ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let traversal_path = pos.to_traversal_path(self.height);
-        match self.root.forget_internal(self.height, &traversal_path) {
+        let (root, result) = self.root.forget_internal(self.height, &traversal_path);
+        self.root = root;
+        match result {
             LookupResult::Ok(elem, proof) => LookupResult::Ok(elem, MerkleProof::new(pos, proof)),
             LookupResult::NotInMemory => LookupResult::NotInMemory,
             LookupResult::NotFound(proof) => LookupResult::NotFound(MerkleProof::new(pos, proof)),
@@ -249,12 +249,13 @@ where
                         }
                     },
                 )?;
-            self.root.remember_internal::<H, Arity>(
+            self.root = self.root.remember_internal::<H, Arity>(
                 self.height,
                 &traversal_path,
                 &path_values,
                 &proof.proof,
-            )
+            )?;
+            Ok(())
         } else {
             Err(PrimitivesError::ParameterError(
                 "Invalid proof type".to_string(),
@@ -271,7 +272,7 @@ mod mt_tests {
             prelude::{RescueHash, RescueSparseMerkleTree},
             DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
             Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
-            PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+            NonDestructiveUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -589,17 +590,17 @@ mod mt_tests {
     }
 
     #[test]
-    fn test_persistent_update() {
-        test_persistent_update_helper::<BigUint, Fq254>();
-        test_persistent_update_helper::<BigUint, Fq377>();
-        test_persistent_update_helper::<BigUint, Fq381>();
+    fn test_non_destructive_update() {
+        test_non_destructive_update_helper::<BigUint, Fq254>();
+        test_non_destructive_update_helper::<BigUint, Fq377>();
+        test_non_destructive_update_helper::<BigUint, Fq381>();
 
-        test_persistent_update_helper::<Fq254, Fq254>();
-        test_persistent_update_helper::<Fq377, Fq377>();
-        test_persistent_update_helper::<Fq381, Fq381>();
+        test_non_destructive_update_helper::<Fq254, Fq254>();
+        test_non_destructive_update_helper::<Fq377, Fq377>();
+        test_non_destructive_update_helper::<Fq381, Fq381>();
     }
 
-    fn test_persistent_update_helper<I, F>()
+    fn test_non_destructive_update_helper<I, F>()
     where
         I: Index + ToTraversalPath<U3>,
         F: RescueParameter + ToTraversalPath<U3>,
@@ -611,7 +612,7 @@ mod mt_tests {
             mts.push(
                 mts.last()
                     .unwrap()
-                    .persistent_update(F::from(i), F::from(i))
+                    .non_destructive_update(F::from(i), F::from(i))
                     .unwrap(),
             );
             assert_eq!(mts.last().unwrap().num_leaves(), i);
@@ -627,7 +628,7 @@ mod mt_tests {
         }
 
         assert_eq!(mts[5].num_leaves(), 5);
-        let mt = mts[5].persistent_remove(F::from(1u64)).unwrap();
+        let mt = mts[5].non_destructive_remove(F::from(1u64)).unwrap();
         assert_eq!(mt.num_leaves(), 4);
     }
 

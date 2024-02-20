@@ -93,13 +93,15 @@ where
 
         let traversal_path =
             ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
-        self.num_leaves += self.root.extend_internal::<H, Arity>(
+        let (root, num_inserted) = self.root.extend_internal::<H, Arity>(
             self.height,
             &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
         )?;
+        self.root = root;
+        self.num_leaves += num_inserted;
         if iter.peek().is_some() {
             return Err(PrimitivesError::ParameterError(
                 "Exceed merkle tree capacity".to_string(),

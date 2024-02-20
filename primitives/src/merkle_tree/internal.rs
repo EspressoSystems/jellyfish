@@ -363,17 +363,25 @@ where
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
     /// also be forgotten if all its leafs are forgotten.
+    #[allow(clippy::type_complexity)]
     pub(crate) fn forget_internal(
-        &mut self,
+        &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
+    ) -> (
+        Arc<Self>,
+        LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>>,
+    ) {
         match self {
-            MerkleNode::Empty => LookupResult::NotFound(vec![MerkleNode::Empty; height + 1]),
+            MerkleNode::Empty => (
+                Arc::new(self.clone()),
+                LookupResult::NotFound(vec![MerkleNode::Empty; height + 1]),
+            ),
             MerkleNode::Branch { value, children } => {
-                match children[traversal_path[height - 1]]
-                    .forget_internal(height - 1, traversal_path)
-                {
+                let mut children = children.clone();
+                let (new_child, result) = children[traversal_path[height - 1]]
+                    .forget_internal(height - 1, traversal_path);
+                match result {
                     LookupResult::Ok(elem, mut proof) => {
                         proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -390,17 +398,30 @@ where
                                 })
                                 .collect::<Vec<_>>(),
                         });
+                        children[traversal_path[height - 1]] = new_child;
                         if children.iter().all(|child| {
                             matches!(
                                 **child,
-                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { value: _ }
+                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { .. }
                             )
                         }) {
-                            *self = MerkleNode::ForgettenSubtree { value: *value };
+                            (
+                                Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
+                                LookupResult::Ok(elem, proof),
+                            )
+                        } else {
+                            (
+                                Arc::new(MerkleNode::Branch {
+                                    value: *value,
+                                    children,
+                                }),
+                                LookupResult::Ok(elem, proof),
+                            )
                         }
-                        LookupResult::Ok(elem, proof)
                     },
-                    LookupResult::NotInMemory => LookupResult::NotInMemory,
+                    LookupResult::NotInMemory => {
+                        (Arc::new(self.clone()), LookupResult::NotInMemory)
+                    },
                     LookupResult::NotFound(mut non_membership_proof) => {
                         non_membership_proof.push(MerkleNode::Branch {
                             value: T::default(),
@@ -417,7 +438,10 @@ where
                                 })
                                 .collect::<Vec<_>>(),
                         });
-                        LookupResult::NotFound(non_membership_proof)
+                        (
+                            Arc::new(self.clone()),
+                            LookupResult::NotFound(non_membership_proof),
+                        )
                     },
                 }
             },
@@ -428,21 +452,24 @@ where
                     pos: pos.clone(),
                     elem: elem.clone(),
                 }];
-                *self = MerkleNode::ForgettenSubtree { value: *value };
-                LookupResult::Ok(elem, proof)
+                (
+                    Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
+                    LookupResult::Ok(elem, proof),
+                )
             },
-            _ => LookupResult::NotInMemory,
+            _ => (Arc::new(self.clone()), LookupResult::NotInMemory),
         }
     }
 
-    /// Re-insert a forgotten leaf to the Merkle tree if the proof is valid.
+    /// Re-insert a forgotten leaf to the Merkle tree. We assume that the proof
+    /// is valid and already checked.
     pub(crate) fn remember_internal<H, Arity>(
-        &mut self,
+        &self,
         height: usize,
         traversal_path: &[usize],
         path_values: &[T],
         proof: &[MerkleNode<E, I, T>],
-    ) -> Result<(), PrimitivesError>
+    ) -> Result<Arc<Self>, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -456,36 +483,46 @@ where
             )));
         }
 
-        match (&mut *self, &proof[height]) {
+        match (self, &proof[height]) {
             (Self::ForgettenSubtree { value }, Self::Branch { children, .. }) => {
                 // Recurse into the appropriate sub-tree to remember the rest of the path.
                 let mut children = children.clone();
-                children[traversal_path[height - 1]].remember_internal::<H, Arity>(
-                    height - 1,
-                    traversal_path,
-                    path_values,
-                    proof,
-                )?;
+                children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
+                    .remember_internal::<H, Arity>(
+                        height - 1,
+                        traversal_path,
+                        path_values,
+                        proof,
+                    )?;
                 // Remember `*self`.
-                *self = Self::Branch {
+                Ok(Arc::new(Self::Branch {
                     value: *value,
                     children,
-                };
-                Ok(())
+                }))
             },
             (Self::ForgettenSubtree { .. }, node) => {
                 // Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
                 // proof. Safe because we already checked our hash value matches the proof.
-                *self = node.clone();
-                Ok(())
+                Ok(Arc::new(node.clone()))
             },
-            (Self::Branch { children, .. }, Self::Branch { .. }) => children
-                [traversal_path[height - 1]]
-                .remember_internal::<H, Arity>(height - 1, traversal_path, path_values, proof),
+            (Self::Branch { value, children }, Self::Branch { .. }) => {
+                let mut children = children.clone();
+                children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
+                    .remember_internal::<H, Arity>(
+                        height - 1,
+                        traversal_path,
+                        path_values,
+                        proof,
+                    )?;
+                Ok(Arc::new(Self::Branch {
+                    value: *value,
+                    children,
+                }))
+            },
             (Self::Leaf { .. }, Self::Leaf { .. }) | (Self::Empty, Self::Empty) => {
                 // This node is already a complete sub-tree, so there's nothing to remember. The
                 // proof matches, so just return success.
-                Ok(())
+                Ok(Arc::new(self.clone()))
             },
             (..) => Err(PrimitivesError::ParameterError("Invalid proof".into())),
         }
@@ -561,111 +598,14 @@ where
     ///   result)`, `delta` represents the changes to the overall number of
     ///   leaves of the tree, `result` contains the original lookup information
     ///   at the given location.
+    #[allow(clippy::type_complexity)]
     pub(crate) fn update_with_internal<H, Arity, F>(
-        &mut self,
-        height: usize,
-        pos: impl Borrow<I>,
-        traversal_path: &[usize],
-        f: F,
-    ) -> Result<(i64, LookupResult<E, (), ()>), PrimitivesError>
-    where
-        H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
-        F: FnOnce(Option<&E>) -> Option<E>,
-    {
-        let pos = pos.borrow();
-        match self {
-            MerkleNode::Leaf {
-                elem: node_elem,
-                value,
-                pos,
-            } => {
-                let result = LookupResult::Ok(node_elem.clone(), ());
-                match f(Some(node_elem)) {
-                    Some(elem) => {
-                        *value = H::digest_leaf(pos, &elem)?;
-                        *node_elem = elem;
-                        Ok((0i64, result))
-                    },
-                    None => {
-                        *self = MerkleNode::Empty;
-                        Ok((-1i64, result))
-                    },
-                }
-            },
-            MerkleNode::Branch { value, children } => {
-                let branch = traversal_path[height - 1];
-                let result = children[branch].update_with_internal::<H, Arity, _>(
-                    height - 1,
-                    pos,
-                    traversal_path,
-                    f,
-                )?;
-                if matches!(*children[branch], MerkleNode::ForgettenSubtree { .. }) {
-                    // If the branch containing the update was forgotten by
-                    // user, the update failed and nothing was changed, so we
-                    // can short-circuit without recomputing this node's value.
-                } else if children
-                    .iter()
-                    .all(|child| matches!(**child, MerkleNode::Empty))
-                {
-                    // If all children are empty, remove the current node.
-                    *self = MerkleNode::Empty;
-                } else {
-                    // Otherwise, an entry has been updated and the value of one of our children has
-                    // changed, so we must recompute our own value.
-                    *value = digest_branch::<E, H, I, T>(children)?;
-                }
-                Ok(result)
-            },
-            MerkleNode::Empty => {
-                if height == 0 {
-                    if let Some(elem) = f(None) {
-                        *self = MerkleNode::Leaf {
-                            value: H::digest_leaf(pos, &elem)?,
-                            pos: pos.clone(),
-                            elem,
-                        };
-                        Ok((1, LookupResult::NotFound(())))
-                    } else {
-                        Ok((0, LookupResult::NotFound(())))
-                    }
-                } else {
-                    let branch = traversal_path[height - 1];
-                    let mut children = vec![Arc::new(MerkleNode::Empty); Arity::to_usize()];
-                    let result = children[branch].update_with_internal::<H, Arity, _>(
-                        height - 1,
-                        pos,
-                        traversal_path,
-                        f,
-                    )?;
-                    if matches!(*children[branch], MerkleNode::Empty) {
-                        // No update performed.
-                    } else {
-                        *self = MerkleNode::Branch {
-                            value: digest_branch::<E, H, I, T>(&children)?,
-                            children,
-                        };
-                    }
-                    Ok(result)
-                }
-            },
-            MerkleNode::ForgettenSubtree { .. } => Ok((0, LookupResult::NotInMemory)),
-        }
-    }
-
-    /// Persistently update the element at the given index.
-    /// * `returns` - `Err()` if any error happens internally. `Ok(delta,
-    ///   result)`, `delta` represents the changes to the overall number of
-    ///   leaves of the tree, `result` contains the original lookup information
-    ///   at the given location.
-    pub(crate) fn persistent_update_with_internal<H, Arity, F>(
         &self,
         height: usize,
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         f: F,
-    ) -> Result<(Arc<Self>, i64), PrimitivesError>
+    ) -> Result<(Arc<Self>, i64, LookupResult<E, (), ()>), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
         Arity: Unsigned,
@@ -677,20 +617,24 @@ where
                 elem: node_elem,
                 value: _,
                 pos,
-            } => match f(Some(node_elem)) {
-                Some(elem) => Ok((
-                    Arc::new(MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, &elem)?,
-                        pos: pos.clone(),
-                        elem,
-                    }),
-                    0i64,
-                )),
-                None => Ok((Arc::new(MerkleNode::Empty), -1i64)),
+            } => {
+                let result = LookupResult::Ok(node_elem.clone(), ());
+                match f(Some(node_elem)) {
+                    Some(elem) => Ok((
+                        Arc::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(pos, &elem)?,
+                            pos: pos.clone(),
+                            elem,
+                        }),
+                        0i64,
+                        result,
+                    )),
+                    None => Ok((Arc::new(MerkleNode::Empty), -1i64, result)),
+                }
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
-                let result = children[branch].persistent_update_with_internal::<H, Arity, _>(
+                let result = children[branch].update_with_internal::<H, Arity, _>(
                     height - 1,
                     pos,
                     traversal_path,
@@ -708,12 +652,13 @@ where
                             children,
                         }),
                         result.1,
+                        result.2,
                     ))
                 } else if children
                     .iter()
                     .all(|child| matches!(**child, MerkleNode::Empty))
                 {
-                    Ok((Arc::new(MerkleNode::Empty), result.1))
+                    Ok((Arc::new(MerkleNode::Empty), result.1, result.2))
                 } else {
                     // Otherwise, an entry has been updated and the value of one of our children has
                     // changed, so we must recompute our own value.
@@ -724,6 +669,7 @@ where
                             children,
                         }),
                         result.1,
+                        result.2,
                     ))
                 }
             },
@@ -737,13 +683,20 @@ where
                                 elem,
                             }),
                             1i64,
+                            LookupResult::NotFound(()),
                         ))
                     } else {
-                        Ok((Arc::new(MerkleNode::Empty), 0i64))
+                        Ok((
+                            Arc::new(MerkleNode::Empty),
+                            0i64,
+                            LookupResult::NotFound(()),
+                        ))
                     }
                 } else {
                     let branch = traversal_path[height - 1];
-                    let mut children = vec![Arc::new(MerkleNode::Empty); Arity::to_usize()];
+                    let mut children = (0..Arity::to_usize())
+                        .map(|_| Arc::new(Self::Empty))
+                        .collect::<Vec<_>>();
                     // Inserting new leave here, shortcutting
                     let result = children[branch].update_with_internal::<H, Arity, _>(
                         height - 1,
@@ -751,16 +704,18 @@ where
                         traversal_path,
                         f,
                     )?;
+                    children[branch] = result.0;
                     if matches!(*children[branch], MerkleNode::Empty) {
                         // No update performed.
-                        Ok((Arc::new(MerkleNode::Empty), 0i64))
+                        Ok((Arc::new(MerkleNode::Empty), 0i64, result.2))
                     } else {
                         Ok((
                             Arc::new(MerkleNode::Branch {
                                 value: digest_branch::<E, H, I, T>(&children)?,
                                 children,
                             }),
-                            result.0,
+                            result.1,
+                            result.2,
                         ))
                     }
                 }
@@ -779,23 +734,23 @@ where
 {
     /// Batch insertion for the given Merkle node.
     pub(crate) fn extend_internal<H, Arity>(
-        &mut self,
+        &self,
         height: usize,
         pos: &u64,
         traversal_path: &[usize],
         at_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
-    ) -> Result<u64, PrimitivesError>
+    ) -> Result<(Arc<Self>, u64), PrimitivesError>
     where
         H: DigestAlgorithm<E, u64, T>,
         Arity: Unsigned,
     {
         if data.peek().is_none() {
-            return Ok(0);
+            return Ok((Arc::new(self.clone()), 0));
         }
         let mut cur_pos = *pos;
         match self {
-            MerkleNode::Branch { value, children } => {
+            MerkleNode::Branch { value: _, children } => {
                 let mut cnt = 0u64;
                 let mut frontier = if at_frontier {
                     traversal_path[height - 1]
@@ -803,31 +758,35 @@ where
                     0
                 };
                 let cap = Arity::to_usize();
+                let mut children = children.clone();
                 while data.peek().is_some() && frontier < cap {
-                    let increment = children[frontier].extend_internal::<H, Arity>(
+                    let (new_child, increment) = children[frontier].extend_internal::<H, Arity>(
                         height - 1,
                         &cur_pos,
                         traversal_path,
                         at_frontier && frontier == traversal_path[height - 1],
                         data,
                     )?;
+                    children[frontier] = new_child;
                     cnt += increment;
                     cur_pos += increment;
                     frontier += 1;
                 }
-                *value = digest_branch::<E, H, u64, T>(children)?;
-                Ok(cnt)
+                let value = digest_branch::<E, H, u64, T>(&children)?;
+                Ok((Arc::new(Self::Branch { value, children }), cnt))
             },
             MerkleNode::Empty => {
                 if height == 0 {
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
-                    *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem)?,
-                        pos: *pos,
-                        elem: elem.clone(),
-                    };
-                    Ok(1)
+                    Ok((
+                        Arc::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(pos, elem)?,
+                            pos: *pos,
+                            elem: elem.clone(),
+                        }),
+                        1,
+                    ))
                 } else {
                     let mut cnt = 0u64;
                     let mut frontier = if at_frontier {
@@ -836,24 +795,28 @@ where
                         0
                     };
                     let cap = Arity::to_usize();
-                    let mut children = vec![Arc::new(MerkleNode::Empty); cap];
+                    let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
                     while data.peek().is_some() && frontier < cap {
-                        let increment = children[frontier].extend_internal::<H, Arity>(
-                            height - 1,
-                            &cur_pos,
-                            traversal_path,
-                            at_frontier && frontier == traversal_path[height - 1],
-                            data,
-                        )?;
+                        let (new_child, increment) = children[frontier]
+                            .extend_internal::<H, Arity>(
+                                height - 1,
+                                &cur_pos,
+                                traversal_path,
+                                at_frontier && frontier == traversal_path[height - 1],
+                                data,
+                            )?;
+                        children[frontier] = new_child;
                         cnt += increment;
                         cur_pos += increment;
                         frontier += 1;
                     }
-                    *self = MerkleNode::Branch {
-                        value: digest_branch::<E, H, u64, T>(&children)?,
-                        children,
-                    };
-                    Ok(cnt)
+                    Ok((
+                        Arc::new(MerkleNode::Branch {
+                            value: digest_branch::<E, H, u64, T>(&children)?,
+                            children,
+                        }),
+                        cnt,
+                    ))
                 }
             },
             MerkleNode::Leaf { .. } => Err(PrimitivesError::ParameterError(
@@ -868,23 +831,23 @@ where
     /// Similar to [`extend_internal`], but this function will automatically
     /// forget every leaf except for the Merkle tree frontier.
     pub(crate) fn extend_and_forget_internal<H, Arity>(
-        &mut self,
+        &self,
         height: usize,
         pos: &u64,
         traversal_path: &[usize],
         at_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
-    ) -> Result<u64, PrimitivesError>
+    ) -> Result<(Arc<Self>, u64), PrimitivesError>
     where
         H: DigestAlgorithm<E, u64, T>,
         Arity: Unsigned,
     {
         if data.peek().is_none() {
-            return Ok(0);
+            return Ok((Arc::new(self.clone()), 0));
         }
         let mut cur_pos = *pos;
         match self {
-            MerkleNode::Branch { value, children } => {
+            MerkleNode::Branch { value: _, children } => {
                 let mut cnt = 0u64;
                 let mut frontier = if at_frontier {
                     traversal_path[height - 1]
@@ -892,6 +855,7 @@ where
                     0
                 };
                 let cap = Arity::to_usize();
+                let mut children = children.clone();
                 while data.peek().is_some() && frontier < cap {
                     if frontier > 0 && !children[frontier - 1].is_forgotten() {
                         children[frontier - 1] =
@@ -899,30 +863,34 @@ where
                                 value: children[frontier - 1].value(),
                             });
                     }
-                    let increment = children[frontier].extend_and_forget_internal::<H, Arity>(
-                        height - 1,
-                        &cur_pos,
-                        traversal_path,
-                        at_frontier && frontier == traversal_path[height - 1],
-                        data,
-                    )?;
+                    let (new_child, increment) = children[frontier]
+                        .extend_and_forget_internal::<H, Arity>(
+                            height - 1,
+                            &cur_pos,
+                            traversal_path,
+                            at_frontier && frontier == traversal_path[height - 1],
+                            data,
+                        )?;
+                    children[frontier] = new_child;
                     cnt += increment;
                     cur_pos += increment;
                     frontier += 1;
                 }
-                *value = digest_branch::<E, H, u64, T>(children)?;
-                Ok(cnt)
+                let value = digest_branch::<E, H, u64, T>(&children)?;
+                Ok((Arc::new(Self::Branch { value, children }), cnt))
             },
             MerkleNode::Empty => {
                 if height == 0 {
                     let elem = data.next().unwrap();
                     let elem = elem.borrow();
-                    *self = MerkleNode::Leaf {
-                        value: H::digest_leaf(pos, elem)?,
-                        pos: *pos,
-                        elem: elem.clone(),
-                    };
-                    Ok(1)
+                    Ok((
+                        Arc::new(MerkleNode::Leaf {
+                            value: H::digest_leaf(pos, elem)?,
+                            pos: *pos,
+                            elem: elem.clone(),
+                        }),
+                        1,
+                    ))
                 } else {
                     let mut cnt = 0u64;
                     let mut frontier = if at_frontier {
@@ -931,7 +899,7 @@ where
                         0
                     };
                     let cap = Arity::to_usize();
-                    let mut children = vec![Arc::new(MerkleNode::Empty); cap];
+                    let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
                     while data.peek().is_some() && frontier < cap {
                         if frontier > 0 && !children[frontier - 1].is_forgotten() {
                             children[frontier - 1] =
@@ -939,22 +907,26 @@ where
                                     value: children[frontier - 1].value(),
                                 });
                         }
-                        let increment = children[frontier].extend_and_forget_internal::<H, Arity>(
-                            height - 1,
-                            &cur_pos,
-                            traversal_path,
-                            at_frontier && frontier == traversal_path[height - 1],
-                            data,
-                        )?;
+                        let (new_child, increment) = children[frontier]
+                            .extend_and_forget_internal::<H, Arity>(
+                                height - 1,
+                                &cur_pos,
+                                traversal_path,
+                                at_frontier && frontier == traversal_path[height - 1],
+                                data,
+                            )?;
+                        children[frontier] = new_child;
                         cnt += increment;
                         cur_pos += increment;
                         frontier += 1;
                     }
-                    *self = MerkleNode::Branch {
-                        value: digest_branch::<E, H, u64, T>(&children)?,
-                        children,
-                    };
-                    Ok(cnt)
+                    Ok((
+                        Arc::new(MerkleNode::Branch {
+                            value: digest_branch::<E, H, u64, T>(&children)?,
+                            children,
+                        }),
+                        cnt,
+                    ))
                 }
             },
             MerkleNode::Leaf { .. } => Err(PrimitivesError::ParameterError(
@@ -1131,22 +1103,25 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(node) = self.stack.pop() {
-            match *node {
+            match node.as_ref() {
                 MerkleNode::Branch { value: _, children } => {
                     children
-                        .into_iter()
+                        .iter()
                         .rev()
                         .filter(|child| {
-                            matches!(**child, MerkleNode::Branch { .. } | MerkleNode::Leaf { .. })
+                            matches!(
+                                (**child).as_ref(),
+                                MerkleNode::Branch { .. } | MerkleNode::Leaf { .. }
+                            )
                         })
-                        .for_each(|child| self.stack.push(child));
+                        .for_each(|child| self.stack.push(child.clone()));
                 },
                 MerkleNode::Leaf {
                     value: _,
                     pos,
                     elem,
                 } => {
-                    return Some((pos, elem));
+                    return Some((pos.clone(), elem.clone()));
                 },
                 _ => {},
             }

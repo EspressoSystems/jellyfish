@@ -279,8 +279,8 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
-    ///   update is success or the given leaf is not in memory.
+    /// * `returns` - Err() if any error occurs internally or the given leaf is
+    ///   not in memory. Ok(result) if the update is success.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
@@ -398,29 +398,29 @@ pub trait ForgetableUniversalMerkleTreeScheme:
     ) -> Result<(), PrimitivesError>;
 }
 
-/// A universal merkle tree that allows persistent updates.
-/// A persistent update doesn't directly modify the existing content, it creates
+/// A universal merkle tree that allows non destructive updates.
+/// A non destructive update doesn't directly modify the existing content, it creates
 /// a new copy about the update so that people could access both the old version
 /// and the new.
-pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
-    /// A persistent update interface, check
-    /// [PersistentUniversalMerkleTreeScheme] and
+pub trait NonDestructiveUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
+    /// A non destructive update interface, check
+    /// [NonDestructiveUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::update].
-    fn persistent_update(
+    fn non_destructive_update(
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<Self, PrimitivesError>;
 
     /// A persistent remove interface, check
-    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [NonDestructiveUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::remove].
-    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
+    fn non_destructive_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
 
     /// A persistent update_with interface, check
-    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [NonDestructiveUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::update_with].
-    fn persistent_update_with<F>(
+    fn non_destructive_update_with<F>(
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
