@@ -35,7 +35,7 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
   - Restricting the index type for `AppendableMerkleTreeScheme` to be `u64`.
   - Add new `update_with()` and `remove()` interface for the universal Merkle tree.
   - Add new `iter()` interface for Merkle tree scheme, allows user to iterate through all elements that are in memory.
-- [#489](https://github.com/EspressoSystems/jellyfish/pull/489) (`jf-primitives`) Add persistent universal Merkle tree.
+- [#489](https://github.com/EspressoSystems/jellyfish/pull/489) (`jf-primitives`) Add non destructive universal Merkle tree.
 
 ### Fixed
 

@@ -399,9 +399,9 @@ pub trait ForgetableUniversalMerkleTreeScheme:
 }
 
 /// A universal merkle tree that allows non destructive updates.
-/// A non destructive update doesn't directly modify the existing content, it creates
-/// a new copy about the update so that people could access both the old version
-/// and the new.
+/// A non destructive update doesn't directly modify the existing content, it
+/// creates a new copy about the update so that people could access both the old
+/// version and the new.
 pub trait NonDestructiveUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
     /// A non destructive update interface, check
     /// [NonDestructiveUniversalMerkleTreeScheme] and
