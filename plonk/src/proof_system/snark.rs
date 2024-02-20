@@ -662,7 +662,6 @@ pub mod test {
     };
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{
-        convert::TryInto,
         format,
         rand::{CryptoRng, RngCore},
         string::ToString,

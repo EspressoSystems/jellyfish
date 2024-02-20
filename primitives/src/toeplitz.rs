@@ -173,7 +173,7 @@ mod tests {
     use super::*;
     use ark_bls12_381::{Fr, G1Projective};
     use ark_ff::Field;
-    use ark_std::{convert::Into, ops::AddAssign, vec, UniformRand};
+    use ark_std::{ops::AddAssign, vec, UniformRand};
     use jf_utils::test_rng;
 
     // a MxN matrix, M rows, N cols.
