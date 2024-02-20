@@ -303,15 +303,9 @@ mod tests {
         super::{util::get_batched_nv, *},
         *,
     };
-    use crate::pcs::{
-        multilinear_kzg::util::{compute_qx_degree, generate_evaluations},
-        prelude::UnivariateUniversalParams,
-        StructuredReferenceString,
-    };
+    use crate::pcs::multilinear_kzg::util::{compute_qx_degree, generate_evaluations};
     use ark_bls12_381::Bls12_381 as E;
-    use ark_ec::pairing::Pairing;
-    use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
-    use ark_std::{log2, rand::RngCore, vec::Vec, UniformRand};
+    use ark_std::{log2, UniformRand};
     use jf_utils::test_rng;
     type Fr = <E as Pairing>::ScalarField;
 

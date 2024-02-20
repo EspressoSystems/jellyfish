@@ -253,13 +253,10 @@ mod tests {
     use ark_std::{
         collections::LinkedList,
         end_timer,
-        iter::FromIterator,
         rand::{CryptoRng, RngCore},
         start_timer,
         string::ToString,
-        vec,
-        vec::Vec,
-        UniformRand,
+        vec, UniformRand,
     };
 
     // fix first `pad` variables of `poly` represented in evaluation form to zero

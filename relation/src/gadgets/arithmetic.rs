@@ -511,7 +511,7 @@ mod test {
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::PrimeField;
-    use ark_std::{convert::TryInto, vec, vec::Vec};
+    use ark_std::{vec, vec::Vec};
     use jf_utils::test_rng;
     use num_bigint::BigUint;
 

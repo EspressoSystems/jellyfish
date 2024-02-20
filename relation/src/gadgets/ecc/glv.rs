@@ -571,14 +571,13 @@ fn get_bits(a: &[bool]) -> u16 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{errors::CircuitError, gadgets::ecc::TEPoint, Circuit, PlonkCircuit};
     use ark_ec::{
         twisted_edwards::{Affine, TECurveConfig as Config},
         CurveConfig,
     };
     use ark_ed_on_bls12_381_bandersnatch::{EdwardsAffine, EdwardsConfig, Fq, Fr};
-    use ark_ff::{BigInteger, MontFp, One, PrimeField, UniformRand};
-    use jf_utils::{field_switching, fr_to_fq, test_rng};
+    use ark_ff::{BigInteger, MontFp, One, UniformRand};
+    use jf_utils::{fr_to_fq, test_rng};
 
     #[test]
     fn test_glv() -> Result<(), CircuitError> {
