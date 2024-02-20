@@ -5,9 +5,12 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Circuits for the building blocks in Plonk verifiers.
+use super::{
+    challenge_var_to_fp_elem_var, poly, BatchProofVar, ChallengesFpElemVar, ChallengesVar,
+    NonNativeFieldInfo, PcsInfoVar, ProofEvaluationsVar, ScalarsAndBasesVar, VerifyingKeyVar,
+};
 use crate::{
-    circuit::{plonk_verifier::*, transcript::RescueTranscriptVar},
-    constants::EXTRA_TRANSCRIPT_MSG_LABEL,
+    circuit::transcript::RescueTranscriptVar, constants::EXTRA_TRANSCRIPT_MSG_LABEL,
     errors::PlonkError,
 };
 use ark_ec::{
@@ -16,7 +19,7 @@ use ark_ec::{
 };
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
-use ark_std::{format, vec::Vec};
+use ark_std::{format, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
     errors::{CircuitError, CircuitError::ParameterError},
@@ -455,12 +458,14 @@ mod test {
     use crate::{
         proof_system::{
             batch_arg::{new_mergeable_circuit_for_test, BatchArgument},
+            structs::VerifyingKey,
             PlonkKzgSnark, UniversalSNARK,
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
     use ark_bls12_377::Bls12_377;
     use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig};
+    use ark_ff::BigInteger as _;
     use ark_std::{vec, UniformRand};
     use jf_primitives::rescue::RescueParameter;
     use jf_relation::{Circuit, MergeableCircuitType};

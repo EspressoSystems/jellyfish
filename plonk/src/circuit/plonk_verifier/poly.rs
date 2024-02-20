@@ -5,7 +5,10 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Circuits for the polynomial evaluations within Plonk verifiers.
-use crate::{circuit::plonk_verifier::*, errors::PlonkError};
+use super::{
+    BatchProofVar, ChallengesFpElemVar, NonNativeFieldInfo, ScalarsAndBasesVar, VerifyingKeyVar,
+};
+use crate::errors::PlonkError;
 use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -734,7 +737,7 @@ where
 mod test {
     use super::*;
     use ark_bls12_377::Bls12_377;
-    use ark_ff::Field;
+    use ark_ff::{BigInteger as _, Field};
     use ark_poly::Radix2EvaluationDomain;
     use ark_std::{One, UniformRand};
     use jf_relation::Circuit;
