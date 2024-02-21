@@ -400,12 +400,10 @@ where
                                 .collect::<Vec<_>>(),
                         });
                         children[traversal_path[height - 1]] = new_child;
-                        if children.iter().all(|child| {
-                            matches!(
-                                **child,
-                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { .. }
-                            )
-                        }) {
+                        if children
+                            .iter()
+                            .all(|child| matches!(**child, MerkleNode::ForgettenSubtree { .. }))
+                        {
                             (
                                 Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
                                 LookupResult::Ok(elem, proof),
