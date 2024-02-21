@@ -8,8 +8,9 @@ use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
 use crate::errors::{PrimitivesError, VerificationResult};
+use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, sync::Arc, vec, vec::Vec};
+use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
 use core::marker::PhantomData;
 use itertools::Itertools;
 use jf_utils::canonical;

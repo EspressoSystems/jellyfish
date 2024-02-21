@@ -451,12 +451,13 @@ mod test {
         },
         rescue::RescueParameter,
     };
+    use alloc::sync::Arc;
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_std::{sync::Arc, vec::Vec};
+    use ark_std::vec::Vec;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     #[test]
