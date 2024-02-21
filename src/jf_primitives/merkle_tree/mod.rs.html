@@ -398,6 +398,13 @@
 <a href="#397" id="397">397</a>
 <a href="#398" id="398">398</a>
 <a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -702,6 +709,13 @@
     ///   or should be removed.
     /// * `returns` - Err() if any error occurs internally. Ok(result) if the
     ///   update is success or the given leaf is not in memory.
+    ///
+    /// # Example
+    /// ```ignore
+    /// merkle_tree.update_with(account, |balance| {
+    ///     Some(balance.cloned().unwrap_or_default().add(amount))
+    /// });
+    /// ```
     </span><span class="kw">fn </span>update_with&lt;F&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
