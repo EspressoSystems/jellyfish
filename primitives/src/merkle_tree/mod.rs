@@ -304,7 +304,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     ///   update is success or the given leaf is not in memory.
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// merkle_tree.update_with(account, |balance| {
     ///     Some(balance.cloned().unwrap_or_default().add(amount))
     /// });
