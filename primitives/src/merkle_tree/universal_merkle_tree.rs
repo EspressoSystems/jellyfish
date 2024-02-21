@@ -9,7 +9,7 @@ use super::{
     internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
     Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
-    NonDestructiveUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
     errors::{PrimitivesError, VerificationResult},
@@ -146,7 +146,7 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> NonDestructiveUniversalMerkleTreeScheme
+impl<E, H, I, Arity, T> PersistentUniversalMerkleTreeScheme
     for UniversalMerkleTree<E, H, I, Arity, T>
 where
     E: Element,
@@ -155,19 +155,19 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    fn non_destructive_update(
+    fn persistent_update(
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<Self, PrimitivesError> {
-        self.non_destructive_update_with(pos, |_| Some(elem.borrow().clone()))
+        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
-    fn non_destructive_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
-        self.non_destructive_update_with(pos, |_| None)
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| None)
     }
 
-    fn non_destructive_update_with<F>(
+    fn persistent_update_with<F>(
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
@@ -271,7 +271,7 @@ mod mt_tests {
             prelude::{RescueHash, RescueSparseMerkleTree},
             DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
             Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
-            NonDestructiveUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+            PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -589,17 +589,17 @@ mod mt_tests {
     }
 
     #[test]
-    fn test_non_destructive_update() {
-        test_non_destructive_update_helper::<BigUint, Fq254>();
-        test_non_destructive_update_helper::<BigUint, Fq377>();
-        test_non_destructive_update_helper::<BigUint, Fq381>();
+    fn test_persistent_update() {
+        test_persistent_update_helper::<BigUint, Fq254>();
+        test_persistent_update_helper::<BigUint, Fq377>();
+        test_persistent_update_helper::<BigUint, Fq381>();
 
-        test_non_destructive_update_helper::<Fq254, Fq254>();
-        test_non_destructive_update_helper::<Fq377, Fq377>();
-        test_non_destructive_update_helper::<Fq381, Fq381>();
+        test_persistent_update_helper::<Fq254, Fq254>();
+        test_persistent_update_helper::<Fq377, Fq377>();
+        test_persistent_update_helper::<Fq381, Fq381>();
     }
 
-    fn test_non_destructive_update_helper<I, F>()
+    fn test_persistent_update_helper<I, F>()
     where
         I: Index + ToTraversalPath<U3>,
         F: RescueParameter + ToTraversalPath<U3>,
@@ -611,7 +611,7 @@ mod mt_tests {
             mts.push(
                 mts.last()
                     .unwrap()
-                    .non_destructive_update(F::from(i), F::from(i))
+                    .persistent_update(F::from(i), F::from(i))
                     .unwrap(),
             );
             assert_eq!(mts.last().unwrap().num_leaves(), i);
@@ -627,7 +627,7 @@ mod mt_tests {
         }
 
         assert_eq!(mts[5].num_leaves(), 5);
-        let mt = mts[5].non_destructive_remove(F::from(1u64)).unwrap();
+        let mt = mts[5].persistent_remove(F::from(1u64)).unwrap();
         assert_eq!(mt.num_leaves(), 4);
     }
 

@@ -402,25 +402,25 @@ pub trait ForgetableUniversalMerkleTreeScheme:
 /// A non destructive update doesn't directly modify the existing content, it
 /// creates a new copy about the update so that people could access both the old
 /// version and the new.
-pub trait NonDestructiveUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
+pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
     /// A non destructive update interface, check
-    /// [NonDestructiveUniversalMerkleTreeScheme] and
+    /// [PersistentUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::update].
-    fn non_destructive_update(
+    fn persistent_update(
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
     ) -> Result<Self, PrimitivesError>;
 
     /// A persistent remove interface, check
-    /// [NonDestructiveUniversalMerkleTreeScheme] and
+    /// [PersistentUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::remove].
-    fn non_destructive_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
 
     /// A persistent update_with interface, check
-    /// [NonDestructiveUniversalMerkleTreeScheme] and
+    /// [PersistentUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::update_with].
-    fn non_destructive_update_with<F>(
+    fn persistent_update_with<F>(
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
