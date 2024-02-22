@@ -302,6 +302,13 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     ///   or should be removed.
     /// * `returns` - Err() if any error occurs internally. Ok(result) if the
     ///   update is success or the given leaf is not in memory.
+    ///
+    /// # Example
+    /// ```ignore
+    /// merkle_tree.update_with(account, |balance| {
+    ///     Some(balance.cloned().unwrap_or_default().add(amount))
+    /// });
+    /// ```
     fn update_with<F>(
         &mut self,
         pos: impl Borrow<Self::Index>,
