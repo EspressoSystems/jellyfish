@@ -75,21 +75,6 @@ where
     type NonMembershipProof = MerkleProof<E, I, T, Arity>;
     type BatchNonMembershipProof = ();
 
-    fn update(
-        &mut self,
-        pos: impl Borrow<I>,
-        elem: impl Borrow<E>,
-    ) -> Result<LookupResult<E, (), ()>, PrimitivesError> {
-        self.update_with(pos, |_| Some(elem.borrow().clone()))
-    }
-
-    fn remove(
-        &mut self,
-        pos: impl Borrow<Self::Index>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
-        self.update_with(pos, |_| None)
-    }
-
     fn update_with<F>(
         &mut self,
         pos: impl Borrow<Self::Index>,
@@ -155,18 +140,6 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
-    fn persistent_update(
-        &self,
-        pos: impl Borrow<Self::Index>,
-        elem: impl Borrow<Self::Element>,
-    ) -> Result<Self, PrimitivesError> {
-        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
-    }
-
-    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
-        self.persistent_update_with(pos, |_| None)
-    }
-
     fn persistent_update_with<F>(
         &self,
         pos: impl Borrow<Self::Index>,
@@ -199,6 +172,7 @@ where
     Arity: Unsigned,
     T: NodeValue,
 {
+    /// WARN(#495): this method breaks non-membership proofs.
     fn universal_forget(
         &mut self,
         pos: Self::Index,

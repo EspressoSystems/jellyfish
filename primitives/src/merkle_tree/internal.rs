@@ -364,6 +364,7 @@ where
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
     /// also be forgotten if all its leafs are forgotten.
+    /// WARN(#495): this method breaks non-membership proofs.
     #[allow(clippy::type_complexity)]
     pub(crate) fn forget_internal(
         &self,
@@ -400,10 +401,12 @@ where
                                 .collect::<Vec<_>>(),
                         });
                         children[traversal_path[height - 1]] = new_child;
-                        if children
-                            .iter()
-                            .all(|child| matches!(**child, MerkleNode::ForgettenSubtree { .. }))
-                        {
+                        if children.iter().all(|child| {
+                            matches!(
+                                **child,
+                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { .. }
+                            )
+                        }) {
                             (
                                 Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
                                 LookupResult::Ok(elem, proof),

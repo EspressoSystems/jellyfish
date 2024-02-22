@@ -285,7 +285,9 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| Some(elem.borrow().clone()))
+    }
 
     /// Remove a leaf at the given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -294,7 +296,9 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     fn remove(
         &mut self,
         pos: impl Borrow<Self::Index>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| None)
+    }
 
     /// Apply an update function `f` at a given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -417,12 +421,16 @@ pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> Result<Self, PrimitivesError>;
+    ) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
+    }
 
     /// A persistent remove interface, check
     /// [PersistentUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::remove].
-    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError>;
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| None)
+    }
 
     /// A persistent update_with interface, check
     /// [PersistentUniversalMerkleTreeScheme] and
