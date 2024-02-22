@@ -801,7 +801,7 @@ mod tests {
     #[test]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
-        let m = 8;
+        let m = 16;
         let (payload_chunk_size, num_storage_nodes) = (128, 256);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size * m, &mut rng);
