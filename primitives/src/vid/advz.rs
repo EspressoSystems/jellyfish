@@ -62,7 +62,6 @@ pub mod precomputable;
 pub struct Advz<E, H>
 where
     E: Pairing,
-    H: Send + Sync,
 {
     payload_chunk_size: usize,
     num_storage_nodes: usize,
@@ -101,7 +100,6 @@ type KzgEvalsMerkleTreeProof<E, H> =
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
-    H: Send + Sync,
 {
     /// Return a new instance of `Self`.
     ///
@@ -241,7 +239,7 @@ where
 impl<E, H> VidScheme for Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     // use HasherNode<H> instead of Output<H> to easily meet trait bounds
     type Commit = HasherNode<H>;
@@ -550,7 +548,7 @@ where
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     fn evaluate_polys(
         &self,
