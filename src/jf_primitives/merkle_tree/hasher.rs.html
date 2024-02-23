@@ -339,7 +339,7 @@
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher&lt;H&gt;()
 /// where
-///     H: Digest + Write,
+///     H: Digest + Write + Send + Sync,
 ///     &lt;&lt;H as OutputSizeUser&gt;::OutputSize as ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -355,13 +355,13 @@
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher&lt;H&gt;()
 /// where
-///     H: Digest + Write,
+///     H: Digest + Write + Send + Sync,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 ///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(None, &amp;my_data).unwrap();
 /// }
 /// ```
-</span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::Foo&gt; + Write {
+</span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::Foo&gt; + Write + Send + Sync {
     <span class="doccomment">/// Associated type needed to express trait bounds.
     </span><span class="kw">type </span>Foo: ArrayLength&lt;u8, ArrayType = <span class="self">Self</span>::Bar&gt;;
     <span class="doccomment">/// Associated type needed to express trait bounds.
@@ -369,7 +369,7 @@
 }
 <span class="kw">impl</span>&lt;T&gt; HasherDigest <span class="kw">for </span>T
 <span class="kw">where
-    </span>T: Digest + Write,
+    </span>T: Digest + Write + Send + Sync,
     &lt;T::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 {
     <span class="kw">type </span>Foo = T::OutputSize;

@@ -1053,6 +1053,11 @@
 <a href="#1052" id="1052">1052</a>
 <a href="#1053" id="1053">1053</a>
 <a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1097,8 +1102,12 @@
 <span class="kw">use </span>core::mem;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>digest::crypto_common::Output;
-<span class="kw">use </span>itertools::Itertools;
-<span class="kw">use </span>jf_utils::canonical;
+<span class="kw">use </span>jf_utils::{
+    canonical,
+    par_utils::{parallelizable_chunks, parallelizable_slice_iter},
+};
+<span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
+</span><span class="kw">use </span>rayon::prelude::ParallelIterator;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">mod </span>bytes_to_field;
@@ -1610,32 +1619,34 @@
         H: HasherDigest,
     {
         <span class="kw">let </span>code_word_size = <span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity;
-        <span class="kw">let </span>all_storage_node_evals = {
-            <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
+        <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
 
-            <span class="kw">for </span>poly <span class="kw">in </span>polys.iter() {
-                <span class="kw">let </span>poly_evals = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
+        <span class="kw">let </span>all_poly_evals = parallelizable_slice_iter(polys)
+            .map(|poly| {
+                UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
                     poly,
                     code_word_size,
                     <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
                 )
-                .map_err(vid)<span class="question-mark">?</span>;
+                .map_err(vid)
+            })
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
 
-                <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in
-                    </span>all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
+        <span class="kw">for </span>poly_evals <span class="kw">in </span>all_poly_evals {
+            <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in </span>all_storage_node_evals
+                .iter_mut()
+                .zip(poly_evals.into_iter())
+            {
+                storage_node_evals.push(poly_eval);
             }
+        }
 
-            <span class="comment">// sanity checks
-            </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
-            <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
-                <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
-            }
+        <span class="comment">// sanity checks
+        </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
+        <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
+            <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
+        }
 
-            all_storage_node_evals
-        };
         <span class="prelude-val">Ok</span>(all_storage_node_evals)
     }
 
@@ -1671,10 +1682,9 @@
         </span>E: Pairing,
     {
         <span class="kw">let </span>chunk_size = <span class="self">self</span>.payload_chunk_size * <span class="self">self</span>.multiplicity;
-        bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload)
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| <span class="self">self</span>.polynomial(evals_iter))
+        <span class="kw">let </span>elem_bytes_len = bytes_to_field::elem_byte_capacity::&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;();
+        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+            .map(|chunk| <span class="self">self</span>.polynomial(bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(chunk)))
             .collect()
     }
 
@@ -1858,7 +1868,7 @@
         <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span>advz =
             Advz::&lt;Bls12_381, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
-        <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">20</span>, <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">25</span>, <span class="kw-2">&amp;mut </span>rng);
 
         <span class="kw">let _ </span>= advz.disperse(payload_random);
     }

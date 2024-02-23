@@ -28,6 +28,17 @@
 <a href="#27" id="27">27</a>
 <a href="#28" id="28">28</a>
 <a href="#29" id="29">29</a>
+<a href="#30" id="30">30</a>
+<a href="#31" id="31">31</a>
+<a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 // You should have received a copy of the MIT License
@@ -56,5 +67,16 @@
 <span class="attr">#[cfg(not(feature = <span class="string">"parallel"</span>))]
 </span><span class="kw">pub fn </span>parallelizable_slice_iter&lt;T&gt;(data: <span class="kw-2">&amp;</span>[T]) -&gt; ark_std::slice::Iter&lt;T&gt; {
     data.iter()
+}
+
+<span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
+</span><span class="kw">pub fn </span>parallelizable_chunks&lt;T: Sync&gt;(data: <span class="kw-2">&amp;</span>[T], chunk_size: usize) -&gt; rayon::slice::Chunks&lt;T&gt; {
+    <span class="kw">use </span>rayon::slice::ParallelSlice;
+    data.par_chunks(chunk_size)
+}
+
+<span class="attr">#[cfg(not(feature = <span class="string">"parallel"</span>))]
+</span><span class="kw">pub fn </span>parallelizable_chunks&lt;T&gt;(data: <span class="kw-2">&amp;</span>[T], chunk_size: usize) -&gt; ark_std::slice::Chunks&lt;T&gt; {
+    data.chunks(chunk_size)
 }
 </code></pre></div></section></main></body></html>
