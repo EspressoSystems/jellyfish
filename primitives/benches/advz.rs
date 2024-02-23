@@ -24,7 +24,7 @@ fn advz<E, H>(c: &mut Criterion, pairing_name: &str)
 where
     E: Pairing,
     // TODO(Gus) clean up nasty trait bounds upstream
-    H: Digest + DynDigest + Default + Clone + Write + Send + Sync,
+    H: Digest + DynDigest + Default + Clone + Write,
     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     // play with these items

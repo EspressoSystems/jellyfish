@@ -67,7 +67,7 @@ pub struct LargeRangeProof<F> {
 impl<E, H> PayloadProver<SmallRangeProof<KzgProof<E>>> for Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -202,7 +202,7 @@ where
 impl<E, H> PayloadProver<LargeRangeProof<KzgEval<E>>> for Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     fn payload_proof<B>(
         &self,
@@ -277,7 +277,7 @@ where
 impl<E, H> Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     // lots of index manipulation
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
@@ -395,7 +395,7 @@ mod tests {
     fn correctness_generic<E, H>()
     where
         E: Pairing,
-        H: HasherDigest + Send + Sync,
+        H: HasherDigest,
     {
         // play with these items
         let (payload_chunk_size, num_storage_nodes) = (4, 6);

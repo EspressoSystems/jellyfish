@@ -29,7 +29,7 @@ use super::KzgCommit;
 impl<E, H> Precomputable for Advz<E, H>
 where
     E: Pairing,
-    H: HasherDigest + Send + Sync,
+    H: HasherDigest,
 {
     type PrecomputeData = PrecomputeData<E>;
 
