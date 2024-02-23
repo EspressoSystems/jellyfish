@@ -27,3 +27,14 @@ pub fn parallelizable_slice_iter<T: Sync>(data: &[T]) -> rayon::slice::Iter<T> {
 pub fn parallelizable_slice_iter<T>(data: &[T]) -> ark_std::slice::Iter<T> {
     data.iter()
 }
+
+#[cfg(feature = "parallel")]
+pub fn parallelizable_chunks<T: Sync>(data: &[T], chunk_size: usize) -> rayon::slice::Chunks<T> {
+    use rayon::slice::ParallelSlice;
+    data.par_chunks(chunk_size)
+}
+
+#[cfg(not(feature = "parallel"))]
+pub fn parallelizable_chunks<T>(data: &[T], chunk_size: usize) -> ark_std::slice::Chunks<T> {
+    data.chunks(chunk_size)
+}
