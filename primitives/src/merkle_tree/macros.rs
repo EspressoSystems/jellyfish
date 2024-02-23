@@ -24,7 +24,7 @@ macro_rules! impl_merkle_tree_scheme {
             Arity: Unsigned,
             T: NodeValue,
         {
-            root: Box<MerkleNode<E, I, T>>,
+            root: Arc<MerkleNode<E, I, T>>,
             height: usize,
             num_leaves: u64,
 
@@ -148,7 +148,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Box::new(MerkleNode::ForgettenSubtree {
+                    root: Arc::new(MerkleNode::ForgettenSubtree {
                         value: com.digest(),
                     }),
                     height: com.height(),
@@ -159,12 +159,15 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 
             fn forget(
                 &mut self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
             ) -> LookupResult<Self::Element, Self::MembershipProof, ()> {
+                let pos = pos.borrow();
                 let traversal_path = pos.to_traversal_path(self.height);
-                match self.root.forget_internal(self.height, &traversal_path) {
+                let (new_root, result) = self.root.forget_internal(self.height, &traversal_path);
+                self.root = new_root;
+                match result {
                     LookupResult::Ok(elem, proof) => {
-                        LookupResult::Ok(elem, MerkleProof::new(pos, proof))
+                        LookupResult::Ok(elem, MerkleProof::new(pos.clone(), proof))
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
@@ -173,12 +176,12 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 
             fn remember(
                 &mut self,
-                pos: Self::Index,
+                pos: impl Borrow<Self::Index>,
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<(), PrimitivesError> {
                 let proof = proof.borrow();
-                let traversal_path = pos.to_traversal_path(self.height);
+                let traversal_path = pos.borrow().to_traversal_path(self.height);
                 if let MerkleNode::<E, I, T>::Leaf {
                     value: _,
                     pos,
@@ -213,12 +216,13 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                             }
                         },
                     )?;
-                    self.root.remember_internal::<H, Arity>(
+                    self.root = self.root.remember_internal::<H, Arity>(
                         self.height,
                         &traversal_path,
                         &path_values,
                         &proof.proof,
-                    )
+                    )?;
+                    Ok(())
                 } else {
                     Err(PrimitivesError::ParameterError(
                         "Invalid proof type".to_string(),

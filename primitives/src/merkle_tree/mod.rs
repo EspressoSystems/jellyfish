@@ -279,13 +279,15 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
-    ///   update is success or the given leaf is not in memory.
+    /// * `returns` - Err() if any error occurs internally or the given leaf is
+    ///   not in memory. Ok(result) if the update is success.
     fn update(
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| Some(elem.borrow().clone()))
+    }
 
     /// Remove a leaf at the given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -294,7 +296,9 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     fn remove(
         &mut self,
         pos: impl Borrow<Self::Index>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>;
+    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+        self.update_with(pos, |_| None)
+    }
 
     /// Apply an update function `f` at a given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -349,7 +353,7 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// call.
     fn forget(
         &mut self,
-        pos: Self::Index,
+        pos: impl Borrow<Self::Index>,
     ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// "Re-insert" a leaf into the tree using its proof.
@@ -357,7 +361,7 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
     /// proof disagrees with the merkle tree
     fn remember(
         &mut self,
-        pos: Self::Index,
+        pos: impl Borrow<Self::Index>,
         element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<(), PrimitivesError>;
@@ -403,4 +407,39 @@ pub trait ForgetableUniversalMerkleTreeScheme:
         pos: Self::Index,
         proof: impl Borrow<Self::NonMembershipProof>,
     ) -> Result<(), PrimitivesError>;
+}
+
+/// A universal merkle tree that allows non destructive updates.
+/// A non destructive update doesn't directly modify the existing content, it
+/// creates a new copy about the update so that people could access both the old
+/// version and the new.
+pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
+    /// A non destructive update interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update].
+    fn persistent_update(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        elem: impl Borrow<Self::Element>,
+    ) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
+    }
+
+    /// A persistent remove interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::remove].
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+        self.persistent_update_with(pos, |_| None)
+    }
+
+    /// A persistent update_with interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update_with].
+    fn persistent_update_with<F>(
+        &self,
+        pos: impl Borrow<Self::Index>,
+        f: F,
+    ) -> Result<Self, PrimitivesError>
+    where
+        F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 }

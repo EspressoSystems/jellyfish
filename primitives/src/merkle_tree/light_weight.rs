@@ -19,9 +19,8 @@ use crate::{
     errors::{PrimitivesError, VerificationResult},
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
-use ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
-};
+use alloc::sync::Arc;
+use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
@@ -41,7 +40,7 @@ where
     /// Initialize an empty Merkle tree.
     pub fn new(height: usize) -> Self {
         Self {
-            root: Box::new(MerkleNode::<E, I, T>::Empty),
+            root: Arc::new(MerkleNode::<E, I, T>::Empty),
             height,
             num_leaves: 0,
             _phantom: PhantomData,
@@ -95,13 +94,15 @@ where
 
         let traversal_path =
             ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
-        self.num_leaves += self.root.extend_and_forget_internal::<H, Arity>(
+        let (root, num_inserted) = self.root.extend_and_forget_internal::<H, Arity>(
             self.height,
             &self.num_leaves,
             &traversal_path,
             true,
             &mut iter,
         )?;
+        self.root = root;
+        self.num_leaves += num_inserted;
         if iter.peek().is_some() {
             return Err(PrimitivesError::ParameterError(
                 "Exceed merkle tree capacity".to_string(),
