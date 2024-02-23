@@ -42,8 +42,12 @@ use bytes_to_field::{bytes_to_field, field_to_bytes};
 use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
-use itertools::Itertools;
-use jf_utils::canonical;
+use jf_utils::{
+    canonical,
+    par_utils::{parallelizable_chunks, parallelizable_slice_iter},
+};
+#[cfg(feature = "parallel")]
+use rayon::prelude::ParallelIterator;
 use serde::{Deserialize, Serialize};
 
 mod bytes_to_field;
@@ -555,32 +559,34 @@ where
         H: HasherDigest,
     {
         let code_word_size = self.num_storage_nodes * self.multiplicity;
-        let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+        let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
 
-            for poly in polys.iter() {
-                let poly_evals = UnivariateKzgPCS::<E>::multi_open_rou_evals(
+        let all_poly_evals = parallelizable_slice_iter(polys)
+            .map(|poly| {
+                UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
                     code_word_size,
                     &self.multi_open_domain,
                 )
-                .map_err(vid)?;
+                .map_err(vid)
+            })
+            .collect::<Result<Vec<_>, VidError>>()?;
 
-                for (storage_node_evals, poly_eval) in
-                    all_storage_node_evals.iter_mut().zip(poly_evals)
-                {
-                    storage_node_evals.push(poly_eval);
-                }
+        for poly_evals in all_poly_evals {
+            for (storage_node_evals, poly_eval) in all_storage_node_evals
+                .iter_mut()
+                .zip(poly_evals.into_iter())
+            {
+                storage_node_evals.push(poly_eval);
             }
+        }
 
-            // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_word_size);
-            for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
-            }
+        // sanity checks
+        assert_eq!(all_storage_node_evals.len(), code_word_size);
+        for storage_node_evals in all_storage_node_evals.iter() {
+            assert_eq!(storage_node_evals.len(), polys.len());
+        }
 
-            all_storage_node_evals
-        };
         Ok(all_storage_node_evals)
     }
 
@@ -616,10 +622,9 @@ where
         E: Pairing,
     {
         let chunk_size = self.payload_chunk_size * self.multiplicity;
-        bytes_to_field::<_, KzgEval<E>>(payload)
-            .chunks(chunk_size)
-            .into_iter()
-            .map(|evals_iter| self.polynomial(evals_iter))
+        let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+            .map(|chunk| self.polynomial(bytes_to_field::<_, KzgEval<E>>(chunk)))
             .collect()
     }
 
@@ -803,7 +808,7 @@ mod tests {
         let srs = init_srs(payload_chunk_size, &mut rng);
         let advz =
             Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        let payload_random = init_random_payload(1 << 20, &mut rng);
+        let payload_random = init_random_payload(1 << 25, &mut rng);
 
         let _ = advz.disperse(payload_random);
     }

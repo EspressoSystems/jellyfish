@@ -98,7 +98,7 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
-///     H: Digest + Write,
+///     H: Digest + Write + Send + Sync,
 ///     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -114,13 +114,13 @@ pub type GenericHasherMerkleTree<H, E, I, Arity> =
 /// # use jf_primitives::merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
-///     H: Digest + Write,
+///     H: Digest + Write + Send + Sync,
 /// {
 ///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 ///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
-pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write {
+pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write + Send + Sync {
     /// Associated type needed to express trait bounds.
     type Foo: ArrayLength<u8, ArrayType = Self::Bar>;
     /// Associated type needed to express trait bounds.
@@ -128,7 +128,7 @@ pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write {
 }
 impl<T> HasherDigest for T
 where
-    T: Digest + Write,
+    T: Digest + Write + Send + Sync,
     <T::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     type Foo = T::OutputSize;
