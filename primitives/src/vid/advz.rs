@@ -622,9 +622,9 @@ where
         E: Pairing,
     {
         let chunk_size = self.payload_chunk_size * self.multiplicity;
-        let field_elems = bytes_to_field::<_, KzgEval<E>>(payload).collect::<Vec<_>>();
-        parallelizable_chunks(&field_elems, chunk_size)
-            .map(|evals| self.polynomial(evals.iter()))
+        let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+            .map(|chunk| self.polynomial(bytes_to_field::<_, KzgEval<E>>(chunk)))
             .collect()
     }
 
