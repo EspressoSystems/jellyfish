@@ -344,6 +344,7 @@
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -364,9 +365,8 @@
     errors::{PrimitivesError, VerificationResult},
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
-<span class="kw">use </span>ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
-};
+<span class="kw">use </span>alloc::sync::Arc;
+<span class="kw">use </span>ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>num_traits::pow::pow;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -386,7 +386,7 @@
     <span class="doccomment">/// Initialize an empty Merkle tree.
     </span><span class="kw">pub fn </span>new(height: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            root: Box::new(MerkleNode::&lt;E, I, T&gt;::Empty),
+            root: Arc::new(MerkleNode::&lt;E, I, T&gt;::Empty),
             height,
             num_leaves: <span class="number">0</span>,
             _phantom: PhantomData,
@@ -439,13 +439,15 @@
 
         <span class="kw">let </span>traversal_path =
             ToTraversalPath::&lt;Arity&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="self">self</span>.num_leaves, <span class="self">self</span>.height);
-        <span class="self">self</span>.num_leaves += <span class="self">self</span>.root.extend_internal::&lt;H, Arity&gt;(
+        <span class="kw">let </span>(root, num_inserted) = <span class="self">self</span>.root.extend_internal::&lt;H, Arity&gt;(
             <span class="self">self</span>.height,
             <span class="kw-2">&amp;</span><span class="self">self</span>.num_leaves,
             <span class="kw-2">&amp;</span>traversal_path,
             <span class="bool-val">true</span>,
             <span class="kw-2">&amp;mut </span>iter,
         )<span class="question-mark">?</span>;
+        <span class="self">self</span>.root = root;
+        <span class="self">self</span>.num_leaves += num_inserted;
         <span class="kw">if </span>iter.peek().is_some() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                 <span class="string">"Exceed merkle tree capacity"</span>.to_string(),

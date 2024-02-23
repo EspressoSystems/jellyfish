@@ -405,6 +405,45 @@
 <a href="#404" id="404">404</a>
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -686,13 +725,15 @@
     <span class="doccomment">/// Update the leaf value at a given position
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `elem` - newly updated element
-    /// * `returns` - Err() if any error occurs internally. Ok(result) if the
-    ///   update is success or the given leaf is not in memory.
+    /// * `returns` - Err() if any error occurs internally or the given leaf is
+    ///   not in memory. Ok(result) if the update is success.
     </span><span class="kw">fn </span>update(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         elem: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt; {
+        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">Some</span>(elem.borrow().clone()))
+    }
 
     <span class="doccomment">/// Remove a leaf at the given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -701,7 +742,9 @@
     </span><span class="kw">fn </span>remove(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt; {
+        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">None</span>)
+    }
 
     <span class="doccomment">/// Apply an update function `f` at a given position
     /// * `pos` - zero-based index of the leaf in the tree
@@ -756,7 +799,7 @@
     /// call.
     </span><span class="kw">fn </span>forget(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        pos: <span class="self">Self</span>::Index,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
     ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
 
     <span class="doccomment">/// "Re-insert" a leaf into the tree using its proof.
@@ -764,7 +807,7 @@
     /// proof disagrees with the merkle tree
     </span><span class="kw">fn </span>remember(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        pos: <span class="self">Self</span>::Index,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         element: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
@@ -810,5 +853,40 @@
         pos: <span class="self">Self</span>::Index,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NonMembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt;;
+}
+
+<span class="doccomment">/// A universal merkle tree that allows non destructive updates.
+/// A non destructive update doesn't directly modify the existing content, it
+/// creates a new copy about the update so that people could access both the old
+/// version and the new.
+</span><span class="kw">pub trait </span>PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
+    <span class="doccomment">/// A non destructive update interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update].
+    </span><span class="kw">fn </span>persistent_update(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        elem: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
+        <span class="self">self</span>.persistent_update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">Some</span>(elem.borrow().clone()))
+    }
+
+    <span class="doccomment">/// A persistent remove interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::remove].
+    </span><span class="kw">fn </span>persistent_remove(<span class="kw-2">&amp;</span><span class="self">self</span>, pos: <span class="self">Self</span>::Index) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
+        <span class="self">self</span>.persistent_update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">None</span>)
+    }
+
+    <span class="doccomment">/// A persistent update_with interface, check
+    /// [PersistentUniversalMerkleTreeScheme] and
+    /// [UniversalMerkleTreeScheme::update_with].
+    </span><span class="kw">fn </span>persistent_update_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        f: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;
+    <span class="kw">where
+        </span>F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Element&gt;;
 }
 </code></pre></div></section></main></body></html>

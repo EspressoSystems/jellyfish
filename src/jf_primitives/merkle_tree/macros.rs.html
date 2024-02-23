@@ -265,6 +265,10 @@
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -291,7 +295,7 @@
             Arity: Unsigned,
             T: NodeValue,
         {
-            root: Box&lt;MerkleNode&lt;E, I, T&gt;&gt;,
+            root: Arc&lt;MerkleNode&lt;E, I, T&gt;&gt;,
             height: usize,
             num_leaves: u64,
 
@@ -415,7 +419,7 @@
             <span class="kw">fn </span>from_commitment(com: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;) -&gt; <span class="self">Self </span>{
                 <span class="kw">let </span>com = com.borrow();
                 <span class="macro-nonterminal">$name </span>{
-                    root: Box::new(MerkleNode::ForgettenSubtree {
+                    root: Arc::new(MerkleNode::ForgettenSubtree {
                         value: com.digest(),
                     }),
                     height: com.height(),
@@ -426,12 +430,15 @@
 
             <span class="kw">fn </span>forget(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-                pos: <span class="self">Self</span>::Index,
+                pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
             ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt; {
+                <span class="kw">let </span>pos = pos.borrow();
                 <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-                <span class="kw">match </span><span class="self">self</span>.root.forget_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path) {
+                <span class="kw">let </span>(new_root, result) = <span class="self">self</span>.root.forget_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path);
+                <span class="self">self</span>.root = new_root;
+                <span class="kw">match </span>result {
                     LookupResult::Ok(elem, proof) =&gt; {
-                        LookupResult::Ok(elem, MerkleProof::new(pos, proof))
+                        LookupResult::Ok(elem, MerkleProof::new(pos.clone(), proof))
                     },
                     LookupResult::NotInMemory =&gt; LookupResult::NotInMemory,
                     LookupResult::NotFound(<span class="kw">_</span>) =&gt; LookupResult::NotFound(()),
@@ -440,12 +447,12 @@
 
             <span class="kw">fn </span>remember(
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-                pos: <span class="self">Self</span>::Index,
+                pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
                 element: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
                 proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
             ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
                 <span class="kw">let </span>proof = proof.borrow();
-                <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
+                <span class="kw">let </span>traversal_path = pos.borrow().to_traversal_path(<span class="self">self</span>.height);
                 <span class="kw">if let </span>MerkleNode::&lt;E, I, T&gt;::Leaf {
                     value: <span class="kw">_</span>,
                     pos,
@@ -480,12 +487,13 @@
                             }
                         },
                     )<span class="question-mark">?</span>;
-                    <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
+                    <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
                         <span class="self">self</span>.height,
                         <span class="kw-2">&amp;</span>traversal_path,
                         <span class="kw-2">&amp;</span>path_values,
                         <span class="kw-2">&amp;</span>proof.proof,
-                    )
+                    )<span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(())
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                         <span class="string">"Invalid proof type"</span>.to_string(),

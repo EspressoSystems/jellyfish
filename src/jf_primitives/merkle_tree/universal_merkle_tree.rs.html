@@ -578,6 +578,71 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -588,16 +653,15 @@
 </span><span class="kw">use super</span>::{
     internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
-    UniversalMerkleTreeScheme,
+    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 <span class="kw">use crate</span>::{
     errors::{PrimitivesError, VerificationResult},
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
-<span class="kw">use </span>ark_std::{
-    borrow::Borrow, boxed::Box, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec,
-};
+<span class="kw">use </span>alloc::sync::Arc;
+<span class="kw">use </span>ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>num_traits::pow::pow;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -618,7 +682,7 @@
     <span class="doccomment">/// Initialize an empty Merkle tree.
     </span><span class="kw">pub fn </span>new(height: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            root: Box::new(MerkleNode::&lt;E, I, T&gt;::Empty),
+            root: Arc::new(MerkleNode::&lt;E, I, T&gt;::Empty),
             height,
             num_leaves: <span class="number">0</span>,
             _phantom: PhantomData,
@@ -656,21 +720,6 @@
     <span class="kw">type </span>NonMembershipProof = MerkleProof&lt;E, I, T, Arity&gt;;
     <span class="kw">type </span>BatchNonMembershipProof = ();
 
-    <span class="kw">fn </span>update(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        pos: <span class="kw">impl </span>Borrow&lt;I&gt;,
-        elem: <span class="kw">impl </span>Borrow&lt;E&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;E, (), ()&gt;, PrimitivesError&gt; {
-        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">Some</span>(elem.borrow().clone()))
-    }
-
-    <span class="kw">fn </span>remove(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;LookupResult&lt;<span class="self">Self</span>::Element, (), ()&gt;, PrimitivesError&gt; {
-        <span class="self">self</span>.update_with(pos, |<span class="kw">_</span>| <span class="prelude-val">None</span>)
-    }
-
     <span class="kw">fn </span>update_with&lt;F&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
@@ -681,9 +730,10 @@
     {
         <span class="kw">let </span>pos = pos.borrow();
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-        <span class="kw">let </span>(delta, result) =
+        <span class="kw">let </span>(new_root, delta, result) =
             <span class="self">self</span>.root
                 .update_with_internal::&lt;H, Arity, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
+        <span class="self">self</span>.root = new_root;
         <span class="self">self</span>.num_leaves = (delta + <span class="self">self</span>.num_leaves <span class="kw">as </span>i64) <span class="kw">as </span>u64;
         <span class="prelude-val">Ok</span>(result)
     }
@@ -726,6 +776,38 @@
     }
 }
 
+<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; PersistentUniversalMerkleTreeScheme
+    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">where
+    </span>E: Element,
+    H: DigestAlgorithm&lt;E, I, T&gt;,
+    I: Index + ToTraversalPath&lt;Arity&gt;,
+    Arity: Unsigned,
+    T: NodeValue,
+{
+    <span class="kw">fn </span>persistent_update_with&lt;F&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        f: F,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt;
+    <span class="kw">where
+        </span>F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Element&gt;,
+    {
+        <span class="kw">let </span>pos = pos.borrow();
+        <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
+        <span class="kw">let </span>(root, delta, <span class="kw">_</span>) =
+            <span class="self">self</span>.root
+                .update_with_internal::&lt;H, Arity, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
+        <span class="kw">let </span>num_leaves = (delta + <span class="self">self</span>.num_leaves <span class="kw">as </span>i64) <span class="kw">as </span>u64;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            root,
+            height: <span class="self">self</span>.height,
+            num_leaves,
+            _phantom: PhantomData,
+        })
+    }
+}
+
 <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; ForgetableUniversalMerkleTreeScheme
     <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
 <span class="kw">where
@@ -735,12 +817,15 @@
     Arity: Unsigned,
     T: NodeValue,
 {
-    <span class="kw">fn </span>universal_forget(
+    <span class="doccomment">/// WARN(#495): this method breaks non-membership proofs.
+    </span><span class="kw">fn </span>universal_forget(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         pos: <span class="self">Self</span>::Index,
     ) -&gt; LookupResult&lt;<span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt; {
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-        <span class="kw">match </span><span class="self">self</span>.root.forget_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path) {
+        <span class="kw">let </span>(root, result) = <span class="self">self</span>.root.forget_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path);
+        <span class="self">self</span>.root = root;
+        <span class="kw">match </span>result {
             LookupResult::Ok(elem, proof) =&gt; LookupResult::Ok(elem, MerkleProof::new(pos, proof)),
             LookupResult::NotInMemory =&gt; LookupResult::NotInMemory,
             LookupResult::NotFound(proof) =&gt; LookupResult::NotFound(MerkleProof::new(pos, proof)),
@@ -782,12 +867,13 @@
                         }
                     },
                 )<span class="question-mark">?</span>;
-            <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
+            <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
                 <span class="self">self</span>.height,
                 <span class="kw-2">&amp;</span>traversal_path,
                 <span class="kw-2">&amp;</span>path_values,
                 <span class="kw-2">&amp;</span>proof.proof,
-            )
+            )<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(())
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
                 <span class="string">"Invalid proof type"</span>.to_string(),
@@ -803,8 +889,8 @@
             internal::{MerkleNode, MerkleProof},
             prelude::{RescueHash, RescueSparseMerkleTree},
             DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-            Index, LookupResult, MerkleCommitment, MerkleTreeScheme, ToTraversalPath,
-            UniversalMerkleTreeScheme,
+            Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
+            PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
         },
         rescue::RescueParameter,
     };
@@ -1064,7 +1150,7 @@
         } <span class="kw">else </span>{
             <span class="macro">panic!</span>(<span class="string">"expected membership proof to end in a Leaf"</span>);
         }
-        mt.remember(<span class="number">0u64</span>.into(), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>bad_mem_proof)
+        mt.remember(BigUint::from(<span class="number">0u64</span>), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>bad_mem_proof)
             .unwrap_err();
 
         <span class="kw">let </span><span class="kw-2">mut </span>bad_non_mem_proof = non_mem_proof.clone();
@@ -1092,7 +1178,8 @@
             .unwrap_err();
 
         <span class="comment">// Remember an occupied and an empty  sub-tree.
-        </span>mt.remember(<span class="number">0u64</span>.into(), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>mem_proof).unwrap();
+        </span>mt.remember(BigUint::from(<span class="number">0u64</span>), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>mem_proof)
+            .unwrap();
         mt.non_membership_remember(<span class="number">1u64</span>.into(), <span class="kw-2">&amp;</span>non_mem_proof)
             .unwrap();
 
@@ -1118,6 +1205,49 @@
                 <span class="macro">panic!</span>(<span class="string">"expected NotFound, got {:?}"</span>, res);
             },
         }
+    }
+
+    <span class="attr">#[test]
+    </span><span class="kw">fn </span>test_persistent_update() {
+        test_persistent_update_helper::&lt;BigUint, Fq254&gt;();
+        test_persistent_update_helper::&lt;BigUint, Fq377&gt;();
+        test_persistent_update_helper::&lt;BigUint, Fq381&gt;();
+
+        test_persistent_update_helper::&lt;Fq254, Fq254&gt;();
+        test_persistent_update_helper::&lt;Fq377, Fq377&gt;();
+        test_persistent_update_helper::&lt;Fq381, Fq381&gt;();
+    }
+
+    <span class="kw">fn </span>test_persistent_update_helper&lt;I, F&gt;()
+    <span class="kw">where
+        </span>I: Index + ToTraversalPath&lt;U3&gt;,
+        F: RescueParameter + ToTraversalPath&lt;U3&gt;,
+        RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
+    {
+        <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::new(<span class="number">10</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>mts = <span class="macro">ark_std::vec!</span>[mt];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..<span class="number">10u64 </span>{
+            mts.push(
+                mts.last()
+                    .unwrap()
+                    .persistent_update(F::from(i), F::from(i))
+                    .unwrap(),
+            );
+            <span class="macro">assert_eq!</span>(mts.last().unwrap().num_leaves(), i);
+        }
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">1</span>..<span class="number">10u64 </span>{
+            mts.iter().enumerate().for_each(|(j, mt)| {
+                <span class="kw">if </span>j <span class="kw">as </span>u64 &gt;= i {
+                    <span class="macro">assert!</span>(mt.lookup(F::from(i)).expect_ok().is_ok());
+                } <span class="kw">else </span>{
+                    <span class="macro">assert!</span>(mt.lookup(F::from(i)).expect_not_found().is_ok());
+                }
+            });
+        }
+
+        <span class="macro">assert_eq!</span>(mts[<span class="number">5</span>].num_leaves(), <span class="number">5</span>);
+        <span class="kw">let </span>mt = mts[<span class="number">5</span>].persistent_remove(F::from(<span class="number">1u64</span>)).unwrap();
+        <span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">4</span>);
     }
 
     <span class="attr">#[test]
