@@ -167,6 +167,11 @@ mod mt_tests {
     }
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
+        // singleton merkle tree test (#499)
+        let mt = RescueMerkleTree::<F>::from_elems(None, [F::from(0u64)]).unwrap();
+        let (elem, _) = mt.lookup(0).expect_ok().unwrap();
+        assert_eq!(elem, &F::from(0u64));
+
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let root = mt.commitment().digest();

@@ -200,7 +200,19 @@ where
         Err(PrimitivesError::ParameterError(
             "Too many data for merkle tree".to_string(),
         ))
-    } else if num_leaves > 0 {
+    } else if num_leaves == 0 {
+        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
+    } else if height == 0usize {
+        Ok((
+            Arc::new(MerkleNode::Leaf {
+                value: H::digest_leaf(&0, leaves[0].borrow())?,
+                pos: 0,
+                elem: leaves[0].borrow().clone(),
+            }),
+            height,
+            1,
+        ))
+    } else {
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -243,8 +255,6 @@ where
                 .collect::<Result<Vec<_>, PrimitivesError>>()?;
         }
         Ok((cur_nodes[0].clone(), height, num_leaves))
-    } else {
-        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     }
 }
 
@@ -278,7 +288,19 @@ where
         Err(PrimitivesError::ParameterError(
             "Too many data for merkle tree".to_string(),
         ))
-    } else if num_leaves > 0 {
+    } else if num_leaves == 0 {
+        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
+    } else if height == 0usize {
+        Ok((
+            Arc::new(MerkleNode::Leaf {
+                value: H::digest_leaf(&0, leaves[0].borrow())?,
+                pos: 0,
+                elem: leaves[0].borrow().clone(),
+            }),
+            height,
+            1,
+        ))
+    } else {
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -337,8 +359,6 @@ where
             }
         }
         Ok((cur_nodes[0].clone(), height, num_leaves))
-    } else {
-        Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     }
 }
 
