@@ -88,6 +88,12 @@ harness = false
 required-features = ["test-srs"]
 
 [[bench]]
+name = "msm"
+path = "benches/msm.rs"
+harness = false
+required-features = ["test-srs"]
+
+[[bench]]
 name = "reed-solomon"
 path = "benches/reed_solomon.rs"
 harness = false
