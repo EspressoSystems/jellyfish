@@ -6,6 +6,8 @@
 
 //! Main module for univariate KZG commitment scheme
 
+#[cfg(feature = "icicle")]
+use crate::icicle_deps::*;
 use crate::{
     pcs::{
         poly::GeneralDensePolynomial, prelude::Commitment, PCSError, PolynomialCommitmentScheme,
@@ -13,6 +15,8 @@ use crate::{
     },
     toeplitz::ToeplitzMatrix,
 };
+#[cfg(feature = "icicle")]
+use ark_ec::models::{short_weierstrass::Affine, CurveConfig};
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
@@ -121,7 +125,6 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(msm_time);
-
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(commit_time);
         Ok(Commitment(commitment))
@@ -652,6 +655,81 @@ where
     }
 }
 
+#[cfg(feature = "icicle")]
+impl<E: Pairing> UnivariateKzgPCS<E> {
+    /// Comupte PCS commit using GPU
+    /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
+    pub fn commit_with_gpu<C>(
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
+        poly: &DensePolynomial<E::ScalarField>,
+    ) -> Result<Commitment<E>, PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
+        // TODO: use proper PCSError instead of unwrap.
+        #[cfg(feature = "kzg-print-trace")]
+        let commit_time =
+            start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
+
+        let prover_param = prover_param.borrow();
+        if poly.degree() > prover_param.powers_of_g.len() {
+            return Err(PCSError::InvalidParameters(format!(
+                "poly degree {} is larger than allowed {}",
+                poly.degree(),
+                prover_param.powers_of_g.len()
+            )));
+        }
+
+        #[cfg(feature = "kzg-print-trace")]
+        let conv_time = start_timer!(|| "Type Conversion: arkworks->ICICLE");
+
+        let size = poly.degree() + 1;
+        let bases: Vec<IcicleAffine<C>> = prover_param.powers_of_g[..size]
+            .iter()
+            .map(|&p| IcicleAffine::<C>::from_ark(p))
+            .collect();
+        let scalars: Vec<C::ScalarField> = poly.coeffs()[..size]
+            .iter()
+            .map(|&s| C::ScalarField::from_ark(s))
+            .collect();
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(conv_time);
+
+        // load them on host first
+        let bases = HostOrDeviceSlice::Host(bases);
+        let scalars = HostOrDeviceSlice::Host(scalars);
+        let mut msm_result: HostOrDeviceSlice<'_, IcicleProjective<C>> =
+            HostOrDeviceSlice::cuda_malloc(1).unwrap();
+
+        let stream = CudaStream::create().unwrap();
+        let mut cfg = MSMConfig::default();
+        cfg.ctx.stream = &stream;
+        cfg.is_async = true; // non-blocking
+
+        #[cfg(feature = "kzg-print-trace")]
+        let msm_time = start_timer!(|| "GPU-accelerated MSM");
+
+        icicle_core::msm::msm(&scalars, &bases, &cfg, &mut msm_result).unwrap();
+
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(msm_time);
+
+        let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
+        stream.synchronize().unwrap();
+        msm_result.copy_to_host(&mut msm_host_result[..]).unwrap();
+
+        let commitment = msm_host_result[0].to_ark().into_affine();
+
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(commit_time);
+
+        Ok(Commitment(commitment))
+    }
+}
+
 fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
     p: &P,
 ) -> (usize, Vec<F::BigInt>) {
@@ -713,6 +791,37 @@ mod tests {
                 degree, rng,
             );
             let comm = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
+            let point = E::ScalarField::rand(rng);
+            let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
+            assert!(
+                UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
+                "proof was incorrect for max_degree = {}, polynomial_degree = {}",
+                degree,
+                p.degree(),
+            );
+        }
+        Ok(())
+    }
+    #[cfg(feature = "icicle")]
+    fn gpu_end_to_end_test_template<E, C>() -> Result<(), PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
+        let rng = &mut test_rng();
+        for _ in 0..100 {
+            let mut degree = 0;
+            while degree <= 1 {
+                degree = usize::rand(rng) % 20;
+            }
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, vk) = pp.trim(degree)?;
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
+            let comm = UnivariateKzgPCS::<E>::commit_with_gpu::<C>(&ck, &p)?;
             let point = E::ScalarField::rand(rng);
             let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
             assert!(
@@ -828,6 +937,17 @@ mod tests {
     #[test]
     fn end_to_end_test() {
         end_to_end_test_template::<Bls12_381>().expect("test failed for bls12-381");
+    }
+
+    #[test]
+    #[cfg(feature = "icicle")]
+    fn gpu_end_to_end_test() {
+        gpu_end_to_end_test_template::<ark_bn254::Bn254, icicle_bn254::curve::CurveCfg>()
+            .expect("test failed for bn254");
+        gpu_end_to_end_test_template::<ark_bls12_381::Bls12_381, icicle_bls12_381::curve::CurveCfg>()
+            .expect("test failed for bls12-381");
+        gpu_end_to_end_test_template::<ark_bls12_377::Bls12_377, icicle_bls12_377::curve::CurveCfg>()
+            .expect("test failed for bls12-377");
     }
 
     #[test]

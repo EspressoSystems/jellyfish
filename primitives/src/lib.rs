@@ -39,4 +39,15 @@ pub mod vdf;
 pub mod vid;
 pub mod vrf;
 
+/// dependecies required for ICICLE-related code, group import for convenience
+#[cfg(feature = "icicle")]
+pub mod icicle_deps {
+    pub use icicle_core::{
+        curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
+        msm::{MSMConfig, MSM},
+        traits::ArkConvertible,
+    };
+    pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
+}
+
 pub(crate) mod utils;
