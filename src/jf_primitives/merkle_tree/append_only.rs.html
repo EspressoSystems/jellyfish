@@ -345,6 +345,11 @@
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -514,6 +519,11 @@
     }
 
     <span class="kw">fn </span>test_mt_lookup_helper&lt;F: RescueParameter&gt;() {
+        <span class="comment">// singleton merkle tree test (#499)
+        </span><span class="kw">let </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">None</span>, [F::from(<span class="number">0u64</span>)]).unwrap();
+        <span class="kw">let </span>(elem, <span class="kw">_</span>) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
+        <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span>F::from(<span class="number">0u64</span>));
+
         <span class="kw">let </span>mt =
             RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
         <span class="kw">let </span>root = mt.commitment().digest();

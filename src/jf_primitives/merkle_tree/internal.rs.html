@@ -1132,6 +1132,26 @@
 <a href="#1131" id="1131">1131</a>
 <a href="#1132" id="1132">1132</a>
 <a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1334,7 +1354,19 @@
         <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
             <span class="string">"Too many data for merkle tree"</span>.to_string(),
         ))
-    } <span class="kw">else if </span>num_leaves &gt; <span class="number">0 </span>{
+    } <span class="kw">else if </span>num_leaves == <span class="number">0 </span>{
+        <span class="prelude-val">Ok</span>((Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty), height, <span class="number">0</span>))
+    } <span class="kw">else if </span>height == <span class="number">0usize </span>{
+        <span class="prelude-val">Ok</span>((
+            Arc::new(MerkleNode::Leaf {
+                value: H::digest_leaf(<span class="kw-2">&amp;</span><span class="number">0</span>, leaves[<span class="number">0</span>].borrow())<span class="question-mark">?</span>,
+                pos: <span class="number">0</span>,
+                elem: leaves[<span class="number">0</span>].borrow().clone(),
+            }),
+            height,
+            <span class="number">1</span>,
+        ))
+    } <span class="kw">else </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -1377,8 +1409,6 @@
                 .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>((cur_nodes[<span class="number">0</span>].clone(), height, num_leaves))
-    } <span class="kw">else </span>{
-        <span class="prelude-val">Ok</span>((Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty), height, <span class="number">0</span>))
     }
 }
 
@@ -1412,7 +1442,19 @@
         <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
             <span class="string">"Too many data for merkle tree"</span>.to_string(),
         ))
-    } <span class="kw">else if </span>num_leaves &gt; <span class="number">0 </span>{
+    } <span class="kw">else if </span>num_leaves == <span class="number">0 </span>{
+        <span class="prelude-val">Ok</span>((Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty), height, <span class="number">0</span>))
+    } <span class="kw">else if </span>height == <span class="number">0usize </span>{
+        <span class="prelude-val">Ok</span>((
+            Arc::new(MerkleNode::Leaf {
+                value: H::digest_leaf(<span class="kw-2">&amp;</span><span class="number">0</span>, leaves[<span class="number">0</span>].borrow())<span class="question-mark">?</span>,
+                pos: <span class="number">0</span>,
+                elem: leaves[<span class="number">0</span>].borrow().clone(),
+            }),
+            height,
+            <span class="number">1</span>,
+        ))
+    } <span class="kw">else </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>cur_nodes = leaves
             .into_iter()
             .enumerate()
@@ -1471,8 +1513,6 @@
             }
         }
         <span class="prelude-val">Ok</span>((cur_nodes[<span class="number">0</span>].clone(), height, num_leaves))
-    } <span class="kw">else </span>{
-        <span class="prelude-val">Ok</span>((Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty), height, <span class="number">0</span>))
     }
 }
 

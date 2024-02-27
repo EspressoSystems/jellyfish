@@ -256,6 +256,11 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -432,6 +437,11 @@
     }
 
     <span class="kw">fn </span>test_light_mt_lookup_helper&lt;F: RescueParameter&gt;() {
+        <span class="comment">// singleton merkle tree test (#499)
+        </span><span class="kw">let </span>mt = RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">None</span>, [F::from(<span class="number">0u64</span>)]).unwrap();
+        <span class="kw">let </span>(elem, <span class="kw">_</span>) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
+        <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span>F::from(<span class="number">0u64</span>));
+
         <span class="kw">let </span><span class="kw-2">mut </span>mt =
             RescueLightWeightMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)])
                 .unwrap();
