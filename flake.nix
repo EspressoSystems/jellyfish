@@ -128,7 +128,7 @@
         devShells = {
           # run with `nix develop .#cudaShell`
           cudaShell =
-            let cudatoolkit = pkgsAllowUnfree.cudatoolkit;
+            let cudatoolkit = pkgsAllowUnfree.cudaPackages_12_3.cudatoolkit;
             in baseShell.overrideAttrs (oldAttrs: {
               # for GPU/CUDA env (e.g. to run ICICLE code)
               name = "cuda-env-shell";
@@ -137,15 +137,15 @@
               # CXX is overridden to use gcc as icicle-curves's build scripts need them
               shellHook = oldAttrs.shellHook + ''
 
-              export PATH="${pkgs.gcc11}/bin:${cudatoolkit}/bin:${cudatoolkit}/nvvm/bin:$PATH"
-              export LD_LIBRARY_PATH=${cudatoolkit}/lib
-              export CUDA_PATH=${cudatoolkit}
-              export CPATH="${cudatoolkit}/include"
-              export LIBRARY_PATH="$LIBRARY_PATH:/lib"
-              export CMAKE_CUDA_COMPILER=$CUDA_PATH/bin/nvcc
-              export LIBCLANG_PATH=${llvmPackages_15.libclang.lib}/lib
-              export CFLAGS=""
-            '';
+                export PATH="${pkgs.gcc11}/bin:${cudatoolkit}/bin:${cudatoolkit}/nvvm/bin:$PATH"
+                export LD_LIBRARY_PATH=${cudatoolkit}/lib
+                export CUDA_PATH=${cudatoolkit}
+                export CPATH="${cudatoolkit}/include"
+                export LIBRARY_PATH="$LIBRARY_PATH:/lib"
+                export CMAKE_CUDA_COMPILER=$CUDA_PATH/bin/nvcc
+                export LIBCLANG_PATH=${llvmPackages_15.libclang.lib}/lib
+                export CFLAGS=""
+              '';
             });
         };
       });
