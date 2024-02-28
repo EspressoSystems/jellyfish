@@ -698,10 +698,21 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         end_timer!(conv_time);
 
         // load them on host first
-        let bases = HostOrDeviceSlice::Host(bases);
-        let scalars = HostOrDeviceSlice::Host(scalars);
+        let mut bases_on_device =
+            HostOrDeviceSlice::<'_, IcicleAffine<C>>::cuda_malloc(bases.len()).unwrap();
+        let mut scalars_on_device =
+            HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(scalars.len()).unwrap();
         let mut msm_result: HostOrDeviceSlice<'_, IcicleProjective<C>> =
             HostOrDeviceSlice::cuda_malloc(1).unwrap();
+
+        #[cfg(feature = "kzg-print-trace")]
+        let load_to_device_time = start_timer!(|| "Load bases and scalars to device");
+
+        bases_on_device.copy_from_host(&bases).unwrap();
+        scalars_on_device.copy_from_host(&scalars).unwrap();
+
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(load_to_device_time);
 
         let stream = CudaStream::create().unwrap();
         let mut cfg = MSMConfig::default();
@@ -711,14 +722,20 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         #[cfg(feature = "kzg-print-trace")]
         let msm_time = start_timer!(|| "GPU-accelerated MSM");
 
-        icicle_core::msm::msm(&scalars, &bases, &cfg, &mut msm_result).unwrap();
+        icicle_core::msm::msm(&scalars_on_device, &bases_on_device, &cfg, &mut msm_result).unwrap();
 
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(msm_time);
 
+        #[cfg(feature = "kzg-print-trace")]
+        let load_back_time = start_timer!(|| "Load results back to host");
+
         let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
         stream.synchronize().unwrap();
         msm_result.copy_to_host(&mut msm_host_result[..]).unwrap();
+
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(load_back_time);
 
         let commitment = msm_host_result[0].to_ark().into_affine();
 
