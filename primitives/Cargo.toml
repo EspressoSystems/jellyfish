@@ -153,4 +153,5 @@ icicle = [
        "icicle-bn254",
        "icicle-bls12-381",
        "icicle-bls12-377",
+       "parallel",
 ]

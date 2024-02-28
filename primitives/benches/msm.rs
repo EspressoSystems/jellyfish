@@ -45,6 +45,7 @@ pub fn bench_msm_ark<E: Pairing>(c: &mut Criterion) {
 }
 
 /// running MSM using ICICLE backends
+#[cfg(feature = "icicle")]
 pub fn bench_msm_icicle<E, C>(c: &mut Criterion)
 where
     C: IcicleCurve + MSM<C>,

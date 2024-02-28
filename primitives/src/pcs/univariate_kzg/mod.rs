@@ -687,12 +687,11 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         let conv_time = start_timer!(|| "Type Conversion: arkworks->ICICLE");
 
         let size = poly.degree() + 1;
-        let bases: Vec<IcicleAffine<C>> = prover_param.powers_of_g[..size]
-            .iter()
-            .map(|&p| IcicleAffine::<C>::from_ark(p))
-            .collect();
-        let scalars: Vec<C::ScalarField> = poly.coeffs()[..size]
-            .iter()
+        let bases: Vec<IcicleAffine<C>> =
+            parallelizable_slice_iter(&prover_param.powers_of_g[..size])
+                .map(|&p| IcicleAffine::<C>::from_ark(p))
+                .collect();
+        let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(&poly.coeffs()[..size])
             .map(|&s| C::ScalarField::from_ark(s))
             .collect();
         #[cfg(feature = "kzg-print-trace")]
@@ -814,7 +813,7 @@ mod tests {
         for _ in 0..100 {
             let mut degree = 0;
             while degree <= 1 {
-                degree = usize::rand(rng) % 20;
+                degree = usize::rand(rng) % 200;
             }
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
