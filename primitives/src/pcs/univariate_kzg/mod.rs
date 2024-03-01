@@ -696,9 +696,8 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
             )));
         }
 
-        // TODO: use async version? so that we can do the conversion on host meanwhile
         let mut bases_on_device =
-            HostOrDeviceSlice::<'_, IcicleAffine<C>>::cuda_malloc(supported_degree + 1).unwrap();
+            HostOrDeviceSlice::<'_, IcicleAffine<C>>::cuda_malloc(supported_degree + 1)?;
 
         #[cfg(feature = "kzg-print-trace")]
         let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Group");
@@ -711,7 +710,7 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
 
         #[cfg(feature = "kzg-print-trace")]
         let load_time = start_timer!(|| "Load group elements: CPU->GPU");
-        bases_on_device.copy_from_host(&bases).unwrap();
+        bases_on_device.copy_from_host(&bases)?;
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(load_time);
 
@@ -730,9 +729,7 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
         let size = poly.degree() + 1;
-        // TODO: use async version?
-        let mut scalars_on_device =
-            HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(size).unwrap();
+        let mut scalars_on_device = HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(size)?;
 
         #[cfg(feature = "kzg-print-trace")]
         let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
@@ -744,7 +741,7 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
 
         #[cfg(feature = "kzg-print-trace")]
         let load_time = start_timer!(|| "Load scalars: CPU->GPU");
-        scalars_on_device.copy_from_host(&scalars).unwrap();
+        scalars_on_device.copy_from_host(&scalars)?;
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(load_time);
 
@@ -768,9 +765,9 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
-        let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1).unwrap();
+        let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1)?;
 
-        let stream = CudaStream::create().unwrap();
+        let stream = CudaStream::create()?;
         let mut cfg = MSMConfig::default();
         cfg.ctx.stream = &stream;
         cfg.is_async = true; // non-blocking
@@ -778,7 +775,7 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         #[cfg(feature = "kzg-print-trace")]
         let msm_time = start_timer!(|| "GPU-accelerated MSM");
 
-        icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result).unwrap();
+        icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result)?;
 
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(msm_time);
@@ -803,12 +800,10 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
 
         // Since `commit_on_gpu()` is conducting the MSM in async way, we need to
         // synchronize it first.
-        stream.synchronize().unwrap();
+        stream.synchronize()?;
 
         let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
-        commitment_on_gpu
-            .copy_to_host(&mut msm_host_result[..])
-            .unwrap();
+        commitment_on_gpu.copy_to_host(&mut msm_host_result[..])?;
 
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(load_time);
