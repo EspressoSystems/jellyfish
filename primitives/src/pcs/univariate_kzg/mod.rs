@@ -657,8 +657,7 @@ where
 
 #[cfg(feature = "icicle")]
 impl<E: Pairing> UnivariateKzgPCS<E> {
-    /// Comupte PCS commit using GPU
-    /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
+    /// The full cycle of computing poly-commit on GPU
     pub fn commit_with_gpu<C>(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
         poly: &DensePolynomial<E::ScalarField>,
@@ -669,50 +668,107 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
-        // TODO: use proper PCSError instead of unwrap.
-        #[cfg(feature = "kzg-print-trace")]
-        let commit_time =
-            start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
+        let mut srs_on_gpu = Self::load_prover_param_to_gpu::<C>(prover_param, poly.degree())?;
+        let mut poly_on_gpu = Self::load_poly_to_gpu::<C>(poly)?;
+        let (msm_result_on_gpu, stream) = Self::commit_on_gpu(&mut srs_on_gpu, &mut poly_on_gpu)?;
+        let comm = Self::load_commitment_to_host::<C>(msm_result_on_gpu, stream)?;
+        Ok(comm)
+    }
 
+    /// load SRS for prover onto GPU once, and reuse for future poly-commit of
+    /// degree<=`supported_degree`
+    pub fn load_prover_param_to_gpu<'srs, C>(
+        prover_param: impl Borrow<UnivariateProverParam<E>>,
+        supported_degree: usize,
+    ) -> Result<HostOrDeviceSlice<'srs, IcicleAffine<C>>, PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
         let prover_param = prover_param.borrow();
-        if poly.degree() > prover_param.powers_of_g.len() {
+        if supported_degree > prover_param.powers_of_g.len() - 1 {
             return Err(PCSError::InvalidParameters(format!(
-                "poly degree {} is larger than allowed {}",
-                poly.degree(),
-                prover_param.powers_of_g.len()
+                "supported degree {} is larger than allowed {}",
+                supported_degree,
+                prover_param.powers_of_g.len() - 1
             )));
         }
 
-        #[cfg(feature = "kzg-print-trace")]
-        let conv_time = start_timer!(|| "Type Conversion: arkworks->ICICLE");
+        // TODO: use async version? so that we can do the conversion on host meanwhile
+        let mut bases_on_device =
+            HostOrDeviceSlice::<'_, IcicleAffine<C>>::cuda_malloc(supported_degree + 1).unwrap();
 
-        let size = poly.degree() + 1;
+        #[cfg(feature = "kzg-print-trace")]
+        let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Group");
         let bases: Vec<IcicleAffine<C>> =
-            parallelizable_slice_iter(&prover_param.powers_of_g[..size])
+            parallelizable_slice_iter(&prover_param.powers_of_g[..supported_degree + 1])
                 .map(|&p| IcicleAffine::<C>::from_ark(p))
                 .collect();
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(conv_time);
+
+        #[cfg(feature = "kzg-print-trace")]
+        let load_time = start_timer!(|| "Load group elements: CPU->GPU");
+        bases_on_device.copy_from_host(&bases).unwrap();
+        #[cfg(feature = "kzg-print-trace")]
+        end_timer!(load_time);
+
+        Ok(bases_on_device)
+    }
+
+    /// Load polynomial's coefficients onto GPU, preparing for poly-commit on
+    /// GPU later
+    pub fn load_poly_to_gpu<'poly, C>(
+        poly: &DensePolynomial<E::ScalarField>,
+    ) -> Result<HostOrDeviceSlice<'poly, C::ScalarField>, PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
+        let size = poly.degree() + 1;
+        // TODO: use async version?
+        let mut scalars_on_device =
+            HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(size).unwrap();
+
+        #[cfg(feature = "kzg-print-trace")]
+        let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
         let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(&poly.coeffs()[..size])
             .map(|&s| C::ScalarField::from_ark(s))
             .collect();
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(conv_time);
 
-        // load them on host first
-        let mut bases_on_device =
-            HostOrDeviceSlice::<'_, IcicleAffine<C>>::cuda_malloc(bases.len()).unwrap();
-        let mut scalars_on_device =
-            HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(scalars.len()).unwrap();
-        let mut msm_result: HostOrDeviceSlice<'_, IcicleProjective<C>> =
-            HostOrDeviceSlice::cuda_malloc(1).unwrap();
-
         #[cfg(feature = "kzg-print-trace")]
-        let load_to_device_time = start_timer!(|| "Load bases and scalars to device");
-
-        bases_on_device.copy_from_host(&bases).unwrap();
+        let load_time = start_timer!(|| "Load scalars: CPU->GPU");
         scalars_on_device.copy_from_host(&scalars).unwrap();
-
         #[cfg(feature = "kzg-print-trace")]
-        end_timer!(load_to_device_time);
+        end_timer!(load_time);
+
+        Ok(scalars_on_device)
+    }
+
+    /// Comupte PCS commit using GPU
+    /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
+    ///
+    /// # Note
+    /// - the result is also temporarily on GPU, you can use
+    ///   `Self::load_commitment_to_host()` to load back to host CPU.
+    /// - this function is async/non-blocking, thus returns a CudaStream handle
+    pub fn commit_on_gpu<'comm, 'srs, 'poly, C>(
+        prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
+        poly_on_gpu: &mut HostOrDeviceSlice<'poly, C::ScalarField>,
+    ) -> Result<(HostOrDeviceSlice<'comm, IcicleProjective<C>>, CudaStream), PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
+        let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1).unwrap();
 
         let stream = CudaStream::create().unwrap();
         let mut cfg = MSMConfig::default();
@@ -722,26 +778,42 @@ impl<E: Pairing> UnivariateKzgPCS<E> {
         #[cfg(feature = "kzg-print-trace")]
         let msm_time = start_timer!(|| "GPU-accelerated MSM");
 
-        icicle_core::msm::msm(&scalars_on_device, &bases_on_device, &cfg, &mut msm_result).unwrap();
+        icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result).unwrap();
 
         #[cfg(feature = "kzg-print-trace")]
         end_timer!(msm_time);
 
+        Ok((msm_result, stream))
+    }
+
+    /// After `Self::commit_on_gpu()`, you can choose to load the result back to
+    /// host CPU
+    pub fn load_commitment_to_host<'comm, C>(
+        commitment_on_gpu: HostOrDeviceSlice<'comm, IcicleProjective<C>>,
+        stream: CudaStream,
+    ) -> Result<Commitment<E>, PCSError>
+    where
+        C: IcicleCurve + MSM<C>,
+        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    {
         #[cfg(feature = "kzg-print-trace")]
-        let load_back_time = start_timer!(|| "Load results back to host");
+        let load_time = start_timer!(|| "Load MSM result GPU->CPU");
+
+        // Since `commit_on_gpu()` is conducting the MSM in async way, we need to
+        // synchronize it first.
+        stream.synchronize().unwrap();
 
         let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
-        stream.synchronize().unwrap();
-        msm_result.copy_to_host(&mut msm_host_result[..]).unwrap();
+        commitment_on_gpu
+            .copy_to_host(&mut msm_host_result[..])
+            .unwrap();
 
         #[cfg(feature = "kzg-print-trace")]
-        end_timer!(load_back_time);
+        end_timer!(load_time);
 
         let commitment = msm_host_result[0].to_ark().into_affine();
-
-        #[cfg(feature = "kzg-print-trace")]
-        end_timer!(commit_time);
-
         Ok(Commitment(commitment))
     }
 }
@@ -827,11 +899,8 @@ mod tests {
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
         let rng = &mut test_rng();
-        for _ in 0..100 {
-            let mut degree = 0;
-            while degree <= 1 {
-                degree = usize::rand(rng) % 200;
-            }
+        for _ in 0..10 {
+            let degree = usize::rand(rng) % 10000;
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, vk) = pp.trim(degree)?;
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
