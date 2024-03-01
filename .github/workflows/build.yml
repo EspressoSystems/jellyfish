@@ -64,7 +64,7 @@ jobs:
       - name: Check all tests and binaries compilation
         run: |
           cargo check --workspace --tests --lib --bins
-          cargo check --workspace --all-features --exclude-feature 'icicle'
+          cargo check --workspace --features 'std parallel test-srs test-apis'
 
       - name: Check no_std support and WASM compilation
         env:
