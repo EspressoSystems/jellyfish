@@ -90,8 +90,8 @@ harness = false
 required-features = ["test-srs"]
 
 [[bench]]
-name = "msm"
-path = "benches/msm.rs"
+name = "kzg-gpu"
+path = "benches/kzg_gpu.rs"
 harness = false
 required-features = ["test-srs"]
 
