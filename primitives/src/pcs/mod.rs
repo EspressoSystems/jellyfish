@@ -22,6 +22,7 @@ use ark_std::{
     fmt::Debug,
     hash::Hash,
     rand::{CryptoRng, RngCore},
+    string::ToString,
     vec::Vec,
 };
 use errors::PCSError;
@@ -33,7 +34,7 @@ pub trait PolynomialCommitmentScheme {
     /// Structured reference string
     type SRS: Clone + Debug + StructuredReferenceString;
     /// Polynomial and its associated types
-    type Polynomial: Clone + Debug + Hash + PartialEq + Eq;
+    type Polynomial: Clone + Debug + Hash + PartialEq + Eq + Send + Sync;
     /// Polynomial input domain
     type Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
     /// Polynomial Evaluation
@@ -45,7 +46,9 @@ pub trait PolynomialCommitmentScheme {
         + Debug
         + PartialEq
         + Eq
-        + Hash;
+        + Hash
+        + Send
+        + Sync;
     /// Batch commitments
     type BatchCommitment: Clone + CanonicalSerialize + CanonicalDeserialize + Debug + PartialEq + Eq;
     /// Proofs
@@ -125,7 +128,14 @@ pub trait PolynomialCommitmentScheme {
             <Self::SRS as StructuredReferenceString>::VerifierParam,
         ),
         PCSError,
-    >;
+    > {
+        if supported_num_vars.is_some() {
+            return Err(PCSError::InvalidParameters(
+                "univariate should not receive a num_var param".to_string(),
+            ));
+        }
+        srs.borrow().trim(supported_degree)
+    }
 
     /// Generate a binding (but not hiding) commitment for a polynomial
     fn commit(
@@ -133,6 +143,7 @@ pub trait PolynomialCommitmentScheme {
         poly: &Self::Polynomial,
     ) -> Result<Self::Commitment, PCSError>;
 
+    // TODO: (alex) once <https://github.com/rust-lang/rust/issues/29661> is stablized, we can provide default types `BatchCommitment = Vec<Self::Commitment>`, and provide default impl here
     /// Batch commit a list of polynomials
     fn batch_commit(
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,
