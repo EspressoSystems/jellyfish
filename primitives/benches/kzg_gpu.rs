@@ -3,18 +3,16 @@
 //!
 //! Run `cargo bench --bench kzg-gpu --features "test-srs icicle"`
 use ark_bn254::Bn254;
-use ark_ec::{
-    models::{short_weierstrass::Affine, CurveConfig},
-    pairing::Pairing,
-};
+#[cfg(feature = "icicle")]
+use ark_ec::models::{short_weierstrass::Affine, CurveConfig};
+use ark_ec::pairing::Pairing;
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use jf_primitives::{
-    icicle_deps::*,
-    pcs::{
-        prelude::{PolynomialCommitmentScheme, UnivariateKzgPCS},
-        StructuredReferenceString,
-    },
+#[cfg(feature = "icicle")]
+use jf_primitives::icicle_deps::*;
+use jf_primitives::pcs::{
+    prelude::{PolynomialCommitmentScheme, UnivariateKzgPCS},
+    StructuredReferenceString,
 };
 use jf_utils::test_rng;
 
@@ -86,7 +84,8 @@ where
 }
 
 fn kzg_gpu_bn254(c: &mut Criterion) {
-    // kzg_ark::<Bn254>(c);
+    kzg_ark::<Bn254>(c);
+    #[cfg(feature = "icicle")]
     kzg_icicle::<Bn254, icicle_bn254::curve::CurveCfg>(c);
 }
 
