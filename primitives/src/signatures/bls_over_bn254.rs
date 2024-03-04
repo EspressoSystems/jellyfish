@@ -400,6 +400,13 @@ impl KeyPair {
     }
 }
 
+impl From<SignKey> for KeyPair {
+    fn from(sk: SignKey) -> Self {
+        let vk = VerKey::from(&sk);
+        Self { sk, vk }
+    }
+}
+
 impl SignKey {
     /// Signature Key generation function
     pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> SignKey {

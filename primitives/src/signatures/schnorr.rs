@@ -328,6 +328,17 @@ where
     }
 }
 
+impl<F, P> From<SignKey<F>> for KeyPair<P>
+where
+    F: PrimeField,
+    P: Config<ScalarField = F>,
+{
+    fn from(sk: SignKey<F>) -> Self {
+        let vk = VerKey::<P>::from(&sk);
+        Self { sk, vk }
+    }
+}
+
 impl<F: PrimeField> SignKey<F> {
     fn generate<R: Rng>(prng: &mut R) -> SignKey<F> {
         SignKey(F::rand(prng))
