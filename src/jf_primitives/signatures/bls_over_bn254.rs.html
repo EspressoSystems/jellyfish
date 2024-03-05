@@ -578,6 +578,13 @@
 <a href="#577" id="577">577</a>
 <a href="#578" id="578">578</a>
 <a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -977,6 +984,13 @@
         <span class="kw">let </span>hash_value: G1Projective = hash_to_curve::&lt;Keccak256&gt;(<span class="kw-2">&amp;</span>msg_input);
         <span class="kw">let </span>sigma = hash_value * <span class="self">self</span>.sk.<span class="number">0</span>;
         Signature { sigma }
+    }
+}
+
+<span class="kw">impl </span>From&lt;SignKey&gt; <span class="kw">for </span>KeyPair {
+    <span class="kw">fn </span>from(sk: SignKey) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>vk = VerKey::from(<span class="kw-2">&amp;</span>sk);
+        <span class="self">Self </span>{ sk, vk }
     }
 }
 
