@@ -19,25 +19,36 @@ use serde::{Deserialize, Serialize};
 use tagged_base64::tagged;
 use typenum::Unsigned;
 
+/// An internal Merkle node.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
                  I: CanonicalSerialize + CanonicalDeserialize,")]
 pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
+    /// An empty subtree.
     Empty,
+    /// An internal branching node
     Branch {
+        /// Merkle hash value of this subtree
         #[serde(with = "canonical")]
         value: T,
+        /// All it's children
         children: Vec<Arc<MerkleNode<E, I, T>>>,
     },
+    /// A leaf node
     Leaf {
+        /// Merkle hash value of this leaf
         #[serde(with = "canonical")]
         value: T,
+        /// Index of this leaf
         #[serde(with = "canonical")]
         pos: I,
+        /// Associated element of this leaf
         #[serde(with = "canonical")]
         elem: E,
     },
+    /// The subtree is forgotten from the memory
     ForgettenSubtree {
+        /// Merkle hash value of this forgotten subtree
         #[serde(with = "canonical")]
         value: T,
     },
@@ -70,6 +81,7 @@ where
     }
 }
 
+/// A merkle path is a bottom-up list of nodes from leaf to the root.
 pub type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
 
 /// A merkle commitment consists a root hash value, a tree height and number of
@@ -120,6 +132,7 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
     }
 }
 
+/// Merkle proof struct.
 #[derive(Derivative, Debug, Clone, Serialize, Deserialize)]
 #[derivative(Eq, Hash, PartialEq)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
@@ -148,10 +161,12 @@ where
     T: NodeValue,
     Arity: Unsigned,
 {
+    /// Return the height of this proof.
     pub fn tree_height(&self) -> usize {
         self.proof.len()
     }
 
+    /// Form a `MerkleProof` from a given index and Merkle path.
     pub fn new(pos: I, proof: MerklePath<E, I, T>) -> Self {
         MerkleProof {
             pos,
@@ -160,10 +175,13 @@ where
         }
     }
 
+    /// Return the index of this `MerkleProof`.
     pub fn index(&self) -> &I {
         &self.pos
     }
 
+    /// Return the element associated with this `MerkleProof`. None if it's a
+    /// non-membership proof.
     pub fn elem(&self) -> Option<&E> {
         match self.proof.first() {
             Some(MerkleNode::Leaf { elem, .. }) => Some(elem),
