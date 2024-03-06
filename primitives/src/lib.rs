@@ -45,9 +45,20 @@ pub mod icicle_deps {
     pub use icicle_core::{
         curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
         msm::{MSMConfig, MSM},
-        traits::ArkConvertible,
+        traits::{ArkConvertible, FieldImpl},
     };
     pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
+
+    /// curve-specific types both from arkworks and from ICICLE
+    /// including Pairing, CurveCfg, Fr, Fq etc.
+    pub mod curves {
+        pub use ark_bls12_381::Bls12_381;
+        pub use ark_bn254::Bn254;
+        pub use icicle_bls12_381::curve::{
+            CurveCfg as IcicleBls12_381, ScalarField as IcicleBls12_381Scalar,
+        };
+        pub use icicle_bn254::curve::{CurveCfg as IcicleBn254, ScalarField as IcicleBn254Scalar};
+    }
 }
 
 pub(crate) mod utils;
