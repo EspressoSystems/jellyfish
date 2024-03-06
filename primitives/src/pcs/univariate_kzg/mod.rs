@@ -654,8 +654,7 @@ where
 #[cfg(feature = "icicle")]
 pub(crate) mod icicle {
     use super::*;
-    // TODO: add back: use crate::icicle_deps::curves::*;
-    use crate::icicle_deps::*;
+    use crate::icicle_deps::{curves::*, *};
     use ark_ec::{short_weierstrass::Affine, CurveConfig};
     use ark_ff::BigInteger;
 
@@ -673,11 +672,19 @@ pub(crate) mod icicle {
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             poly: &DensePolynomial<E::ScalarField>,
         ) -> Result<Commitment<E>, PCSError> {
+            #[cfg(feature = "kzg-print-trace")]
+            let commit_time =
+                start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
+
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, poly.degree())?;
             let mut poly_on_gpu = Self::load_poly_to_gpu(poly)?;
             let (msm_result_on_gpu, stream) =
                 Self::commit_on_gpu(&mut srs_on_gpu, &mut poly_on_gpu)?;
             let comm = Self::load_commitment_to_host(msm_result_on_gpu, stream)?;
+
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(commit_time);
+
             Ok(comm)
         }
 
@@ -809,26 +816,65 @@ pub(crate) mod icicle {
             // Since `commit_on_gpu()` is conducting the MSM in async way, we need to
             // synchronize it first.
             stream.synchronize()?;
-
             let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
             commitment_on_gpu.copy_to_host(&mut msm_host_result[..])?;
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
+            #[cfg(feature = "kzg-print-trace")]
+            let conv_time = start_timer!(|| "Type Conversion: ICICLE->ark: Group");
             let commitment = msm_host_result[0].to_ark().into_affine();
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(conv_time);
+
             Ok(Commitment(commitment))
         }
     }
 
-    impl<E, C> GPUCommit<E, C> for UnivariateKzgPCS<E>
-    where
-        C: IcicleCurve + MSM<C>,
-        C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
-        C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
-        <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
-        E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
-    {
+    impl GPUCommit<Bn254, IcicleBn254> for UnivariateKzgPCS<Bn254> {
+        // NOTE: we are directly using montgomery form, different from default!
+        fn ark_field_to_icicle(f: ark_bn254::Fr) -> icicle_bn254::curve::ScalarField {
+            icicle_bn254::curve::ScalarField::from(f.0 .0)
+        }
+
+        // NOTE: we are directly using montgomery form, different from default!
+        fn ark_affine_to_icicle(p: ark_bn254::G1Affine) -> icicle_bn254::curve::G1Affine {
+            icicle_bn254::curve::G1Affine {
+                x: icicle_bn254::curve::BaseField::from(p.x.0 .0),
+                y: icicle_bn254::curve::BaseField::from(p.y.0 .0),
+            }
+        }
+
+        // NOTE: both bases and scalars are in montgomery form on GPU
+        fn commit_on_gpu<'comm, 'srs, 'poly>(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
+            poly_on_gpu: &mut HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+        ) -> Result<
+            (
+                HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>,
+                CudaStream,
+            ),
+            PCSError,
+        > {
+            let mut msm_result =
+                HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(1)?;
+
+            let stream = CudaStream::create()?;
+            let mut cfg = MSMConfig::default();
+            cfg.ctx.stream = &stream;
+            cfg.is_async = true;
+            cfg.are_scalars_montgomery_form = true;
+            cfg.are_points_montgomery_form = true;
+
+            #[cfg(feature = "kzg-print-trace")]
+            let msm_time = start_timer!(|| "GPU-accelerated MSM");
+            icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result)?;
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(msm_time);
+
+            Ok((msm_result, stream))
+        }
     }
 }
 
@@ -1108,6 +1154,7 @@ mod tests {
                 ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
             <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
             E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+            UnivariateKzgPCS<E>: GPUCommit<E, C>,
         {
             let rng = &mut test_rng();
             for _ in 0..10 {
@@ -1134,7 +1181,6 @@ mod tests {
         #[test]
         fn test_gpu_e2e() {
             test_gpu_e2e_template::<Bn254, IcicleBn254>().unwrap();
-            test_gpu_e2e_template::<Bls12_381, IcicleBls12_381>().unwrap();
         }
     }
 }

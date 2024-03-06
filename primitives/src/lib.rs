@@ -54,10 +54,8 @@ pub mod icicle_deps {
     pub mod curves {
         pub use ark_bls12_381::Bls12_381;
         pub use ark_bn254::Bn254;
-        pub use icicle_bls12_381::curve::{
-            CurveCfg as IcicleBls12_381, ScalarField as IcicleBls12_381Scalar,
-        };
-        pub use icicle_bn254::curve::{CurveCfg as IcicleBn254, ScalarField as IcicleBn254Scalar};
+        pub use icicle_bls12_381::curve::CurveCfg as IcicleBls12_381;
+        pub use icicle_bn254::curve::CurveCfg as IcicleBn254;
     }
 }
 
