@@ -29,7 +29,7 @@
 
 
 ## Laptop
-- MacBoo Pro (16-inch, 2019)
+- MacBook Pro (16-inch, 2019)
 - Processor: 2.3 GHz 8-Core Intel Core i9
 - Memory: 16 GB 2667 MHz DDR4
 - `RAYON_NUM_THREADS=N cargo bench`
