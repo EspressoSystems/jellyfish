@@ -679,9 +679,8 @@ pub(crate) mod icicle {
                 start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
 
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, poly.degree())?;
-            let mut poly_on_gpu = Self::load_poly_to_gpu(poly)?;
-            let msm_result_on_gpu =
-                Self::commit_on_gpu(&mut srs_on_gpu, &mut poly_on_gpu, &stream)?;
+            let poly_on_gpu = Self::load_poly_to_gpu(poly)?;
+            let msm_result_on_gpu = Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, &stream)?;
             let comm = Self::load_commitment_to_host(msm_result_on_gpu, &stream)?;
 
             #[cfg(feature = "kzg-print-trace")]
@@ -792,9 +791,16 @@ pub(crate) mod icicle {
         ///   otherwise
         fn commit_on_gpu<'comm, 'srs, 'poly>(
             prover_param: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
-            poly: &mut HostOrDeviceSlice<'poly, C::ScalarField>,
+            poly: &HostOrDeviceSlice<'poly, C::ScalarField>,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, IcicleProjective<C>>, PCSError> {
+            let trimmed_prover_param = match prover_param {
+                HostOrDeviceSlice::Device(ck, device_id) => {
+                    HostOrDeviceSlice::Device(&mut ck[..poly.len()], *device_id)
+                },
+                HostOrDeviceSlice::Host(ck) => HostOrDeviceSlice::Host(ck[..poly.len()].to_vec()),
+            };
+
             let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1)?;
 
             let mut cfg = MSMConfig::default();
@@ -804,7 +810,7 @@ pub(crate) mod icicle {
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM");
 
-            icicle_core::msm::msm(poly, prover_param, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
@@ -857,9 +863,17 @@ pub(crate) mod icicle {
         // NOTE: both bases and scalars are in montgomery form on GPU
         fn commit_on_gpu<'comm, 'srs, 'poly>(
             prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
-            poly: &mut HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+            poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
+            // FIXME: while this is indeed a subslice, but dropping behavior of
+            // `prover_param` is panicing
+            let trimmed_prover_param = match prover_param {
+                HostOrDeviceSlice::Device(ck, device_id) => {
+                    HostOrDeviceSlice::Device(&mut ck[..poly.len()], *device_id)
+                },
+                HostOrDeviceSlice::Host(ck) => HostOrDeviceSlice::Host(ck[..poly.len()].to_vec()),
+            };
             let mut msm_result =
                 HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(1)?;
 
@@ -871,7 +885,7 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM");
-            icicle_core::msm::msm(poly, prover_param, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
@@ -1159,15 +1173,41 @@ mod tests {
             UnivariateKzgPCS<E>: GPUCommit<E, C>,
         {
             let rng = &mut test_rng();
+            let stream = warmup_new_stream().unwrap();
+
+            let supported_degree = 2usize.pow(15);
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, supported_degree)?;
+            let (full_ck, _vk) = pp.trim(supported_degree)?;
+            let mut srs_on_gpu =
+                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_prover_param_to_gpu(
+                    full_ck,
+                    supported_degree,
+                )?;
+
             for _ in 0..10 {
                 let degree = usize::rand(rng) % 10000;
-                let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
                 let (ck, vk) = pp.trim(degree)?;
                 let p =
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                         degree, rng,
                     );
                 let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
+                {
+                    // step-by-step commitment on gpu
+                    let poly_on_gpu =
+                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p)?;
+                    let msm_result_on_gpu =
+                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
+                            &mut srs_on_gpu,
+                            &poly_on_gpu,
+                            &stream,
+                        )?;
+                    let comm2 = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitment_to_host(
+                        msm_result_on_gpu,
+                        &stream,
+                    )?;
+                    assert_eq!(comm, comm2);
+                }
                 let point = E::ScalarField::rand(rng);
                 let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
                 assert!(
