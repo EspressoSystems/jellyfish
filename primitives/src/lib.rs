@@ -57,6 +57,16 @@ pub mod icicle_deps {
         pub use icicle_bls12_381::curve::CurveCfg as IcicleBls12_381;
         pub use icicle_bn254::curve::CurveCfg as IcicleBn254;
     }
+
+    // TODO: remove this after `warmup()` is added upstream
+    // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
+    /// Create a new stream and warmup
+    pub fn warmup_new_stream() -> Result<CudaStream, ()> {
+        let stream = CudaStream::create().unwrap();
+        // TODO: consider using an error type?
+        let _warmup_bytes = HostOrDeviceSlice::<'_, u8>::cuda_malloc_async(1024, &stream).unwrap();
+        Ok(stream)
+    }
 }
 
 pub(crate) mod utils;

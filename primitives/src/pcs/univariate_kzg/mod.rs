@@ -672,15 +672,17 @@ pub(crate) mod icicle {
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             poly: &DensePolynomial<E::ScalarField>,
         ) -> Result<Commitment<E>, PCSError> {
+            let stream = warmup_new_stream().unwrap();
+
             #[cfg(feature = "kzg-print-trace")]
             let commit_time =
                 start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
 
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, poly.degree())?;
             let mut poly_on_gpu = Self::load_poly_to_gpu(poly)?;
-            let (msm_result_on_gpu, stream) =
-                Self::commit_on_gpu(&mut srs_on_gpu, &mut poly_on_gpu)?;
-            let comm = Self::load_commitment_to_host(msm_result_on_gpu, stream)?;
+            let msm_result_on_gpu =
+                Self::commit_on_gpu(&mut srs_on_gpu, &mut poly_on_gpu, &stream)?;
+            let comm = Self::load_commitment_to_host(msm_result_on_gpu, &stream)?;
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(commit_time);
@@ -774,7 +776,13 @@ pub(crate) mod icicle {
         /// Comupte PCS commit using GPU
         /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
         ///
+        /// - `stream` is a `CudaStream`, you should consider using
+        /// `crate::icicle_deps::warmup_new_stream()` to create one
+        ///
         /// # NOTE
+        /// - if you pass in `HostOrDeviceSlice::Host`, then `icicle_core::msm`
+        ///   will push them onto GPU first; if they are already on GPU, i.e.
+        ///   `HostOrDeviceSlice::Device`, then msm will be executed directly
         /// - the result is also temporarily on GPU, you can use
         ///   `Self::load_commitment_to_host()` to load back to host CPU.
         /// - this function is async/non-blocking, thus returns a CudaStream
@@ -783,12 +791,12 @@ pub(crate) mod icicle {
         ///   bases and scalars, consider overwrite this function if you want
         ///   otherwise
         fn commit_on_gpu<'comm, 'srs, 'poly>(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
-            poly_on_gpu: &mut HostOrDeviceSlice<'poly, C::ScalarField>,
-        ) -> Result<(HostOrDeviceSlice<'comm, IcicleProjective<C>>, CudaStream), PCSError> {
+            prover_param: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
+            poly: &mut HostOrDeviceSlice<'poly, C::ScalarField>,
+            stream: &CudaStream,
+        ) -> Result<HostOrDeviceSlice<'comm, IcicleProjective<C>>, PCSError> {
             let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1)?;
 
-            let stream = CudaStream::create()?;
             let mut cfg = MSMConfig::default();
             cfg.ctx.stream = &stream;
             cfg.is_async = true; // non-blocking
@@ -796,19 +804,19 @@ pub(crate) mod icicle {
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM");
 
-            icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, prover_param, &cfg, &mut msm_result)?;
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
-            Ok((msm_result, stream))
+            Ok(msm_result)
         }
 
         /// After `Self::commit_on_gpu()`, you can choose to load the result
         /// back to host CPU
         fn load_commitment_to_host<'comm>(
             commitment_on_gpu: HostOrDeviceSlice<'comm, IcicleProjective<C>>,
-            stream: CudaStream,
+            stream: &CudaStream,
         ) -> Result<Commitment<E>, PCSError> {
             #[cfg(feature = "kzg-print-trace")]
             let load_time = start_timer!(|| "Load MSM result GPU->CPU");
@@ -848,32 +856,26 @@ pub(crate) mod icicle {
 
         // NOTE: both bases and scalars are in montgomery form on GPU
         fn commit_on_gpu<'comm, 'srs, 'poly>(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
-            poly_on_gpu: &mut HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
-        ) -> Result<
-            (
-                HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>,
-                CudaStream,
-            ),
-            PCSError,
-        > {
+            prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
+            poly: &mut HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+            stream: &CudaStream,
+        ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
             let mut msm_result =
                 HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(1)?;
 
-            let stream = CudaStream::create()?;
             let mut cfg = MSMConfig::default();
-            cfg.ctx.stream = &stream;
+            cfg.ctx.stream = stream;
             cfg.is_async = true;
             cfg.are_scalars_montgomery_form = true;
             cfg.are_points_montgomery_form = true;
 
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM");
-            icicle_core::msm::msm(poly_on_gpu, prover_param_on_gpu, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, prover_param, &cfg, &mut msm_result)?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
-            Ok((msm_result, stream))
+            Ok(msm_result)
         }
     }
 }
