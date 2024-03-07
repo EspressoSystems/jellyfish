@@ -815,6 +815,7 @@ pub(crate) mod icicle {
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
+            ark_std::mem::forget(trimmed_prover_param);
             Ok(msm_result)
         }
 
@@ -866,8 +867,6 @@ pub(crate) mod icicle {
             poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
-            // FIXME: while this is indeed a subslice, but dropping behavior of
-            // `prover_param` is panicing
             let trimmed_prover_param = match prover_param {
                 HostOrDeviceSlice::Device(ck, device_id) => {
                     HostOrDeviceSlice::Device(&mut ck[..poly.len()], *device_id)
@@ -889,6 +888,12 @@ pub(crate) mod icicle {
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
+            // TODO: update after https://github.com/ingonyama-zk/icicle/pull/412
+            // FIXME: even though `trimmed_prover_param` is an internal, temporary variable
+            // there's still risk of double-free if `msm()` above panic. Switching to
+            // `ManuallyDrop<HostOrDeviceSlice>` would fix this issue but aren't supported
+            // by ICICLE's msm API.
+            ark_std::mem::forget(trimmed_prover_param);
             Ok(msm_result)
         }
     }
