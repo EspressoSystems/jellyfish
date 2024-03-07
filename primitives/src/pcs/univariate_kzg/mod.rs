@@ -1168,7 +1168,8 @@ mod tests {
         };
         use ark_ec::{short_weierstrass::Affine, CurveConfig};
 
-        fn test_gpu_e2e_template<E, C>() -> Result<(), PCSError>
+        #[cfg(feature = "kzg-print-trace")]
+        fn gpu_profiling<E, C>() -> Result<(), PCSError>
         where
             C: IcicleCurve + MSM<C>,
             C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
@@ -1180,55 +1181,52 @@ mod tests {
         {
             let rng = &mut test_rng();
             let stream = warmup_new_stream().unwrap();
+            let degree = 2usize.pow(20);
 
-            let supported_degree = 2usize.pow(21);
-            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, supported_degree)?;
-            let (full_ck, _vk) = pp.trim(supported_degree)?;
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+            let (ck, _vk) = pp.trim(degree)?;
             let mut srs_on_gpu =
-                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_prover_param_to_gpu(
-                    full_ck,
-                    supported_degree,
-                )?;
+                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_prover_param_to_gpu(&ck, degree)?;
 
-            // testing on large degree for profiling
-            for _ in 0..10 {
-                let degree = usize::rand(rng) % (2usize.pow(20) + 1);
-                let (ck, vk) = pp.trim(degree)?;
-                let p =
-                    <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
-                        degree, rng,
-                    );
-                let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
-                {
-                    // step-by-step commitment on gpu
-                    let poly_on_gpu =
-                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p)?;
-                    let msm_result_on_gpu =
-                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
-                            &mut srs_on_gpu,
-                            &poly_on_gpu,
-                            &stream,
-                        )?;
-                    let comm2 = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitment_to_host(
-                        msm_result_on_gpu,
-                        &stream,
-                    )?;
-                    assert_eq!(comm, comm2);
-                }
-                let point = E::ScalarField::rand(rng);
-                let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
-                assert!(
-                    UnivariateKzgPCS::<E>::verify(&vk, &comm, &point, &value, &proof)?,
-                    "proof was incorrect for max_degree = {}, polynomial_degree = {}",
-                    degree,
-                    p.degree(),
-                );
-            }
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
+            let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
+
+            // step-by-step commitment on gpu
+            let poly_on_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p)?;
+            let msm_result_on_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
+                &mut srs_on_gpu,
+                &poly_on_gpu,
+                1,
+                &stream,
+            )?;
+            let comm2 = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitments_to_host(
+                msm_result_on_gpu,
+                &stream,
+            )?[0];
+            assert_eq!(comm, comm2);
+            Ok(())
+        }
+
+        fn test_gpu_e2e_template<E, C>() -> Result<(), PCSError>
+        where
+            C: IcicleCurve + MSM<C>,
+            C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
+            C::BaseField:
+                ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+            <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
+            E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+            UnivariateKzgPCS<E>: GPUCommit<E, C>,
+        {
+            let rng = &mut test_rng();
+            let supported_degree = 2usize.pow(12);
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, supported_degree)?;
 
             // testing on smaller degree for correctness
             for _ in 0..10 {
                 let degree = usize::rand(rng) % 1025;
-                let (ck, _vk) = pp.trim(degree)?;
+                let (ck, vk) = pp.trim(degree)?;
                 let p =
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                         degree, rng,
@@ -1236,6 +1234,15 @@ mod tests {
                 let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
                 let comm_cpu = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 assert_eq!(comm_gpu, comm_cpu);
+
+                let point = E::ScalarField::rand(rng);
+                let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
+                assert!(
+                    UnivariateKzgPCS::<E>::verify(&vk, &comm_gpu, &point, &value, &proof)?,
+                    "proof was incorrect for max_degree = {}, polynomial_degree = {}",
+                    degree,
+                    p.degree(),
+                );
             }
             Ok(())
         }
@@ -1243,6 +1250,9 @@ mod tests {
         #[test]
         fn test_gpu_e2e() {
             test_gpu_e2e_template::<Bn254, IcicleBn254>().unwrap();
+            // testing on large degree for profiling
+            #[cfg(feature = "kzg-print-trace")]
+            gpu_profiling::<Bn254, IcicleBn254>().unwrap();
         }
     }
 }
