@@ -6,10 +6,12 @@ use ark_bn254::Bn254;
 #[cfg(feature = "icicle")]
 use ark_ec::models::{short_weierstrass::Affine, CurveConfig};
 use ark_ec::pairing::Pairing;
+#[cfg(feature = "icicle")]
+use ark_ff::PrimeField;
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 #[cfg(feature = "icicle")]
-use jf_primitives::icicle_deps::*;
+use jf_primitives::icicle_deps::{curves::*, *};
 use jf_primitives::pcs::{
     prelude::{PolynomialCommitmentScheme, UnivariateKzgPCS},
     StructuredReferenceString,
@@ -51,23 +53,26 @@ where
     C: IcicleCurve + MSM<C>,
     C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
     C::BaseField: ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
+    <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
     E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
+    UnivariateKzgPCS<E>: GPUCommit<E, C>,
 {
     let mut group = c.benchmark_group("MSM with ICICLE");
     let mut rng = test_rng();
+    let stream = warmup_new_stream().unwrap();
 
     let supported_degree = 2usize.pow(MAX_LOG_DEGREE as u32);
     let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, supported_degree).unwrap();
-    // TODO: (alex) figure out load longer SRS first, and only use part of it later
-    // currently it will error if the `scalars.len() % points.len() != 0`
-    // while we can tap into a slice behind the reference via
-    // `HostOrDeviceSlice[..]` which gives `&[T]` however msm() doesn't accept
-    // &[T], only `&HostOrDeviceSlice`
+    let (full_ck, _vk) = pp.trim(supported_degree).unwrap();
+    let mut srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_prover_param_to_gpu(
+        full_ck,
+        supported_degree,
+    )
+    .unwrap();
 
     // setup for commit first
     for log_degree in MIN_LOG_DEGREE..MAX_LOG_DEGREE {
         let degree = 2usize.pow(log_degree as u32);
-        let (ck, _vk) = pp.trim(degree).unwrap();
         let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
             degree, &mut rng,
         );
@@ -76,7 +81,23 @@ where
             BenchmarkId::from_parameter(log_degree),
             &log_degree,
             |b, _log_degree| {
-                b.iter(|| UnivariateKzgPCS::<E>::commit_with_gpu::<C>(&ck, &p).unwrap())
+                b.iter(|| {
+                    // step-by-step commitment on gpu
+                    let poly_on_gpu =
+                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p).unwrap();
+                    let msm_result_on_gpu =
+                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
+                            &mut srs_on_gpu,
+                            &poly_on_gpu,
+                            &stream,
+                        )
+                        .unwrap();
+                    let _comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitment_to_host(
+                        msm_result_on_gpu,
+                        &stream,
+                    )
+                    .unwrap();
+                })
             },
         );
     }
@@ -86,7 +107,7 @@ where
 fn kzg_gpu_bn254(c: &mut Criterion) {
     kzg_ark::<Bn254>(c);
     #[cfg(feature = "icicle")]
-    kzg_icicle::<Bn254, icicle_bn254::curve::CurveCfg>(c);
+    kzg_icicle::<Bn254, IcicleBn254>(c);
 }
 
 criterion_group! {
