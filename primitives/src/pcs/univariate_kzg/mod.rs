@@ -732,8 +732,9 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Group");
-            let bases: Vec<IcicleAffine<C>> = parallelizable_slice_iter(&prover_param.powers_of_g[..supported_degree + 1])
-                    .map(|&p| Self::ark_affine_to_icicle(p)) // TODO: maybe add api?
+            let bases: Vec<IcicleAffine<C>> =
+                parallelizable_slice_iter(&prover_param.powers_of_g[..supported_degree + 1])
+                    .map(|&p| Self::ark_affine_to_icicle(p))
                     .collect();
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
@@ -758,7 +759,7 @@ pub(crate) mod icicle {
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
             let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(&poly.coeffs()[..size])
-                .map(|&s| Self::ark_field_to_icicle(s)) // TODO: update here
+                .map(|&s| Self::ark_field_to_icicle(s))
                 .collect();
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
@@ -1180,7 +1181,7 @@ mod tests {
             let rng = &mut test_rng();
             let stream = warmup_new_stream().unwrap();
 
-            let supported_degree = 2usize.pow(15);
+            let supported_degree = 2usize.pow(21);
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, supported_degree)?;
             let (full_ck, _vk) = pp.trim(supported_degree)?;
             let mut srs_on_gpu =
@@ -1189,8 +1190,9 @@ mod tests {
                     supported_degree,
                 )?;
 
+            // testing on large degree for profiling
             for _ in 0..10 {
-                let degree = usize::rand(rng) % 10000;
+                let degree = usize::rand(rng) % (2usize.pow(20) + 1);
                 let (ck, vk) = pp.trim(degree)?;
                 let p =
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
@@ -1221,6 +1223,19 @@ mod tests {
                     degree,
                     p.degree(),
                 );
+            }
+
+            // testing on smaller degree for correctness
+            for _ in 0..10 {
+                let degree = usize::rand(rng) % 1025;
+                let (ck, _vk) = pp.trim(degree)?;
+                let p =
+                    <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                        degree, rng,
+                    );
+                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
+                let comm_cpu = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
+                assert_eq!(comm_gpu, comm_cpu);
             }
             Ok(())
         }
