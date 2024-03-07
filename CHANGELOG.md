@@ -15,6 +15,8 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Added
 
+- [#498](https://github.com/EspressoSystems/jellyfish/pull/498) (`jf-primitives`) Add GPU-accelerated MSM for `UnivariateKzgPCS::commit/batch_commit()` using ICICLE.
+
 ### Changed
 
 ### Removed
