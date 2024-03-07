@@ -680,13 +680,41 @@ pub(crate) mod icicle {
 
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, poly.degree())?;
             let poly_on_gpu = Self::load_poly_to_gpu(poly)?;
-            let msm_result_on_gpu = Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, &stream)?;
-            let comm = Self::load_commitment_to_host(msm_result_on_gpu, &stream)?;
+            let msm_result_on_gpu = Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, 1, &stream)?;
+            let comm = Self::load_commitments_to_host(msm_result_on_gpu, &stream)?[0];
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(commit_time);
 
             Ok(comm)
+        }
+
+        /// Similar to [`Self::commit_with_gpu()`] but for a batch of poly of
+        /// the same degree
+        fn batch_commit_with_gpu(
+            prover_param: impl Borrow<UnivariateProverParam<E>>,
+            polys: &[DensePolynomial<E::ScalarField>],
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
+            let stream = warmup_new_stream().unwrap();
+
+            let degree = polys[0].degree();
+            #[cfg(feature = "kzg-print-trace")]
+            let commit_time = start_timer!(|| format!(
+                "Committing to {} polys of degree {} ",
+                polys.len(),
+                degree,
+            ));
+
+            let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, degree)?;
+            let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
+            let msm_result_on_gpu =
+                Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, polys.len(), &stream)?;
+            let comms = Self::load_commitments_to_host(msm_result_on_gpu, &stream)?;
+
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(commit_time);
+
+            Ok(comms)
         }
 
         /// type conversion (specializable/overridable for concrete types) from
@@ -773,18 +801,62 @@ pub(crate) mod icicle {
             Ok(scalars_on_device)
         }
 
+        /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of poly
+        /// of the same degree at once
+        fn load_batch_poly_to_gpu<'poly>(
+            polys: &[DensePolynomial<E::ScalarField>],
+        ) -> Result<HostOrDeviceSlice<'poly, C::ScalarField>, PCSError> {
+            if polys.is_empty() {
+                return Err(PCSError::InvalidParameters(
+                    "number of polys must be positive".to_string(),
+                ));
+            }
+
+            let size = polys[0].degree() + 1;
+            if polys.iter().any(|p| p.degree() + 1 != size) {
+                return Err(PCSError::InvalidParameters(
+                    "all polys should have the same degree".to_string(),
+                ));
+            }
+
+            let mut scalars_on_device =
+                HostOrDeviceSlice::<'_, C::ScalarField>::cuda_malloc(size * polys.len())?;
+
+            #[cfg(feature = "kzg-print-trace")]
+            let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
+            let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(polys)
+                .map(|poly| {
+                    parallelizable_slice_iter(&poly.coeffs()[..size])
+                        .map(|&s| Self::ark_field_to_icicle(s))
+                })
+                .flatten()
+                .collect();
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(conv_time);
+
+            #[cfg(feature = "kzg-print-trace")]
+            let load_time = start_timer!(|| "Load scalars: CPU->GPU");
+            scalars_on_device.copy_from_host(&scalars)?;
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(load_time);
+
+            Ok(scalars_on_device)
+        }
+
         /// Comupte PCS commit using GPU
         /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
         ///
         /// - `stream` is a `CudaStream`, you should consider using
         /// `crate::icicle_deps::warmup_new_stream()` to create one
+        /// - `batch_size`: by default is 1, during batch_commit it could be
+        ///   greater
         ///
         /// # NOTE
         /// - if you pass in `HostOrDeviceSlice::Host`, then `icicle_core::msm`
         ///   will push them onto GPU first; if they are already on GPU, i.e.
         ///   `HostOrDeviceSlice::Device`, then msm will be executed directly
         /// - the result is also temporarily on GPU, you can use
-        ///   `Self::load_commitment_to_host()` to load back to host CPU.
+        ///   `Self::load_commitments_to_host()` to load back to host CPU.
         /// - this function is async/non-blocking, thus returns a CudaStream
         ///   handle
         /// - default implementation assume normal(non-montgomery) affine for
@@ -793,6 +865,7 @@ pub(crate) mod icicle {
         fn commit_on_gpu<'comm, 'srs, 'poly>(
             prover_param: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
             poly: &HostOrDeviceSlice<'poly, C::ScalarField>,
+            batch_size: usize,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, IcicleProjective<C>>, PCSError> {
             let trimmed_prover_param = match prover_param {
@@ -802,14 +875,15 @@ pub(crate) mod icicle {
                 HostOrDeviceSlice::Host(ck) => HostOrDeviceSlice::Host(ck[..poly.len()].to_vec()),
             };
 
-            let mut msm_result = HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(1)?;
+            let mut msm_result =
+                HostOrDeviceSlice::<'_, IcicleProjective<C>>::cuda_malloc(batch_size)?;
 
             let mut cfg = MSMConfig::default();
             cfg.ctx.stream = &stream;
             cfg.is_async = true; // non-blocking
 
             #[cfg(feature = "kzg-print-trace")]
-            let msm_time = start_timer!(|| "GPU-accelerated MSM");
+            let msm_time = start_timer!(|| "GPU-accelerated MSM dispatched");
 
             icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
 
@@ -822,29 +896,34 @@ pub(crate) mod icicle {
 
         /// After `Self::commit_on_gpu()`, you can choose to load the result
         /// back to host CPU
-        fn load_commitment_to_host<'comm>(
-            commitment_on_gpu: HostOrDeviceSlice<'comm, IcicleProjective<C>>,
+        fn load_commitments_to_host<'comm>(
+            commitments_on_gpu: HostOrDeviceSlice<'comm, IcicleProjective<C>>,
             stream: &CudaStream,
-        ) -> Result<Commitment<E>, PCSError> {
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
             #[cfg(feature = "kzg-print-trace")]
-            let load_time = start_timer!(|| "Load MSM result GPU->CPU");
-
+            let sync_time = start_timer!(|| "Sync MSM result");
             // Since `commit_on_gpu()` is conducting the MSM in async way, we need to
             // synchronize it first.
             stream.synchronize()?;
-            let mut msm_host_result = vec![IcicleProjective::<C>::zero(); 1];
-            commitment_on_gpu.copy_to_host(&mut msm_host_result[..])?;
+            #[cfg(feature = "kzg-print-trace")]
+            end_timer!(sync_time);
 
+            #[cfg(feature = "kzg-print-trace")]
+            let load_time = start_timer!(|| "Load MSM result GPU->CPU");
+            let mut msm_host_result = vec![IcicleProjective::<C>::zero(); commitments_on_gpu.len()];
+            commitments_on_gpu.copy_to_host(&mut msm_host_result[..])?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ICICLE->ark: Group");
-            let commitment = msm_host_result[0].to_ark().into_affine();
+            let comms = parallelizable_slice_iter(&msm_host_result)
+                .map(|p| Commitment(p.to_ark().into_affine()))
+                .collect();
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
 
-            Ok(Commitment(commitment))
+            Ok(comms)
         }
     }
 
@@ -866,16 +945,26 @@ pub(crate) mod icicle {
         fn commit_on_gpu<'comm, 'srs, 'poly>(
             prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
             poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+            batch_size: usize,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
+            let trimmed_srs_size = if batch_size == 1 {
+                poly.len()
+            } else {
+                prover_param.len()
+            };
             let trimmed_prover_param = match prover_param {
                 HostOrDeviceSlice::Device(ck, device_id) => {
-                    HostOrDeviceSlice::Device(&mut ck[..poly.len()], *device_id)
+                    HostOrDeviceSlice::Device(&mut ck[..trimmed_srs_size], *device_id)
                 },
-                HostOrDeviceSlice::Host(ck) => HostOrDeviceSlice::Host(ck[..poly.len()].to_vec()),
+                HostOrDeviceSlice::Host(ck) => {
+                    HostOrDeviceSlice::Host(ck[..trimmed_srs_size].to_vec())
+                },
             };
             let mut msm_result =
-                HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(1)?;
+                HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(
+                    batch_size,
+                )?;
 
             let mut cfg = MSMConfig::default();
             cfg.ctx.stream = stream;
@@ -1206,6 +1295,17 @@ mod tests {
                 &stream,
             )?[0];
             assert_eq!(comm, comm2);
+
+            let polys: Vec<_> = (0..10)
+                .map(|_| {
+                    <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                        degree, rng,
+                    )
+                })
+                .collect();
+            let _comms =
+                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::batch_commit_with_gpu(&ck, &polys)?;
+
             Ok(())
         }
 
@@ -1243,6 +1343,16 @@ mod tests {
                     degree,
                     p.degree(),
                 );
+
+                // batch commit
+                let batch_size = rng.gen_range(10..100);
+                let polys: Vec<_> = (0..batch_size).map(|_| <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                        degree, rng,
+                    )).collect();
+                let comms_gpu =
+                    <UnivariateKzgPCS<E> as GPUCommit<E, C>>::batch_commit_with_gpu(&ck, &polys)?;
+                let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
+                assert_eq!(comms_gpu, comms_cpu);
             }
             Ok(())
         }
