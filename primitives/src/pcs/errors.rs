@@ -11,6 +11,10 @@ use crate::errors::PrimitivesError;
 use ark_serialize::SerializationError;
 use ark_std::string::{String, ToString};
 use displaydoc::Display;
+#[cfg(feature = "icicle")]
+use icicle_core::error::IcicleError;
+#[cfg(feature = "icicle")]
+use icicle_cuda_runtime::error::CudaError;
 
 /// A `enum` specifying the possible failure modes of the PCS.
 #[derive(Display, Debug)]
@@ -29,6 +33,9 @@ pub enum PCSError {
     TranscriptError(TranscriptError),
     /// Error from upstream dependencies: {0}
     UpstreamError(String),
+    #[cfg(feature = "icicle")]
+    /// Error from ICICLE: {0}
+    IcicleError(String),
 }
 
 impl ark_std::error::Error for PCSError {}
@@ -48,5 +55,19 @@ impl From<TranscriptError> for PCSError {
 impl From<PrimitivesError> for PCSError {
     fn from(e: PrimitivesError) -> Self {
         Self::UpstreamError(e.to_string())
+    }
+}
+
+#[cfg(feature = "icicle")]
+impl From<IcicleError> for PCSError {
+    fn from(e: IcicleError) -> Self {
+        Self::IcicleError(ark_std::format!("{:?}", e))
+    }
+}
+#[cfg(feature = "icicle")]
+impl From<CudaError> for PCSError {
+    fn from(e: CudaError) -> Self {
+        let icicle_err = IcicleError::from_cuda_error(e);
+        icicle_err.into()
     }
 }

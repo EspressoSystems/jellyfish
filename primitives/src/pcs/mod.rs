@@ -6,12 +6,12 @@
 
 //! Polynomial Commitment Scheme
 pub mod errors;
-mod multilinear_kzg;
+pub(crate) mod multilinear_kzg;
 mod poly;
 pub mod prelude;
 mod structs;
 pub mod transcript;
-mod univariate_kzg;
+pub(crate) mod univariate_kzg;
 
 use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};

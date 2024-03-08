@@ -21,12 +21,15 @@
   outputs = { self, nixpkgs, flake-utils, rust-overlay, pre-commit-hooks, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [
-          (import rust-overlay)
-        ];
+        overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith
-          (toolchain: toolchain.minimal.override { extensions = [ "rustfmt" ]; });
+        pkgsAllowUnfree = import nixpkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        gcc11 = pkgs.overrideCC pkgs.stdenv pkgs.gcc11;
+        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+          toolchain.minimal.override { extensions = [ "rustfmt" ]; });
 
         stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
@@ -42,8 +45,52 @@
           fi
           exec ${stableToolchain}/bin/cargo "$@"
         '';
-      in with pkgs;
-      {
+        baseShell = with pkgs;
+          clang15Stdenv.mkDerivation {
+            name = "clang15-nix-shell";
+            buildInputs = [
+              argbash
+              openssl
+              pkg-config
+              git
+              nixpkgs-fmt
+
+              cargo-with-nightly
+              stableToolchain
+              nightlyToolchain
+              cargo-sort
+              clang-tools_15
+              clangStdenv
+              llvm_15
+            ] ++ lib.optionals stdenv.isDarwin
+              [ darwin.apple_sdk.frameworks.Security ];
+
+            CARGO_TARGET_DIR = "target/nix_rustc";
+
+            shellHook = ''
+              export RUST_BACKTRACE=full
+              export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
+              # Prevent cargo aliases from using programs in `~/.cargo` to avoid conflicts with local rustup installations.
+              export CARGO_HOME=$HOME/.cargo-nix
+
+              # Ensure `cargo fmt` uses `rustfmt` from nightly.
+              export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
+
+              export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/${llvmPackages_15.libclang.version}/include"
+              export LIBCLANG_PATH=
+              export CC="${clang-tools_15.clang}/bin/clang"
+              export CXX="${clang-tools_15.clang}/bin/clang++"
+              export AR="${llvm_15}/bin/llvm-ar"
+              export CFLAGS="-mcpu=generic"
+
+              # by default choose u64_backend
+              export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
+            ''
+            # install pre-commit hooks
+            + self.check.${system}.pre-commit-check.shellHook;
+          };
+      in
+      with pkgs; {
         check = {
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
@@ -72,48 +119,34 @@
                 entry = "cargo sort -w";
                 pass_filenames = false;
               };
+              nixpkgs-fmt.enable = true;
             };
           };
         };
-        devShell = clang15Stdenv.mkDerivation {
-          name = "clang15-nix-shell";
-          buildInputs = [
-            argbash
-            openssl
-            pkg-config
-            git
+        devShell = baseShell;
+        # extra dev shells
+        devShells = {
+          # run with `nix develop .#cudaShell`
+          cudaShell =
+            let cudatoolkit = pkgsAllowUnfree.cudaPackages_12_3.cudatoolkit;
+            in baseShell.overrideAttrs (oldAttrs: {
+              # for GPU/CUDA env (e.g. to run ICICLE code)
+              name = "cuda-env-shell";
+              buildInputs = oldAttrs.buildInputs
+                ++ [ cmake cudatoolkit util-linux gcc11 ];
+              # CXX is overridden to use gcc as icicle-curves's build scripts need them
+              shellHook = oldAttrs.shellHook + ''
 
-            cargo-with-nightly
-            stableToolchain
-            nightlyToolchain
-            cargo-sort
-            clang-tools_15
-            clangStdenv
-            llvm_15
-          ] ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
-
-          CARGO_TARGET_DIR = "target/nix_rustc";
-
-          shellHook = ''
-            export RUST_BACKTRACE=full
-            export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
-            # Prevent cargo aliases from using programs in `~/.cargo` to avoid conflicts with local rustup installations.
-            export CARGO_HOME=$HOME/.cargo-nix
-
-            # Ensure `cargo fmt` uses `rustfmt` from nightly.
-            export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
-
-            export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/${llvmPackages_15.libclang.version}/include"
-            export CC="${clang-tools_15.clang}/bin/clang"
-            export AR="${llvm_15}/bin/llvm-ar"
-            export CFLAGS="-mcpu=generic"
-
-            # by default choose u64_backend
-            export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
-          ''
-          # install pre-commit hooks
-          + self.check.${system}.pre-commit-check.shellHook;
+                export PATH="${pkgs.gcc11}/bin:${cudatoolkit}/bin:${cudatoolkit}/nvvm/bin:$PATH"
+                export LD_LIBRARY_PATH=${cudatoolkit}/lib
+                export CUDA_PATH=${cudatoolkit}
+                export CPATH="${cudatoolkit}/include"
+                export LIBRARY_PATH="$LIBRARY_PATH:/lib"
+                export CMAKE_CUDA_COMPILER=$CUDA_PATH/bin/nvcc
+                export LIBCLANG_PATH=${llvmPackages_15.libclang.lib}/lib
+                export CFLAGS=""
+              '';
+            });
         };
-      }
-    );
+      });
 }
