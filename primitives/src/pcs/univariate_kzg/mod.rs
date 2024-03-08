@@ -668,7 +668,7 @@ pub(crate) mod icicle {
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
         /// The full cycle of computing poly-commit on GPU
-        fn commit_with_gpu(
+        fn gpu_commit(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             poly: &DensePolynomial<E::ScalarField>,
         ) -> Result<Commitment<E>, PCSError> {
@@ -679,40 +679,73 @@ pub(crate) mod icicle {
                 start_timer!(|| format!("Committing to polynomial of degree {} ", poly.degree()));
 
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, poly.degree())?;
-            let poly_on_gpu = Self::load_poly_to_gpu(poly)?;
-            let msm_result_on_gpu = Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, 1, &stream)?;
-            let comm = Self::load_commitments_to_host(msm_result_on_gpu, &stream)?[0];
-
+            let comm = Self::gpu_commit_with_loaded_prover_param(&mut srs_on_gpu, poly, &stream)?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(commit_time);
 
             Ok(comm)
         }
 
-        /// Similar to [`Self::commit_with_gpu()`] but for a batch of poly of
+        /// Compute `PCS::commit()` with SRS already loaded on GPU
+        /// Return the commitment on CPU
+        ///
+        /// # NOTE
+        /// - we assume a stream is already prepared, you can create one if not
+        /// via `warmup_new_stream()`
+        fn gpu_commit_with_loaded_prover_param<'srs>(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
+            poly: &DensePolynomial<E::ScalarField>,
+            stream: &CudaStream,
+        ) -> Result<Commitment<E>, PCSError> {
+            let poly_on_gpu = Self::load_poly_to_gpu(poly)?;
+            let msm_result_on_gpu =
+                Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, 1, stream)?;
+            let comm = Self::load_commitments_to_host(msm_result_on_gpu, stream)?[0];
+
+            Ok(comm)
+        }
+
+        /// Similar to [`Self::gpu_commit()`] but for a batch of poly of
         /// the same degree
-        fn batch_commit_with_gpu(
+        fn gpu_batch_commit(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             polys: &[DensePolynomial<E::ScalarField>],
         ) -> Result<Vec<Commitment<E>>, PCSError> {
             let stream = warmup_new_stream().unwrap();
 
             let degree = polys[0].degree();
+            if polys.iter().any(|p| p.degree() != degree) {
+                return Err(PCSError::InvalidParameters(
+                    "all polys should have the same degree".to_string(),
+                ));
+            }
+
             #[cfg(feature = "kzg-print-trace")]
             let commit_time = start_timer!(|| format!(
                 "Committing to {} polys of degree {} ",
                 polys.len(),
                 degree,
             ));
-
             let mut srs_on_gpu = Self::load_prover_param_to_gpu(prover_param, degree)?;
-            let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
-            let msm_result_on_gpu =
-                Self::commit_on_gpu(&mut srs_on_gpu, &poly_on_gpu, polys.len(), &stream)?;
-            let comms = Self::load_commitments_to_host(msm_result_on_gpu, &stream)?;
-
+            let comms =
+                Self::gpu_batch_commit_with_loaded_prover_param(&mut srs_on_gpu, polys, &stream)?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(commit_time);
+
+            Ok(comms)
+        }
+
+        /// Compute `PCS::commit()` with SRS already loaded on GPU
+        /// Return a vector of commitments on CPU
+        fn gpu_batch_commit_with_loaded_prover_param<'srs>(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
+            polys: &[DensePolynomial<E::ScalarField>],
+            stream: &CudaStream,
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
+            let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
+            let msm_result_on_gpu =
+                Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, polys.len(), &stream)?;
+            let comms = Self::load_commitments_to_host(msm_result_on_gpu, stream)?;
 
             Ok(comms)
         }
@@ -1280,20 +1313,15 @@ mod tests {
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
             );
-            let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
+            let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit(&ck, &p)?;
 
             // step-by-step commitment on gpu
-            let poly_on_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p)?;
-            let msm_result_on_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
-                &mut srs_on_gpu,
-                &poly_on_gpu,
-                1,
-                &stream,
-            )?;
-            let comm2 = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitments_to_host(
-                msm_result_on_gpu,
-                &stream,
-            )?[0];
+            let comm2 =
+                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit_with_loaded_prover_param(
+                    &mut srs_on_gpu,
+                    &p,
+                    &stream,
+                )?;
             assert_eq!(comm, comm2);
 
             let polys: Vec<_> = (0..10)
@@ -1303,8 +1331,7 @@ mod tests {
                     )
                 })
                 .collect();
-            let _comms =
-                <UnivariateKzgPCS<E> as GPUCommit<E, C>>::batch_commit_with_gpu(&ck, &polys)?;
+            let _comms = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_batch_commit(&ck, &polys)?;
 
             Ok(())
         }
@@ -1331,7 +1358,7 @@ mod tests {
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                         degree, rng,
                     );
-                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_with_gpu(&ck, &p)?;
+                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit(&ck, &p)?;
                 let comm_cpu = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 assert_eq!(comm_gpu, comm_cpu);
 
@@ -1350,7 +1377,7 @@ mod tests {
                         degree, rng,
                     )).collect();
                 let comms_gpu =
-                    <UnivariateKzgPCS<E> as GPUCommit<E, C>>::batch_commit_with_gpu(&ck, &polys)?;
+                    <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_batch_commit(&ck, &polys)?;
                 let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
                 assert_eq!(comms_gpu, comms_cpu);
             }
@@ -1360,8 +1387,12 @@ mod tests {
         #[test]
         fn test_gpu_e2e() {
             test_gpu_e2e_template::<Bn254, IcicleBn254>().unwrap();
+        }
+
+        #[cfg(feature = "kzg-print-trace")]
+        #[test]
+        fn profile_gpu_commit() {
             // testing on large degree for profiling
-            #[cfg(feature = "kzg-print-trace")]
             gpu_profiling::<Bn254, IcicleBn254>().unwrap();
         }
     }

@@ -82,21 +82,12 @@ where
             &log_degree,
             |b, _log_degree| {
                 b.iter(|| {
-                    // step-by-step commitment on gpu
-                    let poly_on_gpu =
-                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_poly_to_gpu(&p).unwrap();
-                    let msm_result_on_gpu =
-                        <UnivariateKzgPCS<E> as GPUCommit<E, C>>::commit_on_gpu(
-                            &mut srs_on_gpu,
-                            &poly_on_gpu,
-                            &stream,
-                        )
-                        .unwrap();
-                    let _comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::load_commitment_to_host(
-                        msm_result_on_gpu,
+                    <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit_with_loaded_prover_param(
+                        &mut srs_on_gpu,
+                        &p,
                         &stream,
                     )
-                    .unwrap();
+                    .unwrap()
                 })
             },
         );
