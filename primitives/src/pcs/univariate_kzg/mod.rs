@@ -983,11 +983,7 @@ pub(crate) mod icicle {
             batch_size: usize,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
-            let trimmed_srs_size = if batch_size == 1 {
-                poly.len()
-            } else {
-                prover_param.len()
-            };
+            let trimmed_srs_size = poly.len() / batch_size;
             let trimmed_prover_param = match prover_param {
                 HostOrDeviceSlice::Device(ck, device_id) => {
                     HostOrDeviceSlice::Device(&mut ck[..trimmed_srs_size], *device_id)
@@ -1305,7 +1301,7 @@ mod tests {
         {
             let rng = &mut test_rng();
             let stream = warmup_new_stream().unwrap();
-            let degree = 2usize.pow(20);
+            let degree = 2usize.pow(22);
 
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, _vk) = pp.trim(degree)?;
@@ -1315,6 +1311,7 @@ mod tests {
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
             );
+
             let _comm =
                 <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit_with_loaded_prover_param(
                     &mut srs_on_gpu,
@@ -1322,10 +1319,11 @@ mod tests {
                     &stream,
                 )?;
 
-            let polys: Vec<_> = (0..10)
+            let polys: Vec<_> = (0..8)
                 .map(|_| {
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
-                        degree, rng,
+                        degree / 8,
+                        rng,
                     )
                 })
                 .collect();
