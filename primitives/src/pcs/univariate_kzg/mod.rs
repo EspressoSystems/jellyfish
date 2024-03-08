@@ -793,10 +793,10 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Group");
-            let bases: Vec<IcicleAffine<C>> =
-                parallelizable_slice_iter(&prover_param.powers_of_g[..supported_degree + 1])
-                    .map(|&p| Self::ark_affine_to_icicle(p))
-                    .collect();
+            let bases: Vec<IcicleAffine<C>> = prover_param.powers_of_g[..supported_degree + 1]
+                .par_iter()
+                .map(|&p| Self::ark_affine_to_icicle(p))
+                .collect();
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
 
@@ -819,7 +819,8 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
-            let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(&poly.coeffs()[..size])
+            let scalars: Vec<C::ScalarField> = poly.coeffs()[..size]
+                .par_iter()
                 .map(|&s| Self::ark_field_to_icicle(s))
                 .collect();
             #[cfg(feature = "kzg-print-trace")]
@@ -857,12 +858,12 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
-            let scalars: Vec<C::ScalarField> = parallelizable_slice_iter(polys)
-                .map(|poly| {
-                    parallelizable_slice_iter(&poly.coeffs()[..size])
-                        .map(|&s| Self::ark_field_to_icicle(s))
-                })
-                .flatten()
+            let scalars: Vec<C::ScalarField> = polys
+                .iter()
+                .flat_map(|poly| poly.coeffs())
+                .collect::<Vec<_>>()
+                .into_par_iter()
+                .map(|&s| Self::ark_field_to_icicle(s))
                 .collect();
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
@@ -950,7 +951,8 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ICICLE->ark: Group");
-            let comms = parallelizable_slice_iter(&msm_host_result)
+            let comms = msm_host_result
+                .par_iter()
                 .map(|p| Commitment(p.to_ark().into_affine()))
                 .collect();
             #[cfg(feature = "kzg-print-trace")]
