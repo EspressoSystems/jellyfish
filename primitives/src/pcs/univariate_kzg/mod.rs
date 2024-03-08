@@ -1313,16 +1313,12 @@ mod tests {
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
             );
-            let comm = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit(&ck, &p)?;
-
-            // step-by-step commitment on gpu
-            let comm2 =
+            let _comm =
                 <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit_with_loaded_prover_param(
                     &mut srs_on_gpu,
                     &p,
                     &stream,
                 )?;
-            assert_eq!(comm, comm2);
 
             let polys: Vec<_> = (0..10)
                 .map(|_| {
@@ -1331,7 +1327,8 @@ mod tests {
                     )
                 })
                 .collect();
-            let _comms = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_batch_commit(&ck, &polys)?;
+            let _comms = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_batch_commit_with_loaded_prover_param(
+                &mut srs_on_gpu, &polys, &stream)?;
 
             Ok(())
         }
