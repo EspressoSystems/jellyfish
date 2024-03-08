@@ -51,6 +51,27 @@
 <a href="#50" id="50">50</a>
 <a href="#51" id="51">51</a>
 <a href="#52" id="52">52</a>
+<a href="#53" id="53">53</a>
+<a href="#54" id="54">54</a>
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -64,6 +85,10 @@
 <span class="kw">use </span>ark_serialize::SerializationError;
 <span class="kw">use </span>ark_std::string::{String, ToString};
 <span class="kw">use </span>displaydoc::Display;
+<span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
+</span><span class="kw">use </span>icicle_core::error::IcicleError;
+<span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
+</span><span class="kw">use </span>icicle_cuda_runtime::error::CudaError;
 
 <span class="doccomment">/// A `enum` specifying the possible failure modes of the PCS.
 </span><span class="attr">#[derive(Display, Debug)]
@@ -82,6 +107,9 @@
     </span>TranscriptError(TranscriptError),
     <span class="doccomment">/// Error from upstream dependencies: {0}
     </span>UpstreamError(String),
+    <span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
+    </span><span class="doccomment">/// Error from ICICLE: {0}
+    </span>IcicleError(String),
 }
 
 <span class="kw">impl </span>ark_std::error::Error <span class="kw">for </span>PCSError {}
@@ -101,6 +129,20 @@
 <span class="kw">impl </span>From&lt;PrimitivesError&gt; <span class="kw">for </span>PCSError {
     <span class="kw">fn </span>from(e: PrimitivesError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::UpstreamError(e.to_string())
+    }
+}
+
+<span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
+</span><span class="kw">impl </span>From&lt;IcicleError&gt; <span class="kw">for </span>PCSError {
+    <span class="kw">fn </span>from(e: IcicleError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::IcicleError(<span class="macro">ark_std::format!</span>(<span class="string">"{:?}"</span>, e))
+    }
+}
+<span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
+</span><span class="kw">impl </span>From&lt;CudaError&gt; <span class="kw">for </span>PCSError {
+    <span class="kw">fn </span>from(e: CudaError) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>icicle_err = IcicleError::from_cuda_error(e);
+        icicle_err.into()
     }
 }
 </code></pre></div></section></main></body></html>

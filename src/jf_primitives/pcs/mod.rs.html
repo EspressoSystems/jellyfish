@@ -402,12 +402,12 @@
 
 </span><span class="doccomment">//! Polynomial Commitment Scheme
 </span><span class="kw">pub mod </span>errors;
-<span class="kw">mod </span>multilinear_kzg;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>multilinear_kzg;
 <span class="kw">mod </span>poly;
 <span class="kw">pub mod </span>prelude;
 <span class="kw">mod </span>structs;
 <span class="kw">pub mod </span>transcript;
-<span class="kw">mod </span>univariate_kzg;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>univariate_kzg;
 
 <span class="kw">use </span>ark_ff::{FftField, Field};
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
