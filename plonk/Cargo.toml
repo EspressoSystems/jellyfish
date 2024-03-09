@@ -47,6 +47,7 @@ hex = "^0.4.3"
 [[bench]]
 name = "plonk-benches"
 path = "benches/bench.rs"
+required-features = ["test-srs"]
 harness = false
 
 [features]
@@ -77,6 +78,11 @@ parallel = [
     "dep:rayon",
 ]
 test-srs = []
+icicle = [
+       "jf-primitives/icicle",
+       "parallel",
+]
+
 
 [[example]]
 name = "proof-of-exp"

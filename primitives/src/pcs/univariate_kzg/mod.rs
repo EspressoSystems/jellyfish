@@ -658,8 +658,145 @@ pub(crate) mod icicle {
     use ark_ec::{short_weierstrass::Affine, CurveConfig};
     use ark_ff::BigInteger;
 
+    pub trait GPUCommit<E>
+    where
+        E: Pairing,
+    {
+        /// The icicle equivalent curve configuration
+        type IcicleEquivalentCurve;
+        /// The icicle type for base field
+        type IcicleBaseField;
+        /// The icicle type for scalar field
+        type IcicleScalarField: Default;
+        /// The icicle type for affine points
+        type IcicleAffine: Default;
+        /// The icicle type for projective points
+        type IcicleProjective;
+
+        /// The full cycle of computing poly-commit on GPU
+        fn gpu_commit(
+            prover_param: impl Borrow<UnivariateProverParam<E>>,
+            poly: &DensePolynomial<E::ScalarField>,
+        ) -> Result<Commitment<E>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// Compute `PCS::commit()` with SRS already loaded on GPU
+        /// Return the commitment on CPU
+        ///
+        /// # NOTE
+        /// - we assume a stream is already prepared, you can create one if not
+        /// via `warmup_new_stream()`
+        fn gpu_commit_with_loaded_prover_param<'srs>(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, Self::IcicleAffine>,
+            poly: &DensePolynomial<E::ScalarField>,
+            stream: &CudaStream,
+        ) -> Result<Commitment<E>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// Compute `PCS::commit()` with SRS already loaded on GPU
+        /// Return a vector of commitments on CPU
+        fn gpu_batch_commit_with_loaded_prover_param<'srs>(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, Self::IcicleAffine>,
+            polys: &[DensePolynomial<E::ScalarField>],
+            stream: &CudaStream,
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// type conversion (specializable/overridable for concrete types) from
+        /// field in arkworks to icicle
+        ///
+        /// # NOTE
+        /// returned icicle field is in normal affine (not montgomery) form
+        fn ark_field_to_icicle(f: E::ScalarField) -> Self::IcicleScalarField {
+            Default::default()
+        }
+
+        /// type conversion (specializable/overridable for concrete types) from
+        /// affine point in arkworks to icicle
+        ///
+        /// # NOTE
+        /// returned icicle field is in normal affine (not montgomery) form
+        fn ark_affine_to_icicle(p: E::G1Affine) -> Self::IcicleAffine {
+            Default::default()
+        }
+
+        /// Similar to [`Self::gpu_commit()`] but for a batch of poly of
+        /// the same degree
+        fn gpu_batch_commit(
+            prover_param: impl Borrow<UnivariateProverParam<E>>,
+            polys: &[DensePolynomial<E::ScalarField>],
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// load SRS for prover onto GPU once, and reuse for future poly-commit
+        /// of degree<=`supported_degree`
+        fn load_prover_param_to_gpu<'srs>(
+            prover_param: impl Borrow<UnivariateProverParam<E>>,
+            supported_degree: usize,
+        ) -> Result<HostOrDeviceSlice<'srs, Self::IcicleAffine>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// Load polynomial's coefficients onto GPU, preparing for poly-commit
+        /// on GPU later
+        fn load_poly_to_gpu<'poly>(
+            poly: &DensePolynomial<E::ScalarField>,
+        ) -> Result<HostOrDeviceSlice<'poly, Self::IcicleScalarField>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of poly
+        /// of the same degree at once
+        fn load_batch_poly_to_gpu<'poly>(
+            polys: &[DensePolynomial<E::ScalarField>],
+        ) -> Result<HostOrDeviceSlice<'poly, Self::IcicleScalarField>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// Comupte PCS commit using GPU
+        /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
+        ///
+        /// - `stream` is a `CudaStream`, you should consider using
+        /// `crate::icicle_deps::warmup_new_stream()` to create one
+        /// - `batch_size`: by default is 1, during batch_commit it could be
+        ///   greater
+        ///
+        /// # NOTE
+        /// - if you pass in `HostOrDeviceSlice::Host`, then `icicle_core::msm`
+        ///   will push them onto GPU first; if they are already on GPU, i.e.
+        ///   `HostOrDeviceSlice::Device`, then msm will be executed directly
+        /// - the result is also temporarily on GPU, you can use
+        ///   `Self::load_commitments_to_host()` to load back to host CPU.
+        /// - this function is async/non-blocking, thus returns a CudaStream
+        ///   handle
+        /// - default implementation assume normal(non-montgomery) affine for
+        ///   bases and scalars, consider overwrite this function if you want
+        ///   otherwise
+        fn commit_on_gpu<'comm, 'srs, 'poly>(
+            prover_param: &mut HostOrDeviceSlice<'srs, Self::IcicleAffine>,
+            poly: &HostOrDeviceSlice<'poly, Self::IcicleScalarField>,
+            batch_size: usize,
+            stream: &CudaStream,
+        ) -> Result<HostOrDeviceSlice<'comm, Self::IcicleProjective>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+
+        /// After `Self::commit_on_gpu()`, you can choose to load the result
+        /// back to host CPU
+        fn load_commitments_to_host<'comm>(
+            commitments_on_gpu: HostOrDeviceSlice<'comm, Self::IcicleProjective>,
+            stream: &CudaStream,
+        ) -> Result<Vec<Commitment<E>>, PCSError> {
+            Err(PCSError::IcicleError("Unsupported curve".to_string()))
+        }
+    }
+
     /// Trait for GPU-accelerated PCS.commit APIs
-    pub trait GPUCommit<E, C>
+    impl<E, C> GPUCommit<E> for UnivariateKzgPCS<E>
     where
         C: IcicleCurve + MSM<C>,
         C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
@@ -667,6 +804,11 @@ pub(crate) mod icicle {
         <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
         E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
     {
+        type IcicleEquivalentCurve = C;
+        type IcicleBaseField = C::BaseField;
+        type IcicleScalarField = C::ScalarField;
+        type IcicleAffine = IcicleAffine<C>;
+        type IcicleProjective = IcicleProjective<C>;
         /// The full cycle of computing poly-commit on GPU
         fn gpu_commit(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
@@ -686,12 +828,6 @@ pub(crate) mod icicle {
             Ok(comm)
         }
 
-        /// Compute `PCS::commit()` with SRS already loaded on GPU
-        /// Return the commitment on CPU
-        ///
-        /// # NOTE
-        /// - we assume a stream is already prepared, you can create one if not
-        /// via `warmup_new_stream()`
         fn gpu_commit_with_loaded_prover_param<'srs>(
             prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
             poly: &DensePolynomial<E::ScalarField>,
@@ -705,8 +841,6 @@ pub(crate) mod icicle {
             Ok(comm)
         }
 
-        /// Similar to [`Self::gpu_commit()`] but for a batch of poly of
-        /// the same degree
         fn gpu_batch_commit(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             polys: &[DensePolynomial<E::ScalarField>],
@@ -735,10 +869,8 @@ pub(crate) mod icicle {
             Ok(comms)
         }
 
-        /// Compute `PCS::commit()` with SRS already loaded on GPU
-        /// Return a vector of commitments on CPU
         fn gpu_batch_commit_with_loaded_prover_param<'srs>(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, Self::IcicleAffine>,
             polys: &[DensePolynomial<E::ScalarField>],
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
@@ -750,21 +882,11 @@ pub(crate) mod icicle {
             Ok(comms)
         }
 
-        /// type conversion (specializable/overridable for concrete types) from
-        /// field in arkworks to icicle
-        ///
-        /// # NOTE
-        /// returned icicle field is in normal affine (not montgomery) form
         fn ark_field_to_icicle(f: E::ScalarField) -> C::ScalarField {
             // this is more memory efficient than default `.from_ark`
             C::ScalarField::from_bytes_le(&f.into_bigint().to_bytes_le())
         }
 
-        /// type conversion (specializable/overridable for concrete types) from
-        /// affine point in arkworks to icicle
-        ///
-        /// # NOTE
-        /// returned icicle field is in normal affine (not montgomery) form
         fn ark_affine_to_icicle(p: E::G1Affine) -> IcicleAffine<C> {
             // this is more memory efficient than default `.from_ark`
             IcicleAffine {
@@ -773,8 +895,6 @@ pub(crate) mod icicle {
             }
         }
 
-        /// load SRS for prover onto GPU once, and reuse for future poly-commit
-        /// of degree<=`supported_degree`
         fn load_prover_param_to_gpu<'srs>(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             supported_degree: usize,
@@ -809,8 +929,6 @@ pub(crate) mod icicle {
             Ok(bases_on_device)
         }
 
-        /// Load polynomial's coefficients onto GPU, preparing for poly-commit
-        /// on GPU later
         fn load_poly_to_gpu<'poly>(
             poly: &DensePolynomial<E::ScalarField>,
         ) -> Result<HostOrDeviceSlice<'poly, C::ScalarField>, PCSError> {
@@ -835,8 +953,6 @@ pub(crate) mod icicle {
             Ok(scalars_on_device)
         }
 
-        /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of poly
-        /// of the same degree at once
         fn load_batch_poly_to_gpu<'poly>(
             polys: &[DensePolynomial<E::ScalarField>],
         ) -> Result<HostOrDeviceSlice<'poly, C::ScalarField>, PCSError> {
@@ -877,25 +993,6 @@ pub(crate) mod icicle {
             Ok(scalars_on_device)
         }
 
-        /// Comupte PCS commit using GPU
-        /// Similar to [`Self::commit()`] but with ICICE's GPU-accelerated MSM
-        ///
-        /// - `stream` is a `CudaStream`, you should consider using
-        /// `crate::icicle_deps::warmup_new_stream()` to create one
-        /// - `batch_size`: by default is 1, during batch_commit it could be
-        ///   greater
-        ///
-        /// # NOTE
-        /// - if you pass in `HostOrDeviceSlice::Host`, then `icicle_core::msm`
-        ///   will push them onto GPU first; if they are already on GPU, i.e.
-        ///   `HostOrDeviceSlice::Device`, then msm will be executed directly
-        /// - the result is also temporarily on GPU, you can use
-        ///   `Self::load_commitments_to_host()` to load back to host CPU.
-        /// - this function is async/non-blocking, thus returns a CudaStream
-        ///   handle
-        /// - default implementation assume normal(non-montgomery) affine for
-        ///   bases and scalars, consider overwrite this function if you want
-        ///   otherwise
         fn commit_on_gpu<'comm, 'srs, 'poly>(
             prover_param: &mut HostOrDeviceSlice<'srs, IcicleAffine<C>>,
             poly: &HostOrDeviceSlice<'poly, C::ScalarField>,
@@ -962,62 +1059,68 @@ pub(crate) mod icicle {
         }
     }
 
-    impl GPUCommit<Bn254, IcicleBn254> for UnivariateKzgPCS<Bn254> {
-        // NOTE: we are directly using montgomery form, different from default!
-        fn ark_field_to_icicle(f: ark_bn254::Fr) -> icicle_bn254::curve::ScalarField {
-            icicle_bn254::curve::ScalarField::from(f.0 .0)
-        }
+    // impl GPUCommit<Bls12_381> for UnivariateKzgPCS<Bls12_381> {
+    //     type IcicleEquivalentCurve = IcicleBls12_381;
+    // }
 
-        // NOTE: we are directly using montgomery form, different from default!
-        fn ark_affine_to_icicle(p: ark_bn254::G1Affine) -> icicle_bn254::curve::G1Affine {
-            icicle_bn254::curve::G1Affine {
-                x: icicle_bn254::curve::BaseField::from(p.x.0 .0),
-                y: icicle_bn254::curve::BaseField::from(p.y.0 .0),
-            }
-        }
+    // impl GPUCommit<Bn254> for UnivariateKzgPCS<Bn254> {
+    //     type IcicleEquivalentCurve = IcicleBn254;
 
-        // NOTE: both bases and scalars are in montgomery form on GPU
-        fn commit_on_gpu<'comm, 'srs, 'poly>(
-            prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
-            poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
-            batch_size: usize,
-            stream: &CudaStream,
-        ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
-            let trimmed_srs_size = poly.len() / batch_size;
-            let trimmed_prover_param = match prover_param {
-                HostOrDeviceSlice::Device(ck, device_id) => {
-                    HostOrDeviceSlice::Device(&mut ck[..trimmed_srs_size], *device_id)
-                },
-                HostOrDeviceSlice::Host(ck) => {
-                    HostOrDeviceSlice::Host(ck[..trimmed_srs_size].to_vec())
-                },
-            };
-            let mut msm_result =
-                HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(
-                    batch_size,
-                )?;
+    //     // NOTE: we are directly using montgomery form, different from default!
+    //     fn ark_field_to_icicle(f: ark_bn254::Fr) -> icicle_bn254::curve::ScalarField {
+    //         icicle_bn254::curve::ScalarField::from(f.0 .0)
+    //     }
 
-            let mut cfg = MSMConfig::default();
-            cfg.ctx.stream = stream;
-            cfg.is_async = true;
-            cfg.are_scalars_montgomery_form = true;
-            cfg.are_points_montgomery_form = true;
+    //     // NOTE: we are directly using montgomery form, different from default!
+    //     fn ark_affine_to_icicle(p: ark_bn254::G1Affine) -> icicle_bn254::curve::G1Affine {
+    //         icicle_bn254::curve::G1Affine {
+    //             x: icicle_bn254::curve::BaseField::from(p.x.0 .0),
+    //             y: icicle_bn254::curve::BaseField::from(p.y.0 .0),
+    //         }
+    //     }
 
-            #[cfg(feature = "kzg-print-trace")]
-            let msm_time = start_timer!(|| "GPU-accelerated MSM");
-            icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
-            #[cfg(feature = "kzg-print-trace")]
-            end_timer!(msm_time);
+    //     // NOTE: both bases and scalars are in montgomery form on GPU
+    //     fn commit_on_gpu<'comm, 'srs, 'poly>(
+    //         prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
+    //         poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+    //         batch_size: usize,
+    //         stream: &CudaStream,
+    //     ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
+    //         let trimmed_srs_size = poly.len() / batch_size;
+    //         let trimmed_prover_param = match prover_param {
+    //             HostOrDeviceSlice::Device(ck, device_id) => {
+    //                 HostOrDeviceSlice::Device(&mut ck[..trimmed_srs_size], *device_id)
+    //             },
+    //             HostOrDeviceSlice::Host(ck) => {
+    //                 HostOrDeviceSlice::Host(ck[..trimmed_srs_size].to_vec())
+    //             },
+    //         };
+    //         let mut msm_result =
+    //             HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(
+    //                 batch_size,
+    //             )?;
 
-            // TODO: update after https://github.com/ingonyama-zk/icicle/pull/412
-            // FIXME: even though `trimmed_prover_param` is an internal, temporary variable
-            // there's still risk of double-free if `msm()` above panic. Switching to
-            // `ManuallyDrop<HostOrDeviceSlice>` would fix this issue but aren't supported
-            // by ICICLE's msm API.
-            ark_std::mem::forget(trimmed_prover_param);
-            Ok(msm_result)
-        }
-    }
+    //         let mut cfg = MSMConfig::default();
+    //         cfg.ctx.stream = stream;
+    //         cfg.is_async = true;
+    //         cfg.are_scalars_montgomery_form = true;
+    //         cfg.are_points_montgomery_form = true;
+
+    //         #[cfg(feature = "kzg-print-trace")]
+    //         let msm_time = start_timer!(|| "GPU-accelerated MSM");
+    //         icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
+    //         #[cfg(feature = "kzg-print-trace")]
+    //         end_timer!(msm_time);
+
+    //         // TODO: update after https://github.com/ingonyama-zk/icicle/pull/412
+    //         // FIXME: even though `trimmed_prover_param` is an internal, temporary variable
+    //         // there's still risk of double-free if `msm()` above panic. Switching to
+    //         // `ManuallyDrop<HostOrDeviceSlice>` would fix this issue but aren't supported
+    //         // by ICICLE's msm API.
+    //         ark_std::mem::forget(trimmed_prover_param);
+    //         Ok(msm_result)
+    //     }
+    // }
 }
 
 fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
@@ -1281,23 +1384,23 @@ mod tests {
 
     #[cfg(feature = "icicle")]
     mod icicle {
+        use ark_ec::short_weierstrass::Affine;
+
         use super::*;
         use crate::{
             icicle_deps::{curves::*, *},
             pcs::univariate_kzg::icicle::GPUCommit,
         };
-        use ark_ec::{short_weierstrass::Affine, CurveConfig};
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E, C>() -> Result<(), PCSError>
         where
-            C: IcicleCurve + MSM<C>,
-            C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
-            C::BaseField:
-                ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
-            <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
-            E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
-            UnivariateKzgPCS<E>: GPUCommit<E, C>,
+            E: Pairing<
+                G1Affine = Affine<
+                    <GPUCommit<E>::IcicleEquivalentCurve as IcicleCurve>::ArkSWConfig,
+                >,
+            >,
+            UnivariateKzgPCS<E>: GPUCommit<E>,
         {
             let rng = &mut test_rng();
             let stream = warmup_new_stream().unwrap();
@@ -1333,15 +1436,14 @@ mod tests {
             Ok(())
         }
 
-        fn test_gpu_e2e_template<E, C>() -> Result<(), PCSError>
+        fn test_gpu_e2e_template<E>() -> Result<(), PCSError>
         where
-            C: IcicleCurve + MSM<C>,
-            C::ScalarField: ArkConvertible<ArkEquivalent = E::ScalarField>,
-            C::BaseField:
-                ArkConvertible<ArkEquivalent = <C::ArkSWConfig as CurveConfig>::BaseField>,
-            <C::ArkSWConfig as CurveConfig>::BaseField: PrimeField,
-            E: Pairing<G1Affine = Affine<<C as IcicleCurve>::ArkSWConfig>>,
-            UnivariateKzgPCS<E>: GPUCommit<E, C>,
+            E: Pairing<
+                G1Affine = Affine<
+                    <GPUCommit<E>::IcicleEquivalentCurve as IcicleCurve>::ArkSWConfig,
+                >,
+            >,
+            UnivariateKzgPCS<E>: GPUCommit<E>,
         {
             let rng = &mut test_rng();
             let supported_degree = 2usize.pow(12);
@@ -1355,7 +1457,7 @@ mod tests {
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                         degree, rng,
                     );
-                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E, C>>::gpu_commit(&ck, &p)?;
+                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E>>::gpu_commit(&ck, &p)?;
                 let comm_cpu = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 assert_eq!(comm_gpu, comm_cpu);
 

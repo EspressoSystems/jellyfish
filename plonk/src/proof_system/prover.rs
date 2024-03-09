@@ -27,6 +27,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+#[cfg(feature = "icicle")]
+use jf_primitives::icicle_deps::GPUCommit;
 use jf_primitives::pcs::{
     prelude::{Commitment, UnivariateKzgPCS},
     PolynomialCommitmentScheme,
@@ -82,7 +84,12 @@ impl<E: Pairing> Prover<E> {
             .into_iter()
             .map(|poly| self.mask_polynomial(prng, poly, 1))
             .collect();
+
+        #[cfg(feature = "icicle")]
+        let wires_poly_comms = UnivariateKzgPCS::gpu_batch_commit(ck, &wire_polys)?;
+        #[cfg(not(feature = "icicle"))]
         let wires_poly_comms = UnivariateKzgPCS::batch_commit(ck, &wire_polys)?;
+
         let pub_input_poly = cs.compute_pub_input_polynomial()?;
         Ok(((wires_poly_comms, wire_polys), pub_input_poly))
     }
@@ -116,7 +123,12 @@ impl<E: Pairing> Prover<E> {
         let h_1_poly = self.mask_polynomial(prng, h_1_poly, 2);
         let h_2_poly = self.mask_polynomial(prng, h_2_poly, 2);
         let h_polys = vec![h_1_poly, h_2_poly];
+
+        #[cfg(feature = "icicle")]
+        let h_poly_comms = UnivariateKzgPCS::gpu_batch_commit(ck, &h_polys)?;
+        #[cfg(not(feature = "icicle"))]
         let h_poly_comms = UnivariateKzgPCS::batch_commit(ck, &h_polys)?;
+
         Ok(((h_poly_comms, h_polys), sorted_vec, merged_lookup_table))
     }
 
@@ -134,7 +146,12 @@ impl<E: Pairing> Prover<E> {
             cs.compute_prod_permutation_polynomial(&challenges.beta, &challenges.gamma)?,
             2,
         );
+
+        #[cfg(feature = "icicle")]
+        let prod_perm_comm = UnivariateKzgPCS::gpu_commit(ck, &prod_perm_poly)?;
+        #[cfg(not(feature = "icicle"))]
         let prod_perm_comm = UnivariateKzgPCS::commit(ck, &prod_perm_poly)?;
+
         Ok((prod_perm_comm, prod_perm_poly))
     }
 
@@ -170,7 +187,12 @@ impl<E: Pairing> Prover<E> {
             )?,
             2,
         );
+
+        #[cfg(feature = "icicle")]
+        let prod_lookup_comm = UnivariateKzgPCS::gpu_commit(ck, &prod_lookup_poly)?;
+        #[cfg(not(feature = "icicle"))]
         let prod_lookup_comm = UnivariateKzgPCS::commit(ck, &prod_lookup_poly)?;
+
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
@@ -189,6 +211,10 @@ impl<E: Pairing> Prover<E> {
         let quot_poly =
             self.compute_quotient_polynomial(challenges, pks, online_oracles, num_wire_types)?;
         let split_quot_polys = self.split_quotient_polynomial(prng, &quot_poly, num_wire_types)?;
+
+        #[cfg(feature = "icicle")]
+        let split_quot_poly_comms = UnivariateKzgPCS::gpu_batch_commit(ck, &split_quot_polys)?;
+        #[cfg(not(feature = "icicle"))]
         let split_quot_poly_comms = UnivariateKzgPCS::batch_commit(ck, &split_quot_polys)?;
 
         Ok((split_quot_poly_comms, split_quot_polys))
@@ -482,7 +508,10 @@ impl<E: Pairing> Prover<E> {
             DensePolynomial::from_coefficients_vec(vec![-*eval_point, E::ScalarField::one()]);
         let witness_poly = &batch_poly / &divisor;
 
-        UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError)
+        #[cfg(feature = "icicle")]
+        return UnivariateKzgPCS::gpu_commit(ck, &witness_poly).map_err(PlonkError::PCSError);
+        #[cfg(not(feature = "icicle"))]
+        return UnivariateKzgPCS::commit(ck, &witness_poly).map_err(PlonkError::PCSError);
     }
 
     /// Compute the quotient polynomial via (i)FFTs.
