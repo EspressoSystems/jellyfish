@@ -45,7 +45,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         name: Enable Rust Caching
 
-      - name: typos-action
+      - name: Spell Check
         uses: crate-ci/typos@v1.19.0
 
       - name: Format Check
