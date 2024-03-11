@@ -110,7 +110,7 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
     - `MerkleTreeScheme` is the abstraction of a static array accumulator,
     - `AppendableMerkleTreeScheme` is the abstraction of an appendable vector accumulator.
     - `UniversalMerkleTreeScheme` is the abstraction of a key-value map accumulator, which also supports non-membership query/proof.
-    - `ForgetableMerkleTreeScheme` allows you to forget/remember some leafs from the memory.
+    - `ForgetableMerkleTreeScheme` allows you to forget/remember some leaves from the memory.
   - Implementation of new generic merkle tree: `MerkleTree` and `UniversalMerkleTree`
     - A default rate-3 rescue merkle tree implementation is provided in `prelude` module.
     - Other example instantiation can be found in `example` module.

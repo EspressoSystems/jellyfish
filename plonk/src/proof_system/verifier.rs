@@ -687,7 +687,7 @@ where
             }
         }
 
-        // Add splitted quotient commitments
+        // Add split quotient commitments
         let zeta_to_n_plus_2 =
             (E::ScalarField::one() + vanish_eval) * challenges.zeta * challenges.zeta;
         let mut coeff = vanish_eval.neg();

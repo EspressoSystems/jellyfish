@@ -157,7 +157,7 @@ pub trait PolynomialCommitmentScheme {
     ) -> Result<(Self::BatchProof, Vec<Self::Evaluation>), PCSError>;
 
     /// Open a single polynomial at multiple points.
-    /// The naive default implmenetation just open them individually.
+    /// The naive default implementation just open them individually.
     #[allow(clippy::type_complexity)]
     fn multi_open(
         prover_param: impl Borrow<<Self::SRS as StructuredReferenceString>::ProverParam>,

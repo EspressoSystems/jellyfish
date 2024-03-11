@@ -59,7 +59,7 @@ pub struct Proof<E: Pairing> {
     /// The polynomial commitment for the wire permutation argument.
     pub prod_perm_poly_comm: Commitment<E>,
 
-    /// Splitted quotient polynomial commitments.
+    /// Split quotient polynomial commitments.
     pub split_quot_poly_comms: Vec<Commitment<E>>,
 
     /// (Aggregated) proof of evaluations at challenge point `zeta`.
@@ -238,7 +238,7 @@ pub struct BatchProof<E: Pairing> {
     /// The list of partial proofs for Plookup argument
     pub(crate) plookup_proofs_vec: Vec<Option<PlookupProof<E>>>,
 
-    /// Splitted quotient polynomial commitments.
+    /// Split quotient polynomial commitments.
     pub(crate) split_quot_poly_comms: Vec<Commitment<E>>,
 
     /// (Aggregated) proof of evaluations at challenge point `zeta`.

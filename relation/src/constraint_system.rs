@@ -1732,7 +1732,7 @@ pub(crate) mod test {
         assert_eq!(circuit.num_gates(), 9);
         // Check the number of variables:
         assert_eq!(circuit.num_vars(), 8);
-        // Chech the number of public inputs:
+        // Check the number of public inputs:
         assert_eq!(circuit.num_inputs(), 1);
 
         // Check circuit satisfiability

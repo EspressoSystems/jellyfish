@@ -401,7 +401,7 @@ where
     T: NodeValue,
 {
     /// Forget a leaf from the merkle tree. Internal branch merkle node will
-    /// also be forgotten if all its leafs are forgotten.
+    /// also be forgotten if all its leaves are forgotten.
     /// WARN(#495): this method breaks non-membership proofs.
     #[allow(clippy::type_complexity)]
     pub(crate) fn forget_internal(

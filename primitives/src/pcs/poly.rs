@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Generalized DensePolynomial, allowing coefficients to be group elements, not
-//! just field elemnts.
+//! just field elements.
 //! Inspired by and natural extension of arkwork's `ark-poly` code.
 
 use ark_ff::{FftField, Field, Zero};

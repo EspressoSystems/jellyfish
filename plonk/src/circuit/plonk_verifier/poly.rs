@@ -696,7 +696,7 @@ where
         Err(PlonkError::IteratorOutOfRange)?;
     }
     // ============================================
-    // Add splitted quotient commitments
+    // Add split quotient commitments
     // ============================================
     let zeta_square_fp_elem_var = circuit.mod_mul(
         &challenges.zeta,

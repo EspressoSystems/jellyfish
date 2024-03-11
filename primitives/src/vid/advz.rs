@@ -154,7 +154,7 @@ where
                 .map_err(vid)?;
         let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
-                "fail to construct doman of size {}",
+                "fail to construct domain of size {}",
                 chunk_size
             ))
         })?;

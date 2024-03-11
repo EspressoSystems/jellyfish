@@ -174,8 +174,8 @@ impl<E: Pairing> Prover<E> {
         Ok((prod_lookup_comm, prod_lookup_poly))
     }
 
-    /// Round 3: Return the splitted quotient polynomials and their commitments.
-    /// Note that the first `num_wire_types`-1 splitted quotient polynomials
+    /// Round 3: Return the split quotient polynomials and their commitments.
+    /// Note that the first `num_wire_types`-1 split quotient polynomials
     /// have degree `domain_size`+1.
     pub(crate) fn run_3rd_round<R: CryptoRng + RngCore>(
         &self,
