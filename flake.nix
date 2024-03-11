@@ -120,9 +120,9 @@
                 entry = "cargo sort -w";
                 pass_filenames = false;
               };
-              spell-checking = {
+              spell-check = {
                 enable = true;
-                description = "Spell checking";
+                description = "Spell check";
                 entry = "typos";
                 pass_filenames = false;
               };
