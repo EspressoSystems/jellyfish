@@ -79,7 +79,7 @@ where
 }
 
 // [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
-// I want to do this but I cant:
+// I want to do this but I can't:
 // type Kzg<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>;
 // So instead I do this:
 type KzgPolynomial<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Polynomial;
@@ -154,7 +154,7 @@ where
                 .map_err(vid)?;
         let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
-                "fail to construct doman of size {}",
+                "fail to construct domain of size {}",
                 chunk_size
             ))
         })?;

@@ -88,7 +88,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
     }
 
     /// Generate a commitment for a polynomial
-    /// Note that the scheme is not hidding
+    /// Note that the scheme is not hiding
     fn commit(
         prover_param: impl Borrow<UnivariateProverParam<E>>,
         poly: &Self::Polynomial,

@@ -62,6 +62,7 @@
               clang-tools_15
               clangStdenv
               llvm_15
+              typos
             ] ++ lib.optionals stdenv.isDarwin
               [ darwin.apple_sdk.frameworks.Security ];
 
@@ -117,6 +118,12 @@
                 enable = true;
                 description = "Ensure Cargo.toml are sorted";
                 entry = "cargo sort -w";
+                pass_filenames = false;
+              };
+              spell-check = {
+                enable = true;
+                description = "Spell check";
+                entry = "typos";
                 pass_filenames = false;
               };
               nixpkgs-fmt.enable = true;

@@ -1,0 +1,3 @@
+[default.extend-words]
+# temporary fix for `*_2nd_*`
+nd = "nd"

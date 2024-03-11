@@ -170,7 +170,7 @@ where
 /// Returns the byte length of the [`PrimeField`] modulus minus 1.
 ///
 /// It should be possible to do all this at compile time but I don't know how.
-/// Want to panic on overflow, so use checked arithetic and type conversion.
+/// Want to panic on overflow, so use checked arithmetic and type conversion.
 pub fn elem_byte_capacity<F: PrimeField>() -> usize {
     usize::try_from((F::MODULUS_BIT_SIZE - 1) / 8)
         .expect("prime field modulus byte len should fit into usize")

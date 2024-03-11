@@ -39,7 +39,7 @@ pub mod vdf;
 pub mod vid;
 pub mod vrf;
 
-/// dependecies required for ICICLE-related code, group import for convenience
+/// dependencies required for ICICLE-related code, group import for convenience
 #[cfg(feature = "icicle")]
 pub mod icicle_deps {
     pub use icicle_core::{

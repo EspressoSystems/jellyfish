@@ -4,7 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Implemtation of circuit lookup related gadgets
+//! Implementation of circuit lookup related gadgets
 
 use super::utils::next_multiple;
 use crate::{

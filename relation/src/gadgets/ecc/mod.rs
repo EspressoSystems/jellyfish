@@ -529,8 +529,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
 // {4^i * [G]}_{i=0..n-1}, {2 * 4^i * [G]}_{i=0..n-1}, and {3 * 4^i *
 // [G]}_{i=0..n-1}
 // TODO (tessico): this used to operate on Affine points, but now it takes in
-// Projective points. There are some known issues with outputting projectives,
-// we should make sure that the usage here is safe.
+// Projective points. There are some known issues with outputting projective
+// points, we should make sure that the usage here is safe.
 fn compute_base_points<E: ScalarMul>(base: &E, len: usize) -> Result<[Vec<E>; 3], CircuitError> {
     if len == 0 {
         return Err(CircuitError::InternalError(

@@ -156,7 +156,7 @@ pub struct BatchProofVar<F: PrimeField> {
     // /// The list of partial proofs for Plookup argument
     // not used for plonk verification circuit
     // pub(crate) plookup_proofs_vec: Vec<Option<PlookupProofVar>>,
-    /// Splitted quotient polynomial commitments.
+    /// Split quotient polynomial commitments.
     pub(crate) split_quot_poly_comms: Vec<PointVariable>,
 
     /// (Aggregated) proof of evaluations at challenge point `zeta`.
