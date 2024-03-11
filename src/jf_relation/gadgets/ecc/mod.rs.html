@@ -1828,8 +1828,8 @@
 // {4^i * [G]}_{i=0..n-1}, {2 * 4^i * [G]}_{i=0..n-1}, and {3 * 4^i *
 // [G]}_{i=0..n-1}
 // TODO (tessico): this used to operate on Affine points, but now it takes in
-// Projective points. There are some known issues with outputting projectives,
-// we should make sure that the usage here is safe.
+// Projective points. There are some known issues with outputting projective
+// points, we should make sure that the usage here is safe.
 </span><span class="kw">fn </span>compute_base_points&lt;E: ScalarMul&gt;(base: <span class="kw-2">&amp;</span>E, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;[Vec&lt;E&gt;; <span class="number">3</span>], CircuitError&gt; {
     <span class="kw">if </span>len == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Err</span>(CircuitError::InternalError(

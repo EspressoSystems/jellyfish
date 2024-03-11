@@ -1025,7 +1025,7 @@
 
     <span class="doccomment">/// Constrain that a*b=c in the emulated field.
     /// Checking that a * b - k * E::MODULUS = c.
-    /// This function doesn't perform emulated variable validaty check on the
+    /// This function doesn't perform emulated variable validity check on the
     /// input a, b and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_mul_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -1171,7 +1171,7 @@
     }
 
     <span class="doccomment">/// Constrain that a*b=c in the emulated field for a constant b.
-    /// This function doesn't perform emulated variable validaty check on the
+    /// This function doesn't perform emulated variable validity check on the
     /// input a and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_mul_constant_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -1289,7 +1289,7 @@
 
     <span class="doccomment">/// Constrain that a+b=c in the emulated field.
     /// Checking whether a + b = k * E::MODULUS + c
-    /// This function doesn't perform emulated variable validaty check on the
+    /// This function doesn't perform emulated variable validity check on the
     /// input a, b and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_add_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -1372,7 +1372,7 @@
     }
 
     <span class="doccomment">/// Constrain that a+b=c in the emulated field.
-    /// This function doesn't perform emulated variable validaty check on the
+    /// This function doesn't perform emulated variable validity check on the
     /// input a and c. We assume that they are already performed elsewhere.
     </span><span class="kw">pub fn </span>emulated_add_constant_gate&lt;E: EmulationConfig&lt;F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,

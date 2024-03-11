@@ -568,7 +568,7 @@ or equal a given constant <code>val</code>.</p>
     c: &amp;<a class="struct" href="../gadgets/struct.EmulatedVariable.html" title="struct jf_relation::gadgets::EmulatedVariable">EmulatedVariable</a>&lt;E&gt;
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.76.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.unit.html">()</a>, <a class="enum" href="../errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></summary><div class="docblock"><p>Constrain that a*b=c in the emulated field.
 Checking that a * b - k * E::MODULUS = c.
-This function doesn’t perform emulated variable validaty check on the
+This function doesn’t perform emulated variable validity check on the
 input a, b and c. We assume that they are already performed elsewhere.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.emulated_mul" class="method"><a class="src rightside" href="../../src/jf_relation/gadgets/emulated.rs.html#293-302">source</a><h4 class="code-header">pub fn <a href="#method.emulated_mul" class="fn">emulated_mul</a>&lt;E: <a class="trait" href="../gadgets/trait.EmulationConfig.html" title="trait jf_relation::gadgets::EmulationConfig">EmulationConfig</a>&lt;F&gt;&gt;(
     &amp;mut self,
@@ -581,7 +581,7 @@ input a, b and c. We assume that they are already performed elsewhere.</p>
     b: E,
     c: &amp;<a class="struct" href="../gadgets/struct.EmulatedVariable.html" title="struct jf_relation::gadgets::EmulatedVariable">EmulatedVariable</a>&lt;E&gt;
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.76.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.unit.html">()</a>, <a class="enum" href="../errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></summary><div class="docblock"><p>Constrain that a*b=c in the emulated field for a constant b.
-This function doesn’t perform emulated variable validaty check on the
+This function doesn’t perform emulated variable validity check on the
 input a and c. We assume that they are already performed elsewhere.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.emulated_mul_constant" class="method"><a class="src rightside" href="../../src/jf_relation/gadgets/emulated.rs.html#410-419">source</a><h4 class="code-header">pub fn <a href="#method.emulated_mul_constant" class="fn">emulated_mul_constant</a>&lt;E: <a class="trait" href="../gadgets/trait.EmulationConfig.html" title="trait jf_relation::gadgets::EmulationConfig">EmulationConfig</a>&lt;F&gt;&gt;(
     &amp;mut self,
@@ -595,7 +595,7 @@ input a and c. We assume that they are already performed elsewhere.</p>
     c: &amp;<a class="struct" href="../gadgets/struct.EmulatedVariable.html" title="struct jf_relation::gadgets::EmulatedVariable">EmulatedVariable</a>&lt;E&gt;
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.76.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.unit.html">()</a>, <a class="enum" href="../errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></summary><div class="docblock"><p>Constrain that a+b=c in the emulated field.
 Checking whether a + b = k * E::MODULUS + c
-This function doesn’t perform emulated variable validaty check on the
+This function doesn’t perform emulated variable validity check on the
 input a, b and c. We assume that they are already performed elsewhere.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.emulated_add" class="method"><a class="src rightside" href="../../src/jf_relation/gadgets/emulated.rs.html#482-491">source</a><h4 class="code-header">pub fn <a href="#method.emulated_add" class="fn">emulated_add</a>&lt;E: <a class="trait" href="../gadgets/trait.EmulationConfig.html" title="trait jf_relation::gadgets::EmulationConfig">EmulationConfig</a>&lt;F&gt;&gt;(
     &amp;mut self,
@@ -613,7 +613,7 @@ input a, b and c. We assume that they are already performed elsewhere.</p>
     b: E,
     c: &amp;<a class="struct" href="../gadgets/struct.EmulatedVariable.html" title="struct jf_relation::gadgets::EmulatedVariable">EmulatedVariable</a>&lt;E&gt;
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.76.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.76.0/std/primitive.unit.html">()</a>, <a class="enum" href="../errors/enum.CircuitError.html" title="enum jf_relation::errors::CircuitError">CircuitError</a>&gt;</h4></section></summary><div class="docblock"><p>Constrain that a+b=c in the emulated field.
-This function doesn’t perform emulated variable validaty check on the
+This function doesn’t perform emulated variable validity check on the
 input a and c. We assume that they are already performed elsewhere.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.emulated_add_constant" class="method"><a class="src rightside" href="../../src/jf_relation/gadgets/emulated.rs.html#566-575">source</a><h4 class="code-header">pub fn <a href="#method.emulated_add_constant" class="fn">emulated_add_constant</a>&lt;E: <a class="trait" href="../gadgets/trait.EmulationConfig.html" title="trait jf_relation::gadgets::EmulationConfig">EmulationConfig</a>&lt;F&gt;&gt;(
     &amp;mut self,

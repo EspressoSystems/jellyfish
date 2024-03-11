@@ -553,7 +553,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="self">Self</span>::BatchProof, Vec&lt;<span class="self">Self</span>::Evaluation&gt;), PCSError&gt;;
 
     <span class="doccomment">/// Open a single polynomial at multiple points.
-    /// The naive default implmenetation just open them individually.
+    /// The naive default implementation just open them individually.
     </span><span class="attr">#[allow(clippy::type_complexity)]
     </span><span class="kw">fn </span>multi_open(
         prover_param: <span class="kw">impl </span>Borrow&lt;&lt;<span class="self">Self</span>::SRS <span class="kw">as </span>StructuredReferenceString&gt;::ProverParam&gt;,

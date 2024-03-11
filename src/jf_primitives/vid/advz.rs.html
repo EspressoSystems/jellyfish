@@ -1139,7 +1139,7 @@
 }
 
 <span class="comment">// [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
-// I want to do this but I cant:
+// I want to do this but I can't:
 // type Kzg&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; as PolynomialCommitmentScheme&gt;;
 // So instead I do this:
 </span><span class="kw">type </span>KzgPolynomial&lt;E&gt; = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>PolynomialCommitmentScheme&gt;::Polynomial;
@@ -1214,7 +1214,7 @@
                 .map_err(vid)<span class="question-mark">?</span>;
         <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
             VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
-                <span class="string">"fail to construct doman of size {}"</span>,
+                <span class="string">"fail to construct domain of size {}"</span>,
                 chunk_size
             ))
         })<span class="question-mark">?</span>;
