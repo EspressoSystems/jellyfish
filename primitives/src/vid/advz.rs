@@ -79,7 +79,7 @@ where
 }
 
 // [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
-// I want to do this but I cant:
+// I want to do this but I can't:
 // type Kzg<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>;
 // So instead I do this:
 type KzgPolynomial<E> = <UnivariateKzgPCS<E> as PolynomialCommitmentScheme>::Polynomial;

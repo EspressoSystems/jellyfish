@@ -261,7 +261,7 @@ where
 /// parameter.
 ///
 /// It should be possible to do all this at compile time but I don't know how.
-/// Want to panic on overflow, so use checked arithetic and type conversion.
+/// Want to panic on overflow, so use checked arithmetic and type conversion.
 ///
 /// # Returns
 ///

@@ -53,7 +53,7 @@ Jellyfish is `no_std` compliant and compilable to WASM target environment, just 
 
 ### Backends
 
-To choose different backends for arithemtics of `curve25519-dalek`, which is currently
+To choose different backends for arithmetics of `curve25519-dalek`, which is currently
 used by `jf-primitives/aead`, set the environment variable:
 
 ```
