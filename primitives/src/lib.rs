@@ -45,7 +45,6 @@ pub mod icicle_deps {
     pub use icicle_core::{
         curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
         msm::{MSMConfig, MSM},
-        traits::{ArkConvertible, FieldImpl},
     };
     pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
 
