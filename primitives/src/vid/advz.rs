@@ -9,6 +9,8 @@
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
+#[cfg(feature = "gpu-vid")]
+use crate::icicle_deps::*;
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -54,12 +56,24 @@ mod bytes_to_field;
 pub mod payload_prover;
 pub mod precomputable;
 
+/// Normal Advz VID that's only using CPU
+pub type Advz<E, H> = AdvzInternal<E, H, ()>;
+/// Advz with GPU support
+#[cfg(feature = "gpu-vid")]
+pub type AdvzGPU<'srs, E, H> = AdvzInternal<
+    E,
+    H,
+    HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+>;
+
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
+/// Consider using either [`Advz`] or [`AdvzGPU`].
 ///
 /// - `E` is any [`Pairing`]
 /// - `H` is a [`digest::Digest`]-compatible hash function.
+/// - `T` is a reference to GPU memory that's storing SRS
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Advz<E, H>
+pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
@@ -75,7 +89,9 @@ where
     // but that method consumes `other` and its doc is unclear.
     eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
-    _pd: PhantomData<H>,
+    // reference to the SRS/ProverParam loaded to GPU
+    srs_on_gpu: Option<T>,
+    _pd: (PhantomData<H>, PhantomData<T>),
 }
 
 // [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
@@ -97,7 +113,7 @@ type KzgEvalsMerkleTreeIndex<E, H> = <KzgEvalsMerkleTree<E, H> as MerkleTreeSche
 type KzgEvalsMerkleTreeProof<E, H> =
     <KzgEvalsMerkleTree<E, H> as MerkleTreeScheme>::MembershipProof;
 
-impl<E, H> Advz<E, H>
+impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
@@ -106,7 +122,7 @@ where
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
-    pub fn new(
+    pub(crate) fn new_internal(
         payload_chunk_size: usize, // k
         num_storage_nodes: usize,  // n (code rate: r = k/n)
         multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
@@ -178,8 +194,51 @@ where
             vk,
             multi_open_domain,
             eval_domain,
+            srs_on_gpu: None,
             _pd: Default::default(),
         })
+    }
+}
+
+impl<E, H> Advz<E, H>
+where
+    E: Pairing,
+{
+    /// Construct a new VID instance
+    /// See doc in [`Self::new_internal()`]
+    pub fn new(
+        payload_chunk_size: usize,
+        num_storage_nodes: usize,
+        multiplicity: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)
+    }
+}
+
+#[cfg(feature = "gpu-vid")]
+impl<'srs, E, H> AdvzGPU<'srs, E, H>
+where
+    E: Pairing,
+    UnivariateKzgPCS<E>: GPUCommittable<E>,
+{
+    /// construct a new VID instance with SRS loaded to GPU
+    /// See doc in [`Self::new_internal()`]
+    pub fn new(
+        payload_chunk_size: usize,
+        num_storage_nodes: usize,
+        multiplicity: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        let mut advz =
+            Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)?;
+        let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
+            &advz.ck,
+            advz.ck.powers_of_g.len() - 1,
+        )
+        .map_err(vid)?;
+        advz.srs_on_gpu = Some(srs_on_gpu);
+        Ok(advz)
     }
 }
 

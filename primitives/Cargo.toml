@@ -151,7 +151,6 @@ icicle = [
        "icicle-core",
        "icicle-core/arkworks",
        "icicle-bn254",
-       "icicle-bls12-381",
-       "icicle-bls12-377",
        "parallel",
 ]
+gpu-vid = ["icicle"]
