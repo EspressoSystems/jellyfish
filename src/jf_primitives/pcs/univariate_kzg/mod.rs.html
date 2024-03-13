@@ -1395,6 +1395,11 @@
 <a href="#1394" id="1394">1394</a>
 <a href="#1395" id="1395">1395</a>
 <a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2052,18 +2057,12 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>icicle {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::icicle_deps::{curves::<span class="kw-2">*</span>, <span class="kw-2">*</span>};
-    <span class="kw">use </span>ark_ec::{short_weierstrass::Affine, CurveConfig};
-    <span class="kw">use </span>ark_ff::BigInteger;
 
     <span class="doccomment">/// Trait for GPU-accelerated PCS.commit APIs
-    </span><span class="kw">pub trait </span>GPUCommit&lt;E, C&gt;
-    <span class="kw">where
-        </span>C: IcicleCurve + MSM&lt;C&gt;,
-        C::ScalarField: ArkConvertible&lt;ArkEquivalent = E::ScalarField&gt;,
-        C::BaseField: ArkConvertible&lt;ArkEquivalent = &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField&gt;,
-        &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField: PrimeField,
-        E: Pairing&lt;G1Affine = Affine&lt;&lt;C <span class="kw">as </span>IcicleCurve&gt;::ArkSWConfig&gt;&gt;,
-    {
+    </span><span class="kw">pub trait </span>GPUCommittable&lt;E: Pairing&gt; {
+        <span class="doccomment">/// Equivalent Curve from ICICLE
+        </span><span class="kw">type </span>IC: IcicleCurve + MSM&lt;<span class="self">Self</span>::IC&gt;;
+
         <span class="doccomment">/// The full cycle of computing poly-commit on GPU
         </span><span class="kw">fn </span>gpu_commit(
             prover_param: <span class="kw">impl </span>Borrow&lt;UnivariateProverParam&lt;E&gt;&gt;,
@@ -2090,7 +2089,7 @@
         /// - we assume a stream is already prepared, you can create one if not
         /// via `warmup_new_stream()`
         </span><span class="kw">fn </span>gpu_commit_with_loaded_prover_param&lt;<span class="lifetime">'srs</span>&gt;(
-            prover_param_on_gpu: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;C&gt;&gt;,
+            prover_param_on_gpu: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt;,
             poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
             stream: <span class="kw-2">&amp;</span>CudaStream,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Commitment&lt;E&gt;, PCSError&gt; {
@@ -2135,7 +2134,7 @@
         <span class="doccomment">/// Compute `PCS::commit()` with SRS already loaded on GPU
         /// Return a vector of commitments on CPU
         </span><span class="kw">fn </span>gpu_batch_commit_with_loaded_prover_param&lt;<span class="lifetime">'srs</span>&gt;(
-            prover_param_on_gpu: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;C&gt;&gt;,
+            prover_param_on_gpu: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt;,
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
             stream: <span class="kw-2">&amp;</span>CudaStream,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Commitment&lt;E&gt;&gt;, PCSError&gt; {
@@ -2152,30 +2151,24 @@
         ///
         /// # NOTE
         /// returned icicle field is in normal affine (not montgomery) form
-        </span><span class="kw">fn </span>ark_field_to_icicle(f: E::ScalarField) -&gt; C::ScalarField {
-            <span class="comment">// this is more memory efficient than default `.from_ark`
-            </span>C::ScalarField::from_bytes_le(<span class="kw-2">&amp;</span>f.into_bigint().to_bytes_le())
-        }
+        </span><span class="kw">fn </span>ark_field_to_icicle(f: E::ScalarField) -&gt; &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField;
 
         <span class="doccomment">/// type conversion (specializable/overridable for concrete types) from
         /// affine point in arkworks to icicle
         ///
         /// # NOTE
         /// returned icicle field is in normal affine (not montgomery) form
-        </span><span class="kw">fn </span>ark_affine_to_icicle(p: E::G1Affine) -&gt; IcicleAffine&lt;C&gt; {
-            <span class="comment">// this is more memory efficient than default `.from_ark`
-            </span>IcicleAffine {
-                x: C::BaseField::from_bytes_le(<span class="kw-2">&amp;</span>p.x.into_bigint().to_bytes_le()),
-                y: C::BaseField::from_bytes_le(<span class="kw-2">&amp;</span>p.y.into_bigint().to_bytes_le()),
-            }
-        }
+        </span><span class="kw">fn </span>ark_affine_to_icicle(p: E::G1Affine) -&gt; IcicleAffine&lt;<span class="self">Self</span>::IC&gt;;
+
+        <span class="doccomment">/// type conversion from icicle Projective to arkworks' G1Affine
+        </span><span class="kw">fn </span>icicle_projective_to_ark(p: IcicleProjective&lt;<span class="self">Self</span>::IC&gt;) -&gt; E::G1Affine;
 
         <span class="doccomment">/// load SRS for prover onto GPU once, and reuse for future poly-commit
         /// of degree&lt;=`supported_degree`
         </span><span class="kw">fn </span>load_prover_param_to_gpu&lt;<span class="lifetime">'srs</span>&gt;(
             prover_param: <span class="kw">impl </span>Borrow&lt;UnivariateProverParam&lt;E&gt;&gt;,
             supported_degree: usize,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;C&gt;&gt;, PCSError&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt;, PCSError&gt; {
             <span class="kw">let </span>prover_param = prover_param.borrow();
             <span class="kw">if </span>supported_degree &gt; prover_param.powers_of_g.len() - <span class="number">1 </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(<span class="macro">format!</span>(
@@ -2186,11 +2179,12 @@
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>bases_on_device =
-                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, IcicleAffine&lt;C&gt;&gt;::cuda_malloc(supported_degree + <span class="number">1</span>)<span class="question-mark">?</span>;
+                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt;::cuda_malloc(supported_degree + <span class="number">1</span>)<span class="question-mark">?</span>;
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ark-&gt;ICICLE: Group"</span>);
-            <span class="kw">let </span>bases: Vec&lt;IcicleAffine&lt;C&gt;&gt; = prover_param.powers_of_g[..supported_degree + <span class="number">1</span>]
+            <span class="kw">let </span>bases: Vec&lt;IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt; = prover_param.powers_of_g
+                [..supported_degree + <span class="number">1</span>]
                 .par_iter()
                 .map(|<span class="kw-2">&amp;</span>p| <span class="self">Self</span>::ark_affine_to_icicle(p))
                 .collect();
@@ -2210,13 +2204,15 @@
         /// on GPU later
         </span><span class="kw">fn </span>load_poly_to_gpu&lt;<span class="lifetime">'poly</span>&gt;(
             poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, C::ScalarField&gt;, PCSError&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;, PCSError&gt;
+        {
             <span class="kw">let </span>size = poly.degree() + <span class="number">1</span>;
-            <span class="kw">let </span><span class="kw-2">mut </span>scalars_on_device = HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, C::ScalarField&gt;::cuda_malloc(size)<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>scalars_on_device =
+                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;::cuda_malloc(size)<span class="question-mark">?</span>;
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ark-&gt;ICICLE: Scalar"</span>);
-            <span class="kw">let </span>scalars: Vec&lt;C::ScalarField&gt; = poly.coeffs()[..size]
+            <span class="kw">let </span>scalars: Vec&lt;&lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt; = poly.coeffs()[..size]
                 .par_iter()
                 .map(|<span class="kw-2">&amp;</span>s| <span class="self">Self</span>::ark_field_to_icicle(s))
                 .collect();
@@ -2236,7 +2232,8 @@
         /// of the same degree at once
         </span><span class="kw">fn </span>load_batch_poly_to_gpu&lt;<span class="lifetime">'poly</span>&gt;(
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, C::ScalarField&gt;, PCSError&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;, PCSError&gt;
+        {
             <span class="kw">if </span>polys.is_empty() {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
                     <span class="string">"number of polys must be positive"</span>.to_string(),
@@ -2250,12 +2247,14 @@
                 ));
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>scalars_on_device =
-                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, C::ScalarField&gt;::cuda_malloc(size * polys.len())<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>scalars_on_device = HostOrDeviceSlice::&lt;
+                <span class="lifetime">'_</span>,
+                &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField,
+            &gt;::cuda_malloc(size * polys.len())<span class="question-mark">?</span>;
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ark-&gt;ICICLE: Scalar"</span>);
-            <span class="kw">let </span>scalars: Vec&lt;C::ScalarField&gt; = polys
+            <span class="kw">let </span>scalars: Vec&lt;&lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt; = polys
                 .iter()
                 .flat_map(|poly| poly.coeffs())
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
@@ -2294,11 +2293,11 @@
         ///   bases and scalars, consider overwrite this function if you want
         ///   otherwise
         </span><span class="kw">fn </span>commit_on_gpu&lt;<span class="lifetime">'comm</span>, <span class="lifetime">'srs</span>, <span class="lifetime">'poly</span>&gt;(
-            prover_param: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;C&gt;&gt;,
-            poly: <span class="kw-2">&amp;</span>HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, C::ScalarField&gt;,
+            prover_param: <span class="kw-2">&amp;mut </span>HostOrDeviceSlice&lt;<span class="lifetime">'srs</span>, IcicleAffine&lt;<span class="self">Self</span>::IC&gt;&gt;,
+            poly: <span class="kw-2">&amp;</span>HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;,
             batch_size: usize,
             stream: <span class="kw-2">&amp;</span>CudaStream,
-        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'comm</span>, IcicleProjective&lt;C&gt;&gt;, PCSError&gt; {
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'comm</span>, IcicleProjective&lt;<span class="self">Self</span>::IC&gt;&gt;, PCSError&gt; {
             <span class="kw">let </span>trimmed_prover_param = <span class="kw">match </span>prover_param {
                 HostOrDeviceSlice::Device(ck, device_id) =&gt; {
                     HostOrDeviceSlice::Device(<span class="kw-2">&amp;mut </span>ck[..poly.len()], <span class="kw-2">*</span>device_id)
@@ -2307,7 +2306,7 @@
             };
 
             <span class="kw">let </span><span class="kw-2">mut </span>msm_result =
-                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, IcicleProjective&lt;C&gt;&gt;::cuda_malloc(batch_size)<span class="question-mark">?</span>;
+                HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, IcicleProjective&lt;<span class="self">Self</span>::IC&gt;&gt;::cuda_malloc(batch_size)<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>cfg = MSMConfig::default();
             cfg.ctx.stream = <span class="kw-2">&amp;</span>stream;
@@ -2328,7 +2327,7 @@
         <span class="doccomment">/// After `Self::commit_on_gpu()`, you can choose to load the result
         /// back to host CPU
         </span><span class="kw">fn </span>load_commitments_to_host&lt;<span class="lifetime">'comm</span>&gt;(
-            commitments_on_gpu: HostOrDeviceSlice&lt;<span class="lifetime">'comm</span>, IcicleProjective&lt;C&gt;&gt;,
+            commitments_on_gpu: HostOrDeviceSlice&lt;<span class="lifetime">'comm</span>, IcicleProjective&lt;<span class="self">Self</span>::IC&gt;&gt;,
             stream: <span class="kw-2">&amp;</span>CudaStream,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Commitment&lt;E&gt;&gt;, PCSError&gt; {
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
@@ -2341,7 +2340,8 @@
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>load_time = <span class="macro">start_timer!</span>(|| <span class="string">"Load MSM result GPU-&gt;CPU"</span>);
-            <span class="kw">let </span><span class="kw-2">mut </span>msm_host_result = <span class="macro">vec!</span>[IcicleProjective::&lt;C&gt;::zero(); commitments_on_gpu.len()];
+            <span class="kw">let </span><span class="kw-2">mut </span>msm_host_result =
+                <span class="macro">vec!</span>[IcicleProjective::&lt;<span class="self">Self</span>::IC&gt;::zero(); commitments_on_gpu.len()];
             commitments_on_gpu.copy_to_host(<span class="kw-2">&amp;mut </span>msm_host_result[..])<span class="question-mark">?</span>;
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="macro">end_timer!</span>(load_time);
@@ -2350,7 +2350,7 @@
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ICICLE-&gt;ark: Group"</span>);
             <span class="kw">let </span>comms = msm_host_result
                 .par_iter()
-                .map(|p| Commitment(p.to_ark().into_affine()))
+                .map(|<span class="kw-2">&amp;</span>p| Commitment(<span class="self">Self</span>::icicle_projective_to_ark(p)))
                 .collect();
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="macro">end_timer!</span>(conv_time);
@@ -2359,7 +2359,8 @@
         }
     }
 
-    <span class="kw">impl </span>GPUCommit&lt;Bn254, IcicleBn254&gt; <span class="kw">for </span>UnivariateKzgPCS&lt;Bn254&gt; {
+    <span class="kw">impl </span>GPUCommittable&lt;Bn254&gt; <span class="kw">for </span>UnivariateKzgPCS&lt;Bn254&gt; {
+        <span class="kw">type </span>IC = IcicleBn254;
         <span class="comment">// NOTE: we are directly using montgomery form, different from default!
         </span><span class="kw">fn </span>ark_field_to_icicle(f: ark_bn254::Fr) -&gt; icicle_bn254::curve::ScalarField {
             icicle_bn254::curve::ScalarField::from(f.<span class="number">0 </span>.<span class="number">0</span>)
@@ -2370,6 +2371,24 @@
             icicle_bn254::curve::G1Affine {
                 x: icicle_bn254::curve::BaseField::from(p.x.<span class="number">0 </span>.<span class="number">0</span>),
                 y: icicle_bn254::curve::BaseField::from(p.y.<span class="number">0 </span>.<span class="number">0</span>),
+            }
+        }
+
+        <span class="kw">fn </span>icicle_projective_to_ark(p: icicle_bn254::curve::G1Projective) -&gt; ark_bn254::G1Affine {
+            <span class="kw">use </span>ark_ff::biginteger::BigInteger256;
+
+            <span class="kw">let </span>ic_affine: icicle_bn254::curve::G1Affine = p.into();
+            <span class="kw">let </span>x_limbs: [u64; <span class="number">4</span>] = ic_affine.x.into();
+            <span class="kw">let </span>y_limbs: [u64; <span class="number">4</span>] = ic_affine.y.into();
+
+            <span class="kw">if </span>ic_affine == icicle_bn254::curve::G1Affine::zero() {
+                ark_bn254::G1Affine::zero()
+            } <span class="kw">else </span>{
+                ark_bn254::G1Affine {
+                    x: BigInteger256::new(x_limbs).into(),
+                    y: BigInteger256::new(y_limbs).into(),
+                    infinity: <span class="bool-val">false</span>,
+                }
             }
         }
 
@@ -2681,20 +2700,13 @@
         <span class="kw">use super</span>::<span class="kw-2">*</span>;
         <span class="kw">use crate</span>::{
             icicle_deps::{curves::<span class="kw-2">*</span>, <span class="kw-2">*</span>},
-            pcs::univariate_kzg::icicle::GPUCommit,
+            pcs::univariate_kzg::icicle::GPUCommittable,
         };
-        <span class="kw">use </span>ark_ec::{short_weierstrass::Affine, CurveConfig};
 
         <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
-        </span><span class="kw">fn </span>gpu_profiling&lt;E, C&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
+        </span><span class="kw">fn </span>gpu_profiling&lt;E: Pairing&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
         <span class="kw">where
-            </span>C: IcicleCurve + MSM&lt;C&gt;,
-            C::ScalarField: ArkConvertible&lt;ArkEquivalent = E::ScalarField&gt;,
-            C::BaseField:
-                ArkConvertible&lt;ArkEquivalent = &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField&gt;,
-            &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField: PrimeField,
-            E: Pairing&lt;G1Affine = Affine&lt;&lt;C <span class="kw">as </span>IcicleCurve&gt;::ArkSWConfig&gt;&gt;,
-            UnivariateKzgPCS&lt;E&gt;: GPUCommit&lt;E, C&gt;,
+            </span>UnivariateKzgPCS&lt;E&gt;: GPUCommittable&lt;E&gt;,
         {
             <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
             <span class="kw">let </span>stream = warmup_new_stream().unwrap();
@@ -2703,14 +2715,14 @@
             <span class="kw">let </span>pp = UnivariateKzgPCS::&lt;E&gt;::gen_srs_for_testing(rng, degree)<span class="question-mark">?</span>;
             <span class="kw">let </span>(ck, _vk) = pp.trim(degree)<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>srs_on_gpu =
-                &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommit&lt;E, C&gt;&gt;::load_prover_param_to_gpu(<span class="kw-2">&amp;</span>ck, degree)<span class="question-mark">?</span>;
+                &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::load_prover_param_to_gpu(<span class="kw-2">&amp;</span>ck, degree)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>p = &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
                 degree, rng,
             );
 
             <span class="kw">let </span>_comm =
-                &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommit&lt;E, C&gt;&gt;::gpu_commit_with_loaded_prover_param(
+                &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_commit_with_loaded_prover_param(
                     <span class="kw-2">&amp;mut </span>srs_on_gpu,
                     <span class="kw-2">&amp;</span>p,
                     <span class="kw-2">&amp;</span>stream,
@@ -2724,21 +2736,19 @@
                     )
                 })
                 .collect();
-            <span class="kw">let </span>_comms = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommit&lt;E, C&gt;&gt;::gpu_batch_commit_with_loaded_prover_param(
-                <span class="kw-2">&amp;mut </span>srs_on_gpu, <span class="kw-2">&amp;</span>polys, <span class="kw-2">&amp;</span>stream)<span class="question-mark">?</span>;
+            <span class="kw">let </span>_comms =
+                &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit_with_loaded_prover_param(
+                    <span class="kw-2">&amp;mut </span>srs_on_gpu,
+                    <span class="kw-2">&amp;</span>polys,
+                    <span class="kw-2">&amp;</span>stream,
+                )<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(())
         }
 
-        <span class="kw">fn </span>test_gpu_e2e_template&lt;E, C&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
+        <span class="kw">fn </span>test_gpu_e2e_template&lt;E: Pairing&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
         <span class="kw">where
-            </span>C: IcicleCurve + MSM&lt;C&gt;,
-            C::ScalarField: ArkConvertible&lt;ArkEquivalent = E::ScalarField&gt;,
-            C::BaseField:
-                ArkConvertible&lt;ArkEquivalent = &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField&gt;,
-            &lt;C::ArkSWConfig <span class="kw">as </span>CurveConfig&gt;::BaseField: PrimeField,
-            E: Pairing&lt;G1Affine = Affine&lt;&lt;C <span class="kw">as </span>IcicleCurve&gt;::ArkSWConfig&gt;&gt;,
-            UnivariateKzgPCS&lt;E&gt;: GPUCommit&lt;E, C&gt;,
+            </span>UnivariateKzgPCS&lt;E&gt;: GPUCommittable&lt;E&gt;,
         {
             <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
             <span class="kw">let </span>supported_degree = <span class="number">2usize</span>.pow(<span class="number">12</span>);
@@ -2752,7 +2762,7 @@
                     &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
                         degree, rng,
                     );
-                <span class="kw">let </span>comm_gpu = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommit&lt;E, C&gt;&gt;::gpu_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
+                <span class="kw">let </span>comm_gpu = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
                 <span class="kw">let </span>comm_cpu = UnivariateKzgPCS::&lt;E&gt;::commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>p)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(comm_gpu, comm_cpu);
 
@@ -2771,7 +2781,7 @@
                         degree, rng,
                     )).collect();
                 <span class="kw">let </span>comms_gpu =
-                    &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommit&lt;E, C&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
+                    &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
                 <span class="kw">let </span>comms_cpu = UnivariateKzgPCS::&lt;E&gt;::batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(comms_gpu, comms_cpu);
             }
@@ -2780,14 +2790,14 @@
 
         <span class="attr">#[test]
         </span><span class="kw">fn </span>test_gpu_e2e() {
-            test_gpu_e2e_template::&lt;Bn254, IcicleBn254&gt;().unwrap();
+            test_gpu_e2e_template::&lt;Bn254&gt;().unwrap();
         }
 
         <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         #[test]
         </span><span class="kw">fn </span>profile_gpu_commit() {
             <span class="comment">// testing on large degree for profiling
-            </span>gpu_profiling::&lt;Bn254, IcicleBn254&gt;().unwrap();
+            </span>gpu_profiling::&lt;Bn254&gt;().unwrap();
         }
     }
 }

@@ -72,7 +72,6 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -120,7 +119,6 @@
     <span class="kw">pub use </span>icicle_core::{
         curve::{Affine <span class="kw">as </span>IcicleAffine, Curve <span class="kw">as </span>IcicleCurve, Projective <span class="kw">as </span>IcicleProjective},
         msm::{MSMConfig, MSM},
-        traits::{ArkConvertible, FieldImpl},
     };
     <span class="kw">pub use </span>icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
 
@@ -133,7 +131,7 @@
         <span class="kw">pub use </span>icicle_bn254::curve::CurveCfg <span class="kw">as </span>IcicleBn254;
     }
 
-    <span class="kw">pub use </span><span class="kw">crate</span>::pcs::univariate_kzg::icicle::GPUCommit;
+    <span class="kw">pub use </span><span class="kw">crate</span>::pcs::univariate_kzg::icicle::GPUCommittable;
 
     <span class="comment">// TODO: remove this after `warmup()` is added upstream
     // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
