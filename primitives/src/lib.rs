@@ -45,7 +45,6 @@ pub mod icicle_deps {
     pub use icicle_core::{
         curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
         msm::{MSMConfig, MSM},
-        traits::{ArkConvertible, FieldImpl},
     };
     pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
 
@@ -58,7 +57,7 @@ pub mod icicle_deps {
         pub use icicle_bn254::curve::CurveCfg as IcicleBn254;
     }
 
-    pub use crate::pcs::univariate_kzg::icicle::GPUCommit;
+    pub use crate::pcs::univariate_kzg::icicle::GPUCommittable;
 
     // TODO: remove this after `warmup()` is added upstream
     // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
