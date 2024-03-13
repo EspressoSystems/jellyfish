@@ -657,7 +657,7 @@ pub(crate) mod icicle {
     use crate::icicle_deps::{curves::*, *};
 
     /// Trait for GPU-accelerated PCS.commit APIs
-    pub trait GPUCommit<E: Pairing> {
+    pub trait GPUCommittable<E: Pairing> {
         /// Equivalent Curve from ICICLE
         type IC: IcicleCurve + MSM<Self::IC>;
 
@@ -957,7 +957,7 @@ pub(crate) mod icicle {
         }
     }
 
-    impl GPUCommit<Bn254> for UnivariateKzgPCS<Bn254> {
+    impl GPUCommittable<Bn254> for UnivariateKzgPCS<Bn254> {
         type IC = IcicleBn254;
         // NOTE: we are directly using montgomery form, different from default!
         fn ark_field_to_icicle(f: ark_bn254::Fr) -> icicle_bn254::curve::ScalarField {
@@ -1298,13 +1298,13 @@ mod tests {
         use super::*;
         use crate::{
             icicle_deps::{curves::*, *},
-            pcs::univariate_kzg::icicle::GPUCommit,
+            pcs::univariate_kzg::icicle::GPUCommittable,
         };
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>
         where
-            UnivariateKzgPCS<E>: GPUCommit<E>,
+            UnivariateKzgPCS<E>: GPUCommittable<E>,
         {
             let rng = &mut test_rng();
             let stream = warmup_new_stream().unwrap();
@@ -1313,17 +1313,18 @@ mod tests {
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, _vk) = pp.trim(degree)?;
             let mut srs_on_gpu =
-                <UnivariateKzgPCS<E> as GPUCommit<E>>::load_prover_param_to_gpu(&ck, degree)?;
+                <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(&ck, degree)?;
 
             let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                 degree, rng,
             );
 
-            let _comm = <UnivariateKzgPCS<E> as GPUCommit<E>>::gpu_commit_with_loaded_prover_param(
-                &mut srs_on_gpu,
-                &p,
-                &stream,
-            )?;
+            let _comm =
+                <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_commit_with_loaded_prover_param(
+                    &mut srs_on_gpu,
+                    &p,
+                    &stream,
+                )?;
 
             let polys: Vec<_> = (0..8)
                 .map(|_| {
@@ -1334,7 +1335,7 @@ mod tests {
                 })
                 .collect();
             let _comms =
-                <UnivariateKzgPCS<E> as GPUCommit<E>>::gpu_batch_commit_with_loaded_prover_param(
+                <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
                     &mut srs_on_gpu,
                     &polys,
                     &stream,
@@ -1345,7 +1346,7 @@ mod tests {
 
         fn test_gpu_e2e_template<E: Pairing>() -> Result<(), PCSError>
         where
-            UnivariateKzgPCS<E>: GPUCommit<E>,
+            UnivariateKzgPCS<E>: GPUCommittable<E>,
         {
             let rng = &mut test_rng();
             let supported_degree = 2usize.pow(12);
@@ -1359,7 +1360,7 @@ mod tests {
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
                         degree, rng,
                     );
-                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommit<E>>::gpu_commit(&ck, &p)?;
+                let comm_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_commit(&ck, &p)?;
                 let comm_cpu = UnivariateKzgPCS::<E>::commit(&ck, &p)?;
                 assert_eq!(comm_gpu, comm_cpu);
 
@@ -1378,7 +1379,7 @@ mod tests {
                         degree, rng,
                     )).collect();
                 let comms_gpu =
-                    <UnivariateKzgPCS<E> as GPUCommit<E>>::gpu_batch_commit(&ck, &polys)?;
+                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &polys)?;
                 let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
                 assert_eq!(comms_gpu, comms_cpu);
             }
