@@ -1296,10 +1296,7 @@ mod tests {
     #[cfg(feature = "icicle")]
     mod icicle {
         use super::*;
-        use crate::{
-            icicle_deps::{curves::*, *},
-            pcs::univariate_kzg::icicle::GPUCommittable,
-        };
+        use crate::{icicle_deps::curves::*, pcs::univariate_kzg::icicle::GPUCommittable};
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>

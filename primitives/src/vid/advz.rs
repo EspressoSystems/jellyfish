@@ -365,8 +365,14 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload);
+        end_timer!(bytes_to_polys_time);
+
+        let poly_commits_time = start_timer!(|| "batch poly commit");
         let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
+        end_timer!(poly_commits_time);
+
         Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
@@ -938,6 +944,7 @@ mod tests {
 
     use crate::pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     use ark_bls12_381::Bls12_381;
+    use ark_bn254::Bn254;
     use ark_std::{
         rand::{CryptoRng, RngCore},
         vec,
@@ -951,10 +958,17 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+                .unwrap();
+
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
+        #[cfg(feature = "gpu-vid")]
+        let _ = advz_gpu.disperse(payload_random.clone());
         let _ = advz.disperse(payload_random);
     }
 
@@ -965,16 +979,24 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        let payload_random = init_random_payload(1 << 20, &mut rng);
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+                .unwrap();
+
+        let payload_random = init_random_payload(1 << 25, &mut rng);
+
+        #[cfg(feature = "gpu-vid")]
+        let _ = advz_gpu.commit_only(payload_random.clone());
 
         let _ = advz.commit_only(payload_random);
     }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1040,7 +1062,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1086,7 +1108,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1111,7 +1133,7 @@ mod tests {
 
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = avdz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
