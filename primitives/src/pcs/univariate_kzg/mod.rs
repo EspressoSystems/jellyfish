@@ -810,16 +810,18 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
-            let scalars: Vec<<Self::IC as IcicleCurve>::ScalarField> = poly.coeffs()[..size]
-                .par_iter()
-                .map(|&s| Self::ark_field_to_icicle(s))
-                .collect();
+            // We assume that two types use the same underline repr.
+            let scalars = unsafe {
+                poly.coeffs()[..size]
+                    .align_to::<<Self::IC as IcicleCurve>::ScalarField>()
+                    .1
+            };
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(conv_time);
 
             #[cfg(feature = "kzg-print-trace")]
             let load_time = start_timer!(|| "Load scalars: CPU->GPU");
-            scalars_on_device.copy_from_host(&scalars)?;
+            scalars_on_device.copy_from_host(scalars)?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
