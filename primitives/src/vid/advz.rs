@@ -295,7 +295,7 @@ where
     multiplicity: u32,
 }
 
-impl<E, H> VidScheme for Advz<E, H>
+impl<E, H, T> VidScheme for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
@@ -604,7 +604,7 @@ where
     }
 }
 
-impl<E, H> Advz<E, H>
+impl<E, H, SrsRef> AdvzInternal<E, H, SrsRef>
 where
     E: Pairing,
     H: HasherDigest,
@@ -619,13 +619,17 @@ where
     {
         let code_word_size = self.num_storage_nodes * self.multiplicity;
         let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+        // this is to avoid `SrsRef` not implementing `Sync` problem,
+        // instead of sending entire `self` cross thread, we only send a ref which is
+        // Sync
+        let multi_open_domain_ref = &self.multi_open_domain;
 
         let all_poly_evals = parallelizable_slice_iter(polys)
             .map(|poly| {
                 UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
                     code_word_size,
-                    &self.multi_open_domain,
+                    multi_open_domain_ref,
                 )
                 .map_err(vid)
             })
@@ -682,12 +686,27 @@ where
     {
         let chunk_size = self.payload_chunk_size * self.multiplicity;
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        let eval_domain_ref = &self.eval_domain;
+
         parallelizable_chunks(payload, chunk_size * elem_bytes_len)
-            .map(|chunk| self.polynomial(bytes_to_field::<_, KzgEval<E>>(chunk)))
+            .map(|chunk| {
+                Self::polynomial_internal(
+                    eval_domain_ref,
+                    chunk_size,
+                    bytes_to_field::<_, KzgEval<E>>(chunk),
+                )
+            })
             .collect()
     }
 
-    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
+    // This is an associated function, not a method, doesn't take in `self`, thus
+    // more friendly to cross-thread `Sync`, especially when on of the generic
+    // param of `Self` didn't implement `Sync`
+    fn polynomial_internal<I>(
+        domain_ref: &Radix2EvaluationDomain<KzgPoint<E>>,
+        chunk_size: usize,
+        coeffs: I,
+    ) -> KzgPolynomial<E>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
@@ -697,17 +716,29 @@ where
         // https://github.com/EspressoSystems/jellyfish/issues/339
         let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
         let pre_fft_len = coeffs_vec.len();
-        self.eval_domain.ifft_in_place(&mut coeffs_vec);
+        EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
 
         // sanity check: the fft did not resize coeffs.
         // If pre_fft_len != self.payload_chunk_size * self.multiplicity
         // then we were not given the correct number of coeffs. In that case
         // coeffs.len() could be anything, so there's nothing to sanity check.
-        if pre_fft_len == self.payload_chunk_size * self.multiplicity {
+        if pre_fft_len == chunk_size {
             assert_eq!(coeffs_vec.len(), pre_fft_len);
         }
 
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+    }
+
+    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
+    where
+        I: Iterator,
+        I::Item: Borrow<KzgEval<E>>,
+    {
+        Self::polynomial_internal(
+            &self.eval_domain,
+            self.payload_chunk_size * self.multiplicity,
+            coeffs,
+        )
     }
 
     /// Derive a commitment from whatever data is needed.
