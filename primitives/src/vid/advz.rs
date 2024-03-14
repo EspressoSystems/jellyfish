@@ -70,7 +70,7 @@ pub type AdvzGPU<'srs, E, H> = AdvzInternal<
 >;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
-/// Consider using either [`Advz`] or [`AdvzGPU`].
+/// Consider using either [`Advz`] or `AdvzGPU` (enabled via `gpu-vid` feature).
 ///
 /// - `E` is any [`Pairing`]
 /// - `H` is a [`digest::Digest`]-compatible hash function.
@@ -210,7 +210,14 @@ where
     E: Pairing,
 {
     /// Construct a new VID instance
-    /// See doc in [`Self::new_internal()`]
+    ///
+    /// - `payload_chunk_size`: k
+    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    ///
+    /// # Errors
+    /// Return [`VidError::Argument`] if `num_storage_nodes <
+    /// payload_chunk_size`.
     pub fn new(
         payload_chunk_size: usize,
         num_storage_nodes: usize,
@@ -228,7 +235,14 @@ where
     UnivariateKzgPCS<E>: GPUCommittable<E>,
 {
     /// construct a new VID instance with SRS loaded to GPU
-    /// See doc in [`Self::new_internal()`]
+    ///
+    /// - `payload_chunk_size`: k
+    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    ///
+    /// # Errors
+    /// Return [`VidError::Argument`] if `num_storage_nodes <
+    /// payload_chunk_size`.
     pub fn new(
         payload_chunk_size: usize,
         num_storage_nodes: usize,
@@ -309,7 +323,7 @@ pub trait MaybeGPU<E: Pairing> {
     /// propagate out to `VidScheme::commit_only/disperse(&mut self)`
     /// This should be fixed once ICICLE improve their `HostOrDeviceSlice`, and
     /// we can update our `GPUCommittable::commit_on_gpu()` input type.
-    /// depends on https://github.com/ingonyama-zk/icicle/pull/412
+    /// depends on <https://github.com/ingonyama-zk/icicle/pull/412>
     fn kzg_batch_commit(
         &mut self,
         polys: &[DensePolynomial<E::ScalarField>],
