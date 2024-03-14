@@ -63,7 +63,10 @@ pub type Advz<E, H> = AdvzInternal<E, H, ()>;
 pub type AdvzGPU<'srs, E, H> = AdvzInternal<
     E,
     H,
-    HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+    (
+        HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+        CudaStream,
+    ),
 >;
 
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
@@ -89,8 +92,10 @@ where
     // but that method consumes `other` and its doc is unclear.
     eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
-    // reference to the SRS/ProverParam loaded to GPU
-    srs_on_gpu: Option<T>,
+    // tuple of
+    // - reference to the SRS/ProverParam loaded to GPU
+    // - cuda stream handle
+    srs_on_gpu_and_cuda_stream: Option<T>,
     _pd: (PhantomData<H>, PhantomData<T>),
 }
 
@@ -194,7 +199,7 @@ where
             vk,
             multi_open_domain,
             eval_domain,
-            srs_on_gpu: None,
+            srs_on_gpu_and_cuda_stream: None,
             _pd: Default::default(),
         })
     }
@@ -237,7 +242,8 @@ where
             advz.ck.powers_of_g.len() - 1,
         )
         .map_err(vid)?;
-        advz.srs_on_gpu = Some(srs_on_gpu);
+
+        advz.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
         Ok(advz)
     }
 }
@@ -295,10 +301,58 @@ where
     multiplicity: u32,
 }
 
+/// A helper trait that cover API that maybe instantiated using GPU code
+/// in specialized implementation for concrete types
+pub trait MaybeGPU<E: Pairing> {
+    /// kzg batch commit
+    /// TODO: (alex) it's unfortnate that we are forced to use &mut self which
+    /// propagate out to `VidScheme::commit_only/disperse(&mut self)`
+    /// This should be fixed once ICICLE improve their `HostOrDeviceSlice`, and
+    /// we can update our `GPUCommittable::commit_on_gpu()` input type.
+    /// depends on https://github.com/ingonyama-zk/icicle/pull/412
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>>;
+}
+
+impl<E, H> MaybeGPU<E> for Advz<E, H>
+where
+    E: Pairing,
+{
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>> {
+        UnivariateKzgPCS::batch_commit(&self.ck, polys).map_err(vid)
+    }
+}
+
+#[cfg(feature = "gpu-vid")]
+impl<'srs, E, H> MaybeGPU<E> for AdvzGPU<'srs, E, H>
+where
+    E: Pairing,
+    UnivariateKzgPCS<E>: GPUCommittable<E>,
+{
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>> {
+        // let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
+        // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
+        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
+        <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
+            srs_on_gpu, polys, &stream,
+        )
+        .map_err(vid)
+    }
+}
+
 impl<E, H, T> VidScheme for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // use HasherNode<H> instead of Output<H> to easily meet trait bounds
     type Commit = HasherNode<H>;
@@ -306,17 +360,17 @@ where
     type Share = Share<E, H>;
     type Common = Common<E, H>;
 
-    fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
+    fn commit_only<B>(&mut self, payload: B) -> VidResult<Self::Commit>
     where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
         let polys = self.bytes_to_polys(payload);
-        let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
+        let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
         Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
-    fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
+    fn disperse<B>(&mut self, payload: B) -> VidResult<VidDisperse<Self>>
     where
         B: AsRef<[u8]>,
     {
@@ -352,7 +406,7 @@ where
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
         let common = Common {
-            poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
+            poly_commits: <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
@@ -608,6 +662,7 @@ impl<E, H, SrsRef> AdvzInternal<E, H, SrsRef>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, SrsRef>: MaybeGPU<E>,
 {
     fn evaluate_polys(
         &self,
