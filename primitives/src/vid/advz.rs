@@ -356,7 +356,7 @@ where
         // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
         let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
         <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
-            srs_on_gpu, polys, &stream,
+            srs_on_gpu, polys, stream,
         )
         .map_err(vid)
     }

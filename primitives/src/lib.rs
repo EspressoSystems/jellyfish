@@ -60,6 +60,7 @@ pub mod icicle_deps {
     // TODO: remove this after `warmup()` is added upstream
     // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
     /// Create a new stream and warmup
+    #[allow(clippy::result_unit_err)]
     pub fn warmup_new_stream() -> Result<CudaStream, ()> {
         let stream = CudaStream::create().unwrap();
         // TODO: consider using an error type?

@@ -16,8 +16,8 @@
 //!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
 use super::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, KzgEval, KzgProof,
-    PolynomialCommitmentScheme, Vec, VidResult,
+    bytes_to_field::{bytes_to_field, elem_byte_capacity},
+    AdvzInternal, KzgEval, KzgProof, MaybeGPU, PolynomialCommitmentScheme, Vec, VidResult,
 };
 use crate::{
     merkle_tree::hasher::HasherDigest,
@@ -64,10 +64,11 @@ pub struct LargeRangeProof<F> {
     suffix_bytes: Vec<u8>,
 }
 
-impl<E, H> PayloadProver<SmallRangeProof<KzgProof<E>>> for Advz<E, H>
+impl<E, H, T> PayloadProver<SmallRangeProof<KzgProof<E>>> for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     fn payload_proof<B>(
         &self,
@@ -199,10 +200,11 @@ where
     }
 }
 
-impl<E, H> PayloadProver<LargeRangeProof<KzgEval<E>>> for Advz<E, H>
+impl<E, H, T> PayloadProver<LargeRangeProof<KzgEval<E>>> for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     fn payload_proof<B>(
         &self,
@@ -274,10 +276,11 @@ where
     }
 }
 
-impl<E, H> Advz<E, H>
+impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // lots of index manipulation
     fn range_byte_to_elem(&self, range: &Range<usize>) -> Range<usize> {
@@ -388,7 +391,7 @@ mod tests {
         },
         payload_prover::PayloadProver,
     };
-    use ark_bls12_381::Bls12_381;
+    use ark_bn254::Bn254;
     use ark_std::{ops::Range, print, println, rand::Rng};
     use sha2::Sha256;
 
@@ -560,6 +563,6 @@ mod tests {
 
     #[test]
     fn correctness() {
-        correctness_generic::<Bls12_381, Sha256>();
+        correctness_generic::<Bn254, Sha256>();
     }
 }
