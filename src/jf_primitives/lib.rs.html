@@ -70,6 +70,7 @@
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -114,6 +115,7 @@
 <span class="doccomment">/// dependencies required for ICICLE-related code, group import for convenience
 </span><span class="attr">#[cfg(feature = <span class="string">"icicle"</span>)]
 </span><span class="kw">pub mod </span>icicle_deps {
+    <span class="kw">use </span>anyhow::anyhow;
     <span class="kw">pub use </span>icicle_core::{
         curve::{Affine <span class="kw">as </span>IcicleAffine, Curve <span class="kw">as </span>IcicleCurve, Projective <span class="kw">as </span>IcicleProjective},
         msm::{MSMConfig, MSM},
@@ -132,10 +134,10 @@
     <span class="comment">// TODO: remove this after `warmup()` is added upstream
     // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
     </span><span class="doccomment">/// Create a new stream and warmup
-    </span><span class="kw">pub fn </span>warmup_new_stream() -&gt; <span class="prelude-ty">Result</span>&lt;CudaStream, ()&gt; {
-        <span class="kw">let </span>stream = CudaStream::create().unwrap();
-        <span class="comment">// TODO: consider using an error type?
-        </span><span class="kw">let </span>_warmup_bytes = HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, u8&gt;::cuda_malloc_async(<span class="number">1024</span>, <span class="kw-2">&amp;</span>stream).unwrap();
+    </span><span class="kw">pub fn </span>warmup_new_stream() -&gt; anyhow::Result&lt;CudaStream&gt; {
+        <span class="kw">let </span>stream = CudaStream::create().map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"{:?}"</span>, e))<span class="question-mark">?</span>;
+        <span class="kw">let </span>_warmup_bytes = HostOrDeviceSlice::&lt;<span class="lifetime">'_</span>, u8&gt;::cuda_malloc_async(<span class="number">1024</span>, <span class="kw-2">&amp;</span>stream)
+            .map_err(|e| <span class="macro">anyhow!</span>(<span class="string">"{:?}"</span>, e))<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(stream)
     }
 }

@@ -564,6 +564,9 @@
 <a href="#563" id="563">563</a>
 <a href="#564" id="564">564</a>
 <a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -582,8 +585,8 @@
 //!    a pairing. Consists of metadata required to rebuild a KZG commitment.
 
 </span><span class="kw">use super</span>::{
-    bytes_to_field, bytes_to_field::elem_byte_capacity, Advz, KzgEval, KzgProof,
-    PolynomialCommitmentScheme, Vec, VidResult,
+    bytes_to_field::{bytes_to_field, elem_byte_capacity},
+    AdvzInternal, KzgEval, KzgProof, MaybeGPU, PolynomialCommitmentScheme, Vec, VidResult,
 };
 <span class="kw">use crate</span>::{
     merkle_tree::hasher::HasherDigest,
@@ -630,10 +633,11 @@
     suffix_bytes: Vec&lt;u8&gt;,
 }
 
-<span class="kw">impl</span>&lt;E, H&gt; PayloadProver&lt;SmallRangeProof&lt;KzgProof&lt;E&gt;&gt;&gt; <span class="kw">for </span>Advz&lt;E, H&gt;
+<span class="kw">impl</span>&lt;E, H, T&gt; PayloadProver&lt;SmallRangeProof&lt;KzgProof&lt;E&gt;&gt;&gt; <span class="kw">for </span>AdvzInternal&lt;E, H, T&gt;
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="kw">fn </span>payload_proof&lt;B&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -765,10 +769,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H&gt; PayloadProver&lt;LargeRangeProof&lt;KzgEval&lt;E&gt;&gt;&gt; <span class="kw">for </span>Advz&lt;E, H&gt;
+<span class="kw">impl</span>&lt;E, H, T&gt; PayloadProver&lt;LargeRangeProof&lt;KzgEval&lt;E&gt;&gt;&gt; <span class="kw">for </span>AdvzInternal&lt;E, H, T&gt;
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="kw">fn </span>payload_proof&lt;B&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -840,10 +845,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H&gt; Advz&lt;E, H&gt;
+<span class="kw">impl</span>&lt;E, H, T&gt; AdvzInternal&lt;E, H, T&gt;
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="comment">// lots of index manipulation
     </span><span class="kw">fn </span>range_byte_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
@@ -954,7 +960,7 @@
         },
         payload_prover::PayloadProver,
     };
-    <span class="kw">use </span>ark_bls12_381::Bls12_381;
+    <span class="kw">use </span>ark_bn254::Bn254;
     <span class="kw">use </span>ark_std::{ops::Range, print, println, rand::Rng};
     <span class="kw">use </span>sha2::Sha256;
 
@@ -1126,7 +1132,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>correctness() {
-        correctness_generic::&lt;Bls12_381, Sha256&gt;();
+        correctness_generic::&lt;Bn254, Sha256&gt;();
     }
 }
 </code></pre></div></section></main></body></html>
