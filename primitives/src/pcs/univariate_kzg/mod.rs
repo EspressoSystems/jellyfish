@@ -705,6 +705,10 @@ pub(crate) mod icicle {
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             polys: &[DensePolynomial<E::ScalarField>],
         ) -> Result<Vec<Commitment<E>>, PCSError> {
+            if polys.len() == 0 {
+                return Ok(vec![]);
+            }
+
             let stream = warmup_new_stream().unwrap();
 
             let degree = polys[0].degree();
@@ -736,6 +740,10 @@ pub(crate) mod icicle {
             polys: &[DensePolynomial<E::ScalarField>],
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
+            if polys.len() == 0 {
+                return Ok(vec![]);
+            }
+
             let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
             let msm_result_on_gpu =
                 Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, polys.len(), stream)?;
@@ -1381,6 +1389,9 @@ mod tests {
                     <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &polys)?;
                 let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
                 assert_eq!(comms_gpu, comms_cpu);
+                assert!(
+                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &[]).is_ok()
+                );
             }
             Ok(())
         }
