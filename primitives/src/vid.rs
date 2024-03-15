@@ -39,12 +39,12 @@ pub trait VidScheme {
     type Common: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; // TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     /// Compute a payload commitment
-    fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
+    fn commit_only<B>(&mut self, payload: B) -> VidResult<Self::Commit>
     where
         B: AsRef<[u8]>;
 
     /// Compute shares to send to the storage nodes
-    fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
+    fn disperse<B>(&mut self, payload: B) -> VidResult<VidDisperse<Self>>
     where
         B: AsRef<[u8]>;
 

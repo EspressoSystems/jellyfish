@@ -1297,7 +1297,7 @@ mod tests {
     mod icicle {
         use super::*;
         use crate::{
-            icicle_deps::{curves::*, *},
+            icicle_deps::{curves::*, warmup_new_stream},
             pcs::univariate_kzg::icicle::GPUCommittable,
         };
 
