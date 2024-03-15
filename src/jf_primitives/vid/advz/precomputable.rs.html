@@ -416,7 +416,7 @@
 
     <span class="kw">use </span><span class="kw">crate</span>::vid::{
         advz::{
-            tests::{avdz_init, init_random_payload, init_srs},
+            tests::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         VidScheme,
@@ -464,7 +464,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>commit_disperse_recover_with_precomputed_data() {
-        <span class="kw">let </span>(advz, bytes_random) = avdz_init();
+        <span class="kw">let </span>(advz, bytes_random) = advz_init();
         <span class="kw">let </span>(commit, data) = advz.commit_only_precompute(<span class="kw-2">&amp;</span>bytes_random).unwrap();
         <span class="kw">let </span>disperse = advz.disperse_precompute(<span class="kw-2">&amp;</span>bytes_random, <span class="kw-2">&amp;</span>data).unwrap();
         <span class="kw">let </span>(shares, common) = (disperse.shares, disperse.common);

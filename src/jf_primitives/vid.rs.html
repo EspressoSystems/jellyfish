@@ -186,12 +186,12 @@
     </span><span class="kw">type </span>Common: Clone + Debug + DeserializeOwned + Eq + PartialEq + Hash + Serialize + Sync; <span class="comment">// TODO https://github.com/EspressoSystems/jellyfish/issues/253
 
     </span><span class="doccomment">/// Compute a payload commitment
-    </span><span class="kw">fn </span>commit_only&lt;B&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt;
+    </span><span class="kw">fn </span>commit_only&lt;B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;<span class="self">Self</span>::Commit&gt;
     <span class="kw">where
         </span>B: AsRef&lt;[u8]&gt;;
 
     <span class="doccomment">/// Compute shares to send to the storage nodes
-    </span><span class="kw">fn </span>disperse&lt;B&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;
+    </span><span class="kw">fn </span>disperse&lt;B&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, payload: B) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt;
     <span class="kw">where
         </span>B: AsRef&lt;[u8]&gt;;
 
