@@ -61,7 +61,6 @@ pub mod icicle_deps {
     // TODO: remove this after `warmup()` is added upstream
     // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
     /// Create a new stream and warmup
-    #[allow(clippy::result_unit_err)]
     pub fn warmup_new_stream() -> anyhow::Result<CudaStream> {
         let stream = CudaStream::create().map_err(|e| anyhow!("{:?}", e))?;
         let _warmup_bytes = HostOrDeviceSlice::<'_, u8>::cuda_malloc_async(1024, &stream)
