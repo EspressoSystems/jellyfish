@@ -175,7 +175,7 @@ mod tests {
 
     use crate::vid::{
         advz::{
-            tests::{avdz_init, init_random_payload, init_srs},
+            tests::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         VidScheme,
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn commit_disperse_recover_with_precomputed_data() {
-        let (advz, bytes_random) = avdz_init();
+        let (advz, bytes_random) = advz_init();
         let (commit, data) = advz.commit_only_precompute(&bytes_random).unwrap();
         let disperse = advz.disperse_precompute(&bytes_random, &data).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);

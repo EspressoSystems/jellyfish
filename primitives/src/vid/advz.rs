@@ -1010,7 +1010,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
-        let (mut advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1076,7 +1076,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
-        let (mut advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1122,7 +1122,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
-        let (mut advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -1147,7 +1147,7 @@ mod tests {
 
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
-        let (mut advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
@@ -1206,7 +1206,7 @@ mod tests {
     /// Returns the following tuple:
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
-    pub(super) fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
+    pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
