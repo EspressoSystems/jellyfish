@@ -1399,6 +1399,17 @@
 <a href="#1398" id="1398">1398</a>
 <a href="#1399" id="1399">1399</a>
 <a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2106,6 +2117,10 @@
             prover_param: <span class="kw">impl </span>Borrow&lt;UnivariateProverParam&lt;E&gt;&gt;,
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Commitment&lt;E&gt;&gt;, PCSError&gt; {
+            <span class="kw">if </span>polys.len() == <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]);
+            }
+
             <span class="kw">let </span>stream = warmup_new_stream().unwrap();
 
             <span class="kw">let </span>degree = polys[<span class="number">0</span>].degree();
@@ -2137,6 +2152,10 @@
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
             stream: <span class="kw-2">&amp;</span>CudaStream,
         ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Commitment&lt;E&gt;&gt;, PCSError&gt; {
+            <span class="kw">if </span>polys.len() == <span class="number">0 </span>{
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]);
+            }
+
             <span class="kw">let </span>poly_on_gpu = <span class="self">Self</span>::load_batch_poly_to_gpu(polys)<span class="question-mark">?</span>;
             <span class="kw">let </span>msm_result_on_gpu =
                 <span class="self">Self</span>::commit_on_gpu(prover_param_on_gpu, <span class="kw-2">&amp;</span>poly_on_gpu, polys.len(), stream)<span class="question-mark">?</span>;
@@ -2782,6 +2801,9 @@
                     &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
                 <span class="kw">let </span>comms_cpu = UnivariateKzgPCS::&lt;E&gt;::batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
                 <span class="macro">assert_eq!</span>(comms_gpu, comms_cpu);
+                <span class="macro">assert!</span>(
+                    &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>[]).is_ok()
+                );
             }
             <span class="prelude-val">Ok</span>(())
         }
