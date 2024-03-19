@@ -66,19 +66,18 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const INPUT_LEN_PLUS_ONE: usize
     type Input = [F; INPUT_LEN];
     type Output = F;
     type Randomness = F;
-
+    
     fn commit<T: Borrow<Self::Input>>(
         input: T,
         r: Option<&Self::Randomness>,
     ) -> Result<Self::Output, PrimitivesError> {
         let mut msg = [F::zero(); INPUT_LEN_PLUS_ONE];
-        msg[0] = *r.ok_or_else(|| {
-            PrimitivesError::ParameterError("Expecting a blinding factor".to_string())
-        })?;
-        msg[1..INPUT_LEN_PLUS_ONE].copy_from_slice(&input.borrow()[..(INPUT_LEN)]);
-
-        Ok(FixedLengthRescueCRHF::<F, INPUT_LEN_PLUS_ONE, 1>::evaluate(&msg)?[0])
-    }
+        
+        if let Some(blinding_factor) = r {
+            msg[0] = *blinding_factor;
+        } else {
+            return Err(PrimitivesError::ParameterError("Blinding factor is required".to_string()));
+        }
 
     fn verify<T: Borrow<Self::Input>>(
         input: T,
