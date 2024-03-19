@@ -1314,39 +1314,38 @@ mod tests {
             UnivariateKzgPCS<E>: GPUCommittable<E>,
         {
             let rng = &mut test_rng();
-            let stream = warmup_new_stream().unwrap();
-            let degree = 2usize.pow(22);
+            let degree = 2usize.pow(20);
 
             let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
             let (ck, _vk) = pp.trim(degree)?;
             let mut srs_on_gpu =
                 <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(&ck, degree)?;
 
-            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
-                degree, rng,
-            );
-
-            let _comm =
-                <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_commit_with_loaded_prover_param(
-                    &mut srs_on_gpu,
-                    &p,
-                    &stream,
-                )?;
-
-            let polys: Vec<_> = (0..8)
+            for batch in [1, 8, 16, 256, 1024, 4096] {
+                let polys: Vec<_> = (0..batch)
                 .map(|_| {
                     <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
-                        degree / 8,
+                        degree / batch,
                         rng,
                     )
                 })
                 .collect();
-            let _comms =
+
+                let stream = warmup_new_stream().unwrap();
+                #[cfg(feature = "print-trace")]
+                let batch_commit_timer = start_timer!(|| format!(
+                    "Batch commit {} total elements, batch size {}",
+                    degree, batch
+                ));
+                let _comms =
                 <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
                     &mut srs_on_gpu,
                     &polys,
                     &stream,
                 )?;
+                #[cfg(feature = "print-trace")]
+                end_timer!(batch_commit_timer);
+            }
 
             Ok(())
         }
@@ -1401,7 +1400,7 @@ mod tests {
             test_gpu_e2e_template::<Bn254>().unwrap();
         }
 
-        #[cfg(feature = "kzg-print-trace")]
+        #[cfg(feature = "print-trace")]
         #[test]
         fn profile_gpu_commit() {
             // testing on large degree for profiling
