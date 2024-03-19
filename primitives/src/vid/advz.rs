@@ -9,6 +9,8 @@
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
+#[cfg(feature = "gpu-vid")]
+use crate::icicle_deps::*;
 use crate::{
     alloc::string::ToString,
     merkle_tree::{
@@ -54,12 +56,27 @@ mod bytes_to_field;
 pub mod payload_prover;
 pub mod precomputable;
 
+/// Normal Advz VID that's only using CPU
+pub type Advz<E, H> = AdvzInternal<E, H, ()>;
+/// Advz with GPU support
+#[cfg(feature = "gpu-vid")]
+pub type AdvzGPU<'srs, E, H> = AdvzInternal<
+    E,
+    H,
+    (
+        HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+        CudaStream,
+    ),
+>;
+
 /// The [ADVZ VID scheme](https://eprint.iacr.org/2021/1500), a concrete impl for [`VidScheme`].
+/// Consider using either [`Advz`] or `AdvzGPU` (enabled via `gpu-vid` feature).
 ///
 /// - `E` is any [`Pairing`]
 /// - `H` is a [`digest::Digest`]-compatible hash function.
+/// - `T` is a reference to GPU memory that's storing SRS
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Advz<E, H>
+pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
@@ -75,7 +92,11 @@ where
     // but that method consumes `other` and its doc is unclear.
     eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
-    _pd: PhantomData<H>,
+    // tuple of
+    // - reference to the SRS/ProverParam loaded to GPU
+    // - cuda stream handle
+    srs_on_gpu_and_cuda_stream: Option<T>,
+    _pd: (PhantomData<H>, PhantomData<T>),
 }
 
 // [Nested associated type projection is overly conservative · Issue #38078 · rust-lang/rust](https://github.com/rust-lang/rust/issues/38078)
@@ -97,7 +118,7 @@ type KzgEvalsMerkleTreeIndex<E, H> = <KzgEvalsMerkleTree<E, H> as MerkleTreeSche
 type KzgEvalsMerkleTreeProof<E, H> =
     <KzgEvalsMerkleTree<E, H> as MerkleTreeScheme>::MembershipProof;
 
-impl<E, H> Advz<E, H>
+impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
@@ -106,7 +127,7 @@ where
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
-    pub fn new(
+    pub(crate) fn new_internal(
         payload_chunk_size: usize, // k
         num_storage_nodes: usize,  // n (code rate: r = k/n)
         multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
@@ -178,8 +199,66 @@ where
             vk,
             multi_open_domain,
             eval_domain,
+            srs_on_gpu_and_cuda_stream: None,
             _pd: Default::default(),
         })
+    }
+}
+
+impl<E, H> Advz<E, H>
+where
+    E: Pairing,
+{
+    /// Construct a new VID instance
+    ///
+    /// - `payload_chunk_size`: k
+    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    ///
+    /// # Errors
+    /// Return [`VidError::Argument`] if `num_storage_nodes <
+    /// payload_chunk_size`.
+    pub fn new(
+        payload_chunk_size: usize,
+        num_storage_nodes: usize,
+        multiplicity: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)
+    }
+}
+
+#[cfg(feature = "gpu-vid")]
+impl<'srs, E, H> AdvzGPU<'srs, E, H>
+where
+    E: Pairing,
+    UnivariateKzgPCS<E>: GPUCommittable<E>,
+{
+    /// construct a new VID instance with SRS loaded to GPU
+    ///
+    /// - `payload_chunk_size`: k
+    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    ///
+    /// # Errors
+    /// Return [`VidError::Argument`] if `num_storage_nodes <
+    /// payload_chunk_size`.
+    pub fn new(
+        payload_chunk_size: usize,
+        num_storage_nodes: usize,
+        multiplicity: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        let mut advz =
+            Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)?;
+        let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
+            &advz.ck,
+            advz.ck.powers_of_g.len() - 1,
+        )
+        .map_err(vid)?;
+
+        advz.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
+        Ok(advz)
     }
 }
 
@@ -236,10 +315,58 @@ where
     multiplicity: u32,
 }
 
-impl<E, H> VidScheme for Advz<E, H>
+/// A helper trait that cover API that maybe instantiated using GPU code
+/// in specialized implementation for concrete types
+pub trait MaybeGPU<E: Pairing> {
+    /// kzg batch commit
+    /// TODO: (alex) it's unfortnate that we are forced to use &mut self which
+    /// propagate out to `VidScheme::commit_only/disperse(&mut self)`
+    /// This should be fixed once ICICLE improve their `HostOrDeviceSlice`, and
+    /// we can update our `GPUCommittable::commit_on_gpu()` input type.
+    /// depends on <https://github.com/ingonyama-zk/icicle/pull/412>
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>>;
+}
+
+impl<E, H> MaybeGPU<E> for Advz<E, H>
+where
+    E: Pairing,
+{
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>> {
+        UnivariateKzgPCS::batch_commit(&self.ck, polys).map_err(vid)
+    }
+}
+
+#[cfg(feature = "gpu-vid")]
+impl<'srs, E, H> MaybeGPU<E> for AdvzGPU<'srs, E, H>
+where
+    E: Pairing,
+    UnivariateKzgPCS<E>: GPUCommittable<E>,
+{
+    fn kzg_batch_commit(
+        &mut self,
+        polys: &[DensePolynomial<E::ScalarField>],
+    ) -> VidResult<Vec<KzgCommit<E>>> {
+        // let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
+        // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
+        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
+        <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
+            srs_on_gpu, polys, stream,
+        )
+        .map_err(vid)
+    }
+}
+
+impl<E, H, T> VidScheme for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // use HasherNode<H> instead of Output<H> to easily meet trait bounds
     type Commit = HasherNode<H>;
@@ -247,17 +374,23 @@ where
     type Share = Share<E, H>;
     type Common = Common<E, H>;
 
-    fn commit_only<B>(&self, payload: B) -> VidResult<Self::Commit>
+    fn commit_only<B>(&mut self, payload: B) -> VidResult<Self::Commit>
     where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload);
-        let poly_commits = UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
+        end_timer!(bytes_to_polys_time);
+
+        let poly_commits_time = start_timer!(|| "batch poly commit");
+        let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
+        end_timer!(poly_commits_time);
+
         Self::derive_commit(&poly_commits, payload.len(), self.num_storage_nodes)
     }
 
-    fn disperse<B>(&self, payload: B) -> VidResult<VidDisperse<Self>>
+    fn disperse<B>(&mut self, payload: B) -> VidResult<VidDisperse<Self>>
     where
         B: AsRef<[u8]>,
     {
@@ -293,7 +426,7 @@ where
 
         let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
         let common = Common {
-            poly_commits: UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?,
+            poly_commits: <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
@@ -545,10 +678,11 @@ where
     }
 }
 
-impl<E, H> Advz<E, H>
+impl<E, H, SrsRef> AdvzInternal<E, H, SrsRef>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, SrsRef>: MaybeGPU<E>,
 {
     fn evaluate_polys(
         &self,
@@ -560,13 +694,17 @@ where
     {
         let code_word_size = self.num_storage_nodes * self.multiplicity;
         let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+        // this is to avoid `SrsRef` not implementing `Sync` problem,
+        // instead of sending entire `self` cross thread, we only send a ref which is
+        // Sync
+        let multi_open_domain_ref = &self.multi_open_domain;
 
         let all_poly_evals = parallelizable_slice_iter(polys)
             .map(|poly| {
                 UnivariateKzgPCS::<E>::multi_open_rou_evals(
                     poly,
                     code_word_size,
-                    &self.multi_open_domain,
+                    multi_open_domain_ref,
                 )
                 .map_err(vid)
             })
@@ -623,12 +761,27 @@ where
     {
         let chunk_size = self.payload_chunk_size * self.multiplicity;
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        let eval_domain_ref = &self.eval_domain;
+
         parallelizable_chunks(payload, chunk_size * elem_bytes_len)
-            .map(|chunk| self.polynomial(bytes_to_field::<_, KzgEval<E>>(chunk)))
+            .map(|chunk| {
+                Self::polynomial_internal(
+                    eval_domain_ref,
+                    chunk_size,
+                    bytes_to_field::<_, KzgEval<E>>(chunk),
+                )
+            })
             .collect()
     }
 
-    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
+    // This is an associated function, not a method, doesn't take in `self`, thus
+    // more friendly to cross-thread `Sync`, especially when on of the generic
+    // param of `Self` didn't implement `Sync`
+    fn polynomial_internal<I>(
+        domain_ref: &Radix2EvaluationDomain<KzgPoint<E>>,
+        chunk_size: usize,
+        coeffs: I,
+    ) -> KzgPolynomial<E>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
@@ -638,17 +791,29 @@ where
         // https://github.com/EspressoSystems/jellyfish/issues/339
         let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
         let pre_fft_len = coeffs_vec.len();
-        self.eval_domain.ifft_in_place(&mut coeffs_vec);
+        EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
 
         // sanity check: the fft did not resize coeffs.
         // If pre_fft_len != self.payload_chunk_size * self.multiplicity
         // then we were not given the correct number of coeffs. In that case
         // coeffs.len() could be anything, so there's nothing to sanity check.
-        if pre_fft_len == self.payload_chunk_size * self.multiplicity {
+        if pre_fft_len == chunk_size {
             assert_eq!(coeffs_vec.len(), pre_fft_len);
         }
 
         DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+    }
+
+    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
+    where
+        I: Iterator,
+        I::Item: Borrow<KzgEval<E>>,
+    {
+        Self::polynomial_internal(
+            &self.eval_domain,
+            self.payload_chunk_size * self.multiplicity,
+            coeffs,
+        )
     }
 
     /// Derive a commitment from whatever data is needed.
@@ -793,6 +958,7 @@ mod tests {
 
     use crate::pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     use ark_bls12_381::Bls12_381;
+    use ark_bn254::Bn254;
     use ark_std::{
         rand::{CryptoRng, RngCore},
         vec,
@@ -806,10 +972,17 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+                .unwrap();
+
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
+        #[cfg(feature = "gpu-vid")]
+        let _ = advz_gpu.disperse(payload_random.clone());
         let _ = advz.disperse(payload_random);
     }
 
@@ -820,16 +993,24 @@ mod tests {
         let (payload_chunk_size, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz =
-            Advz::<Bls12_381, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        let payload_random = init_random_payload(1 << 20, &mut rng);
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+                .unwrap();
+
+        let payload_random = init_random_payload(1 << 25, &mut rng);
+
+        #[cfg(feature = "gpu-vid")]
+        let _ = advz_gpu.commit_only(payload_random.clone());
 
         let _ = advz.commit_only(payload_random);
     }
 
     #[test]
     fn sad_path_verify_share_corrupt_share() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -895,7 +1076,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_commit() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -941,7 +1122,7 @@ mod tests {
 
     #[test]
     fn sad_path_verify_share_corrupt_share_and_commit() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(bytes_random).unwrap();
         let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
@@ -966,7 +1147,7 @@ mod tests {
 
     #[test]
     fn sad_path_recover_payload_corrupt_shares() {
-        let (advz, bytes_random) = avdz_init();
+        let (mut advz, bytes_random) = advz_init();
         let disperse = advz.disperse(&bytes_random).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
 
@@ -1025,7 +1206,7 @@ mod tests {
     /// Returns the following tuple:
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
-    pub(super) fn avdz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
+    pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (payload_chunk_size, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);

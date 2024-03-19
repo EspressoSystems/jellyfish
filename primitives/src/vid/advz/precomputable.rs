@@ -11,8 +11,8 @@ use crate::{
     pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS},
     vid::{
         advz::{
-            polynomial_eval, Advz, Common, HasherDigest, KzgEvalsMerkleTree, Pairing,
-            PolynomialMultiplier, UnivariateKzgPCS,
+            polynomial_eval, AdvzInternal, Common, HasherDigest, KzgCommit, KzgEvalsMerkleTree,
+            MaybeGPU, Pairing, PolynomialMultiplier, UnivariateKzgPCS,
         },
         precomputable::Precomputable,
         vid, VidDisperse, VidResult,
@@ -24,12 +24,11 @@ use ark_std::{end_timer, start_timer, vec::Vec};
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
 
-use super::KzgCommit;
-
-impl<E, H> Precomputable for Advz<E, H>
+impl<E, H, T> Precomputable for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     type PrecomputeData = PrecomputeData<E>;
 
@@ -175,7 +174,7 @@ mod tests {
 
     use crate::vid::{
         advz::{
-            tests::{avdz_init, init_random_payload, init_srs},
+            tests::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         VidScheme,
@@ -223,7 +222,7 @@ mod tests {
 
     #[test]
     fn commit_disperse_recover_with_precomputed_data() {
-        let (advz, bytes_random) = avdz_init();
+        let (advz, bytes_random) = advz_init();
         let (commit, data) = advz.commit_only_precompute(&bytes_random).unwrap();
         let disperse = advz.disperse_precompute(&bytes_random, &data).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);

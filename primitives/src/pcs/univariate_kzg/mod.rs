@@ -686,8 +686,8 @@ pub(crate) mod icicle {
         /// # NOTE
         /// - we assume a stream is already prepared, you can create one if not
         /// via `warmup_new_stream()`
-        fn gpu_commit_with_loaded_prover_param<'srs>(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<Self::IC>>,
+        fn gpu_commit_with_loaded_prover_param(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
             poly: &DensePolynomial<E::ScalarField>,
             stream: &CudaStream,
         ) -> Result<Commitment<E>, PCSError> {
@@ -705,6 +705,10 @@ pub(crate) mod icicle {
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             polys: &[DensePolynomial<E::ScalarField>],
         ) -> Result<Vec<Commitment<E>>, PCSError> {
+            if polys.len() == 0 {
+                return Ok(vec![]);
+            }
+
             let stream = warmup_new_stream().unwrap();
 
             let degree = polys[0].degree();
@@ -731,14 +735,18 @@ pub(crate) mod icicle {
 
         /// Compute `PCS::commit()` with SRS already loaded on GPU
         /// Return a vector of commitments on CPU
-        fn gpu_batch_commit_with_loaded_prover_param<'srs>(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'srs, IcicleAffine<Self::IC>>,
+        fn gpu_batch_commit_with_loaded_prover_param(
+            prover_param_on_gpu: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
             polys: &[DensePolynomial<E::ScalarField>],
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
+            if polys.len() == 0 {
+                return Ok(vec![]);
+            }
+
             let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
             let msm_result_on_gpu =
-                Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, polys.len(), &stream)?;
+                Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, polys.len(), stream)?;
             let comms = Self::load_commitments_to_host(msm_result_on_gpu, stream)?;
 
             Ok(comms)
@@ -892,9 +900,9 @@ pub(crate) mod icicle {
         /// - default implementation assume normal(non-montgomery) affine for
         ///   bases and scalars, consider overwrite this function if you want
         ///   otherwise
-        fn commit_on_gpu<'comm, 'srs, 'poly>(
-            prover_param: &mut HostOrDeviceSlice<'srs, IcicleAffine<Self::IC>>,
-            poly: &HostOrDeviceSlice<'poly, <Self::IC as IcicleCurve>::ScalarField>,
+        fn commit_on_gpu<'comm>(
+            prover_param: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
+            poly: &HostOrDeviceSlice<'_, <Self::IC as IcicleCurve>::ScalarField>,
             batch_size: usize,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, IcicleProjective<Self::IC>>, PCSError> {
@@ -926,8 +934,8 @@ pub(crate) mod icicle {
 
         /// After `Self::commit_on_gpu()`, you can choose to load the result
         /// back to host CPU
-        fn load_commitments_to_host<'comm>(
-            commitments_on_gpu: HostOrDeviceSlice<'comm, IcicleProjective<Self::IC>>,
+        fn load_commitments_to_host(
+            commitments_on_gpu: HostOrDeviceSlice<'_, IcicleProjective<Self::IC>>,
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
             #[cfg(feature = "kzg-print-trace")]
@@ -993,9 +1001,9 @@ pub(crate) mod icicle {
         }
 
         // NOTE: both bases and scalars are in montgomery form on GPU
-        fn commit_on_gpu<'comm, 'srs, 'poly>(
-            prover_param: &mut HostOrDeviceSlice<'srs, icicle_bn254::curve::G1Affine>,
-            poly: &HostOrDeviceSlice<'poly, icicle_bn254::curve::ScalarField>,
+        fn commit_on_gpu<'comm>(
+            prover_param: &mut HostOrDeviceSlice<'_, icicle_bn254::curve::G1Affine>,
+            poly: &HostOrDeviceSlice<'_, icicle_bn254::curve::ScalarField>,
             batch_size: usize,
             stream: &CudaStream,
         ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
@@ -1298,10 +1306,9 @@ mod tests {
     #[cfg(feature = "icicle")]
     mod icicle {
         use super::*;
-        use crate::{
-            icicle_deps::{curves::*, *},
-            pcs::univariate_kzg::icicle::GPUCommittable,
-        };
+        #[cfg(feature = "kzg-print-trace")]
+        use crate::icicle_deps::warmup_new_stream;
+        use crate::{icicle_deps::curves::*, pcs::univariate_kzg::icicle::GPUCommittable};
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>
@@ -1384,6 +1391,9 @@ mod tests {
                     <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &polys)?;
                 let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
                 assert_eq!(comms_gpu, comms_cpu);
+                assert!(
+                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &[]).is_ok()
+                );
             }
             Ok(())
         }

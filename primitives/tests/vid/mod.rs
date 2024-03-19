@@ -24,7 +24,7 @@ pub fn round_trip<V, R>(
     for (&mult, &(payload_chunk_size, num_storage_nodes)) in
         zip(multiplicities.iter().cycle(), vid_sizes)
     {
-        let vid = vid_factory(payload_chunk_size, num_storage_nodes, mult);
+        let mut vid = vid_factory(payload_chunk_size, num_storage_nodes, mult);
 
         for &len in payload_byte_lens {
             println!(
