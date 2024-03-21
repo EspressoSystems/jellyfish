@@ -24,7 +24,7 @@ hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
-jf-utils = { path = "../utilities" }
+jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
 rand_chacha = { workspace = true }
