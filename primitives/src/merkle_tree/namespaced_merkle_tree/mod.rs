@@ -11,8 +11,6 @@ use ark_std::vec::Vec;
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use typenum::Unsigned;
-
 use crate::errors::{PrimitivesError, VerificationResult};
 
 use self::{
@@ -123,8 +121,8 @@ impl Namespace for u64 {
     }
 }
 
-type InnerTree<E, H, T, N, Arity> =
-    MerkleTree<E, NamespacedHasher<H, E, u64, T, N>, u64, Arity, NamespacedHash<T, N>>;
+type InnerTree<E, H, T, N, const ARITY: usize> =
+    MerkleTree<E, NamespacedHasher<H, E, u64, T, N>, u64, ARITY, NamespacedHash<T, N>>;
 
 type NamespaceRanges<N> = BTreeMap<N, Range<u64>>;
 
@@ -132,30 +130,28 @@ type NamespaceRanges<N> = BTreeMap<N, Range<u64>>;
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
                  T: CanonicalSerialize + CanonicalDeserialize")]
 /// NMT
-pub struct NMT<E, H, Arity, N, T>
+pub struct NMT<E, H, const ARITY: usize, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     namespace_ranges: NamespaceRanges<N>,
-    inner: InnerTree<E, H, T, N, Arity>,
+    inner: InnerTree<E, H, T, N, ARITY>,
 }
 
-impl<E, H, Arity, N, T> NMT<E, H, Arity, N, T>
+impl<E, H, const ARITY: usize, N, T> NMT<E, H, ARITY, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     /// Initializze an empty NMT
     pub fn new(height: usize) -> Self {
         let namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
-        let inner = InnerTree::<E, H, T, N, Arity>::new(height);
+        let inner = InnerTree::<E, H, T, N, ARITY>::new(height);
         NMT {
             inner,
             namespace_ranges,
@@ -169,8 +165,8 @@ where
     ) -> Result<Self, PrimitivesError> {
         let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
         let leaves =
-            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
-        let inner = InnerTree::<E, H, T, N, Arity>::from_elems(height, leaves)?;
+            NMT::<E, H, ARITY, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
+        let inner = InnerTree::<E, H, T, N, ARITY>::from_elems(height, leaves)?;
         Ok(NMT {
             inner,
             namespace_ranges,
@@ -178,22 +174,21 @@ where
     }
 }
 
-impl<E, H, Arity, N, T> MerkleTreeScheme for NMT<E, H, Arity, N, T>
+impl<E, H, const ARITY: usize, N, T> MerkleTreeScheme for NMT<E, H, ARITY, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     type Element = E;
     type Index = u64;
     type NodeValue = NamespacedHash<T, N>;
-    type MembershipProof = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::MembershipProof;
+    type MembershipProof = <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::MembershipProof;
     type BatchMembershipProof =
-        <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::BatchMembershipProof;
-    const ARITY: usize = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::ARITY;
-    type Commitment = <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::Commitment;
+        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::BatchMembershipProof;
+    const ARITY: usize = <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::ARITY;
+    type Commitment = <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::Commitment;
 
     fn height(&self) -> usize {
         self.inner.height()
@@ -223,7 +218,7 @@ where
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, PrimitivesError> {
-        <InnerTree<E, H, T, N, Arity> as MerkleTreeScheme>::verify(root, pos, proof)
+        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(root, pos, proof)
     }
 
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
@@ -231,20 +226,19 @@ where
     }
 }
 
-impl<E, H, Arity, N, T> AppendableMerkleTreeScheme for NMT<E, H, Arity, N, T>
+impl<E, H, const ARITY: usize, N, T> AppendableMerkleTreeScheme for NMT<E, H, ARITY, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
     ) -> Result<(), PrimitivesError> {
         let leaves =
-            NMT::<E, H, Arity, N, T>::update_namespace_metadata(&mut self.namespace_ranges, elems)?;
+            NMT::<E, H, ARITY, N, T>::update_namespace_metadata(&mut self.namespace_ranges, elems)?;
         self.inner.extend(leaves)
     }
 
@@ -256,17 +250,16 @@ where
     }
 }
 
-impl<E, H, Arity, N, T> NMT<E, H, Arity, N, T>
+impl<E, H, const ARITY: usize, N, T> NMT<E, H, ARITY, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     // Helper function to lookup a proof that should be in the tree because of NMT
     // invariants
-    fn lookup_proof(&self, idx: u64) -> MerkleProof<E, u64, NamespacedHash<T, N>, Arity> {
+    fn lookup_proof(&self, idx: u64) -> MerkleProof<E, u64, NamespacedHash<T, N>, ARITY> {
         if let LookupResult::Ok(_, proof) = self.inner.lookup(idx) {
             proof
         } else {
@@ -318,16 +311,15 @@ where
     }
 }
 
-impl<E, H, Arity, N, T> NamespacedMerkleTreeScheme for NMT<E, H, Arity, N, T>
+impl<E, H, const ARITY: usize, N, T> NamespacedMerkleTreeScheme for NMT<E, H, ARITY, N, T>
 where
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N> + Clone,
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     N: Namespace,
-    Arity: Unsigned,
 {
     type NamespaceId = N;
-    type NamespaceProof = NaiveNamespaceProof<E, T, Arity, N, H>;
+    type NamespaceProof = NaiveNamespaceProof<E, T, ARITY, N, H>;
 
     fn get_namespace_proof(&self, namespace: Self::NamespaceId) -> Self::NamespaceProof {
         let ns_range = self.namespace_ranges.get(&namespace);
@@ -388,7 +380,6 @@ where
 
 #[cfg(test)]
 mod nmt_tests {
-    use typenum::U2;
 
     use super::*;
     use crate::merkle_tree::prelude::{Sha3Digest, Sha3Node};
@@ -426,7 +417,7 @@ mod nmt_tests {
         }
     }
 
-    type TestNMT = NMT<Leaf, Sha3Digest, U2, NamespaceId, Sha3Node>;
+    type TestNMT = NMT<Leaf, Sha3Digest, 2, NamespaceId, Sha3Node>;
 
     #[test]
     fn test_namespaced_hash() {

@@ -13,7 +13,6 @@ use crate::{
     rescue::{sponge::RescueCRHF, RescueParameter},
 };
 use ark_ff::Field;
-use typenum::U3;
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
@@ -33,4 +32,4 @@ impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> 
 
 /// Interval merkle tree instantiation for interval merkle tree using Rescue
 /// hash function.
-pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<F>, u64, U3, F>;
+pub type IntervalMerkleTree<F> = MerkleTree<Interval<F>, RescueHash<F>, u64, 3, F>;

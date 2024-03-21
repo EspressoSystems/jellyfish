@@ -11,13 +11,11 @@ use crate::errors::{PrimitivesError, VerificationResult};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
-use core::marker::PhantomData;
 use itertools::Itertools;
 use jf_utils::canonical;
 use num_bigint::BigUint;
 use serde::{Deserialize, Serialize};
 use tagged_base64::tagged;
-use typenum::Unsigned;
 
 /// An internal Merkle node.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -137,29 +135,24 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
 #[derivative(Eq, Hash, PartialEq)]
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
              I: CanonicalSerialize + CanonicalDeserialize,")]
-pub struct MerkleProof<E, I, T, Arity>
+pub struct MerkleProof<E, I, T, const ARITY: usize>
 where
     E: Element,
     I: Index,
     T: NodeValue,
-    Arity: Unsigned,
 {
     /// Proof of inclusion for element at index `pos`
     #[serde(with = "canonical")]
     pub pos: I,
     /// Nodes of proof path, from root to leaf
     pub proof: MerklePath<E, I, T>,
-
-    /// Place holder for Arity
-    _phantom_arity: PhantomData<Arity>,
 }
 
-impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
+impl<E, I, T, const ARITY: usize> MerkleProof<E, I, T, ARITY>
 where
     E: Element,
     I: Index,
     T: NodeValue,
-    Arity: Unsigned,
 {
     /// Return the height of this proof.
     pub fn tree_height(&self) -> usize {
@@ -168,11 +161,7 @@ where
 
     /// Form a `MerkleProof` from a given index and Merkle path.
     pub fn new(pos: I, proof: MerklePath<E, I, T>) -> Self {
-        MerkleProof {
-            pos,
-            proof,
-            _phantom_arity: PhantomData,
-        }
+        MerkleProof { pos, proof }
     }
 
     /// Return the index of this `MerkleProof`.
@@ -191,14 +180,13 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-pub(crate) fn build_tree_internal<E, H, Arity, T>(
+pub(crate) fn build_tree_internal<E, H, const ARITY: usize, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
 ) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
-    Arity: Unsigned,
     T: NodeValue,
 {
     let leaves: Vec<_> = elems.into_iter().collect();
@@ -208,11 +196,11 @@ where
         let mut capacity = 1;
         while capacity < num_leaves {
             height += 1;
-            capacity *= Arity::to_u64();
+            capacity *= ARITY as u64;
         }
         height
     });
-    let capacity = BigUint::from(Arity::to_u64()).pow(height as u32);
+    let capacity = BigUint::from(ARITY as u64).pow(height as u32);
 
     if BigUint::from(num_leaves) > capacity {
         Err(PrimitivesError::ParameterError(
@@ -234,7 +222,7 @@ where
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
-            .chunks(Arity::to_usize())
+            .chunks(ARITY)
             .into_iter()
             .map(|chunk| {
                 let children = chunk
@@ -246,7 +234,7 @@ where
                             elem: elem.borrow().clone(),
                         }))
                     })
-                    .pad_using(Arity::to_usize(), |_| Ok(Arc::new(MerkleNode::Empty)))
+                    .pad_using(ARITY, |_| Ok(Arc::new(MerkleNode::Empty)))
                     .collect::<Result<Vec<_>, PrimitivesError>>()?;
                 Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
@@ -257,13 +245,11 @@ where
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
-                .chunks(Arity::to_usize())
+                .chunks(ARITY)
                 .into_iter()
                 .map(|chunk| {
                     let children = chunk
-                        .pad_using(Arity::to_usize(), |_| {
-                            Arc::new(MerkleNode::<E, u64, T>::Empty)
-                        })
+                        .pad_using(ARITY, |_| Arc::new(MerkleNode::<E, u64, T>::Empty))
                         .collect::<Vec<_>>();
                     Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                         value: digest_branch::<E, H, u64, T>(&children)?,
@@ -277,14 +263,13 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-pub(crate) fn build_light_weight_tree_internal<E, H, Arity, T>(
+pub(crate) fn build_light_weight_tree_internal<E, H, const ARITY: usize, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
 ) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
-    Arity: Unsigned,
     T: NodeValue,
 {
     let leaves: Vec<_> = elems.into_iter().collect();
@@ -294,11 +279,11 @@ where
         let mut capacity = 1;
         while capacity < num_leaves {
             height += 1;
-            capacity *= Arity::to_u64();
+            capacity *= ARITY as u64;
         }
         height
     });
-    let capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or_else(|| {
+    let capacity = num_traits::checked_pow(ARITY as u64, height).ok_or_else(|| {
         PrimitivesError::ParameterError("Merkle tree size too large.".to_string())
     })?;
 
@@ -322,7 +307,7 @@ where
         let mut cur_nodes = leaves
             .into_iter()
             .enumerate()
-            .chunks(Arity::to_usize())
+            .chunks(ARITY)
             .into_iter()
             .map(|chunk| {
                 let children = chunk
@@ -340,7 +325,7 @@ where
                             })
                         })
                     })
-                    .pad_using(Arity::to_usize(), |_| Ok(Arc::new(MerkleNode::Empty)))
+                    .pad_using(ARITY, |_| Ok(Arc::new(MerkleNode::Empty)))
                     .collect::<Result<Vec<_>, PrimitivesError>>()?;
                 Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
@@ -356,13 +341,11 @@ where
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
-                .chunks(Arity::to_usize())
+                .chunks(ARITY)
                 .into_iter()
                 .map(|chunk| {
                     let children = chunk
-                        .pad_using(Arity::to_usize(), |_| {
-                            Arc::new(MerkleNode::<E, u64, T>::Empty)
-                        })
+                        .pad_using(ARITY, |_| Arc::new(MerkleNode::<E, u64, T>::Empty))
                         .collect::<Vec<_>>();
                     Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                         value: digest_branch::<E, H, u64, T>(&children)?,
@@ -503,7 +486,7 @@ where
 
     /// Re-insert a forgotten leaf to the Merkle tree. We assume that the proof
     /// is valid and already checked.
-    pub(crate) fn remember_internal<H, Arity>(
+    pub(crate) fn remember_internal<H, const ARITY: usize>(
         &self,
         height: usize,
         traversal_path: &[usize],
@@ -512,7 +495,6 @@ where
     ) -> Result<Arc<Self>, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
     {
         if self.value() != path_values[height] {
             return Err(PrimitivesError::ParameterError(format!(
@@ -528,7 +510,7 @@ where
                 // Recurse into the appropriate sub-tree to remember the rest of the path.
                 let mut children = children.clone();
                 children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
-                    .remember_internal::<H, Arity>(
+                    .remember_internal::<H, ARITY>(
                         height - 1,
                         traversal_path,
                         path_values,
@@ -548,7 +530,7 @@ where
             (Self::Branch { value, children }, Self::Branch { .. }) => {
                 let mut children = children.clone();
                 children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
-                    .remember_internal::<H, Arity>(
+                    .remember_internal::<H, ARITY>(
                         height - 1,
                         traversal_path,
                         path_values,
@@ -639,7 +621,7 @@ where
     ///   leaves of the tree, `result` contains the original lookup information
     ///   at the given location.
     #[allow(clippy::type_complexity)]
-    pub(crate) fn update_with_internal<H, Arity, F>(
+    pub(crate) fn update_with_internal<H, const ARITY: usize, F>(
         &self,
         height: usize,
         pos: impl Borrow<I>,
@@ -648,7 +630,6 @@ where
     ) -> Result<(Arc<Self>, i64, LookupResult<E, (), ()>), PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
         F: FnOnce(Option<&E>) -> Option<E>,
     {
         let pos = pos.borrow();
@@ -674,7 +655,7 @@ where
             },
             MerkleNode::Branch { value, children } => {
                 let branch = traversal_path[height - 1];
-                let result = children[branch].update_with_internal::<H, Arity, _>(
+                let result = children[branch].update_with_internal::<H, ARITY, _>(
                     height - 1,
                     pos,
                     traversal_path,
@@ -734,11 +715,11 @@ where
                     }
                 } else {
                     let branch = traversal_path[height - 1];
-                    let mut children = (0..Arity::to_usize())
+                    let mut children = (0..ARITY)
                         .map(|_| Arc::new(Self::Empty))
                         .collect::<Vec<_>>();
                     // Inserting new leave here, shortcutting
-                    let result = children[branch].update_with_internal::<H, Arity, _>(
+                    let result = children[branch].update_with_internal::<H, ARITY, _>(
                         height - 1,
                         pos,
                         traversal_path,
@@ -773,7 +754,7 @@ where
     T: NodeValue,
 {
     /// Batch insertion for the given Merkle node.
-    pub(crate) fn extend_internal<H, Arity>(
+    pub(crate) fn extend_internal<H, const ARITY: usize>(
         &self,
         height: usize,
         pos: &u64,
@@ -783,7 +764,6 @@ where
     ) -> Result<(Arc<Self>, u64), PrimitivesError>
     where
         H: DigestAlgorithm<E, u64, T>,
-        Arity: Unsigned,
     {
         if data.peek().is_none() {
             return Ok((Arc::new(self.clone()), 0));
@@ -797,10 +777,10 @@ where
                 } else {
                     0
                 };
-                let cap = Arity::to_usize();
+                let cap = ARITY;
                 let mut children = children.clone();
                 while data.peek().is_some() && frontier < cap {
-                    let (new_child, increment) = children[frontier].extend_internal::<H, Arity>(
+                    let (new_child, increment) = children[frontier].extend_internal::<H, ARITY>(
                         height - 1,
                         &cur_pos,
                         traversal_path,
@@ -834,11 +814,11 @@ where
                     } else {
                         0
                     };
-                    let cap = Arity::to_usize();
+                    let cap = ARITY;
                     let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
                     while data.peek().is_some() && frontier < cap {
                         let (new_child, increment) = children[frontier]
-                            .extend_internal::<H, Arity>(
+                            .extend_internal::<H, ARITY>(
                                 height - 1,
                                 &cur_pos,
                                 traversal_path,
@@ -870,7 +850,7 @@ where
 
     /// Similar to [`extend_internal`], but this function will automatically
     /// forget every leaf except for the Merkle tree frontier.
-    pub(crate) fn extend_and_forget_internal<H, Arity>(
+    pub(crate) fn extend_and_forget_internal<H, const ARITY: usize>(
         &self,
         height: usize,
         pos: &u64,
@@ -880,7 +860,6 @@ where
     ) -> Result<(Arc<Self>, u64), PrimitivesError>
     where
         H: DigestAlgorithm<E, u64, T>,
-        Arity: Unsigned,
     {
         if data.peek().is_none() {
             return Ok((Arc::new(self.clone()), 0));
@@ -894,7 +873,7 @@ where
                 } else {
                     0
                 };
-                let cap = Arity::to_usize();
+                let cap = ARITY;
                 let mut children = children.clone();
                 while data.peek().is_some() && frontier < cap {
                     if frontier > 0 && !children[frontier - 1].is_forgotten() {
@@ -904,7 +883,7 @@ where
                             });
                     }
                     let (new_child, increment) = children[frontier]
-                        .extend_and_forget_internal::<H, Arity>(
+                        .extend_and_forget_internal::<H, ARITY>(
                             height - 1,
                             &cur_pos,
                             traversal_path,
@@ -938,7 +917,7 @@ where
                     } else {
                         0
                     };
-                    let cap = Arity::to_usize();
+                    let cap = ARITY;
                     let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
                     while data.peek().is_some() && frontier < cap {
                         if frontier > 0 && !children[frontier - 1].is_forgotten() {
@@ -948,7 +927,7 @@ where
                                 });
                         }
                         let (new_child, increment) = children[frontier]
-                            .extend_and_forget_internal::<H, Arity>(
+                            .extend_and_forget_internal::<H, ARITY>(
                                 height - 1,
                                 &cur_pos,
                                 traversal_path,
@@ -979,12 +958,11 @@ where
     }
 }
 
-impl<E, I, T, Arity> MerkleProof<E, I, T, Arity>
+impl<E, I, T, const ARITY: usize> MerkleProof<E, I, T, ARITY>
 where
     E: Element,
-    I: Index + ToTraversalPath<Arity>,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
-    Arity: Unsigned,
 {
     /// Verify a membership proof by comparing the computed root value to the
     /// expected one.
@@ -994,7 +972,6 @@ where
     ) -> Result<VerificationResult, PrimitivesError>
     where
         H: DigestAlgorithm<E, I, T>,
-        Arity: Unsigned,
     {
         if let MerkleNode::<E, I, T>::Leaf {
             value: _,

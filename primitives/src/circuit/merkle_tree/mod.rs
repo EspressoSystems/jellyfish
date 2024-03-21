@@ -12,7 +12,6 @@ use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable
 
 mod universal_merkle_tree;
 use ark_std::{string::ToString, vec::Vec};
-use typenum::{Unsigned, U3};
 
 use crate::{
     merkle_tree::{
@@ -72,7 +71,7 @@ where
     M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle proof of the concrete MT instantiation.
-    /// It is MT-specific, e.g arity will affect the exact definition of the
+    /// It is MT-specific, e.g ARITY will affect the exact definition of the
     /// underlying Merkle path.
     type MembershipProofVar;
 
@@ -165,7 +164,7 @@ where
     M::NodeValue: PrimeField,
 {
     /// Type to represent the merkle non-membership proof of the concrete MT
-    /// instantiation. It is MT-specific, e.g arity will affect the exact
+    /// instantiation. It is MT-specific, e.g ARITY will affect the exact
     /// definition of the underlying Merkle path.
     type NonMembershipProofVar;
 
@@ -305,12 +304,11 @@ where
     fn merkle_path(&self) -> &MerklePath<E, I, T>;
 }
 
-impl<E, I, T, Arity> MembershipProof<E, I, T> for MerkleProof<E, I, T, Arity>
+impl<E, I, T, const ARITY: usize> MembershipProof<E, I, T> for MerkleProof<E, I, T, ARITY>
 where
     E: Element,
     I: Index,
     T: NodeValue,
-    Arity: Unsigned,
 {
     fn tree_height(&self) -> usize {
         self.tree_height()
@@ -331,7 +329,7 @@ where
     T: MerkleTreeScheme,
     T::MembershipProof: MembershipProof<T::NodeValue, T::Index, T::NodeValue>,
     T::NodeValue: PrimeField + RescueParameter,
-    T::Index: ToTraversalPath<U3>,
+    T::Index: ToTraversalPath<3>,
 {
     type MembershipProofVar = Merkle3AryMembershipProofVar;
 

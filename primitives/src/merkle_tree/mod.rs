@@ -26,7 +26,6 @@ use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
 
 use self::internal::MerkleTreeIter;
 
@@ -139,9 +138,9 @@ where
 }
 
 /// An trait for Merkle tree index type.
-pub trait ToTraversalPath<Arity: Unsigned> {
+pub trait ToTraversalPath<const ARITY: usize> {
     /// Convert the given index to a vector of branch indices given tree height
-    /// and arity.
+    /// and ARITY.
     fn to_traversal_path(&self, height: usize) -> Vec<usize>;
 }
 
@@ -195,7 +194,7 @@ pub trait MerkleTreeScheme: Sized {
     /// Merkle tree commitment
     type Commitment: MerkleCommitment<Self::NodeValue>;
 
-    /// Tree arity
+    /// Tree ARITY
     const ARITY: usize;
 
     /// Return the height of this merkle tree

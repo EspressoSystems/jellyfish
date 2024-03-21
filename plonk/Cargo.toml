@@ -10,27 +10,27 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
-ark-ec = "0.4.0"
-ark-ff = { version = "0.4.0", features = ["asm"] }
-ark-poly = "0.4.0"
-ark-serialize = "0.4.0"
-ark-std = { version = "0.4.0", default-features = false }
-derivative = { version = "2", features = ["use_core"] }
-displaydoc = { version = "0.2.3", default-features = false }
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+ark-poly = { workspace = true }
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+derivative = { workspace = true }
+displaydoc = { workspace = true }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
-hashbrown = "0.14.3"
+hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-utils = { path = "../utilities" }
-merlin = { version = "3.0.0", default-features = false }
-num-bigint = { version = "0.4", default-features = false }
-rand_chacha = { version = "0.3.1", default-features = false }
+merlin = { workspace = true }
+num-bigint = { workspace = true }
+rand_chacha = { workspace = true }
 rayon = { version = "1.5.0", optional = true }
-serde = { version = "1.0", default-features = false, features = ["derive"] }
-sha3 = "^0.10"
+serde = { workspace = true }
+sha3 = { workspace = true }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
@@ -62,6 +62,7 @@ std = [
     "jf-primitives/std",
     "jf-relation/std",
     "jf-utils/std",
+    "merlin/std",
     "num-bigint/std",
     "rand_chacha/std",
     "sha3/std",
