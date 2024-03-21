@@ -19,9 +19,9 @@ sha2 = { workspace = true }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
-ark-bls12-377 = "0.4.0"
-ark-bls12-381 = "0.4.0"
-ark-bn254 = "0.4.0"
+ark-bls12-377 = { workspace = true }
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
 ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"

@@ -65,8 +65,8 @@ pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, 3>;
 /// Additional parameters beyond [`HasherMerkleTree`]:
 /// - `I` is a [`Index`] data type that impls [`From<u64>`]. (eg. [`u64`],
 ///   [`Field`](ark_ff::Field), etc.)
-/// - `ARITY` is a [`Unsigned`](typenum::Unsigned). (eg. [`U2`](typenum::U2) for
-///   a binary tree, [`U3`] for a trinary tree, etc.)
+/// - `ARITY` is a const generic. (eg. 2 for a binary tree, 3 for a trinary
+///   tree, etc.)
 pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
     MerkleTree<E, HasherDigestAlgorithm, I, ARITY, HasherNode<H>>;
 
