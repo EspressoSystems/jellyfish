@@ -54,7 +54,7 @@ use tagged_base64::tagged;
 
 /// Merkle tree generic over [`Digest`] hasher `H`.
 ///
-/// It's a trinary ([`U3`]) tree whose nodes are indexed by [`u64`].
+/// It's a trinary tree whose nodes are indexed by [`u64`].
 /// - `H` is a [RustCrypto-compatible](https://github.com/RustCrypto/hashes)
 ///   hash function.
 /// - `E` is a [`Element`] payload data type for the Merkle tree.
