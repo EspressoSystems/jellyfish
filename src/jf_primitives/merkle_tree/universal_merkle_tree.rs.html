@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/universal_merkle_tree.rs`."><title>universal_merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/universal_merkle_tree.rs`."><title>universal_merkle_tree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -638,11 +639,6 @@
 <a href="#637" id="637">637</a>
 <a href="#638" id="638">638</a>
 <a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
-<a href="#642" id="642">642</a>
-<a href="#643" id="643">643</a>
-<a href="#644" id="644">644</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -665,18 +661,16 @@
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>num_traits::pow::pow;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>typenum::Unsigned;
 
 <span class="comment">// A standard Universal Merkle tree implementation
 </span><span class="macro">impl_merkle_tree_scheme!</span>(UniversalMerkleTree);
 <span class="macro">impl_forgetable_merkle_tree_scheme!</span>(UniversalMerkleTree);
 
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; UniversalMerkleTree&lt;E, H, I, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + ToTraversalPath&lt;Arity&gt;,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
 {
     <span class="doccomment">/// Initialize an empty Merkle tree.
@@ -709,15 +703,15 @@
         <span class="prelude-val">Ok</span>(mt)
     }
 }
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; UniversalMerkleTreeScheme <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; UniversalMerkleTreeScheme
+    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + ToTraversalPath&lt;Arity&gt;,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
 {
-    <span class="kw">type </span>NonMembershipProof = MerkleProof&lt;E, I, T, Arity&gt;;
+    <span class="kw">type </span>NonMembershipProof = MerkleProof&lt;E, I, T, ARITY&gt;;
     <span class="kw">type </span>BatchNonMembershipProof = ();
 
     <span class="kw">fn </span>update_with&lt;F&gt;(
@@ -732,7 +726,7 @@
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
         <span class="kw">let </span>(new_root, delta, result) =
             <span class="self">self</span>.root
-                .update_with_internal::&lt;H, Arity, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
+                .update_with_internal::&lt;H, ARITY, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
         <span class="self">self</span>.root = new_root;
         <span class="self">self</span>.num_leaves = (delta + <span class="self">self</span>.num_leaves <span class="kw">as </span>i64) <span class="kw">as </span>u64;
         <span class="prelude-val">Ok</span>(result)
@@ -776,13 +770,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; PersistentUniversalMerkleTreeScheme
-    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; PersistentUniversalMerkleTreeScheme
+    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + ToTraversalPath&lt;Arity&gt;,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
 {
     <span class="kw">fn </span>persistent_update_with&lt;F&gt;(
@@ -797,7 +790,7 @@
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
         <span class="kw">let </span>(root, delta, <span class="kw">_</span>) =
             <span class="self">self</span>.root
-                .update_with_internal::&lt;H, Arity, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
+                .update_with_internal::&lt;H, ARITY, F&gt;(<span class="self">self</span>.height, pos, <span class="kw-2">&amp;</span>traversal_path, f)<span class="question-mark">?</span>;
         <span class="kw">let </span>num_leaves = (delta + <span class="self">self</span>.num_leaves <span class="kw">as </span>i64) <span class="kw">as </span>u64;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             root,
@@ -808,13 +801,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; ForgetableUniversalMerkleTreeScheme
-    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; ForgetableUniversalMerkleTreeScheme
+    <span class="kw">for </span>UniversalMerkleTree&lt;E, H, I, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
-    I: Index + ToTraversalPath&lt;Arity&gt;,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
 {
     <span class="doccomment">/// WARN(#495): this method breaks non-membership proofs.
@@ -867,7 +859,7 @@
                         }
                     },
                 )<span class="question-mark">?</span>;
-            <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
+            <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, ARITY&gt;(
                 <span class="self">self</span>.height,
                 <span class="kw-2">&amp;</span>traversal_path,
                 <span class="kw-2">&amp;</span>path_values,
@@ -899,7 +891,6 @@
     <span class="kw">use </span>ark_ed_on_bn254::Fq <span class="kw">as </span>Fq254;
     <span class="kw">use </span>hashbrown::HashMap;
     <span class="kw">use </span>num_bigint::BigUint;
-    <span class="kw">use </span>typenum::U3;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_universal_mt_builder() {
@@ -967,8 +958,8 @@
 
     <span class="kw">fn </span>test_update_and_lookup_helper&lt;I, F&gt;()
     <span class="kw">where
-        </span>I: Index + ToTraversalPath&lt;U3&gt;,
-        F: RescueParameter + ToTraversalPath&lt;U3&gt;,
+        </span>I: Index + ToTraversalPath&lt;<span class="number">3</span>&gt;,
+        F: RescueParameter + ToTraversalPath&lt;<span class="number">3</span>&gt;,
         RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::new(<span class="number">10</span>);
@@ -1220,8 +1211,8 @@
 
     <span class="kw">fn </span>test_persistent_update_helper&lt;I, F&gt;()
     <span class="kw">where
-        </span>I: Index + ToTraversalPath&lt;U3&gt;,
-        F: RescueParameter + ToTraversalPath&lt;U3&gt;,
+        </span>I: Index + ToTraversalPath&lt;<span class="number">3</span>&gt;,
+        F: RescueParameter + ToTraversalPath&lt;<span class="number">3</span>&gt;,
         RescueHash&lt;F&gt;: DigestAlgorithm&lt;F, I, F&gt;,
     {
         <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::new(<span class="number">10</span>);
@@ -1257,7 +1248,7 @@
         test_universal_mt_serde_helper::&lt;Fq381&gt;();
     }
 
-    <span class="kw">fn </span>test_universal_mt_serde_helper&lt;F: RescueParameter + ToTraversalPath&lt;U3&gt;&gt;() {
+    <span class="kw">fn </span>test_universal_mt_serde_helper&lt;F: RescueParameter + ToTraversalPath&lt;<span class="number">3</span>&gt;&gt;() {
         <span class="kw">let </span><span class="kw-2">mut </span>hashmap = HashMap::new();
         hashmap.insert(F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(F::from(<span class="number">10u64</span>), F::from(<span class="number">3u64</span>));

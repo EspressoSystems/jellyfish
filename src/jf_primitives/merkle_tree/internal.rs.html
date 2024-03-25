@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/internal.rs`."><title>internal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/internal.rs`."><title>internal.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1147,29 +1148,6 @@
 <a href="#1146" id="1146">1146</a>
 <a href="#1147" id="1147">1147</a>
 <a href="#1148" id="1148">1148</a>
-<a href="#1149" id="1149">1149</a>
-<a href="#1150" id="1150">1150</a>
-<a href="#1151" id="1151">1151</a>
-<a href="#1152" id="1152">1152</a>
-<a href="#1153" id="1153">1153</a>
-<a href="#1154" id="1154">1154</a>
-<a href="#1155" id="1155">1155</a>
-<a href="#1156" id="1156">1156</a>
-<a href="#1157" id="1157">1157</a>
-<a href="#1158" id="1158">1158</a>
-<a href="#1159" id="1159">1159</a>
-<a href="#1160" id="1160">1160</a>
-<a href="#1161" id="1161">1161</a>
-<a href="#1162" id="1162">1162</a>
-<a href="#1163" id="1163">1163</a>
-<a href="#1164" id="1164">1164</a>
-<a href="#1165" id="1165">1165</a>
-<a href="#1166" id="1166">1166</a>
-<a href="#1167" id="1167">1167</a>
-<a href="#1168" id="1168">1168</a>
-<a href="#1169" id="1169">1169</a>
-<a href="#1170" id="1170">1170</a>
-<a href="#1171" id="1171">1171</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1183,13 +1161,11 @@
 <span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
-<span class="kw">use </span>core::marker::PhantomData;
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_utils::canonical;
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>tagged_base64::tagged;
-<span class="kw">use </span>typenum::Unsigned;
 
 <span class="doccomment">/// An internal Merkle node.
 </span><span class="attr">#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -1309,29 +1285,24 @@
 #[derivative(Eq, Hash, PartialEq)]
 #[serde(bound = <span class="string">"E: CanonicalSerialize + CanonicalDeserialize,
              I: CanonicalSerialize + CanonicalDeserialize,"</span>)]
-</span><span class="kw">pub struct </span>MerkleProof&lt;E, I, T, Arity&gt;
+</span><span class="kw">pub struct </span>MerkleProof&lt;E, I, T, <span class="kw">const </span>ARITY: usize&gt;
 <span class="kw">where
     </span>E: Element,
     I: Index,
     T: NodeValue,
-    Arity: Unsigned,
 {
     <span class="doccomment">/// Proof of inclusion for element at index `pos`
     </span><span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span><span class="kw">pub </span>pos: I,
     <span class="doccomment">/// Nodes of proof path, from root to leaf
     </span><span class="kw">pub </span>proof: MerklePath&lt;E, I, T&gt;,
-
-    <span class="doccomment">/// Place holder for Arity
-    </span>_phantom_arity: PhantomData&lt;Arity&gt;,
 }
 
-<span class="kw">impl</span>&lt;E, I, T, Arity&gt; MerkleProof&lt;E, I, T, Arity&gt;
+<span class="kw">impl</span>&lt;E, I, T, <span class="kw">const </span>ARITY: usize&gt; MerkleProof&lt;E, I, T, ARITY&gt;
 <span class="kw">where
     </span>E: Element,
     I: Index,
     T: NodeValue,
-    Arity: Unsigned,
 {
     <span class="doccomment">/// Return the height of this proof.
     </span><span class="kw">pub fn </span>tree_height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
@@ -1340,11 +1311,7 @@
 
     <span class="doccomment">/// Form a `MerkleProof` from a given index and Merkle path.
     </span><span class="kw">pub fn </span>new(pos: I, proof: MerklePath&lt;E, I, T&gt;) -&gt; <span class="self">Self </span>{
-        MerkleProof {
-            pos,
-            proof,
-            _phantom_arity: PhantomData,
-        }
+        MerkleProof { pos, proof }
     }
 
     <span class="doccomment">/// Return the index of this `MerkleProof`.
@@ -1363,14 +1330,13 @@
 }
 
 <span class="attr">#[allow(clippy::type_complexity)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_tree_internal&lt;E, H, Arity, T&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_tree_internal&lt;E, H, <span class="kw">const </span>ARITY: usize, T&gt;(
     height: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;E&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;MerkleNode&lt;E, u64, T&gt;&gt;, usize, u64), PrimitivesError&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, u64, T&gt;,
-    Arity: Unsigned,
     T: NodeValue,
 {
     <span class="kw">let </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = elems.into_iter().collect();
@@ -1380,11 +1346,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>capacity = <span class="number">1</span>;
         <span class="kw">while </span>capacity &lt; num_leaves {
             height += <span class="number">1</span>;
-            capacity <span class="kw-2">*</span>= Arity::to_u64();
+            capacity <span class="kw-2">*</span>= ARITY <span class="kw">as </span>u64;
         }
         height
     });
-    <span class="kw">let </span>capacity = BigUint::from(Arity::to_u64()).pow(height <span class="kw">as </span>u32);
+    <span class="kw">let </span>capacity = BigUint::from(ARITY <span class="kw">as </span>u64).pow(height <span class="kw">as </span>u32);
 
     <span class="kw">if </span>BigUint::from(num_leaves) &gt; capacity {
         <span class="prelude-val">Err</span>(PrimitivesError::ParameterError(
@@ -1406,7 +1372,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cur_nodes = leaves
             .into_iter()
             .enumerate()
-            .chunks(Arity::to_usize())
+            .chunks(ARITY)
             .into_iter()
             .map(|chunk| {
                 <span class="kw">let </span>children = chunk
@@ -1418,7 +1384,7 @@
                             elem: elem.borrow().clone(),
                         }))
                     })
-                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::Empty)))
+                    .pad_using(ARITY, |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::Empty)))
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::&lt;E, u64, T&gt;::Branch {
                     value: digest_branch::&lt;E, H, u64, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
@@ -1429,13 +1395,11 @@
         <span class="kw">for _ in </span><span class="number">1</span>..height {
             cur_nodes = cur_nodes
                 .into_iter()
-                .chunks(Arity::to_usize())
+                .chunks(ARITY)
                 .into_iter()
                 .map(|chunk| {
                     <span class="kw">let </span>children = chunk
-                        .pad_using(Arity::to_usize(), |<span class="kw">_</span>| {
-                            Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty)
-                        })
+                        .pad_using(ARITY, |<span class="kw">_</span>| Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty))
                         .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                     <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::&lt;E, u64, T&gt;::Branch {
                         value: digest_branch::&lt;E, H, u64, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
@@ -1449,14 +1413,13 @@
 }
 
 <span class="attr">#[allow(clippy::type_complexity)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_light_weight_tree_internal&lt;E, H, Arity, T&gt;(
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build_light_weight_tree_internal&lt;E, H, <span class="kw">const </span>ARITY: usize, T&gt;(
     height: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;E&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;MerkleNode&lt;E, u64, T&gt;&gt;, usize, u64), PrimitivesError&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, u64, T&gt;,
-    Arity: Unsigned,
     T: NodeValue,
 {
     <span class="kw">let </span>leaves: Vec&lt;<span class="kw">_</span>&gt; = elems.into_iter().collect();
@@ -1466,11 +1429,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>capacity = <span class="number">1</span>;
         <span class="kw">while </span>capacity &lt; num_leaves {
             height += <span class="number">1</span>;
-            capacity <span class="kw-2">*</span>= Arity::to_u64();
+            capacity <span class="kw-2">*</span>= ARITY <span class="kw">as </span>u64;
         }
         height
     });
-    <span class="kw">let </span>capacity = num_traits::checked_pow(Arity::to_u64(), height).ok_or_else(|| {
+    <span class="kw">let </span>capacity = num_traits::checked_pow(ARITY <span class="kw">as </span>u64, height).ok_or_else(|| {
         PrimitivesError::ParameterError(<span class="string">"Merkle tree size too large."</span>.to_string())
     })<span class="question-mark">?</span>;
 
@@ -1494,7 +1457,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>cur_nodes = leaves
             .into_iter()
             .enumerate()
-            .chunks(Arity::to_usize())
+            .chunks(ARITY)
             .into_iter()
             .map(|chunk| {
                 <span class="kw">let </span>children = chunk
@@ -1512,7 +1475,7 @@
                             })
                         })
                     })
-                    .pad_using(Arity::to_usize(), |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::Empty)))
+                    .pad_using(ARITY, |<span class="kw">_</span>| <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::Empty)))
                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, PrimitivesError&gt;&gt;()<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::&lt;E, u64, T&gt;::Branch {
                     value: digest_branch::&lt;E, H, u64, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
@@ -1528,13 +1491,11 @@
         <span class="kw">for _ in </span><span class="number">1</span>..height {
             cur_nodes = cur_nodes
                 .into_iter()
-                .chunks(Arity::to_usize())
+                .chunks(ARITY)
                 .into_iter()
                 .map(|chunk| {
                     <span class="kw">let </span>children = chunk
-                        .pad_using(Arity::to_usize(), |<span class="kw">_</span>| {
-                            Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty)
-                        })
+                        .pad_using(ARITY, |<span class="kw">_</span>| Arc::new(MerkleNode::&lt;E, u64, T&gt;::Empty))
                         .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                     <span class="prelude-val">Ok</span>(Arc::new(MerkleNode::&lt;E, u64, T&gt;::Branch {
                         value: digest_branch::&lt;E, H, u64, T&gt;(<span class="kw-2">&amp;</span>children)<span class="question-mark">?</span>,
@@ -1675,7 +1636,7 @@
 
     <span class="doccomment">/// Re-insert a forgotten leaf to the Merkle tree. We assume that the proof
     /// is valid and already checked.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remember_internal&lt;H, Arity&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remember_internal&lt;H, <span class="kw">const </span>ARITY: usize&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         height: usize,
         traversal_path: <span class="kw-2">&amp;</span>[usize],
@@ -1684,7 +1645,6 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;, PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, I, T&gt;,
-        Arity: Unsigned,
     {
         <span class="kw">if </span><span class="self">self</span>.value() != path_values[height] {
             <span class="kw">return </span><span class="prelude-val">Err</span>(PrimitivesError::ParameterError(<span class="macro">format!</span>(
@@ -1700,7 +1660,7 @@
                 <span class="comment">// Recurse into the appropriate sub-tree to remember the rest of the path.
                 </span><span class="kw">let </span><span class="kw-2">mut </span>children = children.clone();
                 children[traversal_path[height - <span class="number">1</span>]] = children[traversal_path[height - <span class="number">1</span>]]
-                    .remember_internal::&lt;H, Arity&gt;(
+                    .remember_internal::&lt;H, ARITY&gt;(
                         height - <span class="number">1</span>,
                         traversal_path,
                         path_values,
@@ -1720,7 +1680,7 @@
             (<span class="self">Self</span>::Branch { value, children }, <span class="self">Self</span>::Branch { .. }) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>children = children.clone();
                 children[traversal_path[height - <span class="number">1</span>]] = children[traversal_path[height - <span class="number">1</span>]]
-                    .remember_internal::&lt;H, Arity&gt;(
+                    .remember_internal::&lt;H, ARITY&gt;(
                         height - <span class="number">1</span>,
                         traversal_path,
                         path_values,
@@ -1811,7 +1771,7 @@
     ///   leaves of the tree, `result` contains the original lookup information
     ///   at the given location.
     </span><span class="attr">#[allow(clippy::type_complexity)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_with_internal&lt;H, Arity, F&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_with_internal&lt;H, <span class="kw">const </span>ARITY: usize, F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         height: usize,
         pos: <span class="kw">impl </span>Borrow&lt;I&gt;,
@@ -1820,7 +1780,6 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;<span class="self">Self</span>&gt;, i64, LookupResult&lt;E, (), ()&gt;), PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, I, T&gt;,
-        Arity: Unsigned,
         F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>E&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;E&gt;,
     {
         <span class="kw">let </span>pos = pos.borrow();
@@ -1846,7 +1805,7 @@
             },
             MerkleNode::Branch { value, children } =&gt; {
                 <span class="kw">let </span>branch = traversal_path[height - <span class="number">1</span>];
-                <span class="kw">let </span>result = children[branch].update_with_internal::&lt;H, Arity, <span class="kw">_</span>&gt;(
+                <span class="kw">let </span>result = children[branch].update_with_internal::&lt;H, ARITY, <span class="kw">_</span>&gt;(
                     height - <span class="number">1</span>,
                     pos,
                     traversal_path,
@@ -1906,11 +1865,11 @@
                     }
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>branch = traversal_path[height - <span class="number">1</span>];
-                    <span class="kw">let </span><span class="kw-2">mut </span>children = (<span class="number">0</span>..Arity::to_usize())
+                    <span class="kw">let </span><span class="kw-2">mut </span>children = (<span class="number">0</span>..ARITY)
                         .map(|<span class="kw">_</span>| Arc::new(<span class="self">Self</span>::Empty))
                         .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                     <span class="comment">// Inserting new leave here, shortcutting
-                    </span><span class="kw">let </span>result = children[branch].update_with_internal::&lt;H, Arity, <span class="kw">_</span>&gt;(
+                    </span><span class="kw">let </span>result = children[branch].update_with_internal::&lt;H, ARITY, <span class="kw">_</span>&gt;(
                         height - <span class="number">1</span>,
                         pos,
                         traversal_path,
@@ -1945,7 +1904,7 @@
     T: NodeValue,
 {
     <span class="doccomment">/// Batch insertion for the given Merkle node.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend_internal&lt;H, Arity&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend_internal&lt;H, <span class="kw">const </span>ARITY: usize&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         height: usize,
         pos: <span class="kw-2">&amp;</span>u64,
@@ -1955,7 +1914,6 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;<span class="self">Self</span>&gt;, u64), PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, u64, T&gt;,
-        Arity: Unsigned,
     {
         <span class="kw">if </span>data.peek().is_none() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>((Arc::new(<span class="self">self</span>.clone()), <span class="number">0</span>));
@@ -1969,10 +1927,10 @@
                 } <span class="kw">else </span>{
                     <span class="number">0
                 </span>};
-                <span class="kw">let </span>cap = Arity::to_usize();
+                <span class="kw">let </span>cap = ARITY;
                 <span class="kw">let </span><span class="kw-2">mut </span>children = children.clone();
                 <span class="kw">while </span>data.peek().is_some() &amp;&amp; frontier &lt; cap {
-                    <span class="kw">let </span>(new_child, increment) = children[frontier].extend_internal::&lt;H, Arity&gt;(
+                    <span class="kw">let </span>(new_child, increment) = children[frontier].extend_internal::&lt;H, ARITY&gt;(
                         height - <span class="number">1</span>,
                         <span class="kw-2">&amp;</span>cur_pos,
                         traversal_path,
@@ -2006,11 +1964,11 @@
                     } <span class="kw">else </span>{
                         <span class="number">0
                     </span>};
-                    <span class="kw">let </span>cap = Arity::to_usize();
+                    <span class="kw">let </span>cap = ARITY;
                     <span class="kw">let </span><span class="kw-2">mut </span>children = (<span class="number">0</span>..cap).map(|<span class="kw">_</span>| Arc::new(<span class="self">Self</span>::Empty)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                     <span class="kw">while </span>data.peek().is_some() &amp;&amp; frontier &lt; cap {
                         <span class="kw">let </span>(new_child, increment) = children[frontier]
-                            .extend_internal::&lt;H, Arity&gt;(
+                            .extend_internal::&lt;H, ARITY&gt;(
                                 height - <span class="number">1</span>,
                                 <span class="kw-2">&amp;</span>cur_pos,
                                 traversal_path,
@@ -2042,7 +2000,7 @@
 
     <span class="doccomment">/// Similar to [`extend_internal`], but this function will automatically
     /// forget every leaf except for the Merkle tree frontier.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend_and_forget_internal&lt;H, Arity&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend_and_forget_internal&lt;H, <span class="kw">const </span>ARITY: usize&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         height: usize,
         pos: <span class="kw-2">&amp;</span>u64,
@@ -2052,7 +2010,6 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Arc&lt;<span class="self">Self</span>&gt;, u64), PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, u64, T&gt;,
-        Arity: Unsigned,
     {
         <span class="kw">if </span>data.peek().is_none() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>((Arc::new(<span class="self">self</span>.clone()), <span class="number">0</span>));
@@ -2066,7 +2023,7 @@
                 } <span class="kw">else </span>{
                     <span class="number">0
                 </span>};
-                <span class="kw">let </span>cap = Arity::to_usize();
+                <span class="kw">let </span>cap = ARITY;
                 <span class="kw">let </span><span class="kw-2">mut </span>children = children.clone();
                 <span class="kw">while </span>data.peek().is_some() &amp;&amp; frontier &lt; cap {
                     <span class="kw">if </span>frontier &gt; <span class="number">0 </span>&amp;&amp; !children[frontier - <span class="number">1</span>].is_forgotten() {
@@ -2076,7 +2033,7 @@
                             });
                     }
                     <span class="kw">let </span>(new_child, increment) = children[frontier]
-                        .extend_and_forget_internal::&lt;H, Arity&gt;(
+                        .extend_and_forget_internal::&lt;H, ARITY&gt;(
                             height - <span class="number">1</span>,
                             <span class="kw-2">&amp;</span>cur_pos,
                             traversal_path,
@@ -2110,7 +2067,7 @@
                     } <span class="kw">else </span>{
                         <span class="number">0
                     </span>};
-                    <span class="kw">let </span>cap = Arity::to_usize();
+                    <span class="kw">let </span>cap = ARITY;
                     <span class="kw">let </span><span class="kw-2">mut </span>children = (<span class="number">0</span>..cap).map(|<span class="kw">_</span>| Arc::new(<span class="self">Self</span>::Empty)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
                     <span class="kw">while </span>data.peek().is_some() &amp;&amp; frontier &lt; cap {
                         <span class="kw">if </span>frontier &gt; <span class="number">0 </span>&amp;&amp; !children[frontier - <span class="number">1</span>].is_forgotten() {
@@ -2120,7 +2077,7 @@
                                 });
                         }
                         <span class="kw">let </span>(new_child, increment) = children[frontier]
-                            .extend_and_forget_internal::&lt;H, Arity&gt;(
+                            .extend_and_forget_internal::&lt;H, ARITY&gt;(
                                 height - <span class="number">1</span>,
                                 <span class="kw-2">&amp;</span>cur_pos,
                                 traversal_path,
@@ -2151,12 +2108,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, I, T, Arity&gt; MerkleProof&lt;E, I, T, Arity&gt;
+<span class="kw">impl</span>&lt;E, I, T, <span class="kw">const </span>ARITY: usize&gt; MerkleProof&lt;E, I, T, ARITY&gt;
 <span class="kw">where
     </span>E: Element,
-    I: Index + ToTraversalPath&lt;Arity&gt;,
+    I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
-    Arity: Unsigned,
 {
     <span class="doccomment">/// Verify a membership proof by comparing the computed root value to the
     /// expected one.
@@ -2166,7 +2122,6 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, PrimitivesError&gt;
     <span class="kw">where
         </span>H: DigestAlgorithm&lt;E, I, T&gt;,
-        Arity: Unsigned,
     {
         <span class="kw">if let </span>MerkleNode::&lt;E, I, T&gt;::Leaf {
             value: <span class="kw">_</span>,

@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/macros.rs`."><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/macros.rs`."><title>macros.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -264,11 +265,6 @@
 <a href="#263" id="263">263</a>
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -287,38 +283,36 @@
             bound = <span class="string">"E: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,
                      I: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,"
         </span>)]
-        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, Arity, T&gt;
+        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt;
         <span class="kw">where
             </span>E: Element,
             H: DigestAlgorithm&lt;E, I, T&gt;,
             I: Index,
-            Arity: Unsigned,
             T: NodeValue,
         {
             root: Arc&lt;MerkleNode&lt;E, I, T&gt;&gt;,
             height: usize,
             num_leaves: u64,
 
-            _phantom: PhantomData&lt;(H, Arity)&gt;,
+            _phantom: PhantomData&lt;H&gt;,
         }
 
-        <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; MerkleTreeScheme <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, Arity, T&gt;
+        <span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; MerkleTreeScheme <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, ARITY, T&gt;
         <span class="kw">where
             </span>E: Element,
             H: DigestAlgorithm&lt;E, I, T&gt;,
-            I: Index + ToTraversalPath&lt;Arity&gt;,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath&lt;ARITY&gt;,
             T: NodeValue,
         {
             <span class="kw">type </span>Element = E;
             <span class="kw">type </span>Index = I;
             <span class="kw">type </span>NodeValue = T;
-            <span class="kw">type </span>MembershipProof = MerkleProof&lt;E, I, T, Arity&gt;;
+            <span class="kw">type </span>MembershipProof = MerkleProof&lt;E, I, T, ARITY&gt;;
             <span class="comment">// TODO(Chengyu): implement batch membership proof
             </span><span class="kw">type </span>BatchMembershipProof = ();
             <span class="kw">type </span>Commitment = MerkleTreeCommitment&lt;T&gt;;
 
-            <span class="kw">const </span>ARITY: usize = Arity::USIZE;
+            <span class="kw">const </span>ARITY: usize = ARITY;
 
             <span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
                 <span class="self">self</span>.height
@@ -367,12 +361,11 @@
             }
         }
 
-        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, E, H, I, Arity, T&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, Arity, T&gt;
+        <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, ARITY, T&gt;
         <span class="kw">where
             </span>E: Element,
             H: DigestAlgorithm&lt;E, I, T&gt;,
-            I: Index + ToTraversalPath&lt;Arity&gt;,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath&lt;ARITY&gt;,
             T: NodeValue,
         {
             <span class="kw">type </span>Item = (<span class="kw-2">&amp;</span><span class="lifetime">'a </span>I, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>E);
@@ -384,12 +377,11 @@
             }
         }
 
-        <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; IntoIterator <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, Arity, T&gt;
+        <span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; IntoIterator <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, ARITY, T&gt;
         <span class="kw">where
             </span>E: Element,
             H: DigestAlgorithm&lt;E, I, T&gt;,
-            I: Index + ToTraversalPath&lt;Arity&gt;,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath&lt;ARITY&gt;,
             T: NodeValue,
         {
             <span class="kw">type </span>Item = (I, E);
@@ -408,12 +400,11 @@
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>impl_forgetable_merkle_tree_scheme {
     (<span class="macro-nonterminal">$name</span>: ident) =&gt; {
-        <span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; ForgetableMerkleTreeScheme <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, Arity, T&gt;
+        <span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; ForgetableMerkleTreeScheme <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;E, H, I, ARITY, T&gt;
         <span class="kw">where
             </span>E: Element,
             H: DigestAlgorithm&lt;E, I, T&gt;,
-            I: Index + ToTraversalPath&lt;Arity&gt;,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath&lt;ARITY&gt;,
             T: NodeValue,
         {
             <span class="kw">fn </span>from_commitment(com: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;) -&gt; <span class="self">Self </span>{
@@ -487,7 +478,7 @@
                             }
                         },
                     )<span class="question-mark">?</span>;
-                    <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, Arity&gt;(
+                    <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, ARITY&gt;(
                         <span class="self">self</span>.height,
                         <span class="kw-2">&amp;</span>traversal_path,
                         <span class="kw-2">&amp;</span>path_values,
@@ -508,13 +499,13 @@
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>impl_to_traversal_path_primitives {
     (<span class="macro-nonterminal">$t</span>: ty) =&gt; {
-        <span class="kw">impl</span>&lt;Arity: Unsigned&gt; ToTraversalPath&lt;Arity&gt; <span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+        <span class="kw">impl</span>&lt;<span class="kw">const </span>ARITY: usize&gt; ToTraversalPath&lt;ARITY&gt; <span class="kw">for </span><span class="macro-nonterminal">$t </span>{
             <span class="kw">fn </span>to_traversal_path(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; Vec&lt;usize&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>pos = <span class="kw-2">*</span><span class="self">self </span><span class="kw">as </span>u64;
                 <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
                 <span class="kw">for </span>_i <span class="kw">in </span><span class="number">0</span>..height {
-                    ret.push((pos % (Arity::to_u64())).to_usize().unwrap());
-                    pos /= Arity::to_u64();
+                    ret.push((pos % (ARITY <span class="kw">as </span>u64)) <span class="kw">as </span>usize);
+                    pos /= ARITY <span class="kw">as </span>u64;
                 }
                 ret
             }
@@ -526,13 +517,13 @@
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>impl_to_traversal_path_biguint {
     (<span class="macro-nonterminal">$t</span>: ty) =&gt; {
-        <span class="kw">impl</span>&lt;Arity: Unsigned&gt; ToTraversalPath&lt;Arity&gt; <span class="kw">for </span><span class="macro-nonterminal">$t </span>{
+        <span class="kw">impl</span>&lt;<span class="kw">const </span>ARITY: usize&gt; ToTraversalPath&lt;ARITY&gt; <span class="kw">for </span><span class="macro-nonterminal">$t </span>{
             <span class="kw">fn </span>to_traversal_path(<span class="kw-2">&amp;</span><span class="self">self</span>, height: usize) -&gt; Vec&lt;usize&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>pos: BigUint = &lt;<span class="self">Self </span><span class="kw">as </span>Into&lt;BigUint&gt;&gt;::into(<span class="self">self</span>.clone());
                 <span class="kw">let </span><span class="kw-2">mut </span>ret = <span class="macro">vec!</span>[];
                 <span class="kw">for </span>_i <span class="kw">in </span><span class="number">0</span>..height {
-                    ret.push((<span class="kw-2">&amp;</span>pos % (Arity::to_u64())).to_usize().unwrap());
-                    pos /= Arity::to_u64();
+                    ret.push((<span class="kw-2">&amp;</span>pos % ARITY).to_usize().unwrap());
+                    pos /= ARITY;
                 }
                 ret
             }

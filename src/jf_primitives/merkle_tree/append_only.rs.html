@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/append_only.rs`."><title>append_only.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/merkle_tree/append_only.rs`."><title>append_only.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -346,10 +347,6 @@
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
 <a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -375,17 +372,15 @@
 <span class="kw">use </span>num_bigint::BigUint;
 <span class="kw">use </span>num_traits::pow::pow;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-<span class="kw">use </span>typenum::Unsigned;
 
 <span class="macro">impl_merkle_tree_scheme!</span>(MerkleTree);
 <span class="macro">impl_forgetable_merkle_tree_scheme!</span>(MerkleTree);
 
-<span class="kw">impl</span>&lt;E, H, I, Arity, T&gt; MerkleTree&lt;E, H, I, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, I, <span class="kw">const </span>ARITY: usize, T&gt; MerkleTree&lt;E, H, I, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, I, T&gt;,
     I: Index,
-    Arity: Unsigned,
     T: NodeValue,
 {
     <span class="doccomment">/// Initialize an empty Merkle tree.
@@ -399,11 +394,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H, Arity, T&gt; MerkleTree&lt;E, H, u64, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, <span class="kw">const </span>ARITY: usize, T&gt; MerkleTree&lt;E, H, u64, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, u64, T&gt;,
-    Arity: Unsigned,
     T: NodeValue,
 {
     <span class="doccomment">/// Construct a new Merkle tree with given height from a data slice
@@ -415,7 +409,7 @@
         height: <span class="prelude-ty">Option</span>&lt;usize&gt;,
         elems: <span class="kw">impl </span>IntoIterator&lt;Item = <span class="kw">impl </span>Borrow&lt;E&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, PrimitivesError&gt; {
-        <span class="kw">let </span>(root, height, num_leaves) = build_tree_internal::&lt;E, H, Arity, T&gt;(height, elems)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(root, height, num_leaves) = build_tree_internal::&lt;E, H, ARITY, T&gt;(height, elems)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             root,
             height,
@@ -425,11 +419,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E, H, Arity, T&gt; AppendableMerkleTreeScheme <span class="kw">for </span>MerkleTree&lt;E, H, u64, Arity, T&gt;
+<span class="kw">impl</span>&lt;E, H, <span class="kw">const </span>ARITY: usize, T&gt; AppendableMerkleTreeScheme <span class="kw">for </span>MerkleTree&lt;E, H, u64, ARITY, T&gt;
 <span class="kw">where
     </span>E: Element,
     H: DigestAlgorithm&lt;E, u64, T&gt;,
-    Arity: Unsigned,
     T: NodeValue,
 {
     <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, elem: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), PrimitivesError&gt; {
@@ -443,8 +436,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>iter = elems.into_iter().peekable();
 
         <span class="kw">let </span>traversal_path =
-            ToTraversalPath::&lt;Arity&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="self">self</span>.num_leaves, <span class="self">self</span>.height);
-        <span class="kw">let </span>(root, num_inserted) = <span class="self">self</span>.root.extend_internal::&lt;H, Arity&gt;(
+            ToTraversalPath::&lt;ARITY&gt;::to_traversal_path(<span class="kw-2">&amp;</span><span class="self">self</span>.num_leaves, <span class="self">self</span>.height);
+        <span class="kw">let </span>(root, num_inserted) = <span class="self">self</span>.root.extend_internal::&lt;H, ARITY&gt;(
             <span class="self">self</span>.height,
             <span class="kw-2">&amp;</span><span class="self">self</span>.num_leaves,
             <span class="kw-2">&amp;</span>traversal_path,
