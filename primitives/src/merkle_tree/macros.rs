@@ -16,38 +16,36 @@ macro_rules! impl_merkle_tree_scheme {
             bound = "E: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,
                      I: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,"
         )]
-        pub struct $name<E, H, I, Arity, T>
+        pub struct $name<E, H, I, const ARITY: usize, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
             I: Index,
-            Arity: Unsigned,
             T: NodeValue,
         {
             root: Arc<MerkleNode<E, I, T>>,
             height: usize,
             num_leaves: u64,
 
-            _phantom: PhantomData<(H, Arity)>,
+            _phantom: PhantomData<H>,
         }
 
-        impl<E, H, I, Arity, T> MerkleTreeScheme for $name<E, H, I, Arity, T>
+        impl<E, H, I, const ARITY: usize, T> MerkleTreeScheme for $name<E, H, I, ARITY, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<Arity>,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
             type Element = E;
             type Index = I;
             type NodeValue = T;
-            type MembershipProof = MerkleProof<E, I, T, Arity>;
+            type MembershipProof = MerkleProof<E, I, T, ARITY>;
             // TODO(Chengyu): implement batch membership proof
             type BatchMembershipProof = ();
             type Commitment = MerkleTreeCommitment<T>;
 
-            const ARITY: usize = Arity::USIZE;
+            const ARITY: usize = ARITY;
 
             fn height(&self) -> usize {
                 self.height
@@ -96,12 +94,11 @@ macro_rules! impl_merkle_tree_scheme {
             }
         }
 
-        impl<'a, E, H, I, Arity, T> IntoIterator for &'a $name<E, H, I, Arity, T>
+        impl<'a, E, H, I, const ARITY: usize, T> IntoIterator for &'a $name<E, H, I, ARITY, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<Arity>,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
             type Item = (&'a I, &'a E);
@@ -113,12 +110,11 @@ macro_rules! impl_merkle_tree_scheme {
             }
         }
 
-        impl<E, H, I, Arity, T> IntoIterator for $name<E, H, I, Arity, T>
+        impl<E, H, I, const ARITY: usize, T> IntoIterator for $name<E, H, I, ARITY, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<Arity>,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
             type Item = (I, E);
@@ -137,12 +133,11 @@ macro_rules! impl_merkle_tree_scheme {
 #[macro_export]
 macro_rules! impl_forgetable_merkle_tree_scheme {
     ($name: ident) => {
-        impl<E, H, I, Arity, T> ForgetableMerkleTreeScheme for $name<E, H, I, Arity, T>
+        impl<E, H, I, const ARITY: usize, T> ForgetableMerkleTreeScheme for $name<E, H, I, ARITY, T>
         where
             E: Element,
             H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<Arity>,
-            Arity: Unsigned,
+            I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
             fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
@@ -216,7 +211,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                             }
                         },
                     )?;
-                    self.root = self.root.remember_internal::<H, Arity>(
+                    self.root = self.root.remember_internal::<H, ARITY>(
                         self.height,
                         &traversal_path,
                         &path_values,
@@ -237,13 +232,13 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 #[macro_export]
 macro_rules! impl_to_traversal_path_primitives {
     ($t: ty) => {
-        impl<Arity: Unsigned> ToTraversalPath<Arity> for $t {
+        impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
                 let mut pos = *self as u64;
                 let mut ret = vec![];
                 for _i in 0..height {
-                    ret.push((pos % (Arity::to_u64())).to_usize().unwrap());
-                    pos /= Arity::to_u64();
+                    ret.push((pos % (ARITY as u64)) as usize);
+                    pos /= ARITY as u64;
                 }
                 ret
             }
@@ -255,13 +250,13 @@ macro_rules! impl_to_traversal_path_primitives {
 #[macro_export]
 macro_rules! impl_to_traversal_path_biguint {
     ($t: ty) => {
-        impl<Arity: Unsigned> ToTraversalPath<Arity> for $t {
+        impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
                 let mut pos: BigUint = <Self as Into<BigUint>>::into(self.clone());
                 let mut ret = vec![];
                 for _i in 0..height {
-                    ret.push((&pos % (Arity::to_u64())).to_usize().unwrap());
-                    pos /= Arity::to_u64();
+                    ret.push((&pos % ARITY).to_usize().unwrap());
+                    pos /= ARITY;
                 }
                 ret
             }
