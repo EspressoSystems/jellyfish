@@ -128,19 +128,21 @@ where
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
     pub(crate) fn new_internal(
-        payload_chunk_size: usize, // k
-        num_storage_nodes: usize,  // n (code rate: r = k/n)
-        multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
+        erasure_code_rate: usize, // inverse of r
+        num_storage_nodes: usize, // n
+        multiplicity: usize,      // m
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        // TODO support any degree, give multiple shares to nodes if needed
-        // https://github.com/EspressoSystems/jellyfish/issues/393
-        if num_storage_nodes < payload_chunk_size {
+        // return error if rate r > 1 (implied by erasure_code_rate < 1)
+        if erasure_code_rate < 1 {
             return Err(VidError::Argument(format!(
-                "payload_chunk_size {} exceeds num_storage_nodes {}",
-                payload_chunk_size, num_storage_nodes
+                "erasure_code_rate {} should be greater than 1",
+                erasure_code_rate
             )));
         }
+
+        // payload_chunk_size: k = r*n
+        let payload_chunk_size = num_storage_nodes.div_ceil(erasure_code_rate);
 
         if !(1..=16).contains(&multiplicity) || !multiplicity.is_power_of_two() {
             return Err(VidError::Argument(format!(
@@ -211,20 +213,20 @@ where
 {
     /// Construct a new VID instance
     ///
-    /// - `payload_chunk_size`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `erasure_code_rate`: r
+    /// - `num_storage_nodes`: n (payload_chunk_size: k = r*n)
     /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
     ///
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
     pub fn new(
-        payload_chunk_size: usize,
+        erasure_code_rate: usize,
         num_storage_nodes: usize,
         multiplicity: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)
+        Self::new_internal(erasure_code_rate, num_storage_nodes, multiplicity, srs)
     }
 }
 
@@ -236,21 +238,20 @@ where
 {
     /// construct a new VID instance with SRS loaded to GPU
     ///
-    /// - `payload_chunk_size`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
+    /// - `erasure_code_rate`: r
+    /// - `num_storage_nodes`: n (payload_chunk_size: k = r*n)
     /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
     ///
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
     /// payload_chunk_size`.
     pub fn new(
-        payload_chunk_size: usize,
+        erasure_code_rate: usize,
         num_storage_nodes: usize,
         multiplicity: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        let mut advz =
-            Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)?;
+        let mut advz = Self::new_internal(erasure_code_rate, num_storage_nodes, multiplicity, srs)?;
         let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
             &advz.ck,
             advz.ck.powers_of_g.len() - 1,
@@ -969,15 +970,21 @@ mod tests {
     #[test]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (erasure_code_rate, num_storage_nodes, multiplicity) = (4usize, 512usize, 1usize);
+        let payload_chunk_size = num_storage_nodes.div_ceil(erasure_code_rate);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
+        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        #[cfg(feature = "gpu-vid")]
-        let mut advz_gpu =
-            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+            Advz::<Bn254, Sha256>::new(erasure_code_rate, num_storage_nodes, multiplicity, srs)
                 .unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu = AdvzGPU::<'_, Bn254, Sha256>::new(
+            erasure_code_rate,
+            num_storage_nodes,
+            multiplicity,
+            &srs,
+        )
+        .unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -990,14 +997,16 @@ mod tests {
     #[test]
     fn commit_only_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (erasure_code_rate, num_storage_nodes, multiplicity) = (2usize, 512usize, 1usize);
+        let payload_chunk_size = num_storage_nodes.div_ceil(erasure_code_rate);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
+        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+            Advz::<Bn254, Sha256>::new(erasure_code_rate, num_storage_nodes, multiplicity, srs)
+                .unwrap();
         #[cfg(feature = "gpu-vid")]
         let mut advz_gpu =
-            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+            AdvzGPU::<'_, Bn254, Sha256>::new(erasure_code_rate, num_storage_nodes, 1, &srs)
                 .unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
@@ -1207,10 +1216,12 @@ mod tests {
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
     pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
-        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        // run with 'print-trace' feature to see timer output
+        let (erasure_code_rate, num_storage_nodes) = (3usize, 6usize);
+        let payload_chunk_size = num_storage_nodes.div_ceil(erasure_code_rate);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz = Advz::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+        let advz = Advz::new(erasure_code_rate, num_storage_nodes, 1, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }
