@@ -13,7 +13,7 @@ mod vid;
 #[test]
 fn round_trip() {
     // play with these items
-    let vid_sizes = [(2, 3), (8, 11)];
+    let vid_sizes = [(2, 3), (3, 11)];
     let payload_byte_lens = [0, 1, 2, 16, 32, 47, 48, 49, 64, 100, 400];
     let mut multiplicities = [1, 2, 4, 8, 16];
 
@@ -34,14 +34,9 @@ fn round_trip() {
         );
 
     vid::round_trip(
-        |payload_chunk_size, num_storage_nodes, multiplicity| {
-            Advz::<Bls12_381, Sha256>::new(
-                payload_chunk_size,
-                num_storage_nodes,
-                multiplicity,
-                &srs,
-            )
-            .unwrap()
+        |erasure_code_rate, num_storage_nodes, multiplicity| {
+            Advz::<Bls12_381, Sha256>::new(erasure_code_rate, num_storage_nodes, multiplicity, &srs)
+                .unwrap()
         },
         &vid_sizes,
         &multiplicities,

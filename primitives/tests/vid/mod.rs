@@ -21,16 +21,17 @@ pub fn round_trip<V, R>(
     V: VidScheme,
     R: RngCore + CryptoRng,
 {
-    for (&mult, &(payload_chunk_size, num_storage_nodes)) in
+    for (&mult, &(erasure_code_rate, num_storage_nodes)) in
         zip(multiplicities.iter().cycle(), vid_sizes)
     {
-        let mut vid = vid_factory(payload_chunk_size, num_storage_nodes, mult);
+        let mut vid = vid_factory(erasure_code_rate, num_storage_nodes, mult);
 
         for &len in payload_byte_lens {
             println!(
-                "m: {} n: {} mult: {} byte_len: {}",
-                payload_chunk_size, num_storage_nodes, mult, len
+                "r: {} n: {} mult: {} byte_len: {}",
+                erasure_code_rate, num_storage_nodes, mult, len
             );
+            let payload_chunk_size = num_storage_nodes.div_ceil(erasure_code_rate);
 
             let bytes_random = {
                 let mut bytes_random = vec![0u8; len];
