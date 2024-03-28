@@ -134,11 +134,6 @@ where
         Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
     }
 
-    /// Return a new instance of `Self`.
-    ///
-    /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// recovery_threshold`.
     pub(crate) fn with_multiplicity_internal(
         num_storage_nodes: usize,  // n (code rate: r = k/n)
         recovery_threshold: usize, // k
@@ -154,10 +149,9 @@ where
             )));
         }
 
-        if !(1..=16).contains(&multiplicity) || !multiplicity.is_power_of_two() {
+        if !multiplicity.is_power_of_two() {
             return Err(VidError::Argument(format!(
-                "multiplicity {} not allowed",
-                multiplicity
+                "multiplicity {multiplicity} should be a power of two"
             )));
         }
 
