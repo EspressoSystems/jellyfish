@@ -24,17 +24,15 @@ use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString,
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
 
 impl_merkle_tree_scheme!(LightWeightMerkleTree);
 impl_forgetable_merkle_tree_scheme!(LightWeightMerkleTree);
 
-impl<E, H, I, Arity, T> LightWeightMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, const ARITY: usize, T> LightWeightMerkleTree<E, H, I, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
     I: Index,
-    Arity: Unsigned,
     T: NodeValue,
 {
     /// Initialize an empty Merkle tree.
@@ -48,11 +46,10 @@ where
     }
 }
 
-impl<E, H, Arity, T> LightWeightMerkleTree<E, H, u64, Arity, T>
+impl<E, H, const ARITY: usize, T> LightWeightMerkleTree<E, H, u64, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
-    Arity: Unsigned,
     T: NodeValue,
 {
     /// Construct a new Merkle tree with given height from a data slice
@@ -65,7 +62,7 @@ where
         elems: impl IntoIterator<Item = impl Borrow<E>>,
     ) -> Result<Self, PrimitivesError> {
         let (root, height, num_leaves) =
-            build_light_weight_tree_internal::<E, H, Arity, T>(height, elems)?;
+            build_light_weight_tree_internal::<E, H, ARITY, T>(height, elems)?;
         Ok(Self {
             root,
             height,
@@ -75,11 +72,11 @@ where
     }
 }
 
-impl<E, H, Arity, T> AppendableMerkleTreeScheme for LightWeightMerkleTree<E, H, u64, Arity, T>
+impl<E, H, const ARITY: usize, T> AppendableMerkleTreeScheme
+    for LightWeightMerkleTree<E, H, u64, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
-    Arity: Unsigned,
     T: NodeValue,
 {
     fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
@@ -93,8 +90,8 @@ where
         let mut iter = elems.into_iter().peekable();
 
         let traversal_path =
-            ToTraversalPath::<Arity>::to_traversal_path(&self.num_leaves, self.height);
-        let (root, num_inserted) = self.root.extend_and_forget_internal::<H, Arity>(
+            ToTraversalPath::<ARITY>::to_traversal_path(&self.num_leaves, self.height);
+        let (root, num_inserted) = self.root.extend_and_forget_internal::<H, ARITY>(
             self.height,
             &self.num_leaves,
             &traversal_path,

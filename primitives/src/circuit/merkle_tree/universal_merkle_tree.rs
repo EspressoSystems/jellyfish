@@ -19,7 +19,6 @@ use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable
 
 type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
 use num_bigint::BigUint;
-use typenum::U3;
 
 use super::{
     constrain_sibling_order, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
@@ -75,7 +74,7 @@ where
         &mut self,
         merkle_proof: &<SparseMerkleTree<F> as MerkleTreeScheme>::MembershipProof,
     ) -> Result<Self::NonMembershipProofVar, CircuitError> {
-        let path = <BigUint as ToTraversalPath<U3>>::to_traversal_path(
+        let path = <BigUint as ToTraversalPath<3>>::to_traversal_path(
             &merkle_proof.pos,
             merkle_proof.tree_height() - 1,
         );

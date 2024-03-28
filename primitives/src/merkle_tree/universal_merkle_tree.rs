@@ -20,18 +20,16 @@ use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString,
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
 
 // A standard Universal Merkle tree implementation
 impl_merkle_tree_scheme!(UniversalMerkleTree);
 impl_forgetable_merkle_tree_scheme!(UniversalMerkleTree);
 
-impl<E, H, I, Arity, T> UniversalMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, const ARITY: usize, T> UniversalMerkleTree<E, H, I, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + ToTraversalPath<Arity>,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
 {
     /// Initialize an empty Merkle tree.
@@ -64,15 +62,15 @@ where
         Ok(mt)
     }
 }
-impl<E, H, I, Arity, T> UniversalMerkleTreeScheme for UniversalMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, const ARITY: usize, T> UniversalMerkleTreeScheme
+    for UniversalMerkleTree<E, H, I, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + ToTraversalPath<Arity>,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
 {
-    type NonMembershipProof = MerkleProof<E, I, T, Arity>;
+    type NonMembershipProof = MerkleProof<E, I, T, ARITY>;
     type BatchNonMembershipProof = ();
 
     fn update_with<F>(
@@ -87,7 +85,7 @@ where
         let traversal_path = pos.to_traversal_path(self.height);
         let (new_root, delta, result) =
             self.root
-                .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
+                .update_with_internal::<H, ARITY, F>(self.height, pos, &traversal_path, f)?;
         self.root = new_root;
         self.num_leaves = (delta + self.num_leaves as i64) as u64;
         Ok(result)
@@ -131,13 +129,12 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> PersistentUniversalMerkleTreeScheme
-    for UniversalMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, const ARITY: usize, T> PersistentUniversalMerkleTreeScheme
+    for UniversalMerkleTree<E, H, I, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + ToTraversalPath<Arity>,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
 {
     fn persistent_update_with<F>(
@@ -152,7 +149,7 @@ where
         let traversal_path = pos.to_traversal_path(self.height);
         let (root, delta, _) =
             self.root
-                .update_with_internal::<H, Arity, F>(self.height, pos, &traversal_path, f)?;
+                .update_with_internal::<H, ARITY, F>(self.height, pos, &traversal_path, f)?;
         let num_leaves = (delta + self.num_leaves as i64) as u64;
         Ok(Self {
             root,
@@ -163,13 +160,12 @@ where
     }
 }
 
-impl<E, H, I, Arity, T> ForgetableUniversalMerkleTreeScheme
-    for UniversalMerkleTree<E, H, I, Arity, T>
+impl<E, H, I, const ARITY: usize, T> ForgetableUniversalMerkleTreeScheme
+    for UniversalMerkleTree<E, H, I, ARITY, T>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
-    I: Index + ToTraversalPath<Arity>,
-    Arity: Unsigned,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
 {
     /// WARN(#495): this method breaks non-membership proofs.
@@ -222,7 +218,7 @@ where
                         }
                     },
                 )?;
-            self.root = self.root.remember_internal::<H, Arity>(
+            self.root = self.root.remember_internal::<H, ARITY>(
                 self.height,
                 &traversal_path,
                 &path_values,
@@ -254,7 +250,6 @@ mod mt_tests {
     use ark_ed_on_bn254::Fq as Fq254;
     use hashbrown::HashMap;
     use num_bigint::BigUint;
-    use typenum::U3;
 
     #[test]
     fn test_universal_mt_builder() {
@@ -322,8 +317,8 @@ mod mt_tests {
 
     fn test_update_and_lookup_helper<I, F>()
     where
-        I: Index + ToTraversalPath<U3>,
-        F: RescueParameter + ToTraversalPath<U3>,
+        I: Index + ToTraversalPath<3>,
+        F: RescueParameter + ToTraversalPath<3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
         let mut mt = RescueSparseMerkleTree::<F, F>::new(10);
@@ -575,8 +570,8 @@ mod mt_tests {
 
     fn test_persistent_update_helper<I, F>()
     where
-        I: Index + ToTraversalPath<U3>,
-        F: RescueParameter + ToTraversalPath<U3>,
+        I: Index + ToTraversalPath<3>,
+        F: RescueParameter + ToTraversalPath<3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
         let mt = RescueSparseMerkleTree::<F, F>::new(10);
@@ -612,7 +607,7 @@ mod mt_tests {
         test_universal_mt_serde_helper::<Fq381>();
     }
 
-    fn test_universal_mt_serde_helper<F: RescueParameter + ToTraversalPath<U3>>() {
+    fn test_universal_mt_serde_helper<F: RescueParameter + ToTraversalPath<3>>() {
         let mut hashmap = HashMap::new();
         hashmap.insert(F::from(1u64), F::from(2u64));
         hashmap.insert(F::from(10u64), F::from(3u64));

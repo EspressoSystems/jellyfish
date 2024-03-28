@@ -3,7 +3,6 @@ use ark_std::{string::ToString, vec::Vec};
 use core::{fmt::Debug, marker::PhantomData};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use typenum::Unsigned;
 
 use crate::{
     errors::{PrimitivesError, VerificationResult},
@@ -26,29 +25,27 @@ pub(crate) enum NamespaceProofType {
 #[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
                  T: CanonicalSerialize + CanonicalDeserialize,")]
 /// Namespace Proof
-pub struct NaiveNamespaceProof<E, T, Arity, N, H>
+pub struct NaiveNamespaceProof<E, T, const ARITY: usize, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     N: Namespace,
-    Arity: Unsigned,
 {
     pub(crate) proof_type: NamespaceProofType,
     // TODO(#140) Switch to a batch proof
-    pub(crate) proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
-    pub(crate) left_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
-    pub(crate) right_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, Arity>>,
+    pub(crate) proofs: Vec<MerkleProof<E, u64, NamespacedHash<T, N>, ARITY>>,
+    pub(crate) left_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, ARITY>>,
+    pub(crate) right_boundary_proof: Option<MerkleProof<E, u64, NamespacedHash<T, N>, ARITY>>,
     pub(crate) first_index: u64,
     pub(crate) phantom: PhantomData<H>,
 }
-impl<E, T, Arity, N, H> NamespaceProof for NaiveNamespaceProof<E, T, Arity, N, H>
+impl<E, T, const ARITY: usize, N, H> NamespaceProof for NaiveNamespaceProof<E, T, ARITY, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     N: Namespace,
-    Arity: Unsigned,
 {
     type Leaf = E;
     type Node = T;
@@ -79,13 +76,12 @@ where
     }
 }
 
-impl<E, T, Arity, N, H> NaiveNamespaceProof<E, T, Arity, N, H>
+impl<E, T, const ARITY: usize, N, H> NaiveNamespaceProof<E, T, ARITY, N, H>
 where
     E: Element + Namespaced<Namespace = N>,
     T: NodeValue,
     H: DigestAlgorithm<E, u64, T> + BindNamespace<E, u64, T, N>,
     N: Namespace,
-    Arity: Unsigned,
 {
     fn verify_left_namespace_boundary(
         &self,
@@ -107,7 +103,7 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, boundary_proof.index(), boundary_proof)?
+            if <InnerTree<E, H, T, N, ARITY>>::verify(root, boundary_proof.index(), boundary_proof)?
                 .is_err()
             {
                 return Ok(Err(()));
@@ -142,7 +138,7 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, boundary_proof.index(), boundary_proof)?
+            if <InnerTree<E, H, T, N, ARITY>>::verify(root, boundary_proof.index(), boundary_proof)?
                 .is_err()
             {
                 return Ok(Err(()));
@@ -203,12 +199,12 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proofs
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, left_proof.index(), left_proof)?
+            if <InnerTree<E, H, T, N, ARITY>>::verify(root, left_proof.index(), left_proof)?
                 .is_err()
             {
                 return Ok(Err(()));
             }
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, right_proof.index(), right_proof)?
+            if <InnerTree<E, H, T, N, ARITY>>::verify(root, right_proof.index(), right_proof)?
                 .is_err()
             {
                 return Ok(Err(()));
@@ -226,7 +222,7 @@ where
         let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
             let leaf_index = self.first_index + idx as u64;
-            if <InnerTree<E, H, T, N, Arity>>::verify(root, leaf_index, proof)?.is_err() {
+            if <InnerTree<E, H, T, N, ARITY>>::verify(root, leaf_index, proof)?.is_err() {
                 return Ok(Err(()));
             }
             if proof

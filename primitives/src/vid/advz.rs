@@ -973,7 +973,7 @@ mod tests {
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
         let mut advz_gpu =
             AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
@@ -994,7 +994,7 @@ mod tests {
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_chunk_size, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs).unwrap();
+            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
         let mut advz_gpu =
             AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)

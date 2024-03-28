@@ -30,7 +30,6 @@ use ark_serialize::{
 use ark_std::{marker::PhantomData, vec::Vec};
 use num_bigint::BigUint;
 use sha3::{Digest, Sha3_256};
-use typenum::U3;
 
 /// Wrapper for rescue hash function
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -50,10 +49,10 @@ impl<F: RescueParameter> DigestAlgorithm<F, u64, F> for RescueHash<F> {
 }
 
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, U3, F>;
+pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, 3, F>;
 
 /// A standard light merkle tree using RATE-3 rescue hash function
-pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, U3, F>;
+pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, 3, F>;
 
 impl<F: RescueParameter> DigestAlgorithm<F, BigUint, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, PrimitivesError> {
@@ -78,7 +77,7 @@ impl<F: RescueParameter> DigestAlgorithm<F, F, F> for RescueHash<F> {
 }
 
 /// Example instantiation of a SparseMerkleTree indexed by I
-pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, U3, F>;
+pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
 
 /// Update the array length here
 #[derive(Default, Eq, PartialEq, Clone, Copy, Debug, Ord, PartialOrd, Hash)]
@@ -145,6 +144,6 @@ impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> 
 }
 
 /// Merkle tree using SHA3 hash
-pub type SHA3MerkleTree<E> = MerkleTree<E, Sha3Digest, u64, U3, Sha3Node>;
+pub type SHA3MerkleTree<E> = MerkleTree<E, Sha3Digest, u64, 3, Sha3Node>;
 /// Light weight merkle tree using SHA3 hash
-pub type LightWeightSHA3MerkleTree<E> = LightWeightMerkleTree<E, Sha3Digest, u64, U3, Sha3Node>;
+pub type LightWeightSHA3MerkleTree<E> = LightWeightMerkleTree<E, Sha3Digest, u64, 3, Sha3Node>;

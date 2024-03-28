@@ -32,7 +32,7 @@
 //! sha2 = "0.10"
 //! ```
 //!
-//! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `Arity`
+//! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `ARITY`
 //! and node [`Index`] types.
 
 // clippy is freaking out about `HasherNode` and this is the only thing I
@@ -51,25 +51,24 @@ use digest::{
     Digest, OutputSizeUser,
 };
 use tagged_base64::tagged;
-use typenum::U3;
 
 /// Merkle tree generic over [`Digest`] hasher `H`.
 ///
-/// It's a trinary ([`U3`]) tree whose nodes are indexed by [`u64`].
+/// It's a trinary tree whose nodes are indexed by [`u64`].
 /// - `H` is a [RustCrypto-compatible](https://github.com/RustCrypto/hashes)
 ///   hash function.
 /// - `E` is a [`Element`] payload data type for the Merkle tree.
-pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, U3>;
+pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, 3>;
 
 /// Like [`HasherMerkleTree`] except with additional parameters.
 ///
 /// Additional parameters beyond [`HasherMerkleTree`]:
 /// - `I` is a [`Index`] data type that impls [`From<u64>`]. (eg. [`u64`],
 ///   [`Field`](ark_ff::Field), etc.)
-/// - `Arity` is a [`Unsigned`](typenum::Unsigned). (eg. [`U2`](typenum::U2) for
-///   a binary tree, [`U3`] for a trinary tree, etc.)
-pub type GenericHasherMerkleTree<H, E, I, Arity> =
-    MerkleTree<E, HasherDigestAlgorithm, I, Arity, HasherNode<H>>;
+/// - `ARITY` is a const generic. (eg. 2 for a binary tree, 3 for a trinary
+///   tree, etc.)
+pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
+    MerkleTree<E, HasherDigestAlgorithm, I, ARITY, HasherNode<H>>;
 
 /// Convenience trait and blanket impl for downstream trait bounds.
 ///
