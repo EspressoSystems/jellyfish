@@ -412,8 +412,7 @@ mod tests {
         let poly_bytes_len = recovery_threshold as usize * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_elems_len, &mut rng);
-        let mut advz =
-            Advz::<E, H>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs).unwrap();
+        let mut advz = Advz::<E, H>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         // TEST: different payload byte lengths
         let payload_byte_len_noise_cases = vec![0, poly_bytes_len / 2, poly_bytes_len - 1];

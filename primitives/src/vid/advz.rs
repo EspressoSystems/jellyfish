@@ -986,16 +986,10 @@ mod tests {
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
-                .unwrap();
+            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
-        let mut advz_gpu = AdvzGPU::<'_, Bn254, Sha256>::with_multiplicity(
-            num_storage_nodes,
-            recovery_threshold,
-            1,
-            &srs,
-        )
-        .unwrap();
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, &srs).unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -1012,16 +1006,10 @@ mod tests {
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
-                .unwrap();
+            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
-        let mut advz_gpu = AdvzGPU::<'_, Bn254, Sha256>::with_multiplicity(
-            num_storage_nodes,
-            recovery_threshold,
-            1,
-            &srs,
-        )
-        .unwrap();
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, &srs).unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -1234,7 +1222,7 @@ mod tests {
         let (recovery_threshold, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
-        let advz = Advz::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs).unwrap();
+        let advz = Advz::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }
