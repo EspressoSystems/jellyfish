@@ -122,6 +122,18 @@ impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
+    pub(crate) fn new_internal(
+        num_storage_nodes: usize,  // n (code rate: r = k/n)
+        recovery_threshold: usize, // k
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        // TODO intelligent choice of multiplicity
+        // https://github.com/EspressoSystems/jellyfish/issues/534
+        let multiplicity = 1;
+
+        Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+    }
+
     /// Return a new instance of `Self`.
     ///
     /// # Errors
@@ -209,15 +221,36 @@ impl<E, H> Advz<E, H>
 where
     E: Pairing,
 {
-    /// Construct a new VID instance
+    /// Return a new instance of `Self` from (mostly)
+    /// implementation-independent arguments.
     ///
-    /// - `recovery_threshold`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
-    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    /// # Implementation-independent arguments
+    /// - `num_storage_nodes`
+    /// - `recovery_threshold`
+    ///
+    /// # Implementation-specific arguments
+    /// - `srs`
     ///
     /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// recovery_threshold`.
+    /// Return [`VidError::Argument`] if
+    /// - `num_storage_nodes < recovery_threshold`
+    /// - `recovery_threshold` is not a power of two TEMPORARY https://github.com/EspressoSystems/jellyfish/issues/339
+    pub fn new(
+        num_storage_nodes: usize,
+        recovery_threshold: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        Self::new_internal(num_storage_nodes, recovery_threshold, srs)
+    }
+
+    /// Like [`Advz::new`] except with a `multiplicity` arg.
+    ///
+    /// `multiplicity` is an implementation-specific optimization arg.
+    /// Each storage node gets `multiplicity` evaluations per polynomial.
+    ///
+    /// # Errors
+    /// In addition to [`Advz::new`], return [`VidError::Argument`] if
+    /// - `multiplicity` is not a power of two TEMPORARY https://github.com/EspressoSystems/jellyfish/issues/339
     pub fn with_multiplicity(
         num_storage_nodes: usize,
         recovery_threshold: usize,
@@ -234,15 +267,17 @@ where
     E: Pairing,
     UnivariateKzgPCS<E>: GPUCommittable<E>,
 {
-    /// construct a new VID instance with SRS loaded to GPU
-    ///
-    /// - `recovery_threshold`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
-    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
-    ///
-    /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// recovery_threshold`.
+    /// Like [`Advz::new`] except with SRS loaded to GPU
+    pub fn with_multiplicity(
+        num_storage_nodes: usize,
+        recovery_threshold: usize,
+        srs: impl Borrow<KzgSrs<E>>,
+    ) -> VidResult<Self> {
+        let mut advz = Self::new_internal(num_storage_nodes, recovery_threshold, srs)?;
+        advz.init_gpu_srs()?;
+        Ok(advz)
+    }
+    /// Like [`Advz::with_multiplicity`] except with SRS loaded to GPU
     pub fn with_multiplicity(
         num_storage_nodes: usize,
         recovery_threshold: usize,
@@ -255,14 +290,18 @@ where
             multiplicity,
             srs,
         )?;
+        advz.init_gpu_srs()?;
+        Ok(advz)
+    }
+
+    fn init_gpu_srs(&mut self) -> VidResult<()> {
         let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
-            &advz.ck,
-            advz.ck.powers_of_g.len() - 1,
+            &self.ck,
+            self.ck.powers_of_g.len() - 1,
         )
         .map_err(vid)?;
-
-        advz.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
-        Ok(advz)
+        self.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
+        Ok(())
     }
 }
 
