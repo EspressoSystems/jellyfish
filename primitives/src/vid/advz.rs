@@ -80,7 +80,7 @@ pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
-    payload_chunk_size: usize,
+    recovery_threshold: usize,
     num_storage_nodes: usize,
     multiplicity: usize,
     ck: KzgProverParam<E>,
@@ -126,19 +126,19 @@ where
     ///
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// payload_chunk_size`.
-    pub(crate) fn new_internal(
-        payload_chunk_size: usize, // k
+    /// recovery_threshold`.
+    pub(crate) fn with_multiplicity_internal(
         num_storage_nodes: usize,  // n (code rate: r = k/n)
+        recovery_threshold: usize, // k
         multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         // TODO support any degree, give multiple shares to nodes if needed
         // https://github.com/EspressoSystems/jellyfish/issues/393
-        if num_storage_nodes < payload_chunk_size {
+        if num_storage_nodes < recovery_threshold {
             return Err(VidError::Argument(format!(
-                "payload_chunk_size {} exceeds num_storage_nodes {}",
-                payload_chunk_size, num_storage_nodes
+                "recovery_threshold {} exceeds num_storage_nodes {}",
+                recovery_threshold, num_storage_nodes
             )));
         }
 
@@ -165,7 +165,7 @@ where
         }
 
         // erasure code params
-        let chunk_size = multiplicity * payload_chunk_size; // message length m
+        let chunk_size = multiplicity * recovery_threshold; // message length m
         let code_word_size = multiplicity * num_storage_nodes; // code word length n
         let poly_degree = chunk_size - 1;
 
@@ -185,14 +185,14 @@ where
         // https://github.com/EspressoSystems/jellyfish/issues/339
         if chunk_size != eval_domain.size() {
             return Err(VidError::Argument(format!(
-                "payload_chunk_size {} currently unsupported, round to {} instead",
+                "recovery_threshold {} currently unsupported, round to {} instead",
                 chunk_size,
                 eval_domain.size()
             )));
         }
 
         Ok(Self {
-            payload_chunk_size,
+            recovery_threshold,
             num_storage_nodes,
             multiplicity,
             ck,
@@ -211,20 +211,20 @@ where
 {
     /// Construct a new VID instance
     ///
-    /// - `payload_chunk_size`: k
+    /// - `recovery_threshold`: k
     /// - `num_storage_nodes`: n (code rate: r = k/n)
     /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
     ///
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// payload_chunk_size`.
-    pub fn new(
-        payload_chunk_size: usize,
+    /// recovery_threshold`.
+    pub fn with_multiplicity(
         num_storage_nodes: usize,
+        recovery_threshold: usize,
         multiplicity: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)
+        Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
     }
 }
 
@@ -236,21 +236,25 @@ where
 {
     /// construct a new VID instance with SRS loaded to GPU
     ///
-    /// - `payload_chunk_size`: k
+    /// - `recovery_threshold`: k
     /// - `num_storage_nodes`: n (code rate: r = k/n)
     /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
     ///
     /// # Errors
     /// Return [`VidError::Argument`] if `num_storage_nodes <
-    /// payload_chunk_size`.
-    pub fn new(
-        payload_chunk_size: usize,
+    /// recovery_threshold`.
+    pub fn with_multiplicity(
         num_storage_nodes: usize,
+        recovery_threshold: usize,
         multiplicity: usize,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        let mut advz =
-            Self::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)?;
+        let mut advz = Self::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            multiplicity,
+            srs,
+        )?;
         let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
             &advz.ck,
             advz.ck.powers_of_g.len() - 1,
@@ -400,7 +404,7 @@ where
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
         ));
-        let _chunk_size = self.multiplicity * self.payload_chunk_size;
+        let _chunk_size = self.multiplicity * self.recovery_threshold;
         let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
@@ -562,11 +566,11 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
-        if shares.len() < self.payload_chunk_size {
+        if shares.len() < self.recovery_threshold {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
                 shares.len(),
-                self.payload_chunk_size
+                self.recovery_threshold
             )));
         }
         let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
@@ -603,7 +607,7 @@ where
                 num_evals,
             )));
         }
-        let chunk_size = self.multiplicity * self.payload_chunk_size;
+        let chunk_size = self.multiplicity * self.recovery_threshold;
         let num_polys = num_evals / self.multiplicity;
 
         let elems_capacity = num_polys * chunk_size;
@@ -759,7 +763,7 @@ where
     where
         E: Pairing,
     {
-        let chunk_size = self.payload_chunk_size * self.multiplicity;
+        let chunk_size = self.recovery_threshold * self.multiplicity;
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
         let eval_domain_ref = &self.eval_domain;
 
@@ -794,7 +798,7 @@ where
         EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
 
         // sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.payload_chunk_size * self.multiplicity
+        // If pre_fft_len != self.recovery_threshold * self.multiplicity
         // then we were not given the correct number of coeffs. In that case
         // coeffs.len() could be anything, so there's nothing to sanity check.
         if pre_fft_len == chunk_size {
@@ -811,7 +815,7 @@ where
     {
         Self::polynomial_internal(
             &self.eval_domain,
-            self.payload_chunk_size * self.multiplicity,
+            self.recovery_threshold * self.multiplicity,
             coeffs,
         )
     }
@@ -969,15 +973,20 @@ mod tests {
     #[test]
     fn disperse_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
+        let srs = init_srs(recovery_threshold, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        #[cfg(feature = "gpu-vid")]
-        let mut advz_gpu =
-            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+            Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
                 .unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu = AdvzGPU::<'_, Bn254, Sha256>::with_multiplicity(
+            num_storage_nodes,
+            recovery_threshold,
+            1,
+            &srs,
+        )
+        .unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -990,15 +999,20 @@ mod tests {
     #[test]
     fn commit_only_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
+        let srs = init_srs(recovery_threshold, &mut rng);
         let mut advz =
-            Advz::<Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
-        #[cfg(feature = "gpu-vid")]
-        let mut advz_gpu =
-            AdvzGPU::<'_, Bn254, Sha256>::new(payload_chunk_size, num_storage_nodes, 1, &srs)
+            Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
                 .unwrap();
+        #[cfg(feature = "gpu-vid")]
+        let mut advz_gpu = AdvzGPU::<'_, Bn254, Sha256>::with_multiplicity(
+            num_storage_nodes,
+            recovery_threshold,
+            1,
+            &srs,
+        )
+        .unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -1207,10 +1221,10 @@ mod tests {
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec<u8>` filled with random bytes.
     pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
-        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        let (recovery_threshold, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size, &mut rng);
-        let advz = Advz::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+        let srs = init_srs(recovery_threshold, &mut rng);
+        let advz = Advz::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)
     }

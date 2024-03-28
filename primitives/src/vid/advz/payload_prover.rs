@@ -97,7 +97,7 @@ where
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
         for (i, evals_iter) in elems_iter
-            .chunks(self.payload_chunk_size)
+            .chunks(self.recovery_threshold)
             .into_iter()
             .enumerate()
         {
@@ -264,7 +264,7 @@ where
         // rebuild the poly commits, check against `common`
         for (commit_index, evals_iter) in range_poly
             .into_iter()
-            .zip(elems_iter.chunks(self.payload_chunk_size).into_iter())
+            .zip(elems_iter.chunks(self.recovery_threshold).into_iter())
         {
             let poly = self.polynomial(evals_iter);
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
@@ -294,18 +294,18 @@ where
         }
     }
     fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen(range, self.payload_chunk_size)
+        range_coarsen(range, self.recovery_threshold)
     }
     fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
         range_coarsen(
             range,
-            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
+            self.recovery_threshold * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
     fn range_poly_to_byte_clamped(&self, range: &Range<usize>, len: usize) -> Range<usize> {
         let result = range_refine(
             range,
-            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
+            self.recovery_threshold * elem_byte_capacity::<KzgEval<E>>(),
         );
         Range {
             end: ark_std::cmp::min(result.end, len),
@@ -315,12 +315,12 @@ where
     fn offset_poly_to_elem(&self, range_poly_start: usize, range_elem_start: usize) -> usize {
         let start_poly_byte = index_refine(
             range_poly_start,
-            self.payload_chunk_size * elem_byte_capacity::<KzgEval<E>>(),
+            self.recovery_threshold * elem_byte_capacity::<KzgEval<E>>(),
         );
         range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::<KzgEval<E>>())
     }
     fn final_poly_points_range_end(&self, range_elem_len: usize, offset_elem: usize) -> usize {
-        (range_elem_len + offset_elem - 1) % self.payload_chunk_size + 1
+        (range_elem_len + offset_elem - 1) % self.recovery_threshold + 1
     }
 
     fn check_stmt_consistency(stmt: &Statement<Self>) -> VidResult<()> {
@@ -401,17 +401,18 @@ mod tests {
         H: HasherDigest,
     {
         // play with these items
-        let (payload_chunk_size, num_storage_nodes) = (4, 6);
+        let (recovery_threshold, num_storage_nodes) = (4, 6);
         let num_polys = 3;
         let num_random_cases = 20;
 
         // more items as a function of the above
-        let payload_elems_len = num_polys * payload_chunk_size;
+        let payload_elems_len = num_polys * recovery_threshold;
         let payload_bytes_base_len = payload_elems_len * elem_byte_capacity::<E::ScalarField>();
-        let poly_bytes_len = payload_chunk_size * elem_byte_capacity::<E::ScalarField>();
+        let poly_bytes_len = recovery_threshold * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_elems_len, &mut rng);
-        let mut advz = Advz::<E, H>::new(payload_chunk_size, num_storage_nodes, 1, srs).unwrap();
+        let mut advz =
+            Advz::<E, H>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs).unwrap();
 
         // TEST: different payload byte lengths
         let payload_byte_len_noise_cases = vec![0, poly_bytes_len / 2, poly_bytes_len - 1];

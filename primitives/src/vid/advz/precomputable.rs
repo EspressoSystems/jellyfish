@@ -64,7 +64,7 @@ where
             payload_byte_len,
             self.num_storage_nodes
         ));
-        let _chunk_size = self.multiplicity * self.payload_chunk_size;
+        let _chunk_size = self.multiplicity * self.recovery_threshold;
         let code_word_size = self.multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
@@ -184,13 +184,13 @@ mod tests {
     #[test]
     fn commit_only_with_data_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (256, 512);
+        let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let multiplicity = 1;
-        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
-        let advz = Advz::<Bls12_381, Sha256>::new(
-            payload_chunk_size,
+        let srs = init_srs(recovery_threshold * multiplicity, &mut rng);
+        let advz = Advz::<Bls12_381, Sha256>::with_multiplicity(
             num_storage_nodes,
+            recovery_threshold,
             multiplicity,
             srs,
         )
@@ -204,13 +204,13 @@ mod tests {
     #[test]
     fn disperse_with_data_timer() {
         // run with 'print-trace' feature to see timer output
-        let (payload_chunk_size, num_storage_nodes) = (64, 128);
+        let (recovery_threshold, num_storage_nodes) = (64, 128);
         let multiplicity = 4;
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(payload_chunk_size * multiplicity, &mut rng);
-        let advz = Advz::<Bls12_381, Sha256>::new(
-            payload_chunk_size,
+        let srs = init_srs(recovery_threshold * multiplicity, &mut rng);
+        let advz = Advz::<Bls12_381, Sha256>::with_multiplicity(
             num_storage_nodes,
+            recovery_threshold,
             multiplicity,
             srs,
         )

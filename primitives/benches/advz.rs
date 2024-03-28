@@ -64,7 +64,8 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("commit"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz =
+                Advz::<E, H>::with_multiplicity(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -79,7 +80,8 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("disperse"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz =
+                Advz::<E, H>::with_multiplicity(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -94,7 +96,8 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("verify"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz =
+                Advz::<E, H>::with_multiplicity(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             grp.bench_with_input(
@@ -116,7 +119,8 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("recover"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz =
+                Advz::<E, H>::with_multiplicity(poly_degree, num_storage_nodes, 1, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common) = (disperse.shares, disperse.common);
             grp.bench_with_input(

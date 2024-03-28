@@ -34,10 +34,10 @@ fn round_trip() {
         );
 
     vid::round_trip(
-        |payload_chunk_size, num_storage_nodes, multiplicity| {
-            Advz::<Bls12_381, Sha256>::new(
-                payload_chunk_size,
+        |recovery_threshold, num_storage_nodes, multiplicity| {
+            Advz::<Bls12_381, Sha256>::with_multiplicity(
                 num_storage_nodes,
+                recovery_threshold,
                 multiplicity,
                 &srs,
             )

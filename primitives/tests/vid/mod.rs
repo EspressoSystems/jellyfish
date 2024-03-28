@@ -21,15 +21,15 @@ pub fn round_trip<V, R>(
     V: VidScheme,
     R: RngCore + CryptoRng,
 {
-    for (&mult, &(payload_chunk_size, num_storage_nodes)) in
+    for (&mult, &(recovery_threshold, num_storage_nodes)) in
         zip(multiplicities.iter().cycle(), vid_sizes)
     {
-        let mut vid = vid_factory(payload_chunk_size, num_storage_nodes, mult);
+        let mut vid = vid_factory(recovery_threshold, num_storage_nodes, mult);
 
         for &len in payload_byte_lens {
             println!(
                 "m: {} n: {} mult: {} byte_len: {}",
-                payload_chunk_size, num_storage_nodes, mult, len
+                recovery_threshold, num_storage_nodes, mult, len
             );
 
             let bytes_random = {
@@ -50,17 +50,17 @@ pub fn round_trip<V, R>(
                 vid.verify_share(share, &common, &commit).unwrap().unwrap();
             }
 
-            // sample a random subset of shares with size payload_chunk_size
+            // sample a random subset of shares with size recovery_threshold
             shares.shuffle(rng);
 
             // give minimum number of shares for recovery
             let bytes_recovered = vid
-                .recover_payload(&shares[..payload_chunk_size], &common)
+                .recover_payload(&shares[..recovery_threshold], &common)
                 .unwrap();
             assert_eq!(bytes_recovered, bytes_random);
 
             // give an intermediate number of shares for recovery
-            let intermediate_num_shares = (payload_chunk_size + num_storage_nodes) / 2;
+            let intermediate_num_shares = (recovery_threshold + num_storage_nodes) / 2;
             let bytes_recovered = vid
                 .recover_payload(&shares[..intermediate_num_shares], &common)
                 .unwrap();
@@ -72,7 +72,7 @@ pub fn round_trip<V, R>(
 
             // give insufficient shares for recovery
             assert_arg_err(
-                vid.recover_payload(&shares[..payload_chunk_size - 1], &common),
+                vid.recover_payload(&shares[..recovery_threshold - 1], &common),
                 "insufficient shares should be arg error",
             );
         }
