@@ -678,25 +678,16 @@ where
         Ok(())
     }
 
-    fn get_payload_byte_len(common: &Self::Common) -> usize {
-        common
-            .payload_byte_len
-            .try_into()
-            .expect("u32 should be convertible to usize")
+    fn get_payload_byte_len(common: &Self::Common) -> u32 {
+        common.payload_byte_len
     }
 
-    fn get_num_storage_nodes(common: &Self::Common) -> usize {
-        common
-            .num_storage_nodes
-            .try_into()
-            .expect("u32 should be convertible to usize")
+    fn get_num_storage_nodes(common: &Self::Common) -> u32 {
+        common.num_storage_nodes
     }
 
-    fn get_multiplicity(common: &Self::Common) -> usize {
-        common
-            .multiplicity
-            .try_into()
-            .expect("u32 should be convertible to usize")
+    fn get_multiplicity(common: &Self::Common) -> u32 {
+        common.multiplicity
     }
 }
 

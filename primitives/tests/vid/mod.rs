@@ -15,7 +15,7 @@ pub fn round_trip<V, R>(
     vid_factory: impl Fn(u32, u32, u32) -> V,
     vid_sizes: &[(u32, u32)],
     multiplicities: &[u32],
-    payload_byte_lens: &[usize],
+    payload_byte_lens: &[u32],
     rng: &mut R,
 ) where
     V: VidScheme,
@@ -33,7 +33,7 @@ pub fn round_trip<V, R>(
             );
 
             let bytes_random = {
-                let mut bytes_random = vec![0u8; len];
+                let mut bytes_random = vec![0u8; len as usize];
                 rng.fill_bytes(&mut bytes_random);
                 bytes_random
             };
@@ -43,11 +43,8 @@ pub fn round_trip<V, R>(
             assert_eq!(shares.len(), num_storage_nodes as usize);
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
             assert_eq!(len, V::get_payload_byte_len(&common));
-            assert_eq!(mult as usize, V::get_multiplicity(&common));
-            assert_eq!(
-                num_storage_nodes as usize,
-                V::get_num_storage_nodes(&common)
-            );
+            assert_eq!(mult, V::get_multiplicity(&common));
+            assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));
 
             for share in shares.iter() {
                 vid.verify_share(share, &common, &commit).unwrap().unwrap();
