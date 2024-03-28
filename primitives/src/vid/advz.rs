@@ -80,9 +80,9 @@ pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
 {
-    recovery_threshold: usize,
-    num_storage_nodes: usize,
-    multiplicity: usize,
+    recovery_threshold: u32,
+    num_storage_nodes: u32,
+    multiplicity: u32,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
     multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
@@ -123,8 +123,8 @@ where
     E: Pairing,
 {
     pub(crate) fn new_internal(
-        num_storage_nodes: usize,  // n (code rate: r = k/n)
-        recovery_threshold: usize, // k
+        num_storage_nodes: u32,  // n (code rate: r = k/n)
+        recovery_threshold: u32, // k
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         // TODO intelligent choice of multiplicity
@@ -135,9 +135,9 @@ where
     }
 
     pub(crate) fn with_multiplicity_internal(
-        num_storage_nodes: usize,  // n (code rate: r = k/n)
-        recovery_threshold: usize, // k
-        multiplicity: usize,       // batch m chunks, keep the rate r = (m*k)/(m*n)
+        num_storage_nodes: u32,  // n (code rate: r = k/n)
+        recovery_threshold: u32, // k
+        multiplicity: u32,       // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         // TODO support any degree, give multiple shares to nodes if needed
@@ -155,31 +155,18 @@ where
             )));
         }
 
-        // Later we will convert to u32.
-        // Better to know now whether that conversion will succeed.
-        if u32::try_from(num_storage_nodes).is_err() {
-            return Err(VidError::Argument(format!(
-                "num_storage nodes {} should be convertible to u32",
-                num_storage_nodes
-            )));
-        }
-        if u32::try_from(multiplicity).is_err() {
-            return Err(VidError::Argument(format!(
-                "multiplicity {} should be convertible to u32",
-                multiplicity
-            )));
-        }
-
         // erasure code params
         let chunk_size = multiplicity * recovery_threshold; // message length m
         let code_word_size = multiplicity * num_storage_nodes; // code word length n
         let poly_degree = chunk_size - 1;
 
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree).map_err(vid)?;
-        let multi_open_domain =
-            UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(poly_degree, code_word_size)
-                .map_err(vid)?;
-        let eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree as usize).map_err(vid)?;
+        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
+            poly_degree as usize,
+            code_word_size as usize,
+        )
+        .map_err(vid)?;
+        let eval_domain = Radix2EvaluationDomain::new(chunk_size as usize).ok_or_else(|| {
             VidError::Internal(anyhow::anyhow!(
                 "fail to construct domain of size {}",
                 chunk_size
@@ -189,7 +176,7 @@ where
         // TODO TEMPORARY: enforce power-of-2 chunk size
         // Remove this restriction after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        if chunk_size != eval_domain.size() {
+        if chunk_size as usize != eval_domain.size() {
             return Err(VidError::Argument(format!(
                 "recovery_threshold {} currently unsupported, round to {} instead",
                 chunk_size,
@@ -230,8 +217,8 @@ where
     /// - `num_storage_nodes < recovery_threshold`
     /// - `recovery_threshold` is not a power of two TEMPORARY https://github.com/EspressoSystems/jellyfish/issues/339
     pub fn new(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         Self::new_internal(num_storage_nodes, recovery_threshold, srs)
@@ -246,9 +233,9 @@ where
     /// In addition to [`Advz::new`], return [`VidError::Argument`] if
     /// - `multiplicity` is not a power of two TEMPORARY https://github.com/EspressoSystems/jellyfish/issues/339
     pub fn with_multiplicity(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
-        multiplicity: usize,
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
+        multiplicity: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
@@ -314,7 +301,7 @@ where
     E: Pairing,
     H: HasherDigest,
 {
-    index: usize,
+    index: u32,
 
     #[serde(with = "canonical")]
     evals: Vec<KzgEval<E>>,
@@ -466,8 +453,8 @@ where
             poly_commits: <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?,
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
-            num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
-            multiplicity: self.multiplicity.try_into().map_err(vid)?,
+            num_storage_nodes: self.num_storage_nodes,
+            multiplicity: self.multiplicity,
         };
         end_timer!(common_timer);
 
@@ -491,7 +478,7 @@ where
         let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
-            code_word_size,
+            code_word_size as usize,
             &self.multi_open_domain,
         )
         .map_err(vid)?;
@@ -526,8 +513,7 @@ where
             )));
         }
 
-        let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
-        if common.num_storage_nodes != num_storage_nodes {
+        if common.num_storage_nodes != self.num_storage_nodes {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
@@ -574,7 +560,7 @@ where
         );
 
         // verify aggregate proof
-        (0..self.multiplicity)
+        (0..self.multiplicity as usize)
             .map(|i| {
                 let aggregate_eval = polynomial_eval(
                     share.evals[i * polys_len..(i + 1) * polys_len]
@@ -587,7 +573,7 @@ where
                     &aggregate_poly_commit,
                     &self
                         .multi_open_domain
-                        .element((share.index * multiplicity) + i),
+                        .element((share.index as usize * multiplicity) + i),
                     &aggregate_eval,
                     &share.aggregate_proofs[i],
                 )
@@ -599,15 +585,14 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
-        if shares.len() < self.recovery_threshold {
+        if shares.len() < self.recovery_threshold as usize {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
                 shares.len(),
                 self.recovery_threshold
             )));
         }
-        let num_storage_nodes: u32 = self.num_storage_nodes.try_into().map_err(vid)?; // pacify cargo check --target wasm32-unknown-unknown --no-default-features
-        if common.num_storage_nodes != num_storage_nodes {
+        if common.num_storage_nodes != self.num_storage_nodes {
             return Err(VidError::Argument(format!(
                 "common num_storage_nodes differs from self ({},{})",
                 common.num_storage_nodes, self.num_storage_nodes
@@ -633,33 +618,33 @@ where
                 share.evals.len()
             )));
         }
-        if num_evals != self.multiplicity * common.poly_commits.len() {
+        if num_evals != self.multiplicity as usize * common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "num_evals should be (multiplicity * poly_commits): {} but is instead: {}",
-                self.multiplicity * common.poly_commits.len(),
+                self.multiplicity as usize * common.poly_commits.len(),
                 num_evals,
             )));
         }
         let chunk_size = self.multiplicity * self.recovery_threshold;
-        let num_polys = num_evals / self.multiplicity;
+        let num_polys = num_evals / self.multiplicity as usize;
 
-        let elems_capacity = num_polys * chunk_size;
+        let elems_capacity = num_polys * chunk_size as usize;
         let mut elems = Vec::with_capacity(elems_capacity);
 
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
             for share in shares {
                 // extract all evaluations for polynomial p from the share
-                for m in 0..self.multiplicity {
+                for m in 0..self.multiplicity as usize {
                     evals.push((
-                        (share.index * self.multiplicity) + m,
+                        (share.index * self.multiplicity) as usize + m,
                         share.evals[(m * num_polys) + p],
                     ))
                 }
             }
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(&mut evals),
-                chunk_size,
+                chunk_size as usize,
                 &self.multi_open_domain,
             )
             .map_err(vid)?;
@@ -729,7 +714,7 @@ where
         E: Pairing,
         H: HasherDigest,
     {
-        let code_word_size = self.num_storage_nodes * self.multiplicity;
+        let code_word_size = (self.num_storage_nodes * self.multiplicity) as usize;
         let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
         // this is to avoid `SrsRef` not implementing `Sync` problem,
         // instead of sending entire `self` cross thread, we only send a ref which is
@@ -796,7 +781,7 @@ where
     where
         E: Pairing,
     {
-        let chunk_size = self.recovery_threshold * self.multiplicity;
+        let chunk_size = (self.recovery_threshold * self.multiplicity) as usize;
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
         let eval_domain_ref = &self.eval_domain;
 
@@ -848,7 +833,7 @@ where
     {
         Self::polynomial_internal(
             &self.eval_domain,
-            self.recovery_threshold * self.multiplicity,
+            (self.recovery_threshold * self.multiplicity) as usize,
             coeffs,
         )
     }
@@ -902,16 +887,16 @@ where
         E: Pairing,
         H: HasherDigest,
     {
-        let code_word_size = self.num_storage_nodes * self.multiplicity;
+        let code_word_size = (self.num_storage_nodes * self.multiplicity) as usize;
         let num_of_polys = all_storage_node_evals[0].len();
-        let mut shares = Vec::with_capacity(self.num_storage_nodes);
-        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity);
-        let mut proofs = Vec::with_capacity(self.multiplicity);
+        let mut shares = Vec::with_capacity(self.num_storage_nodes as usize);
+        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity as usize);
+        let mut proofs = Vec::with_capacity(self.multiplicity as usize);
         let mut index = 0;
         for i in 0..code_word_size {
             evals.extend(all_storage_node_evals[i].iter());
             proofs.push(aggregate_proofs[i].clone());
-            if (i + 1) % self.multiplicity == 0 {
+            if (i + 1) % self.multiplicity as usize == 0 {
                 shares.push(Share {
                     index,
                     evals: mem::take(&mut evals),
@@ -1008,7 +993,7 @@ mod tests {
         // run with 'print-trace' feature to see timer output
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(recovery_threshold, &mut rng);
+        let srs = init_srs(recovery_threshold as usize, &mut rng);
         let mut advz =
             Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
                 .unwrap();
@@ -1034,7 +1019,7 @@ mod tests {
         // run with 'print-trace' feature to see timer output
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(recovery_threshold, &mut rng);
+        let srs = init_srs(recovery_threshold as usize, &mut rng);
         let mut advz =
             Advz::<Bn254, Sha256>::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs)
                 .unwrap();
@@ -1241,7 +1226,8 @@ mod tests {
         {
             let mut shares_bad_indices = shares.clone();
             for i in 0..shares_bad_indices.len() {
-                shares_bad_indices[i].index += advz.multi_open_domain.size();
+                shares_bad_indices[i].index +=
+                    u32::try_from(advz.multi_open_domain.size()).unwrap();
                 advz.recover_payload(&shares_bad_indices, &common)
                     .expect_err("recover_payload should fail when indices are out of bounds");
             }
@@ -1256,7 +1242,7 @@ mod tests {
     pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
         let (recovery_threshold, num_storage_nodes) = (4, 6);
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(recovery_threshold, &mut rng);
+        let srs = init_srs(recovery_threshold as usize, &mut rng);
         let advz = Advz::with_multiplicity(num_storage_nodes, recovery_threshold, 1, srs).unwrap();
         let bytes_random = init_random_payload(4000, &mut rng);
         (advz, bytes_random)

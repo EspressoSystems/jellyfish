@@ -12,9 +12,9 @@ use jf_primitives::vid::{VidError, VidResult, VidScheme};
 /// because it's in an integration test.
 /// <https://doc.rust-lang.org/book/ch11-03-test-organization.html#submodules-in-integration-tests>
 pub fn round_trip<V, R>(
-    vid_factory: impl Fn(usize, usize, usize) -> V,
-    vid_sizes: &[(usize, usize)],
-    multiplicities: &[usize],
+    vid_factory: impl Fn(u32, u32, u32) -> V,
+    vid_sizes: &[(u32, u32)],
+    multiplicities: &[u32],
     payload_byte_lens: &[usize],
     rng: &mut R,
 ) where
@@ -40,11 +40,14 @@ pub fn round_trip<V, R>(
 
             let disperse = vid.disperse(&bytes_random).unwrap();
             let (mut shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-            assert_eq!(shares.len(), num_storage_nodes);
+            assert_eq!(shares.len(), num_storage_nodes as usize);
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
             assert_eq!(len, V::get_payload_byte_len(&common));
-            assert_eq!(mult, V::get_multiplicity(&common));
-            assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));
+            assert_eq!(mult as usize, V::get_multiplicity(&common));
+            assert_eq!(
+                num_storage_nodes as usize,
+                V::get_num_storage_nodes(&common)
+            );
 
             for share in shares.iter() {
                 vid.verify_share(share, &common, &commit).unwrap().unwrap();
@@ -55,14 +58,14 @@ pub fn round_trip<V, R>(
 
             // give minimum number of shares for recovery
             let bytes_recovered = vid
-                .recover_payload(&shares[..recovery_threshold], &common)
+                .recover_payload(&shares[..recovery_threshold as usize], &common)
                 .unwrap();
             assert_eq!(bytes_recovered, bytes_random);
 
             // give an intermediate number of shares for recovery
             let intermediate_num_shares = (recovery_threshold + num_storage_nodes) / 2;
             let bytes_recovered = vid
-                .recover_payload(&shares[..intermediate_num_shares], &common)
+                .recover_payload(&shares[..intermediate_num_shares as usize], &common)
                 .unwrap();
             assert_eq!(bytes_recovered, bytes_random);
 
@@ -72,7 +75,7 @@ pub fn round_trip<V, R>(
 
             // give insufficient shares for recovery
             assert_arg_err(
-                vid.recover_payload(&shares[..recovery_threshold - 1], &common),
+                vid.recover_payload(&shares[..(recovery_threshold - 1) as usize], &common),
                 "insufficient shares should be arg error",
             );
         }

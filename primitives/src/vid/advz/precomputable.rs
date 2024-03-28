@@ -98,8 +98,8 @@ where
             poly_commits: data.poly_commits.clone(),
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
-            num_storage_nodes: self.num_storage_nodes.try_into().map_err(vid)?,
-            multiplicity: self.multiplicity.try_into().map_err(vid)?,
+            num_storage_nodes: self.num_storage_nodes,
+            multiplicity: self.multiplicity,
         };
         end_timer!(common_timer);
 
@@ -123,7 +123,7 @@ where
         let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             &self.ck,
             &aggregate_poly,
-            code_word_size,
+            code_word_size as usize,
             &self.multi_open_domain,
         )
         .map_err(vid)?;
@@ -187,7 +187,7 @@ mod tests {
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let multiplicity = 1;
-        let srs = init_srs(recovery_threshold * multiplicity, &mut rng);
+        let srs = init_srs((recovery_threshold * multiplicity) as usize, &mut rng);
         let advz = Advz::<Bls12_381, Sha256>::with_multiplicity(
             num_storage_nodes,
             recovery_threshold,
@@ -207,7 +207,7 @@ mod tests {
         let (recovery_threshold, num_storage_nodes) = (64, 128);
         let multiplicity = 4;
         let mut rng = jf_utils::test_rng();
-        let srs = init_srs(recovery_threshold * multiplicity, &mut rng);
+        let srs = init_srs((recovery_threshold * multiplicity) as usize, &mut rng);
         let advz = Advz::<Bls12_381, Sha256>::with_multiplicity(
             num_storage_nodes,
             recovery_threshold,

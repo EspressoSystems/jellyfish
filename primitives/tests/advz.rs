@@ -23,7 +23,8 @@ fn round_trip() {
     multiplicities.shuffle(&mut rng);
     let srs = UnivariateKzgPCS::<Bls12_381>::gen_srs_for_testing(
         &mut rng,
-        checked_fft_size(supported_degree).unwrap() * multiplicities.iter().max().unwrap(),
+        checked_fft_size(supported_degree as usize).unwrap()
+            * *multiplicities.iter().max().unwrap() as usize,
     )
     .unwrap();
 
