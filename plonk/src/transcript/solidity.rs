@@ -75,7 +75,7 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
         self.state.copy_from_slice(&[buf0, buf1].concat());
 
         // 2. challenge: sample field from random bytes.
-        let challenge = E::ScalarField::from_le_bytes_mod_order(&self.state[..48]);
+        let challenge = E::ScalarField::from_le_bytes_mod_order(&self.state[..32]);
         Ok(challenge)
     }
 }
