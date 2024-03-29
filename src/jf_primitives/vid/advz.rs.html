@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz.rs`."><title>advz.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1240,6 +1240,18 @@
 <a href="#1238" id="1238">1238</a>
 <a href="#1239" id="1239">1239</a>
 <a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1322,9 +1334,9 @@
 <span class="kw">where
     </span>E: Pairing,
 {
-    payload_chunk_size: usize,
-    num_storage_nodes: usize,
-    multiplicity: usize,
+    recovery_threshold: u32,
+    num_storage_nodes: u32,
+    multiplicity: u32,
     ck: KzgProverParam&lt;E&gt;,
     vk: KzgVerifierParam&lt;E&gt;,
     multi_open_domain: Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
@@ -1364,58 +1376,51 @@
 <span class="kw">where
     </span>E: Pairing,
 {
-    <span class="doccomment">/// Return a new instance of `Self`.
-    ///
-    /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes &lt;
-    /// payload_chunk_size`.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_internal(
-        payload_chunk_size: usize, <span class="comment">// k
-        </span>num_storage_nodes: usize,  <span class="comment">// n (code rate: r = k/n)
-        </span>multiplicity: usize,       <span class="comment">// batch m chunks, keep the rate r = (m*k)/(m*n)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_internal(
+        num_storage_nodes: u32,  <span class="comment">// n (code rate: r = k/n)
+        </span>recovery_threshold: u32, <span class="comment">// k
+        </span>srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
+    ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
+        <span class="comment">// TODO intelligent choice of multiplicity
+        // https://github.com/EspressoSystems/jellyfish/issues/534
+        </span><span class="kw">let </span>multiplicity = <span class="number">1</span>;
+
+        <span class="self">Self</span>::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_multiplicity_internal(
+        num_storage_nodes: u32,  <span class="comment">// n (code rate: r = k/n)
+        </span>recovery_threshold: u32, <span class="comment">// k
+        </span>multiplicity: u32,       <span class="comment">// batch m chunks, keep the rate r = (m*k)/(m*n)
         </span>srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="comment">// TODO support any degree, give multiple shares to nodes if needed
         // https://github.com/EspressoSystems/jellyfish/issues/393
-        </span><span class="kw">if </span>num_storage_nodes &lt; payload_chunk_size {
+        </span><span class="kw">if </span>num_storage_nodes &lt; recovery_threshold {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"payload_chunk_size {} exceeds num_storage_nodes {}"</span>,
-                payload_chunk_size, num_storage_nodes
+                <span class="string">"recovery_threshold {} exceeds num_storage_nodes {}"</span>,
+                recovery_threshold, num_storage_nodes
             )));
         }
 
-        <span class="kw">if </span>!(<span class="number">1</span>..=<span class="number">16</span>).contains(<span class="kw-2">&amp;</span>multiplicity) || !multiplicity.is_power_of_two() {
+        <span class="kw">if </span>!multiplicity.is_power_of_two() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"multiplicity {} not allowed"</span>,
-                multiplicity
-            )));
-        }
-
-        <span class="comment">// Later we will convert to u32.
-        // Better to know now whether that conversion will succeed.
-        </span><span class="kw">if </span>u32::try_from(num_storage_nodes).is_err() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"num_storage nodes {} should be convertible to u32"</span>,
-                num_storage_nodes
-            )));
-        }
-        <span class="kw">if </span>u32::try_from(multiplicity).is_err() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"multiplicity {} should be convertible to u32"</span>,
-                multiplicity
-            )));
+                <span class="string">"multiplicity {multiplicity} should be a power of two"
+            </span>)));
         }
 
         <span class="comment">// erasure code params
-        </span><span class="kw">let </span>chunk_size = multiplicity * payload_chunk_size; <span class="comment">// message length m
+        </span><span class="kw">let </span>chunk_size = multiplicity * recovery_threshold; <span class="comment">// message length m
         </span><span class="kw">let </span>code_word_size = multiplicity * num_storage_nodes; <span class="comment">// code word length n
         </span><span class="kw">let </span>poly_degree = chunk_size - <span class="number">1</span>;
 
-        <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree).map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>multi_open_domain =
-            UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(poly_degree, code_word_size)
-                .map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(chunk_size).ok_or_else(|| {
+        <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree <span class="kw">as </span>usize).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>multi_open_domain = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(
+            poly_degree <span class="kw">as </span>usize,
+            code_word_size <span class="kw">as </span>usize,
+        )
+        .map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(chunk_size <span class="kw">as </span>usize).ok_or_else(|| {
             VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
                 <span class="string">"fail to construct domain of size {}"</span>,
                 chunk_size
@@ -1425,16 +1430,16 @@
         <span class="comment">// TODO TEMPORARY: enforce power-of-2 chunk size
         // Remove this restriction after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        </span><span class="kw">if </span>chunk_size != eval_domain.size() {
+        </span><span class="kw">if </span>chunk_size <span class="kw">as </span>usize != eval_domain.size() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"payload_chunk_size {} currently unsupported, round to {} instead"</span>,
+                <span class="string">"recovery_threshold {} currently unsupported, round to {} instead"</span>,
                 chunk_size,
                 eval_domain.size()
             )));
         }
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            payload_chunk_size,
+            recovery_threshold,
             num_storage_nodes,
             multiplicity,
             ck,
@@ -1451,22 +1456,43 @@
 <span class="kw">where
     </span>E: Pairing,
 {
-    <span class="doccomment">/// Construct a new VID instance
+    <span class="doccomment">/// Return a new instance of `Self` from (mostly)
+    /// implementation-independent arguments.
     ///
-    /// - `payload_chunk_size`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
-    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
+    /// # Implementation-independent arguments
+    /// - `num_storage_nodes`
+    /// - `recovery_threshold`
+    ///
+    /// # Implementation-specific arguments
+    /// - `srs`
     ///
     /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes &lt;
-    /// payload_chunk_size`.
+    /// Return [`VidError::Argument`] if
+    /// - `num_storage_nodes &lt; recovery_threshold`
+    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
     </span><span class="kw">pub fn </span>new(
-        payload_chunk_size: usize,
-        num_storage_nodes: usize,
-        multiplicity: usize,
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
-        <span class="self">Self</span>::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)
+        <span class="self">Self</span>::new_internal(num_storage_nodes, recovery_threshold, srs)
+    }
+
+    <span class="doccomment">/// Like [`Advz::new`] except with a `multiplicity` arg.
+    ///
+    /// `multiplicity` is an implementation-specific optimization arg.
+    /// Each storage node gets `multiplicity` evaluations per polynomial.
+    ///
+    /// # Errors
+    /// In addition to [`Advz::new`], return [`VidError::Argument`] if
+    /// - TEMPORARY `multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    </span><span class="kw">pub fn </span>with_multiplicity(
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
+        multiplicity: u32,
+        srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
+    ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
+        <span class="self">Self</span>::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
     }
 }
 
@@ -1476,31 +1502,41 @@
     </span>E: Pairing,
     UnivariateKzgPCS&lt;E&gt;: GPUCommittable&lt;E&gt;,
 {
-    <span class="doccomment">/// construct a new VID instance with SRS loaded to GPU
-    ///
-    /// - `payload_chunk_size`: k
-    /// - `num_storage_nodes`: n (code rate: r = k/n)
-    /// - `multiplicity`: batch m chunks, keep the rate r = (m*k)/(m*n)
-    ///
-    /// # Errors
-    /// Return [`VidError::Argument`] if `num_storage_nodes &lt;
-    /// payload_chunk_size`.
-    </span><span class="kw">pub fn </span>new(
-        payload_chunk_size: usize,
+    <span class="doccomment">/// Like [`Advz::new`] except with SRS loaded to GPU
+    </span><span class="kw">pub fn </span>with_multiplicity(
         num_storage_nodes: usize,
+        recovery_threshold: usize,
+        srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
+    ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>advz = <span class="self">Self</span>::new_internal(num_storage_nodes, recovery_threshold, srs)<span class="question-mark">?</span>;
+        advz.init_gpu_srs()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(advz)
+    }
+    <span class="doccomment">/// Like [`Advz::with_multiplicity`] except with SRS loaded to GPU
+    </span><span class="kw">pub fn </span>with_multiplicity(
+        num_storage_nodes: usize,
+        recovery_threshold: usize,
         multiplicity: usize,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>advz =
-            <span class="self">Self</span>::new_internal(payload_chunk_size, num_storage_nodes, multiplicity, srs)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>advz = <span class="self">Self</span>::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            multiplicity,
+            srs,
+        )<span class="question-mark">?</span>;
+        advz.init_gpu_srs()<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(advz)
+    }
+
+    <span class="kw">fn </span>init_gpu_srs(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; VidResult&lt;()&gt; {
         <span class="kw">let </span>srs_on_gpu = &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::load_prover_param_to_gpu(
-            <span class="kw-2">&amp;</span>advz.ck,
-            advz.ck.powers_of_g.len() - <span class="number">1</span>,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
+            <span class="self">self</span>.ck.powers_of_g.len() - <span class="number">1</span>,
         )
         .map_err(vid)<span class="question-mark">?</span>;
-
-        advz.srs_on_gpu_and_cuda_stream = <span class="prelude-val">Some</span>((srs_on_gpu, warmup_new_stream().unwrap()));
-        <span class="prelude-val">Ok</span>(advz)
+        <span class="self">self</span>.srs_on_gpu_and_cuda_stream = <span class="prelude-val">Some</span>((srs_on_gpu, warmup_new_stream().unwrap()));
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -1519,7 +1555,7 @@
     </span>E: Pairing,
     H: HasherDigest,
 {
-    index: usize,
+    index: u32,
 
     <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span>evals: Vec&lt;KzgEval&lt;E&gt;&gt;,
@@ -1642,7 +1678,7 @@
             <span class="string">"VID disperse {} payload bytes to {} nodes"</span>,
             payload_byte_len, <span class="self">self</span>.num_storage_nodes
         ));
-        <span class="kw">let </span>_chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
+        <span class="kw">let </span>_chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.recovery_threshold;
         <span class="kw">let </span>code_word_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.num_storage_nodes;
 
         <span class="comment">// partition payload into polynomial coefficients
@@ -1671,8 +1707,8 @@
             poly_commits: &lt;<span class="self">Self </span><span class="kw">as </span>MaybeGPU&lt;E&gt;&gt;::kzg_batch_commit(<span class="self">self</span>, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>,
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
-            num_storage_nodes: <span class="self">self</span>.num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>,
-            multiplicity: <span class="self">self</span>.multiplicity.try_into().map_err(vid)<span class="question-mark">?</span>,
+            num_storage_nodes: <span class="self">self</span>.num_storage_nodes,
+            multiplicity: <span class="self">self</span>.multiplicity,
         };
         <span class="macro">end_timer!</span>(common_timer);
 
@@ -1696,7 +1732,7 @@
         <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
             <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
             <span class="kw-2">&amp;</span>aggregate_poly,
-            code_word_size,
+            code_word_size <span class="kw">as </span>usize,
             <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
         )
         .map_err(vid)<span class="question-mark">?</span>;
@@ -1731,8 +1767,7 @@
             )));
         }
 
-        <span class="kw">let </span>num_storage_nodes: u32 = <span class="self">self</span>.num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>; <span class="comment">// pacify cargo check --target wasm32-unknown-unknown --no-default-features
-        </span><span class="kw">if </span>common.num_storage_nodes != num_storage_nodes {
+        <span class="kw">if </span>common.num_storage_nodes != <span class="self">self</span>.num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"common num_storage_nodes differs from self ({},{})"</span>,
                 common.num_storage_nodes, <span class="self">self</span>.num_storage_nodes
@@ -1779,7 +1814,7 @@
         );
 
         <span class="comment">// verify aggregate proof
-        </span>(<span class="number">0</span>..<span class="self">self</span>.multiplicity)
+        </span>(<span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize)
             .map(|i| {
                 <span class="kw">let </span>aggregate_eval = polynomial_eval(
                     share.evals[i * polys_len..(i + <span class="number">1</span>) * polys_len]
@@ -1792,7 +1827,7 @@
                     <span class="kw-2">&amp;</span>aggregate_poly_commit,
                     <span class="kw-2">&amp;</span><span class="self">self
                         </span>.multi_open_domain
-                        .element((share.index * multiplicity) + i),
+                        .element((share.index <span class="kw">as </span>usize * multiplicity) + i),
                     <span class="kw-2">&amp;</span>aggregate_eval,
                     <span class="kw-2">&amp;</span>share.aggregate_proofs[i],
                 )
@@ -1804,15 +1839,14 @@
     }
 
     <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
-        <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.payload_chunk_size {
+        <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"not enough shares {}, expected at least {}"</span>,
                 shares.len(),
-                <span class="self">self</span>.payload_chunk_size
+                <span class="self">self</span>.recovery_threshold
             )));
         }
-        <span class="kw">let </span>num_storage_nodes: u32 = <span class="self">self</span>.num_storage_nodes.try_into().map_err(vid)<span class="question-mark">?</span>; <span class="comment">// pacify cargo check --target wasm32-unknown-unknown --no-default-features
-        </span><span class="kw">if </span>common.num_storage_nodes != num_storage_nodes {
+        <span class="kw">if </span>common.num_storage_nodes != <span class="self">self</span>.num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"common num_storage_nodes differs from self ({},{})"</span>,
                 common.num_storage_nodes, <span class="self">self</span>.num_storage_nodes
@@ -1838,33 +1872,33 @@
                 share.evals.len()
             )));
         }
-        <span class="kw">if </span>num_evals != <span class="self">self</span>.multiplicity * common.poly_commits.len() {
+        <span class="kw">if </span>num_evals != <span class="self">self</span>.multiplicity <span class="kw">as </span>usize * common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"num_evals should be (multiplicity * poly_commits): {} but is instead: {}"</span>,
-                <span class="self">self</span>.multiplicity * common.poly_commits.len(),
+                <span class="self">self</span>.multiplicity <span class="kw">as </span>usize * common.poly_commits.len(),
                 num_evals,
             )));
         }
-        <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.payload_chunk_size;
-        <span class="kw">let </span>num_polys = num_evals / <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.recovery_threshold;
+        <span class="kw">let </span>num_polys = num_evals / <span class="self">self</span>.multiplicity <span class="kw">as </span>usize;
 
-        <span class="kw">let </span>elems_capacity = num_polys * chunk_size;
+        <span class="kw">let </span>elems_capacity = num_polys * chunk_size <span class="kw">as </span>usize;
         <span class="kw">let </span><span class="kw-2">mut </span>elems = Vec::with_capacity(elems_capacity);
 
         <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_evals);
         <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..num_polys {
             <span class="kw">for </span>share <span class="kw">in </span>shares {
                 <span class="comment">// extract all evaluations for polynomial p from the share
-                </span><span class="kw">for </span>m <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.multiplicity {
+                </span><span class="kw">for </span>m <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize {
                     evals.push((
-                        (share.index * <span class="self">self</span>.multiplicity) + m,
+                        (share.index * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize + m,
                         share.evals[(m * num_polys) + p],
                     ))
                 }
             }
             <span class="kw">let </span><span class="kw-2">mut </span>coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(<span class="kw-2">&amp;mut </span>evals),
-                chunk_size,
+                chunk_size <span class="kw">as </span>usize,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
             )
             .map_err(vid)<span class="question-mark">?</span>;
@@ -1898,25 +1932,16 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>get_payload_byte_len(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
-        common
-            .payload_byte_len
-            .try_into()
-            .expect(<span class="string">"u32 should be convertible to usize"</span>)
+    <span class="kw">fn </span>get_payload_byte_len(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; u32 {
+        common.payload_byte_len
     }
 
-    <span class="kw">fn </span>get_num_storage_nodes(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
-        common
-            .num_storage_nodes
-            .try_into()
-            .expect(<span class="string">"u32 should be convertible to usize"</span>)
+    <span class="kw">fn </span>get_num_storage_nodes(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; u32 {
+        common.num_storage_nodes
     }
 
-    <span class="kw">fn </span>get_multiplicity(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; usize {
-        common
-            .multiplicity
-            .try_into()
-            .expect(<span class="string">"u32 should be convertible to usize"</span>)
+    <span class="kw">fn </span>get_multiplicity(common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; u32 {
+        common.multiplicity
     }
 }
 
@@ -1934,7 +1959,7 @@
         </span>E: Pairing,
         H: HasherDigest,
     {
-        <span class="kw">let </span>code_word_size = <span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>code_word_size = (<span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
         <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
         <span class="comment">// this is to avoid `SrsRef` not implementing `Sync` problem,
         // instead of sending entire `self` cross thread, we only send a ref which is
@@ -2001,7 +2026,7 @@
     <span class="kw">where
         </span>E: Pairing,
     {
-        <span class="kw">let </span>chunk_size = <span class="self">self</span>.payload_chunk_size * <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>chunk_size = (<span class="self">self</span>.recovery_threshold * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
         <span class="kw">let </span>elem_bytes_len = bytes_to_field::elem_byte_capacity::&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;();
         <span class="kw">let </span>eval_domain_ref = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
 
@@ -2036,7 +2061,7 @@
         EvaluationDomain::ifft_in_place(domain_ref, <span class="kw-2">&amp;mut </span>coeffs_vec);
 
         <span class="comment">// sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.payload_chunk_size * self.multiplicity
+        // If pre_fft_len != self.recovery_threshold * self.multiplicity
         // then we were not given the correct number of coeffs. In that case
         // coeffs.len() could be anything, so there's nothing to sanity check.
         </span><span class="kw">if </span>pre_fft_len == chunk_size {
@@ -2053,7 +2078,7 @@
     {
         <span class="self">Self</span>::polynomial_internal(
             <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain,
-            <span class="self">self</span>.payload_chunk_size * <span class="self">self</span>.multiplicity,
+            (<span class="self">self</span>.recovery_threshold * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize,
             coeffs,
         )
     }
@@ -2107,16 +2132,16 @@
         </span>E: Pairing,
         H: HasherDigest,
     {
-        <span class="kw">let </span>code_word_size = <span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity;
+        <span class="kw">let </span>code_word_size = (<span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
         <span class="kw">let </span>num_of_polys = all_storage_node_evals[<span class="number">0</span>].len();
-        <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(<span class="self">self</span>.num_storage_nodes);
-        <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_of_polys * <span class="self">self</span>.multiplicity);
-        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(<span class="self">self</span>.multiplicity);
+        <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(<span class="self">self</span>.num_storage_nodes <span class="kw">as </span>usize);
+        <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_of_polys * <span class="self">self</span>.multiplicity <span class="kw">as </span>usize);
+        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(<span class="self">self</span>.multiplicity <span class="kw">as </span>usize);
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..code_word_size {
             evals.extend(all_storage_node_evals[i].iter());
             proofs.push(aggregate_proofs[i].clone());
-            <span class="kw">if </span>(i + <span class="number">1</span>) % <span class="self">self</span>.multiplicity == <span class="number">0 </span>{
+            <span class="kw">if </span>(i + <span class="number">1</span>) % <span class="self">self</span>.multiplicity <span class="kw">as </span>usize == <span class="number">0 </span>{
                 shares.push(Share {
                     index,
                     evals: mem::take(<span class="kw-2">&amp;mut </span>evals),
@@ -2211,15 +2236,14 @@
     #[test]
     </span><span class="kw">fn </span>disperse_timer() {
         <span class="comment">// run with 'print-trace' feature to see timer output
-        </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
+        </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-        <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>srs = init_srs(recovery_threshold <span class="kw">as </span>usize, <span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span><span class="kw-2">mut </span>advz =
-            Advz::&lt;Bn254, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
+            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         <span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
         </span><span class="kw">let </span><span class="kw-2">mut </span>advz_gpu =
-            AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, <span class="kw-2">&amp;</span>srs)
-                .unwrap();
+            AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, <span class="kw-2">&amp;</span>srs).unwrap();
 
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">25</span>, <span class="kw-2">&amp;mut </span>rng);
 
@@ -2232,15 +2256,14 @@
     #[test]
     </span><span class="kw">fn </span>commit_only_timer() {
         <span class="comment">// run with 'print-trace' feature to see timer output
-        </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
+        </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-        <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>srs = init_srs(recovery_threshold <span class="kw">as </span>usize, <span class="kw-2">&amp;mut </span>rng);
         <span class="kw">let </span><span class="kw-2">mut </span>advz =
-            Advz::&lt;Bn254, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
+            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         <span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
         </span><span class="kw">let </span><span class="kw-2">mut </span>advz_gpu =
-            AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, <span class="kw-2">&amp;</span>srs)
-                .unwrap();
+            AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, <span class="kw-2">&amp;</span>srs).unwrap();
 
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">25</span>, <span class="kw-2">&amp;mut </span>rng);
 
@@ -2436,7 +2459,8 @@
         </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>shares_bad_indices = shares.clone();
             <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..shares_bad_indices.len() {
-                shares_bad_indices[i].index += advz.multi_open_domain.size();
+                shares_bad_indices[i].index +=
+                    u32::try_from(advz.multi_open_domain.size()).unwrap();
                 advz.recover_payload(<span class="kw-2">&amp;</span>shares_bad_indices, <span class="kw-2">&amp;</span>common)
                     .expect_err(<span class="string">"recover_payload should fail when indices are out of bounds"</span>);
             }
@@ -2449,10 +2473,10 @@
     /// 1. An initialized [`Advz`] instance.
     /// 2. A `Vec&lt;u8&gt;` filled with random bytes.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>advz_init() -&gt; (Advz&lt;Bls12_381, Sha256&gt;, Vec&lt;u8&gt;) {
-        <span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
+        <span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-        <span class="kw">let </span>srs = init_srs(payload_chunk_size, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span>advz = Advz::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
+        <span class="kw">let </span>srs = init_srs(recovery_threshold <span class="kw">as </span>usize, <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>advz = Advz::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         <span class="kw">let </span>bytes_random = init_random_payload(<span class="number">4000</span>, <span class="kw-2">&amp;mut </span>rng);
         (advz, bytes_random)
     }

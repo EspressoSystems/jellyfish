@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz/payload_prover.rs`."><title>payload_prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `primitives/src/vid/advz/payload_prover.rs`."><title>payload_prover.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="jf_primitives" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../jf_primitives/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -568,6 +568,7 @@
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
 <a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -667,7 +668,7 @@
         <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(<span class="kw-2">&amp;</span>payload[range_poly_byte]);
         <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(range_poly.len() * points.len());
         <span class="kw">for </span>(i, evals_iter) <span class="kw">in </span>elems_iter
-            .chunks(<span class="self">self</span>.payload_chunk_size)
+            .chunks(<span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
             .into_iter()
             .enumerate()
         {
@@ -832,10 +833,11 @@
             .chain(proof.suffix_elems.iter().cloned());
 
         <span class="comment">// rebuild the poly commits, check against `common`
-        </span><span class="kw">for </span>(commit_index, evals_iter) <span class="kw">in </span>range_poly
-            .into_iter()
-            .zip(elems_iter.chunks(<span class="self">self</span>.payload_chunk_size).into_iter())
-        {
+        </span><span class="kw">for </span>(commit_index, evals_iter) <span class="kw">in </span>range_poly.into_iter().zip(
+            elems_iter
+                .chunks(<span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
+                .into_iter(),
+        ) {
             <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
             <span class="kw">let </span>poly_commit = UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
             <span class="kw">if </span>poly_commit != stmt.common.poly_commits[commit_index] {
@@ -864,18 +866,18 @@
         }
     }
     <span class="kw">fn </span>range_elem_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
-        range_coarsen(range, <span class="self">self</span>.payload_chunk_size)
+        range_coarsen(range, <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
     }
     <span class="kw">fn </span>range_byte_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
         range_coarsen(
             range,
-            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         )
     }
     <span class="kw">fn </span>range_poly_to_byte_clamped(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, len: usize) -&gt; Range&lt;usize&gt; {
         <span class="kw">let </span>result = range_refine(
             range,
-            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         );
         Range {
             end: ark_std::cmp::min(result.end, len),
@@ -885,12 +887,12 @@
     <span class="kw">fn </span>offset_poly_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range_poly_start: usize, range_elem_start: usize) -&gt; usize {
         <span class="kw">let </span>start_poly_byte = index_refine(
             range_poly_start,
-            <span class="self">self</span>.payload_chunk_size * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         );
         range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
     }
     <span class="kw">fn </span>final_poly_points_range_end(<span class="kw-2">&amp;</span><span class="self">self</span>, range_elem_len: usize, offset_elem: usize) -&gt; usize {
-        (range_elem_len + offset_elem - <span class="number">1</span>) % <span class="self">self</span>.payload_chunk_size + <span class="number">1
+        (range_elem_len + offset_elem - <span class="number">1</span>) % <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize + <span class="number">1
     </span>}
 
     <span class="kw">fn </span>check_stmt_consistency(stmt: <span class="kw-2">&amp;</span>Statement&lt;<span class="self">Self</span>&gt;) -&gt; VidResult&lt;()&gt; {
@@ -971,17 +973,17 @@
         H: HasherDigest,
     {
         <span class="comment">// play with these items
-        </span><span class="kw">let </span>(payload_chunk_size, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
+        </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
         <span class="kw">let </span>num_polys = <span class="number">3</span>;
         <span class="kw">let </span>num_random_cases = <span class="number">20</span>;
 
         <span class="comment">// more items as a function of the above
-        </span><span class="kw">let </span>payload_elems_len = num_polys * payload_chunk_size;
+        </span><span class="kw">let </span>payload_elems_len = num_polys * recovery_threshold <span class="kw">as </span>usize;
         <span class="kw">let </span>payload_bytes_base_len = payload_elems_len * elem_byte_capacity::&lt;E::ScalarField&gt;();
-        <span class="kw">let </span>poly_bytes_len = payload_chunk_size * elem_byte_capacity::&lt;E::ScalarField&gt;();
+        <span class="kw">let </span>poly_bytes_len = recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(payload_elems_len, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span><span class="kw-2">mut </span>advz = Advz::&lt;E, H&gt;::new(payload_chunk_size, num_storage_nodes, <span class="number">1</span>, srs).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>advz = Advz::&lt;E, H&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         <span class="comment">// TEST: different payload byte lengths
         </span><span class="kw">let </span>payload_byte_len_noise_cases = <span class="macro">vec!</span>[<span class="number">0</span>, poly_bytes_len / <span class="number">2</span>, poly_bytes_len - <span class="number">1</span>];
