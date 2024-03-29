@@ -33,7 +33,7 @@ where
     // degree as a function of storage node count.
     // If desired, you could set polynomial degrees independent of storage node
     // count.
-    const CODE_RATE: usize = 4; // ratio of num_storage_nodes : polynomial_degree
+    const CODE_RATE: u32 = 4; // ratio of num_storage_nodes : polynomial_degree
     let storage_node_counts = [512, 1024];
     let payload_byte_lens = [1 * MB];
 
@@ -44,7 +44,7 @@ where
     let mut rng = jf_utils::test_rng();
     let srs = UnivariateKzgPCS::<E>::gen_srs_for_testing(
         &mut rng,
-        checked_fft_size(supported_degree).unwrap(),
+        checked_fft_size(supported_degree as usize).unwrap(),
     )
     .unwrap();
 
@@ -64,7 +64,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("commit"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz = Advz::<E, H>::new(num_storage_nodes, poly_degree, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -79,7 +79,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("disperse"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz = Advz::<E, H>::new(num_storage_nodes, poly_degree, &srs).unwrap();
             grp.bench_with_input(
                 BenchmarkId::from_parameter(num_storage_nodes),
                 &num_storage_nodes,
@@ -94,7 +94,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("verify"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz = Advz::<E, H>::new(num_storage_nodes, poly_degree, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
             grp.bench_with_input(
@@ -116,7 +116,7 @@ where
         let mut grp = c.benchmark_group(benchmark_group_name("recover"));
         grp.throughput(Throughput::Bytes(len as u64));
         for (poly_degree, num_storage_nodes) in vid_sizes_iter.clone() {
-            let mut advz = Advz::<E, H>::new(poly_degree, num_storage_nodes, 1, &srs).unwrap();
+            let mut advz = Advz::<E, H>::new(num_storage_nodes, poly_degree, &srs).unwrap();
             let disperse = advz.disperse(&payload_bytes).unwrap();
             let (shares, common) = (disperse.shares, disperse.common);
             grp.bench_with_input(
@@ -125,7 +125,7 @@ where
                 |b, _| {
                     // recover from only the first poly_degree shares
                     b.iter(|| {
-                        advz.recover_payload(&shares[..poly_degree], &common)
+                        advz.recover_payload(&shares[..poly_degree as usize], &common)
                             .unwrap()
                     });
                 },

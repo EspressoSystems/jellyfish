@@ -73,13 +73,13 @@ pub trait VidScheme {
     fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
 
     /// Extract the payload byte length data from a [`VidScheme::Common`].
-    fn get_payload_byte_len(common: &Self::Common) -> usize;
+    fn get_payload_byte_len(common: &Self::Common) -> u32;
 
     /// Extract the number of storage nodes from a [`VidScheme::Common`].
-    fn get_num_storage_nodes(common: &Self::Common) -> usize;
+    fn get_num_storage_nodes(common: &Self::Common) -> u32;
 
     /// Extract the number of poly evals per share [`VidScheme::Common`].
-    fn get_multiplicity(common: &Self::Common) -> usize;
+    fn get_multiplicity(common: &Self::Common) -> u32;
 }
 
 /// Convenience struct to aggregate disperse data.
