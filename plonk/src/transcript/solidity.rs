@@ -60,22 +60,17 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
     where
         E: Pairing,
     {
-        // 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)
-        let input0 = [self.state.as_ref(), self.transcript.as_ref(), &[0u8]].concat();
-        let input1 = [self.state.as_ref(), self.transcript.as_ref(), &[1u8]].concat();
+        // 1. state = keccak256(state|transcript))
+        let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
 
         let mut hasher = Keccak256::new();
-        hasher.update(&input0);
-        let buf0 = hasher.finalize();
+        hasher.update(&input);
+        let buf = hasher.finalize();
 
-        let mut hasher = Keccak256::new();
-        hasher.update(&input1);
-        let buf1 = hasher.finalize();
-
-        self.state.copy_from_slice(&[buf0, buf1].concat());
+        self.state.copy_from_slice(&buf);
 
         // 2. challenge: sample field from random bytes.
-        let challenge = E::ScalarField::from_le_bytes_mod_order(&self.state[..48]);
+        let challenge = E::ScalarField::from_be_bytes_mod_order(&self.state);
         Ok(challenge)
     }
 }
