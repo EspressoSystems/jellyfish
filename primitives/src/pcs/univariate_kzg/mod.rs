@@ -1420,6 +1420,9 @@ mod tests {
         }
 
         #[test]
+        /// This test checks whether the scalar field type in Ark has the size
+        /// with the one in icicle. So that we could do direct reinterpret_cast
+        /// between them.
         fn test_gpu_ark_conversion() {
             test_gpu_ark_conversion_template::<Bn254>();
         }
