@@ -1308,8 +1308,10 @@ mod tests {
         use super::*;
         #[cfg(feature = "kzg-print-trace")]
         use crate::icicle_deps::warmup_new_stream;
-        use crate::icicle_deps::IcicleCurve;
-        use crate::{icicle_deps::curves::*, pcs::univariate_kzg::icicle::GPUCommittable};
+        use crate::{
+            icicle_deps::{curves::*, IcicleCurve},
+            pcs::univariate_kzg::icicle::GPUCommittable,
+        };
         use core::mem::size_of;
 
         #[cfg(feature = "kzg-print-trace")]
