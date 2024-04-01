@@ -67,7 +67,7 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
         hasher.update(&input);
         let buf = hasher.finalize();
 
-        self.state.copy_from_slice(&[buf].concat());
+        self.state.copy_from_slice(&buf);
 
         // 2. challenge: sample field from random bytes.
         let challenge = E::ScalarField::from_be_bytes_mod_order(&self.state);
