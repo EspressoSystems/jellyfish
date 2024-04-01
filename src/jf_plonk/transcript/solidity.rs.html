@@ -94,11 +94,6 @@
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -161,22 +156,17 @@
     <span class="kw">where
         </span>E: Pairing,
     {
-        <span class="comment">// 1. state = keccak256(state|transcript|0) || keccak256(state|transcript|1)
-        </span><span class="kw">let </span>input0 = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref(), <span class="kw-2">&amp;</span>[<span class="number">0u8</span>]].concat();
-        <span class="kw">let </span>input1 = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref(), <span class="kw-2">&amp;</span>[<span class="number">1u8</span>]].concat();
+        <span class="comment">// 1. state = keccak256(state|transcript))
+        </span><span class="kw">let </span>input = [<span class="self">self</span>.state.as_ref(), <span class="self">self</span>.transcript.as_ref()].concat();
 
         <span class="kw">let </span><span class="kw-2">mut </span>hasher = Keccak256::new();
-        hasher.update(<span class="kw-2">&amp;</span>input0);
-        <span class="kw">let </span>buf0 = hasher.finalize();
+        hasher.update(<span class="kw-2">&amp;</span>input);
+        <span class="kw">let </span>buf = hasher.finalize();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>hasher = Keccak256::new();
-        hasher.update(<span class="kw-2">&amp;</span>input1);
-        <span class="kw">let </span>buf1 = hasher.finalize();
-
-        <span class="self">self</span>.state.copy_from_slice(<span class="kw-2">&amp;</span>[buf0, buf1].concat());
+        <span class="self">self</span>.state.copy_from_slice(<span class="kw-2">&amp;</span>buf);
 
         <span class="comment">// 2. challenge: sample field from random bytes.
-        </span><span class="kw">let </span>challenge = E::ScalarField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span><span class="self">self</span>.state[..<span class="number">48</span>]);
+        </span><span class="kw">let </span>challenge = E::ScalarField::from_be_bytes_mod_order(<span class="kw-2">&amp;</span><span class="self">self</span>.state);
         <span class="prelude-val">Ok</span>(challenge)
     }
 }
