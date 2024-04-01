@@ -65,12 +65,12 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
 
         let mut hasher = Keccak256::new();
         hasher.update(&input);
-        let buf0 = hasher.finalize();
+        let buf = hasher.finalize();
 
-        self.state.copy_from_slice(&[buf0].concat());
+        self.state.copy_from_slice(&[buf].concat());
 
         // 2. challenge: sample field from random bytes.
-        let challenge = E::ScalarField::from_be_bytes_mod_order(&self.state[..32]);
+        let challenge = E::ScalarField::from_be_bytes_mod_order(&self.state);
         Ok(challenge)
     }
 }

@@ -19,5 +19,5 @@ pub(crate) const fn domain_size_ratio(n: usize, num_wire_types: usize) -> usize 
     (num_wire_types * (n + 1) + 2) / n + 1
 }
 
-/// Keccak-256 have a 64 byte state size to accommodate two hash digests.
-pub const KECCAK256_STATE_SIZE: usize = 64;
+/// Keccak-256 have a 32 byte state size.
+pub const KECCAK256_STATE_SIZE: usize = 32;
