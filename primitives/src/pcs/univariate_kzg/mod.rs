@@ -1308,7 +1308,9 @@ mod tests {
         use super::*;
         #[cfg(feature = "kzg-print-trace")]
         use crate::icicle_deps::warmup_new_stream;
+        use crate::icicle_deps::IcicleCurve;
         use crate::{icicle_deps::curves::*, pcs::univariate_kzg::icicle::GPUCommittable};
+        use core::mem::size_of;
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>
@@ -1401,6 +1403,23 @@ mod tests {
         #[test]
         fn test_gpu_e2e() {
             test_gpu_e2e_template::<Bn254>().unwrap();
+        }
+
+        fn test_gpu_ark_conversion_template<E: Pairing>()
+        where
+            UnivariateKzgPCS<E>: GPUCommittable<E>,
+        {
+            assert_eq!(
+                size_of::<E::ScalarField>(),
+                size_of::<
+                    <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField,
+                >()
+            );
+        }
+
+        #[test]
+        fn test_gpu_ark_conversion() {
+            test_gpu_ark_conversion_template::<Bn254>();
         }
 
         #[cfg(feature = "kzg-print-trace")]
