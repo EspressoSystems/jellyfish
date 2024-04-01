@@ -249,9 +249,9 @@ where
     UnivariateKzgPCS<E>: GPUCommittable<E>,
 {
     /// Like [`Advz::new`] except with SRS loaded to GPU
-    pub fn with_multiplicity(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
+    pub fn new(
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         let mut advz = Self::new_internal(num_storage_nodes, recovery_threshold, srs)?;
@@ -260,9 +260,9 @@ where
     }
     /// Like [`Advz::with_multiplicity`] except with SRS loaded to GPU
     pub fn with_multiplicity(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
-        multiplicity: usize,
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
+        multiplicity: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         let mut advz = Self::with_multiplicity_internal(
@@ -985,11 +985,11 @@ mod tests {
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
-        let mut advz =
-            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
         let mut advz_gpu =
             AdvzGPU::<'_, Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, &srs).unwrap();
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
@@ -1005,11 +1005,11 @@ mod tests {
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
-        let mut advz =
-            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         #[cfg(feature = "gpu-vid")]
         let mut advz_gpu =
             AdvzGPU::<'_, Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, &srs).unwrap();
+        let mut advz =
+            Advz::<Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         let payload_random = init_random_payload(1 << 25, &mut rng);
 
