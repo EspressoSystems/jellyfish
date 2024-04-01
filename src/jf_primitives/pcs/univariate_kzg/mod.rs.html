@@ -1411,6 +1411,53 @@
 <a href="#1409" id="1409">1409</a>
 <a href="#1410" id="1410">1410</a>
 <a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2231,16 +2278,18 @@
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ark-&gt;ICICLE: Scalar"</span>);
-            <span class="kw">let </span>scalars: Vec&lt;&lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt; = poly.coeffs()[..size]
-                .par_iter()
-                .map(|<span class="kw-2">&amp;</span>s| <span class="self">Self</span>::ark_field_to_icicle(s))
-                .collect();
+            <span class="comment">// We assume that two types use the same underline repr.
+            </span><span class="kw">let </span>scalars = <span class="kw">unsafe </span>{
+                poly.coeffs()[..size]
+                    .align_to::&lt;&lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;()
+                    .<span class="number">1
+            </span>};
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="macro">end_timer!</span>(conv_time);
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>load_time = <span class="macro">start_timer!</span>(|| <span class="string">"Load scalars: CPU-&gt;GPU"</span>);
-            scalars_on_device.copy_from_host(<span class="kw-2">&amp;</span>scalars)<span class="question-mark">?</span>;
+            scalars_on_device.copy_from_host(scalars)<span class="question-mark">?</span>;
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="macro">end_timer!</span>(load_time);
 
@@ -2719,7 +2768,13 @@
         <span class="kw">use super</span>::<span class="kw-2">*</span>;
         <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="kw">use </span><span class="kw">crate</span>::icicle_deps::warmup_new_stream;
-        <span class="kw">use crate</span>::{icicle_deps::curves::<span class="kw-2">*</span>, pcs::univariate_kzg::icicle::GPUCommittable};
+        <span class="kw">use crate</span>::{
+            icicle_deps::{curves::<span class="kw-2">*</span>, IcicleCurve},
+            pcs::univariate_kzg::icicle::GPUCommittable,
+        };
+        <span class="kw">use </span>core::mem::size_of;
+        <span class="kw">use </span>icicle_core::traits::{ArkConvertible, MontgomeryConvertible};
+        <span class="kw">use </span>icicle_cuda_runtime::{error::CudaResultWrap, memory::HostOrDeviceSlice};
 
         <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
         </span><span class="kw">fn </span>gpu_profiling&lt;E: Pairing&gt;() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt;
@@ -2812,6 +2867,45 @@
         <span class="attr">#[test]
         </span><span class="kw">fn </span>test_gpu_e2e() {
             test_gpu_e2e_template::&lt;Bn254&gt;().unwrap();
+        }
+
+        <span class="kw">fn </span>test_gpu_ark_conversion_template&lt;E: Pairing&gt;()
+        <span class="kw">where
+            </span>UnivariateKzgPCS&lt;E&gt;: GPUCommittable&lt;E&gt;,
+            &lt;&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField:
+                ArkConvertible&lt;ArkEquivalent = E::ScalarField&gt; + MontgomeryConvertible,
+        {
+            <span class="kw">type </span>ICScalarField&lt;E&gt; =
+                &lt;&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField;
+            <span class="macro">assert_eq!</span>(size_of::&lt;E::ScalarField&gt;(), size_of::&lt;ICScalarField&lt;E&gt;&gt;());
+            <span class="kw">let </span>size = <span class="number">100usize</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+            <span class="kw">let </span>scalars: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..size)
+                .map(|<span class="kw">_</span>| {
+                    <span class="kw">let </span><span class="kw-2">mut </span>bytes = [<span class="number">0u8</span>; <span class="number">32</span>];
+                    rng.fill_bytes(<span class="kw-2">&amp;mut </span>bytes);
+                    E::ScalarField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>bytes)
+                })
+                .collect();
+            <span class="kw">let </span><span class="kw-2">mut </span>ic_scalars: Vec&lt;<span class="kw">_</span>&gt; = scalars
+                .iter()
+                .copied()
+                .map(ICScalarField::&lt;E&gt;::from_ark)
+                .collect();
+            <span class="kw">let </span><span class="kw-2">mut </span>d_scalars = HostOrDeviceSlice::cuda_malloc(size).unwrap();
+            d_scalars.copy_from_host(<span class="kw-2">&amp;</span>ic_scalars).unwrap();
+            ICScalarField::&lt;E&gt;::to_mont(<span class="kw-2">&amp;mut </span>d_scalars).wrap().unwrap();
+            d_scalars.copy_to_host(<span class="kw-2">&amp;mut </span>ic_scalars).unwrap();
+            <span class="kw">let </span>transformed_scalars = <span class="kw">unsafe </span>{ scalars.align_to::&lt;ICScalarField&lt;E&gt;&gt;().<span class="number">1 </span>};
+            <span class="macro">assert_eq!</span>(ic_scalars, transformed_scalars);
+        }
+
+        <span class="attr">#[test]
+        </span><span class="doccomment">/// This test checks whether the scalar field type in Ark has the size
+        /// with the one in icicle. So that we could do direct reinterpret_cast
+        /// between them.
+        </span><span class="kw">fn </span>test_gpu_ark_conversion() {
+            test_gpu_ark_conversion_template::&lt;Bn254&gt;();
         }
 
         <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]

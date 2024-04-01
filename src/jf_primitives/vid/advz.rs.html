@@ -1503,9 +1503,9 @@
     UnivariateKzgPCS&lt;E&gt;: GPUCommittable&lt;E&gt;,
 {
     <span class="doccomment">/// Like [`Advz::new`] except with SRS loaded to GPU
-    </span><span class="kw">pub fn </span>with_multiplicity(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
+    </span><span class="kw">pub fn </span>new(
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>advz = <span class="self">Self</span>::new_internal(num_storage_nodes, recovery_threshold, srs)<span class="question-mark">?</span>;
@@ -1514,9 +1514,9 @@
     }
     <span class="doccomment">/// Like [`Advz::with_multiplicity`] except with SRS loaded to GPU
     </span><span class="kw">pub fn </span>with_multiplicity(
-        num_storage_nodes: usize,
-        recovery_threshold: usize,
-        multiplicity: usize,
+        num_storage_nodes: u32,
+        recovery_threshold: u32,
+        multiplicity: u32,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>advz = <span class="self">Self</span>::with_multiplicity_internal(
@@ -2239,11 +2239,11 @@
         </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(recovery_threshold <span class="kw">as </span>usize, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span><span class="kw-2">mut </span>advz =
-            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         <span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
         </span><span class="kw">let </span><span class="kw-2">mut </span>advz_gpu =
             AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, <span class="kw-2">&amp;</span>srs).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>advz =
+            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">25</span>, <span class="kw-2">&amp;mut </span>rng);
 
@@ -2259,11 +2259,11 @@
         </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">256</span>, <span class="number">512</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(recovery_threshold <span class="kw">as </span>usize, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span><span class="kw-2">mut </span>advz =
-            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
         <span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
         </span><span class="kw">let </span><span class="kw-2">mut </span>advz_gpu =
             AdvzGPU::&lt;<span class="lifetime">'_</span>, Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, <span class="kw-2">&amp;</span>srs).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>advz =
+            Advz::&lt;Bn254, Sha256&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
 
         <span class="kw">let </span>payload_random = init_random_payload(<span class="number">1 </span>&lt;&lt; <span class="number">25</span>, <span class="kw-2">&amp;mut </span>rng);
 
