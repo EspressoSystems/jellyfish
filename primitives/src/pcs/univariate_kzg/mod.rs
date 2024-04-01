@@ -1313,6 +1313,8 @@ mod tests {
             pcs::univariate_kzg::icicle::GPUCommittable,
         };
         use core::mem::size_of;
+        use icicle_core::traits::{ArkConvertible, MontgomeryConvertible};
+        use icicle_cuda_runtime::{error::CudaResultWrap, memory::HostOrDeviceSlice};
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>
@@ -1410,13 +1412,32 @@ mod tests {
         fn test_gpu_ark_conversion_template<E: Pairing>()
         where
             UnivariateKzgPCS<E>: GPUCommittable<E>,
+            <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField:
+                ArkConvertible<ArkEquivalent = E::ScalarField> + MontgomeryConvertible,
         {
-            assert_eq!(
-                size_of::<E::ScalarField>(),
-                size_of::<
-                    <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField,
-                >()
-            );
+            type ICScalarField<E> =
+                <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField;
+            assert_eq!(size_of::<E::ScalarField>(), size_of::<ICScalarField<E>>());
+            let size = 100usize;
+            let mut rng = test_rng();
+            let scalars: Vec<_> = (0..size)
+                .map(|_| {
+                    let mut bytes = [0u8; 32];
+                    rng.fill_bytes(&mut bytes);
+                    E::ScalarField::from_le_bytes_mod_order(&bytes)
+                })
+                .collect();
+            let mut ic_scalars: Vec<_> = scalars
+                .iter()
+                .copied()
+                .map(ICScalarField::<E>::from_ark)
+                .collect();
+            let mut d_scalars = HostOrDeviceSlice::cuda_malloc(size).unwrap();
+            d_scalars.copy_from_host(&ic_scalars).unwrap();
+            ICScalarField::<E>::to_mont(&mut d_scalars).wrap().unwrap();
+            d_scalars.copy_to_host(&mut ic_scalars).unwrap();
+            let transformed_scalars = unsafe { scalars.align_to::<ICScalarField<E>>().1 };
+            assert_eq!(ic_scalars, transformed_scalars);
         }
 
         #[test]
