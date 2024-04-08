@@ -1,0 +1,24 @@
+[package]
+name = "jf_merkle_tree"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+
+[dependencies]
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+ark-bls12-377 = { workspace = true }
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
+serde = { workspace = true }
+num-bigint = { workspace = true }
+num-traits = { version = "0.2.15", default-features = false }
+jf-primitives-core = { path = "../core", default-features = false }
+jf-rescue = { path = "../rescue", default-features = false }

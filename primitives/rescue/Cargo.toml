@@ -1,0 +1,43 @@
+[package]
+name = "jf-rescue"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+homepage.workspace = true
+documentation.workspace = true
+repository.workspace = true
+
+[dependencies]
+ark-bls12-377 = { workspace = true }
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
+ark-bw6-761 = { workspace = true }
+ark-ed-on-bls12-377 = "0.4.0"
+ark-ed-on-bls12-381 = "0.4.0"
+ark-ed-on-bn254 = "0.4.0"
+ark-std = { workspace = true }
+ark-ff = { workspace = true }
+ark-crypto-primitives = { version = "0.4.0", default-features = false, features = [
+        "sponge",
+] }
+displaydoc = { workspace = true }
+jf-utils = { path = "../../utilities", default-features = false }
+jf-primitives-core = { path = "../core", default-features = false }
+
+[features]
+default = []
+std = [
+        "ark-bls12-377/std",
+        "ark-bls12-381/std",
+        "ark-bn254/std",
+        "ark-bw6-761/std",
+        "ark-std/std",
+        "ark-ff/std",
+        "ark-crypto-primitives/std",
+        "ark-ed-on-bls12-377/std",
+        "ark-ed-on-bls12-381/std",
+        "ark-ed-on-bn254/std",
+        "jf-utils/std",
+]
