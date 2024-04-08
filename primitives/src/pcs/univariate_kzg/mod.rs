@@ -711,6 +711,8 @@ pub(crate) mod icicle {
 
             let stream = warmup_new_stream().unwrap();
 
+            let degree = polys.iter().map(|poly| poly.degree()).max().unwrap_or(0);
+
             #[cfg(feature = "kzg-print-trace")]
             let commit_time = start_timer!(|| format!(
                 "Committing to {} polys of degree {} ",
