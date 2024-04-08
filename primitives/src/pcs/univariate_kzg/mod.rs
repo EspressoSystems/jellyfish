@@ -856,13 +856,10 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
+            let zero_for_padding = E::ScalarField::zero();
             let scalars: Vec<<Self::IC as IcicleCurve>::ScalarField> = polys
                 .iter()
-                .flat_map(|poly| {
-                    poly.coeffs()
-                        .iter()
-                        .pad_using(size, |_| &E::ScalarField::zero())
-                })
+                .flat_map(|poly| poly.coeffs().iter().pad_using(size, |_| &zero_for_padding))
                 .collect::<Vec<_>>()
                 .into_par_iter()
                 .map(|&s| Self::ark_field_to_icicle(s))
