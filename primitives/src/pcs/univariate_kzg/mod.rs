@@ -655,6 +655,7 @@ where
 pub(crate) mod icicle {
     use super::*;
     use crate::icicle_deps::{curves::*, *};
+    use itertools::Itertools;
 
     /// Trait for GPU-accelerated PCS.commit APIs
     pub trait GPUCommittable<E: Pairing> {
@@ -699,8 +700,7 @@ pub(crate) mod icicle {
             Ok(comm)
         }
 
-        /// Similar to [`Self::gpu_commit()`] but for a batch of poly of
-        /// the same degree
+        /// Similar to [`Self::gpu_commit()`] but for a batch of polys
         fn gpu_batch_commit(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             polys: &[DensePolynomial<E::ScalarField>],
@@ -710,13 +710,6 @@ pub(crate) mod icicle {
             }
 
             let stream = warmup_new_stream().unwrap();
-
-            let degree = polys[0].degree();
-            if polys.iter().any(|p| p.degree() != degree) {
-                return Err(PCSError::InvalidParameters(
-                    "all polys should have the same degree".to_string(),
-                ));
-            }
 
             #[cfg(feature = "kzg-print-trace")]
             let commit_time = start_timer!(|| format!(
@@ -836,8 +829,8 @@ pub(crate) mod icicle {
             Ok(scalars_on_device)
         }
 
-        /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of poly
-        /// of the same degree at once
+        /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of
+        /// polys at once
         fn load_batch_poly_to_gpu<'poly>(
             polys: &[DensePolynomial<E::ScalarField>],
         ) -> Result<HostOrDeviceSlice<'poly, <Self::IC as IcicleCurve>::ScalarField>, PCSError>
@@ -848,12 +841,11 @@ pub(crate) mod icicle {
                 ));
             }
 
-            let size = polys[0].degree() + 1;
-            if polys.iter().any(|p| p.degree() + 1 != size) {
-                return Err(PCSError::InvalidParameters(
-                    "all polys should have the same degree".to_string(),
-                ));
-            }
+            let size = polys
+                .iter()
+                .map(|poly| poly.degree() + 1)
+                .max()
+                .unwrap_or(0);
 
             let mut scalars_on_device = HostOrDeviceSlice::<
                 '_,
@@ -864,7 +856,11 @@ pub(crate) mod icicle {
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
             let scalars: Vec<<Self::IC as IcicleCurve>::ScalarField> = polys
                 .iter()
-                .flat_map(|poly| poly.coeffs())
+                .flat_map(|poly| {
+                    poly.coeffs()
+                        .iter()
+                        .pad_using(size, |_| &E::ScalarField::zero())
+                })
                 .collect::<Vec<_>>()
                 .into_par_iter()
                 .map(|&s| Self::ark_field_to_icicle(s))

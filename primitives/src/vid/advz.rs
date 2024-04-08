@@ -803,7 +803,6 @@ where
         // Remove these FFTs after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
         let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
-        coeffs_vec.resize(chunk_size, <E as Pairing>::ScalarField::zero());
         let pre_fft_len = coeffs_vec.len();
         EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
 
