@@ -4,11 +4,18 @@ use ark_ff::{Field, PrimeField};
 use ark_std::rand::seq::SliceRandom;
 use jf_primitives::{
     pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::advz::Advz,
+    vid::advz,
 };
 use sha2::Sha256;
 
 mod vid;
+
+#[cfg(not(feature = "gpu-vid"))]
+/// Internal Jellyfish VID scheme
+type Advz<E, H> = advz::Advz<E, H>;
+#[cfg(feature = "gpu-vid")]
+/// Internal Jellyfish VID scheme
+type Advz<E, H> = advz::AdvzGPU<'static, E, H>;
 
 #[test]
 fn round_trip() {
