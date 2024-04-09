@@ -1384,17 +1384,24 @@ mod tests {
                 );
 
                 // batch commit
-                let batch_size = rng.gen_range(10..100);
-                let polys: Vec<_> = (0..batch_size).map(|_| <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
-                        degree, rng,
-                    )).collect();
-                let comms_gpu =
-                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &polys)?;
-                let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
-                assert_eq!(comms_gpu, comms_cpu);
-                assert!(
-                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &[]).is_ok()
-                );
+                for i in 0..5 {
+                    let batch_size = 10 + i;
+                    let polys: Vec<_> = (0..batch_size)
+                        .map(|_| {
+                            <DensePolynomial<E::ScalarField> as DenseUVPolynomial<
+                                    E::ScalarField,
+                                >>::rand(degree, rng)
+                        })
+                        .collect();
+                    let comms_gpu =
+                        <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &polys)?;
+                    let comms_cpu = UnivariateKzgPCS::<E>::batch_commit(&ck, &polys)?;
+                    assert_eq!(comms_gpu, comms_cpu);
+                    assert!(
+                        <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit(&ck, &[])
+                            .is_ok()
+                    );
+                }
             }
             Ok(())
         }
