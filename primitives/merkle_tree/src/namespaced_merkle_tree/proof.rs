@@ -1,18 +1,22 @@
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{string::ToString, vec::Vec};
-use core::{fmt::Debug, marker::PhantomData};
-use itertools::Itertools;
-use serde::{Deserialize, Serialize};
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
 
-use crate::{
-    errors::{MerkleTreeError, VerificationResult},
-    internal::MerkleProof,
-    DigestAlgorithm, MerkleTreeScheme, NodeValue,
-};
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! Namespace proof
 
 use super::{
     hash::NamespacedHash, BindNamespace, Element, InnerTree, Namespace, NamespaceProof, Namespaced,
 };
+use crate::{
+    errors::MerkleTreeError, internal::MerkleProof, DigestAlgorithm, MerkleTreeScheme, NodeValue,
+};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::{string::ToString, vec::Vec};
+use core::{fmt::Debug, marker::PhantomData};
+use itertools::Itertools;
+use jf_primitives_core::VerificationResult;
+use serde::{Deserialize, Serialize};
 
 /// Indicates whether the namespace proof represents a populated set or an empty
 /// set

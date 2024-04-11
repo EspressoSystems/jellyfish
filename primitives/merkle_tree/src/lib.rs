@@ -31,9 +31,10 @@ pub(crate) mod internal;
 
 pub mod prelude;
 
-use crate::errors::{MerkleTreeError, VerificationResult};
+use crate::errors::MerkleTreeError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, vec, vec::Vec};
+use jf_primitives_core::VerificationResult;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};

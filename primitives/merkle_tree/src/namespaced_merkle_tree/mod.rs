@@ -5,25 +5,24 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementation of a Namespaced Merkle Tree.
-use alloc::collections::{btree_map::Entry, BTreeMap};
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::vec::Vec;
-use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
-use crate::errors::{MerkleTreeError, VerificationResult};
 
 use self::{
     hash::{NamespacedHash, NamespacedHasher},
     proof::{NaiveNamespaceProof, NamespaceProofType},
 };
-
 use super::{
     append_only::MerkleTree,
     internal::{MerkleProof, MerkleTreeIter},
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
     MerkleTreeScheme, NodeValue,
 };
+use crate::errors::MerkleTreeError;
+use alloc::collections::{btree_map::Entry, BTreeMap};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::vec::Vec;
+use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
+use jf_primitives_core::VerificationResult;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 mod hash;
 mod proof;

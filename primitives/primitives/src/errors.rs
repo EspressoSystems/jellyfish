@@ -13,6 +13,7 @@ use ark_std::{
 };
 use blst::BLST_ERROR;
 use displaydoc::Display;
+use jf_rescue::RescueError;
 
 /// A glorified [`bool`] that leverages compile lints to encourage the caller to
 /// use the result.

@@ -23,6 +23,7 @@
 #[cfg(test)]
 extern crate std;
 
+pub mod commitment;
 pub mod crhf;
 #[cfg(feature = "gadgets")]
 pub mod gadgets;

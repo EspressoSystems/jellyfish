@@ -6,44 +6,9 @@
 
 //! Implements a rescue hash based commitment scheme.
 
-use ark_std::marker::PhantomData;
-
-use crate::{
-    crhf::{FixedLengthRescueCRHF, CRHF},
-    errors::PrimitivesError,
-    rescue::RescueParameter,
-};
-use ark_std::{
-    borrow::Borrow,
-    fmt::Debug,
-    hash::Hash,
-    string::{String, ToString},
-    UniformRand,
-};
-
-/// A trait for cryptographic commitment scheme
-pub trait CommitmentScheme {
-    /// Input to the commitment
-    type Input;
-    /// The type of output commitment value
-    type Output: Clone + Debug + PartialEq + Eq + Hash;
-    /// The type of the hiding/blinding factor
-    type Randomness: Clone + Debug + PartialEq + Eq + UniformRand;
-
-    /// Commit algorithm that takes `input` and blinding randomness `r`
-    /// (optional for hiding commitment schemes), outputs a commitment.
-    fn commit<T: Borrow<Self::Input>>(
-        input: T,
-        r: Option<&Self::Randomness>,
-    ) -> Result<Self::Output, PrimitivesError>;
-
-    /// Verify algorithm that output `Ok` if accepted, or `Err` if rejected.
-    fn verify<T: Borrow<Self::Input>>(
-        input: T,
-        r: Option<&Self::Randomness>,
-        comm: &Self::Output,
-    ) -> Result<(), PrimitivesError>;
-}
+use crate::{crhf::FixedLengthRescueCRHF, RescueError, RescueParameter};
+use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString};
+use jf_primitives_core::{commitment::CommitmentScheme, crhf::CRHF, VerificationResult};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 /// Rescue-based Commitment instance for fixed-length input
@@ -66,14 +31,15 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const INPUT_LEN_PLUS_ONE: usize
     type Input = [F; INPUT_LEN];
     type Output = F;
     type Randomness = F;
+    type Error = RescueError;
 
     fn commit<T: Borrow<Self::Input>>(
         input: T,
         r: Option<&Self::Randomness>,
-    ) -> Result<Self::Output, PrimitivesError> {
+    ) -> Result<Self::Output, Self::Error> {
         let mut msg = [F::zero(); INPUT_LEN_PLUS_ONE];
         msg[0] = *r.ok_or_else(|| {
-            PrimitivesError::ParameterError("Expecting a blinding factor".to_string())
+            RescueError::ParameterError("Expecting a blinding factor".to_string())
         })?;
         msg[1..INPUT_LEN_PLUS_ONE].copy_from_slice(&input.borrow()[..(INPUT_LEN)]);
 
@@ -84,13 +50,11 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const INPUT_LEN_PLUS_ONE: usize
         input: T,
         r: Option<&Self::Randomness>,
         comm: &Self::Output,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<VerificationResult, Self::Error> {
         if <Self as CommitmentScheme>::commit(input, r)? == *comm {
-            Ok(())
+            Ok(Ok(()))
         } else {
-            Err(PrimitivesError::VerificationError(String::from(
-                "Commitment verification failed",
-            )))
+            Ok(Err(()))
         }
     }
 }
@@ -99,7 +63,8 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const INPUT_LEN_PLUS_ONE: usize
 mod test {
     use crate::{
         commitment::{CommitmentScheme, FixedLengthRescueCommitment},
-        rescue::{sponge::RescueCRHF, CRHF_RATE},
+        crhf::RescueCRHF,
+        CRHF_RATE,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_bn254::Fq as Fq254;

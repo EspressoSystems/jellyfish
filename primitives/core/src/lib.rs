@@ -17,6 +17,13 @@ extern crate std;
 #[doc(hidden)]
 extern crate alloc;
 
+pub mod commitment;
 pub mod crhf;
-// pub mod errors;
 pub mod prf;
+
+/// A glorified [`bool`] that leverages compile lints to encourage the caller to
+/// use the result.
+///
+/// Intended as the return type for verification of proofs, signatures, etc.
+/// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
+pub type VerificationResult = Result<(), ()>;

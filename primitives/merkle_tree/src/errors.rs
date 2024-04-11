@@ -35,10 +35,3 @@ impl From<RescueError> for MerkleTreeError {
         MerkleTreeError::DigestError(ark_std::format!("{}", err))
     }
 }
-
-/// A glorified [`bool`] that leverages compile lints to encourage the caller to
-/// use the result.
-///
-/// Intended as the return type for verification of proofs, signatures, etc.
-/// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
-pub type VerificationResult = Result<(), ()>;
