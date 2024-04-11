@@ -5,12 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 //! Instantiation of the MinRoot Delay function <https://eprint.iacr.org/2022/1626.pdf>.
 
-use crate::{errors::PrimitivesError, vdf::VDF};
 use ark_ec::AffineRepr;
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{format, vec::Vec};
 use core::marker::PhantomData;
+use jf_primitives_core::VerificationResult;
+
+use crate::{VDFError, VDF};
 
 /// MinRoot compatible field
 pub trait MinRootField: PrimeField {
@@ -79,14 +80,14 @@ impl<F: MinRootField> VDF for MinRoot<F> {
     fn setup<R: ark_std::rand::CryptoRng + ark_std::rand::RngCore>(
         difficulty: u64,
         _prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    ) -> Result<Self::PublicParameter, VDFError> {
         Ok(MinRootPP { difficulty })
     }
 
     fn eval(
         pp: &Self::PublicParameter,
         input: &Self::Input,
-    ) -> Result<(Self::Output, Self::Proof), PrimitivesError> {
+    ) -> Result<(Self::Output, Self::Proof), VDFError> {
         let mut output = *input;
         for i in 0..pp.difficulty {
             Self::iterate_in_place(&mut output, i)?;
@@ -99,21 +100,18 @@ impl<F: MinRootField> VDF for MinRoot<F> {
         _input: &Self::Input,
         output: &Self::Output,
         proof: &Self::Proof,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<VerificationResult, VDFError> {
         if proof == output {
-            Ok(())
+            Ok(Ok(()))
         } else {
-            Err(PrimitivesError::VerificationError(format!(
-                "Expected: \"{:?}\", found \"{:?}\" instead",
-                proof, output
-            )))
+            Ok(Err(()))
         }
     }
 }
 
 impl<F: MinRootField> MinRoot<F> {
     #[inline]
-    fn iterate_in_place(elem: &mut MinRootElement<F>, round: u64) -> Result<(), PrimitivesError> {
+    fn iterate_in_place(elem: &mut MinRootElement<F>, round: u64) -> Result<(), VDFError> {
         let x = elem.0;
         elem.0 = (x + elem.1).pow(F::EXP_COEF);
         // assert_eq!(elem.0.pow([5u64]), x + elem.1);
@@ -164,7 +162,7 @@ impl MinRootField for ark_pallas::Fr {
 #[cfg(test)]
 mod test {
     use super::{MinRoot, MinRootElement, MinRootField};
-    use crate::vdf::VDF;
+    use crate::VDF;
     use ark_std::rand::rngs::StdRng;
 
     #[test]

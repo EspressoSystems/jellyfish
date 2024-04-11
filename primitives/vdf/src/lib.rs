@@ -5,14 +5,21 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Trait and implementation for a Verifiable Delay Function (VDF) <https://eprint.iacr.org/2018/601.pdf>.
-use crate::errors::PrimitivesError;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt::Debug,
     rand::{CryptoRng, RngCore},
 };
+use displaydoc::Display;
+use jf_primitives_core::VerificationResult;
 
 pub mod minroot;
+
+/// VDF error type
+#[derive(Debug, Display, Eq, PartialEq)]
+pub struct VDFError(String);
+
+impl ark_std::error::Error for VDFError {}
 
 /// A trait for VDF proof, evaluation and verification.
 pub trait VDF {
@@ -56,13 +63,13 @@ pub trait VDF {
     fn setup<R: CryptoRng + RngCore>(
         difficulty: u64,
         prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError>;
+    ) -> Result<Self::PublicParameter, VDFError>;
 
     /// Computes the VDF output and proof.
     fn eval(
         pp: &Self::PublicParameter,
         input: &Self::Input,
-    ) -> Result<(Self::Output, Self::Proof), PrimitivesError>;
+    ) -> Result<(Self::Output, Self::Proof), VDFError>;
 
     /// Verifies a VDF output given the proof.
     fn verify(
@@ -70,5 +77,5 @@ pub trait VDF {
         input: &Self::Input,
         output: &Self::Output,
         proof: &Self::Proof,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<VerificationResult, VDFError>;
 }

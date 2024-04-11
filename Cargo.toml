@@ -1,5 +1,5 @@
 [workspace]
-members = ["plonk", "primitives/core", "primitives/merkle_tree", "primitives/primitives", "primitives/rescue", "relation", "utilities"]
+members = ["plonk", "primitives/core", "primitives/merkle_tree", "primitives/primitives", "primitives/rescue", "primitives/vdf", "relation", "utilities"]
 resolver = "2"
 
 [workspace.package]
