@@ -28,25 +28,3 @@ where
         (point.x, point.y)
     }
 }
-
-#[inline]
-pub(crate) fn field_byte_len<F: PrimeField>() -> usize {
-    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
-}
-
-#[inline]
-pub(crate) fn field_bit_len<F: PrimeField>() -> usize {
-    F::MODULUS_BIT_SIZE as usize
-}
-
-#[inline]
-pub(crate) fn challenge_bit_len<F: PrimeField>() -> usize {
-    // Our challenge is of size 248 bits
-    // This is enough for a soundness error of 2^-128
-    (field_byte_len::<F>() - 1) << 3
-}
-
-#[inline]
-pub(crate) fn curve_cofactor<P: Config>() -> u64 {
-    P::COFACTOR[0]
-}

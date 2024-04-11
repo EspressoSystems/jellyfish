@@ -35,7 +35,10 @@
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
 use super::{AggregateableSignatureSchemes, SignatureScheme};
-use crate::{constants::CS_ID_BLS_BN254, errors::PrimitivesError};
+use crate::{
+    constants::{tag, CS_ID_BLS_BN254},
+    SignatureError,
+};
 use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
@@ -61,8 +64,7 @@ use digest::DynDigest;
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
-use crate::errors::PrimitivesError::{ParameterError, VerificationError};
-use espresso_systems_common::jellyfish::tag;
+use crate::SignatureError::{ParameterError, VerificationError};
 
 use tagged_base64::tagged;
 use zeroize::Zeroize;
@@ -92,7 +94,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
     /// Generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
         _prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    ) -> Result<Self::PublicParameter, SignatureError> {
         Ok(())
     }
 
@@ -100,7 +102,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
     fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
         prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
+    ) -> Result<(Self::SigningKey, Self::VerificationKey), SignatureError> {
         let kp = KeyPair::generate(prng);
         Ok((kp.sk.clone(), kp.vk))
     }
@@ -111,7 +113,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
         sk: &Self::SigningKey,
         msg: M,
         _prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError> {
+    ) -> Result<Self::Signature, SignatureError> {
         let kp = KeyPair::generate_with_sign_key(sk.0);
         Ok(kp.sign(msg.as_ref(), Self::CS_ID))
     }
@@ -122,7 +124,7 @@ impl SignatureScheme for BLSOverBN254CurveSignatureScheme {
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         vk.verify(msg.as_ref(), sig, Self::CS_ID)
     }
 }
@@ -134,7 +136,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         _pp: &Self::PublicParameter,
         _vks: &[Self::VerificationKey],
         sigs: &[Self::Signature],
-    ) -> Result<Self::Signature, PrimitivesError> {
+    ) -> Result<Self::Signature, SignatureError> {
         if sigs.is_empty() {
             return Err(ParameterError("no signatures to aggregate".to_string()));
         }
@@ -154,7 +156,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         vks: &[Self::VerificationKey],
         msgs: &[M],
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         if vks.is_empty() {
             return Err(ParameterError(
                 "no verification key for signature verification".to_string(),
@@ -170,7 +172,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         // subgroup check
         // TODO: for BN we don't need a subgroup check
         sig.sigma.check().map_err(|_e| {
-            PrimitivesError::ParameterError("signature subgroup check failed".to_string())
+            SignatureError::ParameterError("signature subgroup check failed".to_string())
         })?;
         // verify
         let mut m_points: Vec<G1Prepared<_>> = msgs
@@ -205,7 +207,7 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         vks: &[Self::VerificationKey],
         msg: &[Self::MessageUnit],
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         if vks.is_empty() {
             return Err(ParameterError(
                 "no verification key for signature verification".to_string(),
@@ -432,7 +434,7 @@ impl VerKey {
         msg: &[u8],
         sig: &Signature,
         csid: B,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         let msg_input = [msg, csid.as_ref()].concat();
         let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
@@ -450,13 +452,9 @@ mod tests {
 
     // These tests are adapted from schnorr.rs
     use crate::{
+        bls_over_bn254::{BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey},
         constants::CS_ID_BLS_BN254,
-        signatures::{
-            bls_over_bn254::{
-                BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey,
-            },
-            tests::{agg_sign_and_verify, failed_verification, sign_and_verify},
-        },
+        tests::{agg_sign_and_verify, failed_verification, sign_and_verify},
     };
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

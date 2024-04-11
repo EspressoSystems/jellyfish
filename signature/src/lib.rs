@@ -18,20 +18,47 @@ extern crate derivative;
 #[doc(hidden)]
 extern crate alloc;
 
-use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 
 pub mod bls_over_bls12381;
 pub mod bls_over_bn254;
+pub mod constants;
 #[cfg(feature = "gadgets")]
 pub mod gadgets;
 pub mod schnorr;
-
 pub use bls_over_bls12381::BLSSignatureScheme;
+
+use ark_std::{
+    format,
+    string::{String, ToString},
+};
+use blst::BLST_ERROR;
 use core::fmt::Debug;
+use displaydoc::Display;
 pub use schnorr::SchnorrSignatureScheme;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
+
+/// Signature error type
+#[derive(Debug, Display, Eq, PartialEq)]
+pub enum SignatureError {
+    /// Bad parameter in function call, {0}
+    ParameterError(String),
+    /// Verification failed, {0}
+    VerificationError(String),
+}
+
+impl From<BLST_ERROR> for SignatureError {
+    fn from(e: BLST_ERROR) -> Self {
+        match e {
+            BLST_ERROR::BLST_SUCCESS => {
+                Self::ParameterError("Expecting an error, but got a success.".to_string())
+            },
+            BLST_ERROR::BLST_VERIFY_FAIL => Self::VerificationError(format!("{e:?}")),
+            _ => Self::ParameterError(format!("{e:?}")),
+        }
+    }
+}
 
 /// Trait definition for a signature scheme.
 // A signature scheme is associated with a hash function H that is
@@ -86,13 +113,13 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
     // where `StdRng` is redundant.
     fn param_gen<R: CryptoRng + RngCore>(
         prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError>;
+    ) -> Result<Self::PublicParameter, SignatureError>;
 
     /// Sample a pair of keys.
     fn key_gen<R: CryptoRng + RngCore>(
         pp: &Self::PublicParameter,
         prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError>;
+    ) -> Result<(Self::SigningKey, Self::VerificationKey), SignatureError>;
 
     /// Sign a message with the signing key
     fn sign<R: CryptoRng + RngCore, M: AsRef<[Self::MessageUnit]>>(
@@ -100,7 +127,7 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
         sk: &Self::SigningKey,
         msg: M,
         prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError>;
+    ) -> Result<Self::Signature, SignatureError>;
 
     /// Verify a signature.
     fn verify<M: AsRef<[Self::MessageUnit]>>(
@@ -108,7 +135,7 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), SignatureError>;
 }
 
 /// Trait for aggregatable signatures.
@@ -125,7 +152,7 @@ pub trait AggregateableSignatureSchemes:
         pp: &Self::PublicParameter,
         vks: &[Self::VerificationKey],
         sigs: &[Self::Signature],
-    ) -> Result<Self::Signature, PrimitivesError>;
+    ) -> Result<Self::Signature, SignatureError>;
 
     /// Verify an aggregate signature w.r.t. a list of messages and public keys.
     /// It is user's responsibility to ensure that the public keys are
@@ -135,7 +162,7 @@ pub trait AggregateableSignatureSchemes:
         vks: &[Self::VerificationKey],
         msgs: &[M],
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), SignatureError>;
 
     /// Verify a multisignature w.r.t. a single message and a list of public
     /// keys. It is user's responsibility to ensure that the public keys are
@@ -145,7 +172,7 @@ pub trait AggregateableSignatureSchemes:
         vks: &[Self::VerificationKey],
         msg: &[Self::MessageUnit],
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), SignatureError>;
 }
 
 #[cfg(test)]

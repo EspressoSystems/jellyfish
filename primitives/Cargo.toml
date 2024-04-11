@@ -25,7 +25,6 @@ ark-pallas = "0.4.0"
 ark-poly = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-blst = { version = "0.3.11", default-features = false }
 chacha20poly1305 = { version = "0.10.1", default-features = false, features = [
         "alloc",
         "rand_core",

@@ -22,13 +22,11 @@ extern crate alloc;
 
 pub mod aead;
 pub mod circuit;
-pub mod constants;
 pub mod elgamal;
 pub mod errors;
 pub mod hash_to_group;
 pub mod pcs;
 pub mod reed_solomon_code;
-pub mod signatures;
 pub mod toeplitz;
 pub mod vid;
 pub mod vrf;

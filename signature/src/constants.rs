@@ -3,8 +3,26 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! Tags to be used for [`tagged-base64`](https://github.com/espressosystems/tagged-base64)
 
-//! Constants for curve specific parameters.
+/// Tags
+pub mod tag {
+    /// Tag for BLS verification key
+    pub const BLS_VER_KEY: &str = "BLS_VER_KEY";
+    /// Tag for BLS signing key
+    pub const BLS_SIGNING_KEY: &str = "BLS_SIGNING_KEY";
+    /// Tag for BLS signature
+    pub const BLS_SIG: &str = "BLS_SIG";
+
+    /// Tag for Schnorr key pair
+    pub const SCHNORR_KEY_PAIR: &str = "SCHNORR_KEY_PAIR";
+    /// Tag for Schnorr verification key
+    pub const SCHNORR_VER_KEY: &str = "SCHNORR_VER_KEY";
+    /// Tag for Schnorr signing key
+    pub const SCHNORR_SIGNING_KEY: &str = "SCHNORR_SIGNING_KEY";
+    /// Tag for Schnorr signature
+    pub const SCHNORR_SIG: &str = "SCHNORR_SIG";
+}
 
 /// ciphersuite identifier for schnorr signature
 pub const CS_ID_SCHNORR: &str = "SCHNORR_WITH_RESCUE_HASH_v01";

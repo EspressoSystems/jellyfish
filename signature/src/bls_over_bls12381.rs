@@ -74,10 +74,10 @@
 use super::SignatureScheme;
 use crate::{
     constants::{
-        BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
+        tag, BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
         BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE,
     },
-    errors::PrimitivesError,
+    SignatureError,
 };
 
 use crate::constants::CS_ID_BLS_MIN_SIG;
@@ -88,7 +88,6 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
 };
 use blst::{min_sig::*, BLST_ERROR};
-use espresso_systems_common::jellyfish::tag;
 use tagged_base64::tagged;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -348,7 +347,7 @@ impl SignatureScheme for BLSSignatureScheme {
     /// If the RNG is not presented, use the default group generator.
     fn param_gen<R: CryptoRng + RngCore>(
         _prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    ) -> Result<Self::PublicParameter, SignatureError> {
         Ok(())
     }
 
@@ -357,7 +356,7 @@ impl SignatureScheme for BLSSignatureScheme {
     fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
         prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
+    ) -> Result<(Self::SigningKey, Self::VerificationKey), SignatureError> {
         let mut ikm = Zeroizing::new([0u8; 32]);
         prng.fill_bytes(ikm.deref_mut());
 
@@ -372,7 +371,7 @@ impl SignatureScheme for BLSSignatureScheme {
         sk: &Self::SigningKey,
         msg: M,
         _prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError> {
+    ) -> Result<Self::Signature, SignatureError> {
         Ok(BLSSignature(sk.sign(
             msg.as_ref(),
             Self::CS_ID.as_bytes(),
@@ -386,10 +385,10 @@ impl SignatureScheme for BLSSignatureScheme {
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         match sig.verify(false, msg.as_ref(), Self::CS_ID.as_bytes(), &[], vk, true) {
             BLST_ERROR::BLST_SUCCESS => Ok(()),
-            e => Err(PrimitivesError::VerificationError(format!("{e:?}"))),
+            e => Err(SignatureError::VerificationError(format!("{e:?}"))),
         }
     }
 }
@@ -417,7 +416,7 @@ impl BLSSignatureScheme {
             <Self as SignatureScheme>::SigningKey,
             <Self as SignatureScheme>::VerificationKey,
         ),
-        PrimitivesError,
+        SignatureError,
     > {
         let sk = SecretKey::key_gen_v5(ikm, salt, key_info)?;
         let vk = sk.sk_to_pk();
@@ -429,7 +428,7 @@ impl BLSSignatureScheme {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::signatures::tests::{failed_verification, sign_and_verify};
+    use crate::tests::{failed_verification, sign_and_verify};
     use ark_std::{fmt::Debug, vec};
 
     #[test]

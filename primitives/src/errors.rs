@@ -11,7 +11,6 @@ use ark_std::{
     format,
     string::{String, ToString},
 };
-use blst::BLST_ERROR;
 use displaydoc::Display;
 use jf_rescue::RescueError;
 

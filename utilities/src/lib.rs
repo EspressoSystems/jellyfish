@@ -12,7 +12,8 @@ mod multi_pairing;
 pub mod par_utils;
 mod serialize;
 
-use ark_ff::Field;
+use ark_ec::twisted_edwards::TECurveConfig as Config;
+use ark_ff::{Field, PrimeField};
 use ark_std::{
     ops::Mul,
     rand::{self, rngs::StdRng},
@@ -25,6 +26,28 @@ pub use conversion::*;
 pub use macros::*;
 pub use multi_pairing::*;
 pub use serialize::*;
+
+#[inline]
+pub fn curve_cofactor<P: Config>() -> u64 {
+    P::COFACTOR[0]
+}
+
+#[inline]
+pub fn field_byte_len<F: PrimeField>() -> usize {
+    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
+}
+
+#[inline]
+pub fn field_bit_len<F: PrimeField>() -> usize {
+    F::MODULUS_BIT_SIZE as usize
+}
+
+#[inline]
+pub fn challenge_bit_len<F: PrimeField>() -> usize {
+    // Our challenge is of size 248 bits
+    // This is enough for a soundness error of 2^-128
+    (field_byte_len::<F>() - 1) << 3
+}
 
 #[inline]
 pub fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {

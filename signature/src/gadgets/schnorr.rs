@@ -7,11 +7,8 @@
 //! Circuit implementation of a Schnorr signature scheme.
 
 use crate::{
-    circuit::rescue::RescueNativeGadget,
     constants::CS_ID_SCHNORR,
-    rescue::RescueParameter,
-    signatures::schnorr::{Signature, VerKey},
-    utils::{challenge_bit_len, field_bit_len},
+    schnorr::{Signature, VerKey},
 };
 use ark_ec::{
     twisted_edwards::{Affine, TECurveConfig as Config},
@@ -24,7 +21,8 @@ use jf_relation::{
     gadgets::ecc::{PointVariable, TEPoint},
     BoolVar, Circuit, PlonkCircuit, Variable,
 };
-use jf_utils::fr_to_fq;
+use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter};
+use jf_utils::{challenge_bit_len, field_bit_len, fr_to_fq};
 
 #[derive(Debug, Clone)]
 /// Signature verification key variable
@@ -198,7 +196,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::signatures::schnorr::KeyPair;
+    use crate::schnorr::KeyPair;
     use ark_ed_on_bls12_377::EdwardsConfig as Param377;
     use ark_ed_on_bls12_381::EdwardsConfig as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;

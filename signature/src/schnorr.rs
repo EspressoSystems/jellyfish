@@ -9,12 +9,18 @@
 
 use super::SignatureScheme;
 use crate::{
-    constants::CS_ID_SCHNORR,
-    crhf::{VariableLengthRescueCRHF, CRHF},
-    errors::PrimitivesError,
-    rescue::RescueParameter,
-    utils::curve_cofactor,
+    constants::{tag, CS_ID_SCHNORR},
+    SignatureError,
 };
+use jf_primitives_core::crhf::CRHF;
+use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
+// use crate::{
+//     constants::CS_ID_SCHNORR,
+//     crhf::{VariableLengthRescueCRHF, CRHF},
+//     errors::SignatureError,
+//     rescue::RescueParameter,
+//     utils::curve_cofactor,
+// };
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveConfig, CurveGroup, Group,
@@ -29,8 +35,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use espresso_systems_common::jellyfish::tag;
-use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+use jf_utils::{curve_cofactor, fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
@@ -65,7 +70,7 @@ where
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
         _prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    ) -> Result<Self::PublicParameter, SignatureError> {
         Ok(())
     }
 
@@ -73,7 +78,7 @@ where
     fn key_gen<R: CryptoRng + RngCore>(
         _pp: &Self::PublicParameter,
         prng: &mut R,
-    ) -> Result<(Self::SigningKey, Self::VerificationKey), PrimitivesError> {
+    ) -> Result<(Self::SigningKey, Self::VerificationKey), SignatureError> {
         let kp = KeyPair::<P>::generate(prng);
         Ok((kp.sk, kp.vk))
     }
@@ -84,7 +89,7 @@ where
         sk: &Self::SigningKey,
         msg: M,
         _prng: &mut R,
-    ) -> Result<Self::Signature, PrimitivesError> {
+    ) -> Result<Self::Signature, SignatureError> {
         let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
         Ok(kp.sign(msg.as_ref(), Self::CS_ID))
     }
@@ -95,7 +100,7 @@ where
         vk: &Self::VerificationKey,
         msg: M,
         sig: &Self::Signature,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         vk.verify(msg.as_ref(), sig, Self::CS_ID)
     }
 }
@@ -372,10 +377,10 @@ where
         msg: &[P::BaseField],
         sig: &Signature<P>,
         csid: B,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), SignatureError> {
         // Reject if public key is of small order
         if (self.0 * P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
-            return Err(PrimitivesError::VerificationError(
+            return Err(SignatureError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
             ));
         }
@@ -390,7 +395,7 @@ where
         if y == x {
             Ok(())
         } else {
-            Err(PrimitivesError::VerificationError(
+            Err(SignatureError::VerificationError(
                 "Signature verification error".to_string(),
             ))
         }
@@ -432,7 +437,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::signatures::tests::{failed_verification, sign_and_verify};
+    use crate::tests::{failed_verification, sign_and_verify};
     use ark_ed_on_bls12_377::EdwardsConfig as Param377;
     use ark_ed_on_bls12_381::EdwardsConfig as Param381;
     use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
