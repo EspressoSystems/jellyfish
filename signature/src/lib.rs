@@ -1,10 +1,30 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
 //! Module for signature primitives.
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[macro_use]
+extern crate derivative;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
 
 use crate::errors::PrimitivesError;
 use ark_std::rand::{CryptoRng, RngCore};
 
 pub mod bls_over_bls12381;
 pub mod bls_over_bn254;
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
 pub mod schnorr;
 
 pub use bls_over_bls12381::BLSSignatureScheme;
@@ -12,6 +32,7 @@ use core::fmt::Debug;
 pub use schnorr::SchnorrSignatureScheme;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
+
 /// Trait definition for a signature scheme.
 // A signature scheme is associated with a hash function H that is
 // to be used for challenge generation.

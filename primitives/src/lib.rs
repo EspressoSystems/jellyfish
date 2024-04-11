@@ -34,6 +34,7 @@ pub mod vid;
 pub mod vrf;
 
 // Re-exporting rescue
+pub use jf_merkle_tree as merkle_tree;
 pub use jf_rescue as rescue;
 
 /// dependencies required for ICICLE-related code, group import for convenience

@@ -22,7 +22,7 @@ dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
-jf-primitives = { path = "../primitives/primitives", default-features = false }
+jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }

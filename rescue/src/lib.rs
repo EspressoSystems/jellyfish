@@ -23,6 +23,10 @@
 #[cfg(test)]
 extern crate std;
 
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod commitment;
 pub mod crhf;
 #[cfg(feature = "gadgets")]

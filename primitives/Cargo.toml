@@ -44,10 +44,11 @@ icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5
 icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
 icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
 itertools = { workspace = true, features = ["use_alloc"] }
+jf-merkle-tree = { path = "../merkle_tree", default-features = false }
 jf-primitives-core = { path = "../core", default-features = false }
-jf-relation = { path = "../../relation", default-features = false }
+jf-relation = { path = "../relation", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
-jf-utils = { path = "../../utilities", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
@@ -134,6 +135,7 @@ std = [
         "jf-utils/std",
         "jf-relation/std",
         "jf-rescue/std",
+        "jf-merkle-tree/std",
 ]
 print-trace = ["ark-std/print-trace"]
 kzg-print-trace = [

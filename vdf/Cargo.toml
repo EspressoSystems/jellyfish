@@ -12,14 +12,14 @@ repository = { workspace = true }
 [dependencies]
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
-ark-pallas = "0.4.0"
-ark-ff = { workspace = true }
 ark-ec = { workspace = true }
-ark-std = { workspace = true }
+ark-ff = { workspace = true }
+ark-pallas = "0.4.0"
 ark-serialize = { workspace = true }
+ark-std = { workspace = true }
 displaydoc = { workspace = true }
-jf-utils = { path = "../../utilities", default-features = false }
 jf-primitives-core = { path = "../core", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }
 
 [features]
 default = []

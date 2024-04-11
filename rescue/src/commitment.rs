@@ -84,7 +84,9 @@ mod test {
 
             let c = FixedLengthRescueCommitment::<$tr, 3, 4>::commit(&input, Some(&blind)).unwrap();
             assert!(
-                FixedLengthRescueCommitment::<$tr, 3, 4>::verify(&input, Some(&blind), &c).is_ok()
+                FixedLengthRescueCommitment::<$tr, 3, 4>::verify(&input, Some(&blind), &c)
+                    .unwrap()
+                    .is_ok()
             );
             // test for correctness
             let mut msg = vec![blind];
@@ -99,6 +101,7 @@ mod test {
             let bad_input = [input[0], input[1]];
             assert!(
                 FixedLengthRescueCommitment::<$tr, 2, 3>::verify(&bad_input, Some(&blind), &c)
+                    .unwrap()
                     .is_err()
             );
             // bad blinding factor
@@ -111,6 +114,7 @@ mod test {
             let bad_input = [$tr::from(2u64), $tr::from(1u64), $tr::from(3u64)];
             assert!(
                 FixedLengthRescueCommitment::<$tr, 3, 4>::verify(&bad_input, Some(&blind), &c)
+                    .unwrap()
                     .is_err()
             );
         };

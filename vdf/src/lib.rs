@@ -5,10 +5,22 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Trait and implementation for a Verifiable Delay Function (VDF) <https://eprint.iacr.org/2018/601.pdf>.
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt::Debug,
     rand::{CryptoRng, RngCore},
+    string::String,
 };
 use displaydoc::Display;
 use jf_primitives_core::VerificationResult;

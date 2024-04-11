@@ -8,6 +8,7 @@
 use ark_ec::AffineRepr;
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::vec::Vec;
 use core::marker::PhantomData;
 use jf_primitives_core::VerificationResult;
 
@@ -177,6 +178,8 @@ mod test {
         let pp = MinRoot::<F>::setup::<StdRng>(100, None).unwrap();
         let (output, proof) = MinRoot::<F>::eval(&pp, &start).unwrap();
         assert_eq!(output, proof);
-        assert!(MinRoot::<F>::verify(&pp, &start, &output, &proof).is_ok());
+        assert!(MinRoot::<F>::verify(&pp, &start, &output, &proof)
+            .unwrap()
+            .is_ok());
     }
 }
