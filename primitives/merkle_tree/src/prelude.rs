@@ -7,27 +7,23 @@
 //! Prelude. Also provides sample instantiations of merkle trees.
 
 pub use crate::{
+    append_only::MerkleTree,
     impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
-    merkle_tree::{
-        append_only::MerkleTree,
-        internal::{MerkleNode, MerklePath, MerkleProof},
-        universal_merkle_tree::UniversalMerkleTree,
-        AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme,
-        ForgetableUniversalMerkleTreeScheme, Index, LookupResult, MerkleCommitment,
-        MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
-    },
+    internal::{MerkleNode, MerklePath, MerkleProof},
+    universal_merkle_tree::UniversalMerkleTree,
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme,
+    ForgetableUniversalMerkleTreeScheme, Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
+    NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 
 use super::light_weight::LightWeightMerkleTree;
-use crate::{
-    errors::PrimitivesError,
-    rescue::{sponge::RescueCRHF, RescueParameter},
-};
+use crate::errors::MerkleTreeError;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
 use ark_std::{marker::PhantomData, vec::Vec};
+use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use sha3::{Digest, Sha3_256};
 
 /// Wrapper for rescue hash function
@@ -37,11 +33,11 @@ pub struct RescueHash<F: RescueParameter> {
 }
 
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
+    fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
     }
 
-    fn digest_leaf(pos: &I, elem: &F) -> Result<F, PrimitivesError> {
+    fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
         let data = [F::zero(), F::from(pos.clone()), *elem];
         Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
@@ -103,7 +99,7 @@ impl Valid for Sha3Node {
 pub struct Sha3Digest();
 
 impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> for Sha3Digest {
-    fn digest(data: &[Sha3Node]) -> Result<Sha3Node, PrimitivesError> {
+    fn digest(data: &[Sha3Node]) -> Result<Sha3Node, MerkleTreeError> {
         let mut hasher = Sha3_256::new();
         for value in data {
             hasher.update(value);
@@ -111,7 +107,7 @@ impl<E: Element + CanonicalSerialize, I: Index> DigestAlgorithm<E, I, Sha3Node> 
         Ok(Sha3Node(hasher.finalize().into()))
     }
 
-    fn digest_leaf(_pos: &I, elem: &E) -> Result<Sha3Node, PrimitivesError> {
+    fn digest_leaf(_pos: &I, elem: &E) -> Result<Sha3Node, MerkleTreeError> {
         let mut writer = Vec::new();
         elem.serialize_compressed(&mut writer).unwrap();
         let mut hasher = Sha3_256::new();

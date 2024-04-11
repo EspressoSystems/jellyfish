@@ -6,8 +6,8 @@ use digest::Digest;
 use sha3::Sha3_256;
 
 use crate::{
-    errors::PrimitivesError,
-    merkle_tree::prelude::{Sha3Digest, Sha3Node},
+    errors::MerkleTreeError,
+    prelude::{Sha3Digest, Sha3Node},
 };
 
 use super::{BindNamespace, DigestAlgorithm, Element, Index, Namespace, Namespaced, NodeValue};
@@ -79,7 +79,7 @@ where
     H: DigestAlgorithm<E, I, T> + BindNamespace<E, I, T, N>,
 {
     // Assumes that data is sorted by namespace, will be enforced by "append"
-    fn digest(data: &[NamespacedHash<T, N>]) -> Result<NamespacedHash<T, N>, PrimitivesError> {
+    fn digest(data: &[NamespacedHash<T, N>]) -> Result<NamespacedHash<T, N>, MerkleTreeError> {
         if data.is_empty() {
             return Ok(NamespacedHash::default());
         }
@@ -93,7 +93,7 @@ where
             }
             // Ensure that namespaced nodes are sorted
             if node.min_namespace < max_namespace {
-                return Err(PrimitivesError::InternalError(
+                return Err(MerkleTreeError::InconsistentStructureError(
                     "Namespace Merkle tree leaves are out of order".to_string(),
                 ));
             }
@@ -110,7 +110,7 @@ where
         ))
     }
 
-    fn digest_leaf(pos: &I, elem: &E) -> Result<NamespacedHash<T, N>, PrimitivesError> {
+    fn digest_leaf(pos: &I, elem: &E) -> Result<NamespacedHash<T, N>, MerkleTreeError> {
         let namespace = elem.get_namespace();
         let hash = H::digest_leaf(pos, elem)?;
         Ok(NamespacedHash::new(namespace, namespace, hash))

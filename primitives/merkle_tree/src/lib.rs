@@ -17,6 +17,7 @@ extern crate std;
 extern crate alloc;
 
 pub mod append_only;
+pub mod errors;
 pub mod examples;
 pub mod hasher;
 pub mod light_weight;
@@ -28,12 +29,9 @@ pub(crate) mod internal;
 
 pub mod prelude;
 
-use crate::{
-    errors::{PrimitivesError, VerificationResult},
-    impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
-};
+use crate::errors::{MerkleTreeError, VerificationResult};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, vec, vec::Vec};
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
@@ -57,41 +55,29 @@ pub enum LookupResult<F, P, N> {
 impl<F, P, N> LookupResult<F, P, N> {
     /// Assert the lookup result is Ok. Return a tuple of element and membership
     /// proof.
-    pub fn expect_ok(self) -> Result<(F, P), PrimitivesError> {
+    pub fn expect_ok(self) -> Result<(F, P), MerkleTreeError> {
         match self {
             LookupResult::Ok(x, proof) => Ok((x, proof)),
-            LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
-                "Expected Ok, found NotInMemory".to_string(),
-            )),
-            LookupResult::NotFound(_) => Err(PrimitivesError::InternalError(
-                "Expected Ok, found NotFound".to_string(),
-            )),
+            LookupResult::NotInMemory => Err(MerkleTreeError::ForgottenLeaf),
+            LookupResult::NotFound(_) => Err(MerkleTreeError::NotFound),
         }
     }
 
     /// Assert the lookup result is NotFound. Return a non-membership proof.
-    pub fn expect_not_found(self) -> Result<N, PrimitivesError> {
+    pub fn expect_not_found(self) -> Result<N, MerkleTreeError> {
         match self {
             LookupResult::NotFound(n) => Ok(n),
-            LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
-                "Expected NotFound, found Ok".to_string(),
-            )),
-            LookupResult::NotInMemory => Err(PrimitivesError::InternalError(
-                "Expected NotFound, found NotInMemory".to_string(),
-            )),
+            LookupResult::Ok(..) => Err(MerkleTreeError::ExistingLeaf),
+            LookupResult::NotInMemory => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 
     /// Assert the lookup result is NotInMemory.
-    pub fn expect_not_in_memory(self) -> Result<(), PrimitivesError> {
+    pub fn expect_not_in_memory(self) -> Result<(), MerkleTreeError> {
         match self {
             LookupResult::NotInMemory => Ok(()),
-            LookupResult::Ok(..) => Err(PrimitivesError::InternalError(
-                "Expected NotInMemory, found Ok".to_string(),
-            )),
-            LookupResult::NotFound(..) => Err(PrimitivesError::InternalError(
-                "Expected NotInMemory, found NotFound".to_string(),
-            )),
+            LookupResult::Ok(..) => Err(MerkleTreeError::ExistingLeaf),
+            LookupResult::NotFound(..) => Err(MerkleTreeError::NotFound),
         }
     }
 }
@@ -142,10 +128,10 @@ where
     T: NodeValue,
 {
     /// Digest a list of values
-    fn digest(data: &[T]) -> Result<T, PrimitivesError>;
+    fn digest(data: &[T]) -> Result<T, MerkleTreeError>;
 
     /// Digest an indexed element
-    fn digest_leaf(pos: &I, elem: &E) -> Result<T, PrimitivesError>;
+    fn digest_leaf(pos: &I, elem: &E) -> Result<T, MerkleTreeError>;
 }
 
 /// An trait for Merkle tree index type.
@@ -165,6 +151,9 @@ impl_to_traversal_path_biguint!(BigUint);
 impl_to_traversal_path_biguint!(ark_bn254::Fr);
 impl_to_traversal_path_biguint!(ark_bls12_377::Fr);
 impl_to_traversal_path_biguint!(ark_bls12_381::Fr);
+impl_to_traversal_path_biguint!(ark_bn254::Fq);
+impl_to_traversal_path_biguint!(ark_bls12_377::Fq);
+impl_to_traversal_path_biguint!(ark_bls12_381::Fq);
 
 /// Trait for a succinct merkle tree commitment
 pub trait MerkleCommitment<T: NodeValue>:
@@ -239,14 +228,14 @@ pub trait MerkleTreeScheme: Sized {
         root: impl Borrow<Self::NodeValue>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<VerificationResult, PrimitivesError>;
+    ) -> Result<VerificationResult, MerkleTreeError>;
 
     // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
     // Self::BatchProof>; fn batch_verify(
     //     &self,
     //     pos: impl Iterator<Item = usize>,
     //     proof: impl Borrow<Self::BatchProof>,
-    // ) -> Result<(), PrimitivesError>;
+    // ) -> Result<(), MerkleTreeError>;
 
     /// Return an iterator that iterates through all element that are not
     /// forgetton
@@ -259,7 +248,7 @@ pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {
     /// Insert a new value at the leftmost available slot
     /// * `elem` - element to insert in the tree
     /// * `returns` - Ok(()) if successful
-    fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError>;
+    fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), MerkleTreeError>;
 
     /// Insert a list of new values at the leftmost available slots
     /// * `elems` - elements to insert
@@ -269,7 +258,7 @@ pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), MerkleTreeError> {
         for elem in elems {
             self.push(elem)?;
         }
@@ -295,7 +284,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         &mut self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+    ) -> Result<LookupResult<Self::Element, (), ()>, MerkleTreeError> {
         self.update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
@@ -306,7 +295,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     fn remove(
         &mut self,
         pos: impl Borrow<Self::Index>,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError> {
+    ) -> Result<LookupResult<Self::Element, (), ()>, MerkleTreeError> {
         self.update_with(pos, |_| None)
     }
 
@@ -327,7 +316,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         &mut self,
         pos: impl Borrow<Self::Index>,
         f: F,
-    ) -> Result<LookupResult<Self::Element, (), ()>, PrimitivesError>
+    ) -> Result<LookupResult<Self::Element, (), ()>, MerkleTreeError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 
@@ -351,7 +340,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         &self,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<bool, PrimitivesError>;
+    ) -> Result<bool, MerkleTreeError>;
     // TODO(Chengyu): non-membership proof interfaces
 }
 
@@ -374,7 +363,7 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
         pos: impl Borrow<Self::Index>,
         element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), MerkleTreeError>;
 
     /// Rebuild a merkle tree from a commitment.
     /// Return a tree which is entirely forgotten.
@@ -416,7 +405,7 @@ pub trait ForgetableUniversalMerkleTreeScheme:
         &mut self,
         pos: Self::Index,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<(), PrimitivesError>;
+    ) -> Result<(), MerkleTreeError>;
 }
 
 /// A universal merkle tree that allows non destructive updates.
@@ -431,14 +420,14 @@ pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
         &self,
         pos: impl Borrow<Self::Index>,
         elem: impl Borrow<Self::Element>,
-    ) -> Result<Self, PrimitivesError> {
+    ) -> Result<Self, MerkleTreeError> {
         self.persistent_update_with(pos, |_| Some(elem.borrow().clone()))
     }
 
     /// A persistent remove interface, check
     /// [PersistentUniversalMerkleTreeScheme] and
     /// [UniversalMerkleTreeScheme::remove].
-    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, PrimitivesError> {
+    fn persistent_remove(&self, pos: Self::Index) -> Result<Self, MerkleTreeError> {
         self.persistent_update_with(pos, |_| None)
     }
 
@@ -449,7 +438,7 @@ pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
-    ) -> Result<Self, PrimitivesError>
+    ) -> Result<Self, MerkleTreeError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 }

@@ -5,8 +5,9 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    errors::{PrimitivesError, VerificationResult},
-    merkle_tree::{internal::MerkleProof, DigestAlgorithm, MerkleTreeScheme, NodeValue},
+    errors::{MerkleTreeError, VerificationResult},
+    internal::MerkleProof,
+    DigestAlgorithm, MerkleTreeScheme, NodeValue,
 };
 
 use super::{
@@ -68,7 +69,7 @@ where
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         match self.proof_type {
             NamespaceProofType::Presence => self.verify_presence_proof(root, namespace),
             NamespaceProofType::Absence => self.verify_absence_proof(root, namespace),
@@ -87,13 +88,13 @@ where
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         if let Some(boundary_proof) = self.left_boundary_proof.as_ref() {
             // If there is a leaf to the left of the namespace range, check that it is less
             // than the target namespace
             if boundary_proof
                 .elem()
-                .ok_or(PrimitivesError::InconsistentStructureError(
+                .ok_or(MerkleTreeError::InconsistentStructureError(
                     "Boundary proof does not contain an element".into(),
                 ))?
                 .get_namespace()
@@ -122,13 +123,13 @@ where
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         if let Some(boundary_proof) = self.right_boundary_proof.as_ref() {
             // If there is a leaf to the left of the namespace range, check that it is less
             // than the target namespace
             if boundary_proof
                 .elem()
-                .ok_or(PrimitivesError::InconsistentStructureError(
+                .ok_or(MerkleTreeError::InconsistentStructureError(
                     "Boundary proof does not contain an element".to_string(),
                 ))?
                 .get_namespace()
@@ -157,7 +158,7 @@ where
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         if namespace < root.min_namespace || namespace > root.max_namespace {
             // Easy case where the namespace isn't covered by the range of the tree root
             return Ok(Ok(()));
@@ -166,26 +167,26 @@ where
             // target and show that the namespace to the left is less than our
             // target
             let left_proof = &self.left_boundary_proof.as_ref().cloned().ok_or(
-                PrimitivesError::InconsistentStructureError(
+                MerkleTreeError::InconsistentStructureError(
                     "Left Boundary proof must be present".into(),
                 ),
             )?;
             let right_proof = &self.right_boundary_proof.as_ref().cloned().ok_or(
-                PrimitivesError::InconsistentStructureError(
+                MerkleTreeError::InconsistentStructureError(
                     "Right boundary proof must be present".into(),
                 ),
             )?;
             let left_index = left_proof.index();
             let left_ns = left_proof
                 .elem()
-                .ok_or(PrimitivesError::InconsistentStructureError(
+                .ok_or(MerkleTreeError::InconsistentStructureError(
                     "The left boundary proof is missing an element".into(),
                 ))?
                 .get_namespace();
             let right_index = right_proof.index();
             let right_ns = right_proof
                 .elem()
-                .ok_or(PrimitivesError::InconsistentStructureError(
+                .ok_or(MerkleTreeError::InconsistentStructureError(
                     "The left boundary proof is missing an element".into(),
                 ))?
                 .get_namespace();
@@ -218,7 +219,7 @@ where
         &self,
         root: &NamespacedHash<T, N>,
         namespace: N,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
             let leaf_index = self.first_index + idx as u64;
@@ -227,7 +228,7 @@ where
             }
             if proof
                 .elem()
-                .ok_or(PrimitivesError::InconsistentStructureError(
+                .ok_or(MerkleTreeError::InconsistentStructureError(
                     "Missing namespace element".into(),
                 ))?
                 .get_namespace()

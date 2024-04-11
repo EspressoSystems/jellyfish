@@ -8,11 +8,10 @@
 //! E.g. Sparse merkle tree with BigUInt index.
 
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm};
-use crate::{
-    errors::PrimitivesError,
-    rescue::{sponge::RescueCRHF, RescueParameter},
-};
+use crate::errors::MerkleTreeError;
 use ark_ff::Field;
+use ark_std::format;
+use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 
 /// Element type for interval merkle tree
 #[derive(PartialEq, Eq, Copy, Clone, Hash)]
@@ -20,13 +19,15 @@ pub struct Interval<F: Field>(pub F, pub F);
 // impl<F: Field> Element for Interval<F> {}
 
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> {
-    fn digest(data: &[F]) -> Result<F, PrimitivesError> {
-        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
+    fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
+        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)
+            .map_err(|err| MerkleTreeError::DigestError(format!("{}", err)))?[0])
     }
 
-    fn digest_leaf(pos: &u64, elem: &Interval<F>) -> Result<F, PrimitivesError> {
+    fn digest_leaf(pos: &u64, elem: &Interval<F>) -> Result<F, MerkleTreeError> {
         let data = [F::from(*pos), elem.0, elem.1];
-        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
+        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)
+            .map_err(|err| MerkleTreeError::DigestError(format!("{}", err)))?[0])
     }
 }
 

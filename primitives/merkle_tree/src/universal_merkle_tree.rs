@@ -12,7 +12,7 @@ use super::{
     PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
-    errors::{PrimitivesError, VerificationResult},
+    errors::{MerkleTreeError, VerificationResult},
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
 use alloc::sync::Arc;
@@ -49,7 +49,7 @@ where
     pub fn from_kv_set<BI, BE>(
         height: usize,
         data: impl IntoIterator<Item = impl Borrow<(BI, BE)>>,
-    ) -> Result<Self, PrimitivesError>
+    ) -> Result<Self, MerkleTreeError>
     where
         BI: Borrow<I>,
         BE: Borrow<E>,
@@ -77,7 +77,7 @@ where
         &mut self,
         pos: impl Borrow<Self::Index>,
         f: F,
-    ) -> Result<LookupResult<E, (), ()>, PrimitivesError>
+    ) -> Result<LookupResult<E, (), ()>, MerkleTreeError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
     {
@@ -95,16 +95,16 @@ where
         &self,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<bool, PrimitivesError> {
+    ) -> Result<bool, MerkleTreeError> {
         let pos = pos.borrow();
         let proof = proof.borrow();
         if self.height != proof.tree_height() - 1 {
-            return Err(PrimitivesError::ParameterError(
+            return Err(MerkleTreeError::InconsistentStructureError(
                 "Incompatible membership proof for this merkle tree".to_string(),
             ));
         }
         if *pos != proof.pos {
-            return Err(PrimitivesError::ParameterError(
+            return Err(MerkleTreeError::InconsistentStructureError(
                 "Inconsistent proof index".to_string(),
             ));
         }
@@ -141,7 +141,7 @@ where
         &self,
         pos: impl Borrow<Self::Index>,
         f: F,
-    ) -> Result<Self, PrimitivesError>
+    ) -> Result<Self, MerkleTreeError>
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>,
     {
@@ -187,7 +187,7 @@ where
         &mut self,
         pos: Self::Index,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), MerkleTreeError> {
         let proof = proof.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
         if matches!(&proof.proof[0], MerkleNode::Empty) {
@@ -198,7 +198,7 @@ where
                 .zip(proof.proof.iter().skip(1))
                 .try_fold(
                     empty_value,
-                    |val: T, (branch, node)| -> Result<T, PrimitivesError> {
+                    |val: T, (branch, node)| -> Result<T, MerkleTreeError> {
                         match node {
                             MerkleNode::Branch { value: _, children } => {
                                 let mut data: Vec<_> =
@@ -212,7 +212,7 @@ where
                                 path_values.push(empty_value);
                                 Ok(empty_value)
                             },
-                            _ => Err(PrimitivesError::ParameterError(
+                            _ => Err(MerkleTreeError::InconsistentStructureError(
                                 "Incompatible proof for this merkle tree".to_string(),
                             )),
                         }
@@ -226,7 +226,7 @@ where
             )?;
             Ok(())
         } else {
-            Err(PrimitivesError::ParameterError(
+            Err(MerkleTreeError::InconsistentStructureError(
                 "Invalid proof type".to_string(),
             ))
         }
@@ -236,19 +236,17 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        merkle_tree::{
-            internal::{MerkleNode, MerkleProof},
-            prelude::{RescueHash, RescueSparseMerkleTree},
-            DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-            Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
-            PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
-        },
-        rescue::RescueParameter,
+        internal::{MerkleNode, MerkleProof},
+        prelude::{RescueHash, RescueSparseMerkleTree},
+        DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme, Index,
+        LookupResult, MerkleCommitment, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
+        ToTraversalPath, UniversalMerkleTreeScheme,
     };
-    use ark_ed_on_bls12_377::Fq as Fq377;
-    use ark_ed_on_bls12_381::Fq as Fq381;
-    use ark_ed_on_bn254::Fq as Fq254;
+    use ark_bls12_377::Fq as Fq377;
+    use ark_bls12_381::Fq as Fq381;
+    use ark_bn254::Fq as Fq254;
     use hashbrown::HashMap;
+    use jf_rescue::RescueParameter;
     use num_bigint::BigUint;
 
     #[test]

@@ -7,11 +7,11 @@
 //! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
 //!
 //! ```
-//! # use jf_primitives::errors::PrimitivesError;
+//! # use jf_primitives::errors::MerkleTreeError;
 //! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
-//! # fn main() -> Result<(), PrimitivesError> {
+//! # fn main() -> Result<(), MerkleTreeError> {
 //! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 //!
 //! // payload type is `usize`, hash function is `Sha256`.
@@ -39,13 +39,14 @@
 // could do to stop it
 #![allow(clippy::non_canonical_partial_ord_impl)]
 
-use crate::errors::PrimitivesError;
-
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
+use crate::errors::MerkleTreeError;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
+use ark_std::string::ToString;
+use derivative::Derivative;
 use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
@@ -143,7 +144,7 @@ where
     I: Index + CanonicalSerialize,
     H: HasherDigest,
 {
-    fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, PrimitivesError> {
+    fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
         for value in data {
             hasher.update(value.as_ref());
@@ -151,10 +152,12 @@ where
         Ok(HasherNode(hasher.finalize()))
     }
 
-    fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, PrimitivesError> {
+    fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
-        pos.serialize_uncompressed(&mut hasher)?;
-        elem.serialize_uncompressed(&mut hasher)?;
+        pos.serialize_uncompressed(&mut hasher)
+            .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
+        elem.serialize_uncompressed(&mut hasher)
+            .map_err(|_| MerkleTreeError::DigestError("Failed serializing elem".to_string()))?;
         Ok(HasherNode(hasher.finalize()))
     }
 }

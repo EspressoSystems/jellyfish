@@ -11,7 +11,7 @@ use ark_std::vec::Vec;
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::errors::{PrimitivesError, VerificationResult};
+use crate::errors::{MerkleTreeError, VerificationResult};
 
 use self::{
     hash::{NamespacedHash, NamespacedHasher},
@@ -49,7 +49,7 @@ where
         &self,
         proof: &Self::NamespaceProof,
         namespace: Self::NamespaceId,
-    ) -> Result<VerificationResult, PrimitivesError>;
+    ) -> Result<VerificationResult, MerkleTreeError>;
 }
 
 /// Completeness proof for a namespace
@@ -69,7 +69,7 @@ pub trait NamespaceProof {
         &self,
         root: &NamespacedHash<Self::Node, Self::Namespace>,
         namespace: Self::Namespace,
-    ) -> Result<VerificationResult, PrimitivesError>;
+    ) -> Result<VerificationResult, MerkleTreeError>;
 }
 
 /// Trait indicating that a leaf has a namespace.
@@ -162,7 +162,7 @@ where
     pub fn from_elems(
         height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<E>>,
-    ) -> Result<Self, PrimitivesError> {
+    ) -> Result<Self, MerkleTreeError> {
         let mut namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
         let leaves =
             NMT::<E, H, ARITY, N, T>::update_namespace_metadata(&mut namespace_ranges, elems)?;
@@ -217,7 +217,7 @@ where
         root: impl Borrow<Self::NodeValue>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(root, pos, proof)
     }
 
@@ -236,7 +236,7 @@ where
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl core::borrow::Borrow<Self::Element>>,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), MerkleTreeError> {
         let leaves =
             NMT::<E, H, ARITY, N, T>::update_namespace_metadata(&mut self.namespace_ranges, elems)?;
         self.inner.extend(leaves)
@@ -245,7 +245,7 @@ where
     fn push(
         &mut self,
         elem: impl core::borrow::Borrow<Self::Element>,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), MerkleTreeError> {
         self.extend([elem])
     }
 }
@@ -281,7 +281,7 @@ where
     fn update_namespace_metadata(
         namespace_ranges: &mut NamespaceRanges<N>,
         elems: impl IntoIterator<Item = impl Borrow<E>>,
-    ) -> Result<Vec<impl Borrow<E>>, PrimitivesError> {
+    ) -> Result<Vec<impl Borrow<E>>, MerkleTreeError> {
         let (mut max_namespace, start_idx) = namespace_ranges
             .iter()
             .next_back()
@@ -292,7 +292,7 @@ where
             let ns = elem.borrow().get_namespace();
             let idx = start_idx + idx as u64;
             if ns < max_namespace {
-                return Err(PrimitivesError::InconsistentStructureError(
+                return Err(MerkleTreeError::InconsistentStructureError(
                     "Namespace leaves must be pushed in sorted order".into(),
                 ));
             }
@@ -373,7 +373,7 @@ where
         &self,
         proof: &Self::NamespaceProof,
         namespace: Self::NamespaceId,
-    ) -> Result<VerificationResult, PrimitivesError> {
+    ) -> Result<VerificationResult, MerkleTreeError> {
         proof.verify(&self.commitment().digest(), namespace)
     }
 }
@@ -382,7 +382,7 @@ where
 mod nmt_tests {
 
     use super::*;
-    use crate::merkle_tree::prelude::{Sha3Digest, Sha3Node};
+    use crate::prelude::{Sha3Digest, Sha3Node};
 
     type NamespaceId = u64;
     type Hasher = NamespacedHasher<Sha3Digest, Leaf, NamespaceId, Sha3Node, u64>;
@@ -429,7 +429,7 @@ mod nmt_tests {
             .iter()
             .enumerate()
             .map(|(idx, leaf)| Hasher::digest_leaf(&(idx as u64), leaf))
-            .collect::<Result<Vec<_>, PrimitivesError>>()
+            .collect::<Result<Vec<_>, MerkleTreeError>>()
             .unwrap();
         assert_eq!((hashes[0].min_namespace, hashes[0].max_namespace), (0, 0));
 
@@ -596,7 +596,9 @@ mod nmt_tests {
         // Ensure that the absence proof returns a verification error when one of the
         // boundary proofs is incorrect
         let mut malicious_proof = absence_proof.clone();
-        malicious_proof.right_boundary_proof = malicious_proof.left_boundary_proof.clone();
+        malicious_proof
+            .right_boundary_proof
+            .clone_from(&malicious_proof.left_boundary_proof);
         assert!(tree
             .verify_namespace_proof(&malicious_proof, 3)
             .unwrap()

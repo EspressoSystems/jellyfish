@@ -15,7 +15,7 @@ use super::{
     LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{
-    errors::{PrimitivesError, VerificationResult},
+    errors::{MerkleTreeError, VerificationResult},
     impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
 };
 use alloc::sync::Arc;
@@ -59,7 +59,7 @@ where
     pub fn from_elems(
         height: Option<usize>,
         elems: impl IntoIterator<Item = impl Borrow<E>>,
-    ) -> Result<Self, PrimitivesError> {
+    ) -> Result<Self, MerkleTreeError> {
         let (root, height, num_leaves) = build_tree_internal::<E, H, ARITY, T>(height, elems)?;
         Ok(Self {
             root,
@@ -76,14 +76,14 @@ where
     H: DigestAlgorithm<E, u64, T>,
     T: NodeValue,
 {
-    fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), PrimitivesError> {
+    fn push(&mut self, elem: impl Borrow<Self::Element>) -> Result<(), MerkleTreeError> {
         <Self as AppendableMerkleTreeScheme>::extend(self, [elem])
     }
 
     fn extend(
         &mut self,
         elems: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-    ) -> Result<(), PrimitivesError> {
+    ) -> Result<(), MerkleTreeError> {
         let mut iter = elems.into_iter().peekable();
 
         let traversal_path =
@@ -98,9 +98,7 @@ where
         self.root = root;
         self.num_leaves += num_inserted;
         if iter.peek().is_some() {
-            return Err(PrimitivesError::ParameterError(
-                "Exceed merkle tree capacity".to_string(),
-            ));
+            return Err(MerkleTreeError::ExceedCapacity);
         }
         Ok(())
     }
@@ -111,16 +109,14 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        merkle_tree::{
-            internal::{MerkleNode, MerkleProof},
-            prelude::{RescueMerkleTree, RescueSparseMerkleTree},
-            *,
-        },
-        rescue::RescueParameter,
+        internal::{MerkleNode, MerkleProof},
+        prelude::{RescueMerkleTree, RescueSparseMerkleTree},
+        *,
     };
-    use ark_ed_on_bls12_377::Fq as Fq377;
-    use ark_ed_on_bls12_381::Fq as Fq381;
-    use ark_ed_on_bn254::Fq as Fq254;
+    use ark_bls12_377::Fq as Fq377;
+    use ark_bls12_381::Fq as Fq381;
+    use ark_bn254::Fq as Fq254;
+    use jf_rescue::RescueParameter;
 
     #[test]
     fn test_mt_builder() {

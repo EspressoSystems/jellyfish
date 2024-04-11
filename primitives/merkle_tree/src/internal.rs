@@ -7,10 +7,11 @@
 use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
-use crate::errors::{PrimitivesError, VerificationResult};
+use crate::errors::{MerkleTreeError, VerificationResult};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
+use derivative::Derivative;
 use itertools::Itertools;
 use jf_utils::canonical;
 use num_bigint::BigUint;
@@ -183,7 +184,7 @@ where
 pub(crate) fn build_tree_internal<E, H, const ARITY: usize, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
+) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), MerkleTreeError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
@@ -203,9 +204,7 @@ where
     let capacity = BigUint::from(ARITY as u64).pow(height as u32);
 
     if BigUint::from(num_leaves) > capacity {
-        Err(PrimitivesError::ParameterError(
-            "Too many data for merkle tree".to_string(),
-        ))
+        Err(MerkleTreeError::ExceedCapacity)
     } else if num_leaves == 0 {
         Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     } else if height == 0usize {
@@ -235,13 +234,13 @@ where
                         }))
                     })
                     .pad_using(ARITY, |_| Ok(Arc::new(MerkleNode::Empty)))
-                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                    .collect::<Result<Vec<_>, MerkleTreeError>>()?;
                 Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
                     children,
                 }))
             })
-            .collect::<Result<Vec<_>, PrimitivesError>>()?;
+            .collect::<Result<Vec<_>, MerkleTreeError>>()?;
         for _ in 1..height {
             cur_nodes = cur_nodes
                 .into_iter()
@@ -256,7 +255,7 @@ where
                         children,
                     }))
                 })
-                .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                .collect::<Result<Vec<_>, MerkleTreeError>>()?;
         }
         Ok((cur_nodes[0].clone(), height, num_leaves))
     }
@@ -266,7 +265,7 @@ where
 pub(crate) fn build_light_weight_tree_internal<E, H, const ARITY: usize, T>(
     height: Option<usize>,
     elems: impl IntoIterator<Item = impl Borrow<E>>,
-) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), PrimitivesError>
+) -> Result<(Arc<MerkleNode<E, u64, T>>, usize, u64), MerkleTreeError>
 where
     E: Element,
     H: DigestAlgorithm<E, u64, T>,
@@ -284,13 +283,11 @@ where
         height
     });
     let capacity = num_traits::checked_pow(ARITY as u64, height).ok_or_else(|| {
-        PrimitivesError::ParameterError("Merkle tree size too large.".to_string())
+        MerkleTreeError::ParametersError("Merkle tree size too large.".to_string())
     })?;
 
     if num_leaves > capacity {
-        Err(PrimitivesError::ParameterError(
-            "Too many data for merkle tree".to_string(),
-        ))
+        Err(MerkleTreeError::ExceedCapacity)
     } else if num_leaves == 0 {
         Ok((Arc::new(MerkleNode::<E, u64, T>::Empty), height, 0))
     } else if height == 0usize {
@@ -326,13 +323,13 @@ where
                         })
                     })
                     .pad_using(ARITY, |_| Ok(Arc::new(MerkleNode::Empty)))
-                    .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                    .collect::<Result<Vec<_>, MerkleTreeError>>()?;
                 Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                     value: digest_branch::<E, H, u64, T>(&children)?,
                     children,
                 }))
             })
-            .collect::<Result<Vec<_>, PrimitivesError>>()?;
+            .collect::<Result<Vec<_>, MerkleTreeError>>()?;
         for i in 1..cur_nodes.len() - 1 {
             cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
                 value: cur_nodes[i].value(),
@@ -352,7 +349,7 @@ where
                         children,
                     }))
                 })
-                .collect::<Result<Vec<_>, PrimitivesError>>()?;
+                .collect::<Result<Vec<_>, MerkleTreeError>>()?;
             for i in 1..cur_nodes.len() - 1 {
                 cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
                     value: cur_nodes[i].value(),
@@ -365,7 +362,7 @@ where
 
 pub(crate) fn digest_branch<E, H, I, T>(
     data: &[Arc<MerkleNode<E, I, T>>],
-) -> Result<T, PrimitivesError>
+) -> Result<T, MerkleTreeError>
 where
     E: Element,
     H: DigestAlgorithm<E, I, T>,
@@ -492,12 +489,12 @@ where
         traversal_path: &[usize],
         path_values: &[T],
         proof: &[MerkleNode<E, I, T>],
-    ) -> Result<Arc<Self>, PrimitivesError>
+    ) -> Result<Arc<Self>, MerkleTreeError>
     where
         H: DigestAlgorithm<E, I, T>,
     {
         if self.value() != path_values[height] {
-            return Err(PrimitivesError::ParameterError(format!(
+            return Err(MerkleTreeError::InconsistentStructureError(format!(
                 "Invalid proof. Hash differs at height {}: (expected: {:?}, received: {:?})",
                 height,
                 self.value(),
@@ -546,7 +543,9 @@ where
                 // proof matches, so just return success.
                 Ok(Arc::new(self.clone()))
             },
-            (..) => Err(PrimitivesError::ParameterError("Invalid proof".into())),
+            (..) => Err(MerkleTreeError::InconsistentStructureError(
+                "Invalid proof".into(),
+            )),
         }
     }
 
@@ -627,7 +626,7 @@ where
         pos: impl Borrow<I>,
         traversal_path: &[usize],
         f: F,
-    ) -> Result<(Arc<Self>, i64, LookupResult<E, (), ()>), PrimitivesError>
+    ) -> Result<(Arc<Self>, i64, LookupResult<E, (), ()>), MerkleTreeError>
     where
         H: DigestAlgorithm<E, I, T>,
         F: FnOnce(Option<&E>) -> Option<E>,
@@ -741,9 +740,7 @@ where
                     }
                 }
             },
-            MerkleNode::ForgettenSubtree { .. } => Err(PrimitivesError::InternalError(
-                "Given leaf is not in memory".to_string(),
-            )),
+            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }
@@ -761,7 +758,7 @@ where
         traversal_path: &[usize],
         at_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
-    ) -> Result<(Arc<Self>, u64), PrimitivesError>
+    ) -> Result<(Arc<Self>, u64), MerkleTreeError>
     where
         H: DigestAlgorithm<E, u64, T>,
     {
@@ -839,12 +836,8 @@ where
                     ))
                 }
             },
-            MerkleNode::Leaf { .. } => Err(PrimitivesError::ParameterError(
-                "Incompatible merkle tree: index already occupied".to_string(),
-            )),
-            MerkleNode::ForgettenSubtree { .. } => Err(PrimitivesError::ParameterError(
-                "Given part of merkle tree is not in memory".to_string(),
-            )),
+            MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
+            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 
@@ -857,7 +850,7 @@ where
         traversal_path: &[usize],
         at_frontier: bool,
         data: &mut Peekable<impl Iterator<Item = impl Borrow<E>>>,
-    ) -> Result<(Arc<Self>, u64), PrimitivesError>
+    ) -> Result<(Arc<Self>, u64), MerkleTreeError>
     where
         H: DigestAlgorithm<E, u64, T>,
     {
@@ -948,12 +941,8 @@ where
                     ))
                 }
             },
-            MerkleNode::Leaf { .. } => Err(PrimitivesError::ParameterError(
-                "Incompatible merkle tree: index already occupied".to_string(),
-            )),
-            MerkleNode::ForgettenSubtree { .. } => Err(PrimitivesError::ParameterError(
-                "Given part of merkle tree is not in memory".to_string(),
-            )),
+            MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
+            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }
@@ -969,7 +958,7 @@ where
     pub(crate) fn verify_membership_proof<H>(
         &self,
         expected_root: &T,
-    ) -> Result<VerificationResult, PrimitivesError>
+    ) -> Result<VerificationResult, MerkleTreeError>
     where
         H: DigestAlgorithm<E, I, T>,
     {
@@ -985,7 +974,7 @@ where
                 .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
-                .try_fold(init, |val, (branch, node)| -> Result<T, PrimitivesError> {
+                .try_fold(init, |val, (branch, node)| -> Result<T, MerkleTreeError> {
                     match node {
                         MerkleNode::Branch { value: _, children } => {
                             let mut data =
@@ -993,7 +982,7 @@ where
                             data[*branch] = val;
                             H::digest(&data)
                         },
-                        _ => Err(PrimitivesError::ParameterError(
+                        _ => Err(MerkleTreeError::InconsistentStructureError(
                             "Incompatible proof for this merkle tree".to_string(),
                         )),
                     }
@@ -1004,7 +993,7 @@ where
                 Ok(Err(()))
             }
         } else {
-            Err(PrimitivesError::ParameterError(
+            Err(MerkleTreeError::InconsistentStructureError(
                 "Invalid proof type".to_string(),
             ))
         }
@@ -1015,7 +1004,7 @@ where
     pub(crate) fn verify_non_membership_proof<H>(
         &self,
         expected_root: &T,
-    ) -> Result<bool, PrimitivesError>
+    ) -> Result<bool, MerkleTreeError>
     where
         H: DigestAlgorithm<E, I, T>,
     {
@@ -1026,7 +1015,7 @@ where
                 .to_traversal_path(self.tree_height() - 1)
                 .iter()
                 .zip(self.proof.iter().skip(1))
-                .try_fold(init, |val, (branch, node)| -> Result<T, PrimitivesError> {
+                .try_fold(init, |val, (branch, node)| -> Result<T, MerkleTreeError> {
                     match node {
                         MerkleNode::Branch { value: _, children } => {
                             let mut data =
@@ -1035,14 +1024,14 @@ where
                             H::digest(&data)
                         },
                         MerkleNode::Empty => Ok(init),
-                        _ => Err(PrimitivesError::ParameterError(
+                        _ => Err(MerkleTreeError::InconsistentStructureError(
                             "Incompatible proof for this merkle tree".to_string(),
                         )),
                     }
                 })?;
             Ok(computed_root == *expected_root)
         } else {
-            Err(PrimitivesError::ParameterError(
+            Err(MerkleTreeError::InconsistentStructureError(
                 "Invalid proof type".to_string(),
             ))
         }

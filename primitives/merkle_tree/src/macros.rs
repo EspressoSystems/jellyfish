@@ -82,7 +82,7 @@ macro_rules! impl_merkle_tree_scheme {
                 root: impl Borrow<Self::NodeValue>,
                 pos: impl Borrow<Self::Index>,
                 proof: impl Borrow<Self::MembershipProof>,
-            ) -> Result<VerificationResult, PrimitivesError> {
+            ) -> Result<VerificationResult, MerkleTreeError> {
                 if *pos.borrow() != proof.borrow().pos {
                     return Ok(Err(())); // invalid proof for the given pos
                 }
@@ -174,7 +174,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 pos: impl Borrow<Self::Index>,
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
-            ) -> Result<(), PrimitivesError> {
+            ) -> Result<(), MerkleTreeError> {
                 let proof = proof.borrow();
                 let traversal_path = pos.borrow().to_traversal_path(self.height);
                 if let MerkleNode::<E, I, T>::Leaf {
@@ -184,7 +184,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 } = &proof.proof[0]
                 {
                     if !elem.eq(element.borrow()) {
-                        return Err(PrimitivesError::ParameterError(
+                        return Err(MerkleTreeError::InconsistentStructureError(
                             "Element does not match the proof.".to_string(),
                         ));
                     }
@@ -192,7 +192,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                     let mut path_values = vec![proof_leaf_value];
                     traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
                         Ok(proof_leaf_value),
-                        |result, (branch, node)| -> Result<T, PrimitivesError> {
+                        |result, (branch, node)| -> Result<T, MerkleTreeError> {
                             match result {
                                 Ok(val) => match node {
                                     MerkleNode::Branch { value: _, children } => {
@@ -203,7 +203,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                                         path_values.push(digest);
                                         Ok(digest)
                                     },
-                                    _ => Err(PrimitivesError::ParameterError(
+                                    _ => Err(MerkleTreeError::InconsistentStructureError(
                                         "Incompatible proof for this merkle tree".to_string(),
                                     )),
                                 },
@@ -219,7 +219,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                     )?;
                     Ok(())
                 } else {
-                    Err(PrimitivesError::ParameterError(
+                    Err(MerkleTreeError::InconsistentStructureError(
                         "Invalid proof type".to_string(),
                     ))
                 }
