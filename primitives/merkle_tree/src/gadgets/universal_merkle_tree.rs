@@ -8,22 +8,18 @@
 //! with a Rescue hash function.
 
 use crate::{
-    circuit::merkle_tree::DigestAlgorithmGadget,
-    merkle_tree::{
-        internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleTreeScheme, ToTraversalPath,
-    },
-    rescue::RescueParameter,
+    internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleTreeScheme, ToTraversalPath,
 };
 use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+use jf_rescue::RescueParameter;
 
 type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
-use num_bigint::BigUint;
-
 use super::{
-    constrain_sibling_order, Merkle3AryNodeVar, Merkle3AryNonMembershipProofVar,
-    UniversalMerkleTreeGadget,
+    constrain_sibling_order, DigestAlgorithmGadget, Merkle3AryNodeVar,
+    Merkle3AryNonMembershipProofVar, UniversalMerkleTreeGadget,
 };
+use num_bigint::BigUint;
 
 impl<F> UniversalMerkleTreeGadget<SparseMerkleTree<F>> for PlonkCircuit<F>
 where
@@ -118,12 +114,9 @@ where
 #[cfg(test)]
 mod test {
     use crate::{
-        circuit::merkle_tree::{MerkleTreeGadget, UniversalMerkleTreeGadget},
-        merkle_tree::{
-            prelude::RescueSparseMerkleTree, MerkleCommitment, MerkleTreeScheme,
-            UniversalMerkleTreeScheme,
-        },
-        rescue::RescueParameter,
+        gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget},
+        prelude::RescueSparseMerkleTree,
+        MerkleCommitment, MerkleTreeScheme, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
@@ -132,6 +125,7 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use hashbrown::HashMap;
     use jf_relation::{Circuit, PlonkCircuit};
+    use jf_rescue::RescueParameter;
     use num_bigint::BigUint;
 
     type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;

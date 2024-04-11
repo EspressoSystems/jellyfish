@@ -23,8 +23,10 @@ ark-crypto-primitives = { version = "0.4.0", default-features = false, features 
         "sponge",
 ] }
 displaydoc = { workspace = true }
+itertools = { workspace = true }
 jf-utils = { path = "../../utilities", default-features = false }
 jf-primitives-core = { path = "../core", default-features = false }
+jf-relation = { path = "../../relation", optional = true, default-features = false }
 
 [features]
 default = []
@@ -39,5 +41,11 @@ std = [
         "ark-ed-on-bls12-377/std",
         "ark-ed-on-bls12-381/std",
         "ark-ed-on-bn254/std",
+        "itertools/use_std",
         "jf-utils/std",
+        "jf-relation/std",
+        "jf-primitives-core/std",
+]
+gadgets = [
+        "jf-relation"
 ]

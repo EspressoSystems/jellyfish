@@ -14,15 +14,13 @@ mod universal_merkle_tree;
 use ark_std::{string::ToString, vec::Vec};
 
 use crate::{
-    merkle_tree::{
-        internal::{MerkleNode, MerklePath, MerkleProof},
-        prelude::RescueMerkleTree,
-        Element, Index, MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
-    },
-    rescue::RescueParameter,
+    internal::{MerkleNode, MerklePath, MerkleProof},
+    prelude::RescueMerkleTree,
+    Element, Index, MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
 };
+use jf_rescue::RescueParameter;
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
-use super::rescue::RescueNativeGadget;
+use jf_rescue::gadgets::RescueNativeGadget;
 
 /// Gadget for a Merkle tree
 ///
@@ -441,13 +439,10 @@ where
 #[cfg(test)]
 mod test {
     use crate::{
-        circuit::merkle_tree::{
-            constrain_sibling_order, Merkle3AryMembershipProofVar, MerkleTreeGadget,
-        },
-        merkle_tree::{
-            internal::MerkleNode, prelude::RescueMerkleTree, MerkleCommitment, MerkleTreeScheme,
-        },
-        rescue::RescueParameter,
+        gadgets::{constrain_sibling_order, Merkle3AryMembershipProofVar, MerkleTreeGadget},
+        internal::MerkleNode,
+        prelude::RescueMerkleTree,
+        MerkleCommitment, MerkleTreeScheme,
     };
     use alloc::sync::Arc;
     use ark_bls12_377::Fq as Fq377;
@@ -457,6 +452,7 @@ mod test {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_std::vec::Vec;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
+    use jf_rescue::RescueParameter;
 
     #[test]
     fn test_permute() {

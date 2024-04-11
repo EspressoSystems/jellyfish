@@ -29,7 +29,34 @@ itertools = { workspace = true }
 jf-primitives-core = { path = "../core", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
 jf-utils = { path = "../../utilities", default-features = false }
+jf-relation = { path = "../../relation", optional = true, default-features = false }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
 bincode = "1.3"
+ark-ed-on-bls12-377 = "0.4.0"
+ark-ed-on-bls12-381 = "0.4.0"
+ark-ed-on-bn254 = "0.4.0"
+ark-ed-on-bls12-381-bandersnatch = "0.4.0"
+
+[features]
+default = []
+std = [
+        "ark-bls12-377/std",
+        "ark-bls12-381/std",
+        "ark-bn254/std",
+        "ark-std/std",
+        "ark-serialize/std",
+        "ark-ff/std",
+        "num-bigint/std",
+        "num-traits/std",
+        "sha3/std",
+        "itertools/use_std",
+        "jf-utils/std",
+        "jf-relation/std",
+        "jf-primitives-core/std",
+]
+gadgets = [
+    "jf-relation",
+    "jf-rescue/gadgets",
+]

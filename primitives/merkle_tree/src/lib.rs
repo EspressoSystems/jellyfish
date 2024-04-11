@@ -19,6 +19,8 @@ extern crate alloc;
 pub mod append_only;
 pub mod errors;
 pub mod examples;
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
 pub mod hasher;
 pub mod light_weight;
 pub mod macros;

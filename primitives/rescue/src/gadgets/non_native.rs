@@ -9,9 +9,7 @@
 //! The major adjustment is to move from `Variable`s (that are native to
 //! a plonk circuit) to `FpElemVar`s that are non-native to the circuit.
 
-use crate::rescue::{
-    Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE,
-};
+use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE};
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
@@ -662,13 +660,10 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{PermutationGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
+    use super::{PermutationGadget, RescueGadget, RescueNonNativeGadget, RescueNonNativeStateVar};
     use crate::{
-        circuit::rescue::RescueGadget,
-        rescue::{
-            sponge::{RescueCRHF, RescuePRFCore},
-            Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, STATE_SIZE,
-        },
+        crhf::RescueCRHF, prf::RescuePRFCore, Permutation, RescueMatrix, RescueParameter,
+        RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;

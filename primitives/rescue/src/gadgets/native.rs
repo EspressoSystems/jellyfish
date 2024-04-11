@@ -4,9 +4,7 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use crate::rescue::{
-    Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE,
-};
+use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE};
 use ark_ff::PrimeField;
 use ark_std::{boxed::Box, format, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
@@ -528,13 +526,10 @@ where
 #[cfg(test)]
 mod tests {
 
-    use super::{PermutationGadget, RescueGadget, RescueStateVar};
+    use super::{PermutationGadget, RescueGadget, RescueNativeGadget, RescueStateVar};
     use crate::{
-        circuit::rescue::RescueNativeGadget,
-        rescue::{
-            sponge::RescueCRHF, Permutation, RescueMatrix, RescueParameter, RescueVector,
-            CRHF_RATE, PRP, STATE_SIZE,
-        },
+        crhf::RescueCRHF, prf::RescuePRFCore, Permutation, RescueMatrix, RescueParameter,
+        RescueVector, CRHF_RATE, PRP, STATE_SIZE,
     };
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;

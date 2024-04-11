@@ -11,3 +11,7 @@ repository.workspace = true
 
 [dependencies]
 ark-std = { workspace = true }
+
+[features]
+default = []
+std = [ "ark-std/std" ]

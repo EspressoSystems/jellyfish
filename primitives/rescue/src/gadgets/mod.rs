@@ -16,7 +16,7 @@ use jf_relation::{errors::CircuitError, Circuit};
 pub use native::{RescueNativeGadget, RescueStateVar};
 pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
 
-use crate::rescue::{RescueMatrix, RescueVector, PRP};
+use crate::{RescueMatrix, RescueVector, PRP};
 
 /// Variable to represent the state of the sponge.
 pub trait SpongeStateVar<T, F> {

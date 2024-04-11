@@ -24,6 +24,8 @@
 extern crate std;
 
 pub mod crhf;
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
 pub mod prf;
 mod rescue_constants;
 pub mod sponge;
