@@ -7,8 +7,6 @@
 use crate::{elgamal, signatures::schnorr};
 use ark_ec::{twisted_edwards::TECurveConfig as Config, CurveGroup};
 use ark_ff::PrimeField;
-use ark_std::vec::Vec;
-use jf_relation::Variable;
 
 impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
 where
@@ -29,17 +27,6 @@ where
         let point = pk.key.into_affine();
         (point.x, point.y)
     }
-}
-
-#[inline]
-pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) {
-    let len = vec.len();
-    let new_len = if len % multiple == 0 {
-        len
-    } else {
-        len + multiple - len % multiple
-    };
-    vec.resize(new_len, var);
 }
 
 #[inline]

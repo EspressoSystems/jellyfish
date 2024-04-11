@@ -4,18 +4,14 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Circuit implementation of the commitment scheme.
+//! Circuit implementation of the rescue-based commitment scheme.
 
-use crate::{
-    rescue::{RescueParameter, CRHF_RATE},
-    utils::pad_with,
-};
-use ark_std::vec;
+use super::RescueNativeGadget;
+use crate::{RescueParameter, CRHF_RATE};
+use ark_std::{vec, vec::Vec};
 use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
 
-use super::rescue::RescueNativeGadget;
-
-/// Circuit implementation of the commitment scheme.
+/// Commitment gadget
 pub trait CommitmentGadget {
     // Commitment scheme
     /// Commitment function.
@@ -39,12 +35,21 @@ where
     }
 }
 
+#[inline]
+pub(crate) fn pad_with(vec: &mut Vec<Variable>, multiple: usize, var: Variable) {
+    let len = vec.len();
+    let new_len = if len % multiple == 0 {
+        len
+    } else {
+        len + multiple - len % multiple
+    };
+    vec.resize(new_len, var);
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{
-        circuit::commitment::CommitmentGadget,
-        commitment::{CommitmentScheme, FixedLengthRescueCommitment},
-    };
+    use super::CommitmentGadget;
+    use crate::commitment::FixedLengthRescueCommitment;
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -53,6 +58,7 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
     use itertools::Itertools;
+    use jf_primitives_core::commitment::CommitmentScheme;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     const TEST_INPUT_LEN: usize = 10;

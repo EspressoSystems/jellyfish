@@ -4,12 +4,11 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Circuit implementation of a PRF.
+//! Circuit implementation of a rescue PRF.
 
-use crate::rescue::RescueParameter;
+use super::RescueNativeGadget;
+use crate::RescueParameter;
 use jf_relation::{errors::CircuitError, PlonkCircuit, Variable};
-
-use super::rescue::RescueNativeGadget;
 
 /// Circuit implementation of a PRF.
 pub trait PRFGadget {
@@ -32,7 +31,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::PRFGadget;
-    use crate::prf::{RescuePRF, PRF};
+    use crate::prf::RescuePRF;
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
@@ -40,6 +39,7 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
+    use jf_primitives_core::prf::PRF;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     macro_rules! test_prf_circuit {

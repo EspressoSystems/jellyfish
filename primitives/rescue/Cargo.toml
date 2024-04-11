@@ -50,5 +50,5 @@ std = [
         "jf-primitives-core/std",
 ]
 gadgets = [
-        "jf-relation"
+        "jf-relation",
 ]

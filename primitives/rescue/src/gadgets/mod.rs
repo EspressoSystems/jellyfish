@@ -7,16 +7,17 @@
 //! Rescue hash related gates and gadgets. Including both native and non-native
 //! fields.
 
+pub mod commitment;
 mod native;
 mod non_native;
+pub mod prf;
 
+use crate::{RescueMatrix, RescueVector, PRP};
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
 use jf_relation::{errors::CircuitError, Circuit};
 pub use native::{RescueNativeGadget, RescueStateVar};
 pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
-
-use crate::{RescueMatrix, RescueVector, PRP};
 
 /// Variable to represent the state of the sponge.
 pub trait SpongeStateVar<T, F> {
