@@ -11,18 +11,6 @@
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
 #[cfg(feature = "gpu-vid")]
 use crate::icicle_deps::*;
-use crate::{
-    alloc::string::ToString,
-    merkle_tree::{
-        hasher::{HasherDigest, HasherMerkleTree, HasherNode},
-        MerkleCommitment, MerkleTreeScheme,
-    },
-    pcs::{
-        prelude::{UnivariateKzgPCS, UnivariateKzgProof},
-        PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
-    },
-    reed_solomon_code::reed_solomon_erasure_decode_rou,
-};
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{Field, PrimeField};
 use ark_poly::{
@@ -36,7 +24,9 @@ use ark_std::{
     format,
     marker::PhantomData,
     ops::{Add, Mul},
-    start_timer, vec,
+    start_timer,
+    string::ToString,
+    vec,
     vec::Vec,
     Zero,
 };
@@ -44,9 +34,18 @@ use bytes_to_field::{bytes_to_field, field_to_bytes};
 use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
+use jf_merkle_tree::{
+    hasher::{HasherDigest, HasherMerkleTree, HasherNode},
+    MerkleCommitment, MerkleTreeScheme,
+};
+use jf_pcs::{
+    prelude::{UnivariateKzgPCS, UnivariateKzgProof},
+    PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
+};
 use jf_utils::{
     canonical,
     par_utils::{parallelizable_chunks, parallelizable_slice_iter},
+    reed_solomon_code::reed_solomon_erasure_decode_rou,
 };
 #[cfg(feature = "parallel")]
 use rayon::prelude::ParallelIterator;
@@ -968,14 +967,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::{VidError::Argument, *};
-
-    use crate::pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     use ark_bls12_381::Bls12_381;
     use ark_bn254::Bn254;
     use ark_std::{
         rand::{CryptoRng, RngCore},
         vec,
     };
+    use jf_pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
     use sha2::Sha256;
 
     #[ignore]

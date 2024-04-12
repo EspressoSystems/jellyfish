@@ -7,19 +7,17 @@
 //! Implementations of [`Precomputable`] for `Advz`.
 
 use crate::{
-    merkle_tree::{MerkleCommitment, MerkleTreeScheme},
-    pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS},
-    vid::{
-        advz::{
-            polynomial_eval, AdvzInternal, Common, HasherDigest, KzgCommit, KzgEvalsMerkleTree,
-            MaybeGPU, Pairing, PolynomialMultiplier, UnivariateKzgPCS,
-        },
-        precomputable::Precomputable,
-        vid, VidDisperse, VidResult,
+    advz::{
+        polynomial_eval, AdvzInternal, Common, HasherDigest, KzgCommit, KzgEvalsMerkleTree,
+        MaybeGPU, Pairing, PolynomialMultiplier, UnivariateKzgPCS,
     },
+    precomputable::Precomputable,
+    vid, VidDisperse, VidResult,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{end_timer, start_timer, vec::Vec};
+use jf_merkle_tree::{MerkleCommitment, MerkleTreeScheme};
+use jf_pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS};
 
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
@@ -166,19 +164,16 @@ where
 
 #[cfg(test)]
 mod tests {
-
-    use crate::vid::precomputable::Precomputable;
-    use ark_bls12_381::Bls12_381;
-
-    use sha2::Sha256;
-
-    use crate::vid::{
+    use crate::{
         advz::{
             tests::{advz_init, init_random_payload, init_srs},
             Advz,
         },
+        precomputable::Precomputable,
         VidScheme,
     };
+    use ark_bls12_381::Bls12_381;
+    use sha2::Sha256;
 
     #[ignore]
     #[test]

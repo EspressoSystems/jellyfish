@@ -25,8 +25,6 @@ pub mod circuit;
 pub mod elgamal;
 pub mod errors;
 pub mod hash_to_group;
-pub mod reed_solomon_code;
-pub mod vid;
 pub mod vrf;
 
 // Re-exporting rescue

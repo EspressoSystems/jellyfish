@@ -17,12 +17,12 @@ ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 derivative = { workspace = true }
 displaydoc = { workspace = true }
-merlin = { workspace = true }
 icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true, features = ["arkworks"] }
 icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
 icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-utils = { path = "../utilities", default-features = false }
+merlin = { workspace = true }
 rayon = { version = "1.5.0", optional = true }
 
 [dev-dependencies]
@@ -33,22 +33,22 @@ criterion = "0.5.1"
 [[bench]]
 name = "pcs"
 harness = false
-required-features = [ "test-srs" ]
+required-features = ["test-srs"]
 
 [[bench]]
 name = "pcs-size"
 path = "benches/pcs_size.rs"
 harness = false
-required-features = [ "test-srs" ]
+required-features = ["test-srs"]
 
 [[bench]]
 name = "kzg-gpu"
 path = "benches/kzg_gpu.rs"
 harness = false
-required-features = [ "test-srs" ]
+required-features = ["test-srs", "icicle"]
 
 [features]
-default = [ "parallel" ]
+default = ["parallel"]
 std = [
     "ark-bls12-381/std", "ark-std/std", "ark-serialize/std", 
     "ark-ff/std", "ark-ec/std", "ark-poly/std", "merlin/std", 

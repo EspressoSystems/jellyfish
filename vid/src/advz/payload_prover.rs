@@ -20,12 +20,8 @@ use super::{
     AdvzInternal, KzgEval, KzgProof, MaybeGPU, PolynomialCommitmentScheme, Vec, VidResult,
 };
 use crate::{
-    merkle_tree::hasher::HasherDigest,
-    pcs::prelude::UnivariateKzgPCS,
-    vid::{
-        payload_prover::{PayloadProver, Statement},
-        vid, VidError, VidScheme,
-    },
+    payload_prover::{PayloadProver, Statement},
+    vid, VidError, VidScheme,
 };
 use anyhow::anyhow;
 use ark_ec::pairing::Pairing;
@@ -33,6 +29,8 @@ use ark_poly::EvaluationDomain;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{format, ops::Range};
 use itertools::Itertools;
+use jf_merkle_tree::hasher::HasherDigest;
+use jf_pcs::prelude::UnivariateKzgPCS;
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
 
@@ -383,7 +381,7 @@ fn check_range_nonempty_and_in_bounds(len: usize, range: &Range<usize>) -> VidRe
 
 #[cfg(test)]
 mod tests {
-    use crate::vid::{
+    use crate::{
         advz::{
             bytes_to_field::elem_byte_capacity,
             payload_prover::{LargeRangeProof, SmallRangeProof, Statement},

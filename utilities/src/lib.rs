@@ -4,12 +4,20 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#[cfg(test)]
+extern crate std;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
 
 mod conversion;
 mod macros;
 mod multi_pairing;
 pub mod par_utils;
+pub mod reed_solomon_code;
 mod serialize;
 
 use ark_ec::twisted_edwards::TECurveConfig as Config;
@@ -97,7 +105,6 @@ pub fn test_rng() -> StdRng {
 mod tests {
     use super::*;
     use ark_ec::CurveGroup;
-    use ark_ff::PrimeField;
 
     fn test_hadamard_template<Fr: PrimeField, G1: CurveGroup<ScalarField = Fr>>() {
         let mut rng = test_rng();

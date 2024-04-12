@@ -1,0 +1,60 @@
+[package]
+name = "jf-vid"
+version = "0.1.0"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+anyhow = "1.0"
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+ark-poly = { workspace = true }
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+derivative = { workspace = true }
+digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
+displaydoc = { workspace = true }
+generic-array = { version = "0", features = [
+        "serde",
+] } # not a direct dependency, but we need serde
+itertools = { workspace = true, features = ["use_alloc"] }
+jf-merkle-tree = { path = "../merkle_tree", default-features = false }
+jf-pcs = { path = "../pcs", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }
+rayon = { version = "1.5.0", optional = true }
+serde = { workspace = true }
+tagged-base64 = { workspace = true }
+
+[dev-dependencies]
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
+ark-ed-on-bls12-377 = "0.4.0"
+ark-ed-on-bls12-381 = "0.4.0"
+ark-ed-on-bn254 = "0.4.0"
+criterion = "0.5.1"
+jf-pcs = { path = "../pcs", features = ["test-srs"] }
+sha2 = "0.10.1"
+
+[[bench]]
+name = "advz"
+harness = false
+required-features = ["test-srs"]
+
+[features]
+default = [ "parallel" ]
+std = [
+    "ark-std/std", "ark-serialize/std", "ark-ff/std",
+    "ark-ec/std", "ark-poly/std", "itertools/use_std",
+    "jf-utils/std", "jf-pcs/std", "jf-merkle-tree/std",
+]
+test-srs = [ "jf-pcs/test-srs" ]
+parallel = [
+    "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel",
+    "jf-pcs/parallel", "rayon",
+]
+gpu-vid = [ "jf-pcs/icicle" ]

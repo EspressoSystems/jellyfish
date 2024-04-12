@@ -80,11 +80,6 @@ path = "benches/reed_solomon.rs"
 harness = false
 
 [[bench]]
-name = "advz"
-harness = false
-required-features = ["test-srs"]
-
-[[bench]]
 name = "minroot"
 harness = false
 

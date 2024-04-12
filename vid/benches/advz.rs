@@ -11,10 +11,8 @@ use ark_serialize::Write;
 use ark_std::rand::RngCore;
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use digest::{crypto_common::generic_array::ArrayLength, Digest, DynDigest, OutputSizeUser};
-use jf_primitives::{
-    pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::{advz::Advz, VidScheme},
-};
+use jf_pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme};
+use jf_vid::{advz::Advz, VidScheme};
 use sha2::Sha256;
 
 const KB: usize = 1 << 10;

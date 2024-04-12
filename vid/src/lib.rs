@@ -5,7 +5,21 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Trait and implementation for a Verifiable Information Retrieval (VID).
-/// See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
+//! See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[macro_use]
+extern crate derivative;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
 use ark_std::{
     error::Error,
     fmt::{Debug, Display},

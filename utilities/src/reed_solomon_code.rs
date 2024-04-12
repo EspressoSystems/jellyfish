@@ -6,11 +6,21 @@
 
 //! Module for erasure code
 
-use crate::errors::PrimitivesError;
 use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
-use ark_std::{format, string::ToString, vec, vec::Vec};
+use ark_std::{
+    format,
+    string::{String, ToString},
+    vec,
+    vec::Vec,
+};
 use core::borrow::Borrow;
+use displaydoc::Display;
+
+/// Erasure code error
+#[derive(Display, Debug)]
+pub struct RSCodeError(String);
+impl ark_std::error::Error for RSCodeError {}
 
 /// Erasure-encode `data` into `data.len() + parity_size` shares.
 ///
@@ -24,7 +34,7 @@ use core::borrow::Borrow;
 /// use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
 /// use ark_bn254::Fr as F;
 /// use ark_std::{vec, One, Zero};
-/// use jf_primitives::reed_solomon_code::reed_solomon_erasure_decode;
+/// use jf_utils::reed_solomon_code::reed_solomon_erasure_decode;
 ///
 /// let domain = GeneralEvaluationDomain::<F>::new(3).unwrap();
 /// let input = vec![F::one(), F::one()];
@@ -34,10 +44,7 @@ use core::borrow::Borrow;
 /// let output = reed_solomon_erasure_decode(eval_points.iter().zip(result).take(2), 2).unwrap();
 /// assert_eq!(input, output);
 /// ```
-pub fn reed_solomon_erasure_encode<F, D>(
-    data: D,
-    parity_size: usize,
-) -> Result<impl Iterator<Item = F>, PrimitivesError>
+pub fn reed_solomon_erasure_encode<F, D>(data: D, parity_size: usize) -> impl Iterator<Item = F>
 where
     F: Field,
     D: IntoIterator,
@@ -49,7 +56,7 @@ where
 
     // view `data` as coefficients of a polynomial
     // make shares by evaluating this polynomial at 1..=num_shares
-    Ok((1..=num_shares).map(move |index| {
+    (1..=num_shares).map(move |index| {
         let mut value = F::zero();
         let mut x = F::one();
         data_iter.clone().for_each(|coef| {
@@ -57,7 +64,7 @@ where
             x *= F::from(index as u64);
         });
         value
-    }))
+    })
 }
 
 /// Decode into `data_size` data elements via polynomial interpolation.
@@ -68,7 +75,7 @@ where
 pub fn reed_solomon_erasure_decode<F, D, T1, T2>(
     shares: D,
     data_size: usize,
-) -> Result<Vec<F>, PrimitivesError>
+) -> Result<Vec<F>, RSCodeError>
 where
     F: Field,
     T1: Borrow<F>,
@@ -79,7 +86,7 @@ where
 {
     let shares_iter = shares.into_iter().take(data_size);
     if shares_iter.len() < data_size {
-        return Err(PrimitivesError::ParameterError(format!(
+        return Err(RSCodeError(format!(
             "Insufficient evaluation points: got {} expected at least {}",
             shares_iter.len(),
             data_size
@@ -115,7 +122,7 @@ where
                 if i != j {
                     let denom = x[i] - x[j];
                     if denom.is_zero() {
-                        return Err(PrimitivesError::ParameterError(format!(
+                        return Err(RSCodeError(format!(
                             "duplicate input point {} at indices {}, {}",
                             x[i], i, j
                         )));
@@ -152,7 +159,7 @@ pub fn reed_solomon_erasure_decode_rou<F, D>(
     shares: D,
     data_size: usize,
     domain: &Radix2EvaluationDomain<F>,
-) -> Result<Vec<F>, PrimitivesError>
+) -> Result<Vec<F>, RSCodeError>
 where
     F: FftField,
     D: IntoIterator,
@@ -165,11 +172,11 @@ where
     let max_index = shares_iter
         .clone()
         .max_by_key(|s| s.borrow().0)
-        .ok_or_else(|| PrimitivesError::ParameterError("empty shares".to_string()))?
+        .ok_or_else(|| RSCodeError("empty shares".to_string()))?
         .borrow()
         .0;
     if max_index >= domain.size() {
-        return Err(PrimitivesError::ParameterError(format!(
+        return Err(RSCodeError(format!(
             "share index {} out of bounds for domain size {}",
             max_index,
             domain.size()
@@ -207,9 +214,7 @@ mod test {
         let data = vec![F::from(1u64), F::from(2u64)];
         // Evaluation of the above polynomial on (1, 2, 3) is (3, 5, 7)
         let expected = vec![F::from(3u64), F::from(5u64), F::from(7u64)];
-        let code: Vec<F> = reed_solomon_erasure_encode(data.iter(), 1)
-            .unwrap()
-            .collect();
+        let code: Vec<F> = reed_solomon_erasure_encode(data.iter(), 1).collect();
         assert_eq!(code, expected);
 
         for to_be_removed in 0..code.len() {
@@ -265,9 +270,7 @@ mod test {
         let payload = [3u64, 1, 4].map(|x| F::from(x));
         // Evaluation of the above polynomial on (1, 2, 3, 4, 5) is (8, 21, 42, 71, 108)
         let expected = [8u64, 21, 42, 71, 108].map(|x| F::from(x));
-        let code: Vec<F> = reed_solomon_erasure_encode(payload.iter(), 2)
-            .unwrap()
-            .collect();
+        let code: Vec<F> = reed_solomon_erasure_encode(payload.iter(), 2).collect();
         assert_eq!(code, expected);
 
         let mut points = [1u64, 2, 3].map(|x| F::from(x));
