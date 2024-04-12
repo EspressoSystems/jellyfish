@@ -8,9 +8,9 @@
 extern crate criterion;
 use ark_std::rand::rngs::StdRng;
 use criterion::{BenchmarkGroup, Criterion, Throughput};
-use jf_primitives::signatures::{
-    bls_over_bn254::BLSOverBN254CurveSignatureScheme, AggregateableSignatureSchemes,
-    BLSSignatureScheme, SignatureScheme,
+use jf_signature::{
+    bls_over_bls12381::BLSSignatureScheme, bls_over_bn254::BLSOverBN254CurveSignatureScheme,
+    AggregateableSignatureSchemes, SignatureScheme,
 };
 use jf_utils::test_rng;
 

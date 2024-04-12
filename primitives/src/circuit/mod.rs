@@ -6,4 +6,3 @@
 
 //! Circuit implementation of various crypto primitives.
 pub mod elgamal;
-pub mod signature;

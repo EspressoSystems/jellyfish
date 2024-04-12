@@ -57,7 +57,6 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
-    use itertools::Itertools;
     use jf_primitives_core::commitment::CommitmentScheme;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
@@ -79,7 +78,7 @@ mod tests {
             let data_vars: Vec<Variable> = data
                 .iter()
                 .map(|&x| circuit.create_variable(x).unwrap())
-                .collect_vec();
+                .collect();
 
             let expected_commitment = FixedLengthRescueCommitment::<
                 $base_field,

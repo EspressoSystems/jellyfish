@@ -34,21 +34,11 @@ ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 [features]
 default = []
 std = [
-        "ark-bls12-377/std",
-        "ark-bls12-381/std",
-        "ark-bn254/std",
-        "ark-bw6-761/std",
-        "ark-std/std",
-        "ark-ff/std",
-        "ark-crypto-primitives/std",
-        "ark-ed-on-bls12-377/std",
-        "ark-ed-on-bls12-381/std",
-        "ark-ed-on-bn254/std",
-        "itertools/use_std",
-        "jf-utils/std",
-        "jf-relation/std",
+        "ark-bls12-377/std", "ark-bls12-381/std", "ark-bn254/std",
+        "ark-bw6-761/std", "ark-std/std", "ark-ff/std",
+        "ark-crypto-primitives/std", "ark-ed-on-bls12-377/std",
+        "ark-ed-on-bls12-381/std", "ark-ed-on-bn254/std",
+        "itertools/use_std", "jf-utils/std", "jf-relation/std",
         "jf-primitives-core/std",
 ]
-gadgets = [
-        "jf-relation",
-]
+gadgets = [ "jf-relation" ]

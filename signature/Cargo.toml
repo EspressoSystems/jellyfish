@@ -38,6 +38,13 @@ ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
+criterion = "0.5.1"
+
+[[bench]]
+name = "bls-signature"
+path = "benches/bls_signature.rs"
+harness = false
+required-features = ["bls"]
 
 [features]
 default = []
@@ -56,7 +63,10 @@ std = [
         "jf-primitives-core/std",
         "zeroize/std",
 ]
+schnorr = []
+bls = []
 gadgets = [
+    "schnorr",
     "jf-relation",
     "jf-rescue/gadgets",
 ]

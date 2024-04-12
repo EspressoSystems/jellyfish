@@ -4,10 +4,10 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
+use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE};
 use ark_ff::PrimeField;
 use ark_std::{boxed::Box, format, string::ToString, vec, vec::Vec};
-use itertools::Itertools;
 use jf_relation::{
     constants::GATE_WIDTH,
     errors::{CircuitError, CircuitError::ParameterError},
@@ -15,8 +15,6 @@ use jf_relation::{
     Circuit, PlonkCircuit, Variable,
 };
 use jf_utils::compute_len_to_next_multiple;
-
-use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 
 #[derive(Clone, Debug)]
 /// Array of variables representing a Rescue state (4 field elements).
@@ -120,7 +118,7 @@ where
         let keys = keys
             .iter()
             .map(|key| RescueVector::from(key.elems().as_slice()))
-            .collect_vec();
+            .collect::<Vec<_>>();
         let mds_matrix = permutation.mds_matrix_ref();
 
         self.permutation_with_const_round_keys(input_var, mds_matrix, keys.as_slice())
@@ -536,7 +534,6 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::{FftField, PrimeField};
     use ark_std::{vec, vec::Vec};
-    use itertools::Itertools;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
     fn gen_state_matrix_constant<F: PrimeField>(
@@ -842,11 +839,13 @@ mod tests {
         let mut circuit = PlonkCircuit::new_turbo_plonk();
 
         let mut prng = jf_utils::test_rng();
-        let data = (0..2 * CRHF_RATE).map(|_| F::rand(&mut prng)).collect_vec();
+        let data = (0..2 * CRHF_RATE)
+            .map(|_| F::rand(&mut prng))
+            .collect::<Vec<_>>();
         let data_vars = data
             .iter()
             .map(|&x| circuit.create_variable(x).unwrap())
-            .collect_vec();
+            .collect::<Vec<_>>();
 
         let expected_sponge = RescueCRHF::sponge_no_padding(&data, 1).unwrap()[0];
         let sponge_var = RescueNativeGadget::<F>::rescue_sponge_no_padding(
@@ -867,11 +866,11 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
         let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
-        let data = (0..size).map(|_| F::rand(&mut prng)).collect_vec();
+        let data = (0..size).map(|_| F::rand(&mut prng)).collect::<Vec<_>>();
         let data_vars = data
             .iter()
             .map(|&x| circuit.create_variable(x).unwrap())
-            .collect_vec();
+            .collect::<Vec<_>>();
 
         assert!(RescueNativeGadget::<F>::rescue_sponge_no_padding(
             &mut circuit,
@@ -1009,11 +1008,11 @@ mod tests {
         let key = F::rand(&mut prng);
         let key_var = circuit.create_variable(key).unwrap();
         let input_len = 8;
-        let data: Vec<F> = (0..input_len).map(|_| F::rand(&mut prng)).collect_vec();
+        let data: Vec<F> = (0..input_len).map(|_| F::rand(&mut prng)).collect();
         let data_vars: Vec<Variable> = data
             .iter()
             .map(|&x| circuit.create_variable(x).unwrap())
-            .collect_vec();
+            .collect();
 
         let expected_fsks_output =
             RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &data, 1).unwrap();

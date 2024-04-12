@@ -11,6 +11,7 @@
 #[cfg(test)]
 extern crate std;
 
+#[cfg(any(test, feature = "schnorr"))]
 #[macro_use]
 extern crate derivative;
 
@@ -20,13 +21,15 @@ extern crate alloc;
 
 use ark_std::rand::{CryptoRng, RngCore};
 
+#[cfg(any(test, feature = "bls"))]
 pub mod bls_over_bls12381;
+#[cfg(any(test, feature = "bls"))]
 pub mod bls_over_bn254;
 pub mod constants;
 #[cfg(feature = "gadgets")]
 pub mod gadgets;
+#[cfg(any(test, feature = "schnorr"))]
 pub mod schnorr;
-pub use bls_over_bls12381::BLSSignatureScheme;
 
 use ark_std::{
     format,
@@ -35,7 +38,6 @@ use ark_std::{
 use blst::BLST_ERROR;
 use core::fmt::Debug;
 use displaydoc::Display;
-pub use schnorr::SchnorrSignatureScheme;
 use serde::{Deserialize, Serialize};
 use zeroize::Zeroize;
 

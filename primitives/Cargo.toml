@@ -83,11 +83,6 @@ harness = false
 name = "minroot"
 harness = false
 
-[[bench]]
-name = "bls-signature"
-path = "benches/bls_signature.rs"
-harness = false
-
 [features]
 default = ["parallel"]
 std = [

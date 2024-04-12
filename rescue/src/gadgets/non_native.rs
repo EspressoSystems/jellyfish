@@ -9,18 +9,16 @@
 //! The major adjustment is to move from `Variable`s (that are native to
 //! a plonk circuit) to `FpElemVar`s that are non-native to the circuit.
 
+use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE};
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
-use itertools::Itertools;
 use jf_relation::{
     errors::CircuitError::{self, ParameterError},
     gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
     Circuit, PlonkCircuit,
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
-
-use super::{PermutationGadget, RescueGadget, SpongeStateVar};
 
 /// Array of variables representing a Rescue state (4 field elements), and also
 /// the modulus of the non-native evaluating field.
@@ -53,7 +51,7 @@ where
         let keys = keys
             .iter()
             .map(|key| RescueVector::from(key.elems().as_slice()))
-            .collect_vec();
+            .collect::<Vec<_>>();
         let mds_matrix = permutation.mds_matrix_ref();
 
         self.permutation_with_const_round_keys(input_var, mds_matrix, keys.as_slice())
@@ -376,7 +374,7 @@ where
                     Some(input_var.state[0].two_power_m()),
                 )
             })
-            .collect::<Result<Vec<FpElem<F>>, _>>()?;
+            .collect::<Result<_, _>>()?;
 
         // add constant to input
         let mut state = [FpElemVar::default(); STATE_SIZE];
@@ -432,7 +430,7 @@ where
         let input_val_fields_elems_f: Vec<F> = input_fp_elem
             .iter()
             .map(|x| x.witness(self))
-            .collect::<Result<Vec<F>, CircuitError>>()?;
+            .collect::<Result<_, CircuitError>>()?;
 
         let input_val_fields_elems_t: Vec<T> = input_val_fields_elems_f
             .iter()
@@ -452,7 +450,7 @@ where
                     Some(input_fp_elem[0].two_power_m()),
                 )
             })
-            .collect::<Result<Vec<FpElem<F>>, _>>()?;
+            .collect::<Result<_, _>>()?;
 
         // 1.3 prepare the output vector
         let mut output_val_t = input_val;
@@ -484,7 +482,7 @@ where
                         Some(input_fp_elem[0].two_power_m()),
                     )
                 })
-                .collect::<Result<Vec<FpElem<F>>, _>>()?;
+                .collect::<Result<_, _>>()?;
 
             // 2.2 output = <input, matrix[i]> + c[i]
             let output_var2 = self.non_native_linear_gen::<T>(
@@ -520,7 +518,7 @@ where
         let input_val_fields_elems_f: Vec<F> = input_fp_elem_var
             .iter()
             .map(|x| x.witness(self))
-            .collect::<Result<Vec<F>, CircuitError>>()?;
+            .collect::<Result<_, CircuitError>>()?;
 
         let input_val_fields_elems_t: Vec<T> = input_val_fields_elems_f
             .iter()
@@ -623,7 +621,7 @@ where
             .map(|(&left_var, &right_var)| -> Result<_, CircuitError> {
                 self.mod_add(&left_var, &right_var, &modulus)
             })
-            .collect::<Result<Vec<FpElemVar<F>>, _>>()?;
+            .collect::<Result<_, _>>()?;
 
         Ok(RescueNonNativeStateVar {
             state: [output_var[0], output_var[1], output_var[2], output_var[3]],
@@ -669,7 +667,6 @@ mod tests {
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ff::PrimeField;
     use ark_std::{vec, vec::Vec};
-    use itertools::Itertools;
     use jf_relation::{
         gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
         Circuit, PlonkCircuit,
@@ -1002,7 +999,7 @@ mod tests {
         let mut prng = jf_utils::test_rng();
 
         // setup the inputs
-        let data_t: Vec<T> = (0..2 * CRHF_RATE).map(|_| T::rand(&mut prng)).collect_vec();
+        let data_t: Vec<T> = (0..2 * CRHF_RATE).map(|_| T::rand(&mut prng)).collect();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
             .iter()
@@ -1055,7 +1052,7 @@ mod tests {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         let size = 2 * CRHF_RATE + 1; // Non multiple of RATE
-        let data_t = (0..size).map(|_| T::rand(&mut prng)).collect_vec();
+        let data_t = (0..size).map(|_| T::rand(&mut prng)).collect::<Vec<_>>();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
             .iter()
@@ -1093,7 +1090,7 @@ mod tests {
             let mut circuit = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
             // setup the inputs
-            let data_t: Vec<T> = (0..input_len).map(|_| T::rand(&mut prng)).collect_vec();
+            let data_t: Vec<T> = (0..input_len).map(|_| T::rand(&mut prng)).collect();
             let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
             let data_vars: Vec<FpElemVar<F>> = data_f
                 .iter()
@@ -1213,7 +1210,7 @@ mod tests {
 
         // data
         let input_len = 8;
-        let data_t: Vec<T> = (0..input_len).map(|_| T::rand(&mut prng)).collect_vec();
+        let data_t: Vec<T> = (0..input_len).map(|_| T::rand(&mut prng)).collect();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
             .iter()

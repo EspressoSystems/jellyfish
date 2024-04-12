@@ -12,15 +12,6 @@ use crate::{
     constants::{tag, CS_ID_SCHNORR},
     SignatureError,
 };
-use jf_primitives_core::crhf::CRHF;
-use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
-// use crate::{
-//     constants::CS_ID_SCHNORR,
-//     crhf::{VariableLengthRescueCRHF, CRHF},
-//     errors::SignatureError,
-//     rescue::RescueParameter,
-//     utils::curve_cofactor,
-// };
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveConfig, CurveGroup, Group,
@@ -35,6 +26,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use jf_primitives_core::crhf::CRHF;
+use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
 use jf_utils::{curve_cofactor, fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
 use zeroize::Zeroize;
