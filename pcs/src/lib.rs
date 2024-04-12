@@ -5,13 +5,28 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Polynomial Commitment Scheme
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![deny(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[macro_use]
+extern crate derivative;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
 pub mod errors;
-pub(crate) mod multilinear_kzg;
+pub mod multilinear_kzg;
 mod poly;
 pub mod prelude;
 mod structs;
+mod toeplitz;
 pub mod transcript;
-pub(crate) mod univariate_kzg;
+pub mod univariate_kzg;
 
 use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
@@ -391,5 +406,35 @@ pub fn checked_fft_size(degree: usize) -> Result<usize, PCSError> {
         degree.checked_mul(2).ok_or_else(err)
     } else {
         degree.checked_next_power_of_two().ok_or_else(err)
+    }
+}
+
+/// dependencies required for ICICLE-related code, group import for convenience
+#[cfg(feature = "icicle")]
+pub mod icicle_deps {
+    use anyhow::anyhow;
+    pub use icicle_core::{
+        curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
+        msm::{MSMConfig, MSM},
+    };
+    pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
+
+    /// curve-specific types both from arkworks and from ICICLE
+    /// including Pairing, CurveCfg, Fr, Fq etc.
+    pub mod curves {
+        pub use ark_bn254::Bn254;
+        pub use icicle_bn254::curve::CurveCfg as IcicleBn254;
+    }
+
+    pub use crate::pcs::univariate_kzg::icicle::GPUCommittable;
+
+    // TODO: remove this after `warmup()` is added upstream
+    // https://github.com/ingonyama-zk/icicle/pull/422#issuecomment-1980881638
+    /// Create a new stream and warmup
+    pub fn warmup_new_stream() -> anyhow::Result<CudaStream> {
+        let stream = CudaStream::create().map_err(|e| anyhow!("{:?}", e))?;
+        let _warmup_bytes = HostOrDeviceSlice::<'_, u8>::cuda_malloc_async(1024, &stream)
+            .map_err(|e| anyhow!("{:?}", e))?;
+        Ok(stream)
     }
 }

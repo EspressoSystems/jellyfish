@@ -23,7 +23,7 @@ use itertools::{
     Itertools,
 };
 
-use crate::errors::PrimitivesError;
+use crate::prelude::PCSError;
 
 // TODO: (alex) change to trait alias once stabilized in Rust:
 // `https://doc.rust-lang.org/unstable-book/language-features/trait-alias.html`
@@ -140,9 +140,9 @@ where
     pub fn batch_evaluate_rou(
         &mut self,
         domain: &Radix2EvaluationDomain<F>,
-    ) -> Result<Vec<T>, PrimitivesError> {
+    ) -> Result<Vec<T>, PCSError> {
         if self.coeffs.len() > domain.size() {
-            Err(PrimitivesError::ParameterError(
+            Err(PCSError::InvalidParameters(
                 ark_std::format!(
                     "Polynomial with {} num_of_coeffs can't be evaluated on a smaller domain with size {}",
                     self.coeffs.len(), domain.size(),

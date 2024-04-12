@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementing Structured Reference Strings for multilinear polynomial KZG
-use crate::pcs::{
+use crate::{
     prelude::PCSError,
     univariate_kzg::srs::{
         UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
@@ -246,7 +246,7 @@ impl<E: Pairing> StructuredReferenceString
 #[cfg(any(test, feature = "test-srs"))]
 mod tests {
     use super::*;
-    use crate::pcs::multilinear_kzg::util::eq_eval;
+    use crate::multilinear_kzg::util::eq_eval;
     use ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
     use ark_ff::{Field, PrimeField, Zero};
     use ark_poly::DenseMultilinearExtension;

@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Prelude
-pub use crate::pcs::{
+pub use crate::{
     errors::PCSError,
     multilinear_kzg::{
         srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam},

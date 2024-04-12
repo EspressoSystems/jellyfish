@@ -10,7 +10,7 @@ use super::{
     util::{build_l, compute_w_circ_l, merge_polynomials},
     verify_internal, MultilinearKzgBatchProof, MLE,
 };
-use crate::pcs::{
+use crate::{
     multilinear_kzg::util::get_uni_domain,
     prelude::{Commitment, UnivariateProverParam, UnivariateVerifierParam},
     transcript::IOPTranscript,
@@ -303,7 +303,7 @@ mod tests {
         super::{util::get_batched_nv, *},
         *,
     };
-    use crate::pcs::multilinear_kzg::util::{compute_qx_degree, generate_evaluations};
+    use crate::multilinear_kzg::util::{compute_qx_degree, generate_evaluations};
     use ark_bls12_381::Bls12_381 as E;
     use ark_std::{log2, UniformRand};
     use jf_utils::test_rng;

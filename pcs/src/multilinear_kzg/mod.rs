@@ -10,7 +10,7 @@ mod batching;
 pub(crate) mod srs;
 pub(crate) mod util;
 
-use crate::pcs::{
+use crate::{
     prelude::{Commitment, UnivariateUniversalParams},
     univariate_kzg::UnivariateKzgProof,
     PCSError, PolynomialCommitmentScheme, StructuredReferenceString,

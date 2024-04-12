@@ -4,19 +4,18 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use std::time::{Duration, Instant};
-
 use ark_bls12_381::Bls12_381;
 use ark_bn254::Bn254;
 use ark_ec::pairing::Pairing;
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use jf_primitives::pcs::{
+use jf_pcs::{
     prelude::{MultilinearKzgPCS, PolynomialCommitmentScheme, MLE},
     StructuredReferenceString,
 };
 use jf_utils::test_rng;
+use std::time::{Duration, Instant};
 
 const MIN_NUM_VARS: usize = 12;
 const MAX_NUM_VARS: usize = 22;

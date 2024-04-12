@@ -7,11 +7,12 @@
 //! Toeplitz matrices and Circulant matrices operations
 //! References: `https://eprint.iacr.org/2020/1516.pdf`
 
-use crate::errors::PrimitivesError;
 use ark_ff::FftField;
 use ark_poly::{domain::DomainCoeff, EvaluationDomain, GeneralEvaluationDomain};
 use ark_std::{format, ops::Mul, string::ToString, vec::Vec};
 use jf_utils::hadamard_product;
+
+use crate::prelude::PCSError;
 
 /// An `NxN` [Circulant Matrix](https://en.wikipedia.org/wiki/Circulant_matrix)
 /// is unambiguously represented by its first column, and has the form:
@@ -30,6 +31,7 @@ pub struct CirculantMatrix<F: FftField> {
 
 impl<F: FftField> CirculantMatrix<F> {
     /// Construct a Circulant matrix by its first column vector
+    #[allow(dead_code)]
     pub fn new(col: Vec<F>) -> Self {
         Self { col }
     }
@@ -38,17 +40,17 @@ impl<F: FftField> CirculantMatrix<F> {
     /// Details see Section 2.2.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     // TODO: (alex) think of ways to extend to arbitrary length vector (simply
     // truncate doesn't work).
-    pub fn fast_vec_mul<T>(&self, m: &[T]) -> Result<Vec<T>, PrimitivesError>
+    pub fn fast_vec_mul<T>(&self, m: &[T]) -> Result<Vec<T>, PCSError>
     where
         T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F>,
     {
         if !m.len().is_power_of_two() {
-            return Err(PrimitivesError::ParameterError(
+            return Err(PCSError::InvalidParameters(
                 "Fast Circulant Matrix mul only supports vector size of power of two.".to_string(),
             ));
         }
         if m.len() != self.col.len() {
-            return Err(PrimitivesError::ParameterError(
+            return Err(PCSError::InvalidParameters(
                 "Wrong input dimension for matrix mul.".to_string(),
             ));
         }
@@ -81,16 +83,16 @@ pub struct ToeplitzMatrix<F: FftField> {
 
 impl<F: FftField> ToeplitzMatrix<F> {
     /// constructor for a new Toeplitz matrix.
-    pub fn new(col: Vec<F>, row: Vec<F>) -> Result<Self, PrimitivesError> {
+    pub fn new(col: Vec<F>, row: Vec<F>) -> Result<Self, PCSError> {
         if col.is_empty() || col.len() != row.len() {
-            return Err(PrimitivesError::ParameterError(format!(
+            return Err(PCSError::InvalidParameters(format!(
                 "row: {}, col: {} should be both positive and equal",
                 row.len(),
                 col.len()
             )));
         }
         if col[0] != row[0] {
-            return Err(PrimitivesError::ParameterError(format!(
+            return Err(PCSError::InvalidParameters(format!(
                 "1st value in 1st col: {:?} should be the same as that in 1st row: {:?}",
                 col[0], row[0]
             )));
@@ -103,7 +105,7 @@ impl<F: FftField> ToeplitzMatrix<F> {
     ///
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
     // TODO: (alex) turn this into concurrent code after: https://github.com/EspressoSystems/jellyfish/issues/111
-    pub fn circulant_embedding(&self) -> Result<CirculantMatrix<F>, PrimitivesError> {
+    pub fn circulant_embedding(&self) -> Result<CirculantMatrix<F>, PCSError> {
         let mut extension_col = self.row.clone();
         extension_col.rotate_left(1);
         extension_col.reverse();
@@ -117,17 +119,17 @@ impl<F: FftField> ToeplitzMatrix<F> {
     /// circulant matrix and multiply there.
     ///
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
-    pub fn fast_vec_mul<T>(&self, v: &[T]) -> Result<Vec<T>, PrimitivesError>
+    pub fn fast_vec_mul<T>(&self, v: &[T]) -> Result<Vec<T>, PCSError>
     where
         T: for<'a> Mul<&'a F, Output = T> + DomainCoeff<F>,
     {
         if !v.len().is_power_of_two() {
-            return Err(PrimitivesError::ParameterError(
+            return Err(PCSError::InvalidParameters(
                 "Fast Toeplitz Matrix mul only supports vector size of power of two.".to_string(),
             ));
         }
         if v.len() != self.col.len() {
-            return Err(PrimitivesError::ParameterError(
+            return Err(PCSError::InvalidParameters(
                 "Wrong input dimension for matrix mul.".to_string(),
             ));
         }
@@ -153,14 +155,14 @@ impl<F: FftField> From<CirculantMatrix<F>> for ToeplitzMatrix<F> {
 }
 
 impl<F: FftField> TryFrom<ToeplitzMatrix<F>> for CirculantMatrix<F> {
-    type Error = PrimitivesError;
+    type Error = PCSError;
 
     fn try_from(t: ToeplitzMatrix<F>) -> Result<Self, Self::Error> {
         let mut expected_col = t.row;
         expected_col.reverse();
         expected_col.rotate_right(1);
         if expected_col != t.col {
-            return Err(PrimitivesError::ParameterError(
+            return Err(PCSError::InvalidParameters(
                 "Not a Circulant Matrix".to_string(),
             ));
         }
@@ -271,7 +273,7 @@ mod tests {
     }
 
     #[test]
-    fn test_circulant_mul() -> Result<(), PrimitivesError> {
+    fn test_circulant_mul() -> Result<(), PCSError> {
         let mut rng = test_rng();
         // happy path
         const N: usize = 16;
@@ -325,7 +327,7 @@ mod tests {
     }
 
     #[test]
-    fn test_toeplitz_mul() -> Result<(), PrimitivesError> {
+    fn test_toeplitz_mul() -> Result<(), PCSError> {
         let mut rng = test_rng();
         const N: usize = 16;
 

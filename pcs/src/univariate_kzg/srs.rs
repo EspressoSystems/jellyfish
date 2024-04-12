@@ -6,7 +6,7 @@
 
 //! Implementing Structured Reference Strings for univariate polynomial KZG
 
-use crate::pcs::{PCSError, StructuredReferenceString};
+use crate::{PCSError, StructuredReferenceString};
 use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
@@ -161,7 +161,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
 #[cfg(any(test, feature = "test-srs"))]
 mod tests {
     use super::UnivariateUniversalParams;
-    use crate::pcs::PCSError;
+    use crate::PCSError;
     use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, CurveGroup};
     use ark_ff::PrimeField;
     use ark_std::{

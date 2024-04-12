@@ -6,7 +6,7 @@
 
 //! Useful utilities for KZG PCS
 
-use crate::pcs::prelude::PCSError;
+use crate::prelude::PCSError;
 use ark_ff::PrimeField;
 use ark_poly::{
     univariate::DensePolynomial, DenseMultilinearExtension, EvaluationDomain, Evaluations,

@@ -7,8 +7,8 @@ use ark_ec::pairing::Pairing;
 use ark_poly::{univariate::DensePolynomial, DenseUVPolynomial};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 #[cfg(feature = "icicle")]
-use jf_primitives::icicle_deps::*;
-use jf_primitives::pcs::{
+use jf_pcs::icicle_deps::*;
+use jf_pcs::{
     prelude::{PolynomialCommitmentScheme, UnivariateKzgPCS},
     StructuredReferenceString,
 };

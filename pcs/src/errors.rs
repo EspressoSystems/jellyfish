@@ -7,9 +7,8 @@
 //! Error module.
 
 use super::transcript::TranscriptError;
-use crate::errors::PrimitivesError;
 use ark_serialize::SerializationError;
-use ark_std::string::{String, ToString};
+use ark_std::string::String;
 use displaydoc::Display;
 #[cfg(feature = "icicle")]
 use icicle_core::error::IcicleError;
@@ -49,12 +48,6 @@ impl From<SerializationError> for PCSError {
 impl From<TranscriptError> for PCSError {
     fn from(e: TranscriptError) -> Self {
         Self::TranscriptError(e)
-    }
-}
-
-impl From<PrimitivesError> for PCSError {
-    fn from(e: PrimitivesError) -> Self {
-        Self::UpstreamError(e.to_string())
     }
 }
 

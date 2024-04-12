@@ -7,11 +7,8 @@
 //! Main module for univariate KZG commitment scheme
 
 use crate::{
-    pcs::{
-        poly::GeneralDensePolynomial, prelude::Commitment, PCSError, PolynomialCommitmentScheme,
-        StructuredReferenceString, UnivariatePCS,
-    },
-    toeplitz::ToeplitzMatrix,
+    poly::GeneralDensePolynomial, prelude::Commitment, toeplitz::ToeplitzMatrix, PCSError,
+    PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
 };
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,

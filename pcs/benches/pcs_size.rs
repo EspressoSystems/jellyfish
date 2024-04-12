@@ -4,7 +4,7 @@ use ark_ec::pairing::Pairing;
 use ark_ff::UniformRand;
 use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
 use ark_serialize::CanonicalSerialize;
-use jf_primitives::pcs::{
+use jf_pcs::{
     prelude::{MultilinearKzgPCS, PolynomialCommitmentScheme, MLE},
     StructuredReferenceString,
 };
