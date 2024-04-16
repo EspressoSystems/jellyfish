@@ -41,4 +41,4 @@ std = [
         "itertools/use_std", "jf-utils/std", "jf-relation/std",
         "jf-primitives-core/std",
 ]
-gadgets = [ "jf-relation" ]
+gadgets = ["jf-relation"]

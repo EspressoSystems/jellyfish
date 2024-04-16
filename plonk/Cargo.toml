@@ -22,8 +22,11 @@ dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
+jf-pcs = { path = "../pcs", default-features = false }
 jf-primitives = { path = "../primitives", default-features = false }
+jf-primitives-core = { path = "../core", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
+jf-rescue = { path = "../rescue", default-features = false, features = ["gadgets"] }
 jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
@@ -62,6 +65,7 @@ std = [
     "jf-primitives/std",
     "jf-relation/std",
     "jf-utils/std",
+    "jf-rescue/std",
     "merlin/std",
     "num-bigint/std",
     "rand_chacha/std",

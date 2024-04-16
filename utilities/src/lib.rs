@@ -5,7 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
 #[cfg(test)]
 extern crate std;
 
@@ -14,6 +15,7 @@ extern crate std;
 extern crate alloc;
 
 mod conversion;
+pub mod hash_to_group;
 mod macros;
 mod multi_pairing;
 pub mod par_utils;

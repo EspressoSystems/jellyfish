@@ -11,7 +11,7 @@ use ark_bn254::Fr as Fr254;
 use ark_pallas::Fr as PastaFr;
 use ark_std::rand::rngs::StdRng;
 use criterion::{Criterion, Throughput};
-use jf_primitives::vdf::{
+use jf_vdf::{
     minroot::{MinRoot, MinRootElement},
     VDF,
 };

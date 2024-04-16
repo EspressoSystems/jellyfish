@@ -35,7 +35,7 @@ pub enum PlonkError {
     /// Plonk proof verification failed due to wrong proof
     WrongProof,
     /// Rescue Error
-    PrimitiveError(jf_primitives::errors::PrimitivesError),
+    RescueError(jf_rescue::RescueError),
     /// Invalid parameters
     InvalidParameters(String),
     /// Non-native field overflow
@@ -66,9 +66,9 @@ impl From<ark_serialize::SerializationError> for PlonkError {
     }
 }
 
-impl From<jf_primitives::errors::PrimitivesError> for PlonkError {
-    fn from(e: jf_primitives::errors::PrimitivesError) -> Self {
-        Self::PrimitiveError(e)
+impl From<jf_rescue::RescueError> for PlonkError {
+    fn from(e: jf_rescue::RescueError) -> Self {
+        Self::RescueError(e)
     }
 }
 

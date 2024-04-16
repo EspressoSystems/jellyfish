@@ -1,18 +1,16 @@
 //! BLS signature based VRF
 use super::Vrf;
-use crate::{
-    errors::PrimitivesError,
-    signatures::{
-        bls_over_bls12381::{BLSSignKey, BLSSignature, BLSVerKey},
-        BLSSignatureScheme, SignatureScheme,
-    },
-};
+use crate::errors::PrimitivesError;
 use ark_std::{
     boxed::Box,
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
 use digest::{Digest, DynDigest};
+use jf_signature::{
+    bls_over_bls12381::{BLSSignKey, BLSSignature, BLSSignatureScheme, BLSVerKey},
+    SignatureScheme,
+};
 use sha2::{Sha256, Sha512};
 
 /// Supported Cipher Suites for BLS VRF.
@@ -81,7 +79,7 @@ impl Vrf for BLSVRFScheme {
         pp: &Self::PublicParameter,
         prng: &mut R,
     ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError> {
-        <BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)
+        Ok(<BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)?)
     }
 
     /// Creates the VRF proof associated with a VRF secret key.
@@ -92,7 +90,9 @@ impl Vrf for BLSVRFScheme {
         input: &Self::Input,
         prng: &mut R,
     ) -> Result<Self::Proof, PrimitivesError> {
-        <BLSSignatureScheme as SignatureScheme>::sign(pp, secret_key, input, prng)
+        Ok(<BLSSignatureScheme as SignatureScheme>::sign(
+            pp, secret_key, input, prng,
+        )?)
     }
 
     /// Computes the VRF output associated with a VRF proof.

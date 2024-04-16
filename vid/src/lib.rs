@@ -8,7 +8,8 @@
 //! See <https://arxiv.org/abs/2111.12323> section 1.3--1.4 for intro to VID semantics.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;

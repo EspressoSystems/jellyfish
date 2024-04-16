@@ -8,7 +8,8 @@
 //! well as the plonk circuit implementation of those primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -21,14 +22,18 @@ extern crate derivative;
 extern crate alloc;
 
 pub mod aead;
-pub mod circuit;
 pub mod elgamal;
 pub mod errors;
-pub mod hash_to_group;
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
 pub mod vrf;
 
 // Re-exporting rescue
 pub use jf_merkle_tree as merkle_tree;
+pub use jf_pcs as pcs;
 pub use jf_rescue as rescue;
+pub use jf_signature as signatures;
+pub use jf_vdf as vdf;
+pub use jf_vid as vid;
 
 pub(crate) mod utils;

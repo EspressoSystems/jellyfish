@@ -6,7 +6,6 @@
 
 //! Hash to Elliptic Curve implementation of <https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/>
 
-use crate::errors::PrimitivesError;
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig},
     AffineRepr,
@@ -29,10 +28,7 @@ pub trait TEHashToGroup: TECurveConfig + Sized {
     //
     // For specific curves we may want to overload it with a more efficient
     // algorithm, such as IETF BLS draft.
-    fn hash_to_group<B: AsRef<[u8]>>(
-        data: B,
-        cs_id: B,
-    ) -> Result<Projective<Self>, PrimitivesError> {
+    fn hash_to_group<B: AsRef<[u8]>>(data: B, cs_id: B) -> Projective<Self> {
         let mut hasher = Sha256::new();
         hasher.update([cs_id.as_ref(), data.as_ref()].concat());
         let mut seed = [0u8; 32];
@@ -43,7 +39,7 @@ pub trait TEHashToGroup: TECurveConfig + Sized {
             // a boolean flag to decide if y is positive or not
             let x_flag = rng.gen();
             if let Some(p) = Affine::<Self>::get_point_from_y_unchecked(y, x_flag) {
-                return Ok(p.mul_by_cofactor_to_group());
+                return p.mul_by_cofactor_to_group();
             }
         }
     }
@@ -75,7 +71,6 @@ mod test {
     fn test_hash_to_group_helper<P: TEHashToGroup>() {
         let data = vec![1u8, 2, 3, 4, 5];
         let _g1 =
-            <P as TEHashToGroup>::hash_to_group::<&[u8]>(data.as_ref(), "Jubjub curves".as_ref())
-                .unwrap();
+            <P as TEHashToGroup>::hash_to_group::<&[u8]>(data.as_ref(), "Jubjub curves".as_ref());
     }
 }

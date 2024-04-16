@@ -7,7 +7,8 @@
 //! Trait and implementation for a Verifiable Delay Function (VDF) <https://eprint.iacr.org/2018/601.pdf>.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;

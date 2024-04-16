@@ -6,7 +6,8 @@
 //! Module for signature primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(warnings)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -49,6 +50,8 @@ pub enum SignatureError {
     /// Verification failed, {0}
     VerificationError(String),
 }
+
+impl ark_std::error::Error for SignatureError {}
 
 impl From<BLST_ERROR> for SignatureError {
     fn from(e: BLST_ERROR) -> Self {

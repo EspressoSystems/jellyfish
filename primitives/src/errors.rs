@@ -7,19 +7,10 @@
 //! Error types.
 
 use ark_serialize::SerializationError;
-use ark_std::{
-    format,
-    string::{String, ToString},
-};
+use ark_std::string::String;
 use displaydoc::Display;
 use jf_rescue::RescueError;
-
-/// A glorified [`bool`] that leverages compile lints to encourage the caller to
-/// use the result.
-///
-/// Intended as the return type for verification of proofs, signatures, etc.
-/// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
-pub type VerificationResult = Result<(), ()>;
+use jf_signature::SignatureError;
 
 /// A `enum` specifying the possible failure modes of the primitives.
 #[derive(Debug, Display)]
@@ -44,6 +35,15 @@ pub enum PrimitivesError {
 impl From<SerializationError> for PrimitivesError {
     fn from(e: SerializationError) -> Self {
         Self::DeserializationError(e)
+    }
+}
+
+impl From<SignatureError> for PrimitivesError {
+    fn from(e: SignatureError) -> Self {
+        match e {
+            SignatureError::ParameterError(s) => PrimitivesError::ParameterError(s),
+            SignatureError::VerificationError(s) => PrimitivesError::VerificationError(s),
+        }
     }
 }
 

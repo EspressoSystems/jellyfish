@@ -4,20 +4,8 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use crate::{elgamal, signatures::schnorr};
+use crate::elgamal;
 use ark_ec::{twisted_edwards::TECurveConfig as Config, CurveGroup};
-use ark_ff::PrimeField;
-
-impl<F, P> From<&schnorr::VerKey<P>> for (F, F)
-where
-    F: PrimeField,
-    P: Config<BaseField = F>,
-{
-    fn from(vk: &schnorr::VerKey<P>) -> Self {
-        let point = vk.0.into_affine();
-        (point.x, point.y)
-    }
-}
 
 impl<P> From<&elgamal::EncKey<P>> for (P::BaseField, P::BaseField)
 where

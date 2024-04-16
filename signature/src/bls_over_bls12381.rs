@@ -16,7 +16,7 @@
 //!
 //! ```
 //! use rand_chacha::{ChaCha20Rng, rand_core::SeedableRng};
-//! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
+//! use jf_signature::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
 //! let pp = BLSSignatureScheme::param_gen::<ChaCha20Rng>(None)?;
 //!
@@ -41,7 +41,7 @@
 //! ```
 //! use rand_chacha::{ChaCha20Rng, rand_core::{SeedableRng, RngCore}};
 //! use sha2::{Sha256, Digest};
-//! use jf_primitives::signatures::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
+//! use jf_signature::{SignatureScheme, bls_over_bls12381::BLSSignatureScheme};
 //!
 //! let mut rng = ChaCha20Rng::from_seed([0u8; 32]); // seed from proper entropy source in practice!
 //! let pp = BLSSignatureScheme::param_gen::<ChaCha20Rng>(None)?;

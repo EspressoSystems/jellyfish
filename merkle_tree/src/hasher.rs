@@ -7,8 +7,8 @@
 //! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
 //!
 //! ```
-//! # use jf_primitives::errors::MerkleTreeError;
-//! use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
+//! # use jf_merkle_tree::errors::MerkleTreeError;
+//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -> Result<(), MerkleTreeError> {
@@ -79,8 +79,8 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 ///
 /// Do this:
 /// ```
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
-/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// # use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
+/// # use jf_merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
 ///     H: HasherDigest,
@@ -94,8 +94,8 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 /// ```
 /// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
 /// # use ark_serialize::Write;
-/// # use jf_primitives::merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
-/// # use jf_primitives::merkle_tree::hasher::HasherDigest;
+/// # use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
+/// # use jf_merkle_tree::hasher::HasherDigest;
 /// fn generic_over_hasher<H>()
 /// where
 ///     H: Digest + Write + Send + Sync,

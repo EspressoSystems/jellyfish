@@ -19,11 +19,17 @@ ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 jf-primitives-core = { path = "../core", default-features = false }
-jf-utils = { path = "../utilities", default-features = false }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "minroot"
+harness = false
 
 [features]
 default = []
 std = [
     "ark-pallas/std", "ark-bls12-381/std", "ark-bn254/std", "ark-std/std",
-    "ark-ff/std", "ark-ec/std", "jf-utils/std", "jf-primitives-core/std"
+    "ark-ff/std", "ark-ec/std", "jf-primitives-core/std"
 ]

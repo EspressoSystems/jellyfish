@@ -1,11 +1,10 @@
-use jf_primitives::{
-    errors::PrimitivesError,
-    merkle_tree::{hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme},
+use jf_merkle_tree::{
+    errors::MerkleTreeError, hasher::HasherMerkleTree, MerkleCommitment, MerkleTreeScheme,
 };
 use sha2::Sha256;
 
 #[test]
-fn doctest_example() -> Result<(), PrimitivesError> {
+fn doctest_example() -> Result<(), MerkleTreeError> {
     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     // payload type is `usize`, hash function is `Sha256`.

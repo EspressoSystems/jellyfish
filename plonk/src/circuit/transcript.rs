@@ -11,10 +11,6 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
-use jf_primitives::{
-    circuit::rescue::RescueNativeGadget,
-    rescue::{RescueParameter, STATE_SIZE},
-};
 use jf_relation::{
     errors::CircuitError::{self, ParameterError},
     gadgets::{
@@ -23,6 +19,7 @@ use jf_relation::{
     },
     Circuit, PlonkCircuit, Variable,
 };
+use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter, STATE_SIZE};
 
 /// Struct of variables representing a Rescue transcript type, including
 /// `STATE_SIZE` variables for the state, and a vector of variables for

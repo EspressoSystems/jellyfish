@@ -4,5 +4,5 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Circuit implementation of various crypto primitives.
+//! Gadget implementation of various crypto primitives.
 pub mod elgamal;

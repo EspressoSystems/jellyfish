@@ -10,7 +10,7 @@ extern crate criterion;
 use ark_bn254::Fr as Fr254;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
 use criterion::Criterion;
-use jf_primitives::reed_solomon_code::reed_solomon_erasure_decode;
+use jf_utils::reed_solomon_code::reed_solomon_erasure_decode;
 use std::time::Duration;
 
 const BENCH_ENCODE: &str = "reed_solomon_encode_4096";

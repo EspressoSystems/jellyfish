@@ -57,4 +57,9 @@ parallel = [
     "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel",
     "jf-pcs/parallel", "rayon",
 ]
+seq-fk-23 = [] # FK23 without parallelism
 gpu-vid = ["jf-pcs/icicle"]
+print-trace = ["ark-std/print-trace"]
+kzg-print-trace = [
+        "print-trace",
+] # leave disabled to reduce pollution in downstream users of KZG (such as VID)

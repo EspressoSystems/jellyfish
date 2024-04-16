@@ -6,11 +6,7 @@
 
 //! Circuit implementation of the ElGamal scheme.
 
-use crate::{
-    circuit::rescue::{RescueGadget, RescueStateVar},
-    elgamal::{Ciphertext, EncKey},
-    rescue::{RescueParameter, PRP, STATE_SIZE},
-};
+use crate::elgamal::{Ciphertext, EncKey};
 use ark_ec::{
     twisted_edwards::{Affine, TECurveConfig},
     AffineRepr, CurveGroup,
@@ -21,6 +17,10 @@ use jf_relation::{
     errors::CircuitError,
     gadgets::ecc::{PointVariable, TEPoint},
     Circuit, PlonkCircuit, Variable,
+};
+use jf_rescue::{
+    gadgets::{RescueGadget, RescueStateVar},
+    RescueParameter, PRP, STATE_SIZE,
 };
 use jf_utils::compute_len_to_next_multiple;
 
@@ -250,12 +250,8 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        circuit::{
-            elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
-            rescue::RescueGadget,
-        },
         elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
-        rescue::{RescueParameter, RescueVector, STATE_SIZE},
+        gadgets::elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
     };
     use ark_ec::{twisted_edwards::TECurveConfig, CurveGroup};
     use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
@@ -265,6 +261,7 @@ mod tests {
     use ark_ff::UniformRand;
     use ark_std::{vec, vec::Vec};
     use jf_relation::{gadgets::ecc::TEPoint, Circuit, PlonkCircuit, Variable};
+    use jf_rescue::{gadgets::RescueGadget, RescueParameter, RescueVector, STATE_SIZE};
     use jf_utils::fr_to_fq;
 
     #[test]
