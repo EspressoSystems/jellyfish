@@ -329,7 +329,7 @@ mod mt_tests {
         mt.update(BigUint::from(32u64), F::from(16u64)).unwrap();
         // forget a leave
         mt.forget(BigUint::from(123u64)).expect_ok().unwrap();
-        // Check that new insertion and forgeting are reflected
+        // Check that new insertion and forgetting are reflected
         assert_eq!(
             mt.into_iter().collect::<Vec<_>>(),
             [

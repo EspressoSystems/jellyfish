@@ -247,7 +247,7 @@ mod tests {
 
         let label = "testing".as_ref();
 
-        let mut transcipt_var = RescueTranscriptVar::new(&mut circuit);
+        let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
         let mut transcript = RescueTranscript::<F>::new(label);
 
         for _ in 0..10 {
@@ -261,14 +261,14 @@ mod tests {
 
                 transcript.append_message(label, msg.as_bytes()).unwrap();
 
-                transcipt_var
+                transcript_var
                     .append_message_vars(label, &message_vars)
                     .unwrap();
             }
 
             let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
 
-            let challenge_var = transcipt_var
+            let challenge_var = transcript_var
                 .get_and_append_challenge_var::<E>(label, &mut circuit)
                 .unwrap();
 

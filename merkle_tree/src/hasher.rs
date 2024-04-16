@@ -73,7 +73,7 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 
 /// Convenience trait and blanket impl for downstream trait bounds.
 ///
-/// Useful for downstream code that's generic ofer [`Digest`] hasher `H`.
+/// Useful for downstream code that's generic offer [`Digest`] hasher `H`.
 ///
 /// # Example
 ///
