@@ -257,7 +257,7 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
     }
 
     /// Compute and return the polynomial that interpolates the lookup domain
-    /// sepration selectors for the lookup gates. Return an error if the
+    /// separation selectors for the lookup gates. Return an error if the
     /// circuit does not support lookup or has not been finalized.
     fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
         Err(CircuitError::LookupUnsupported)

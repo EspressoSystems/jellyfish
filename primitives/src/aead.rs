@@ -76,7 +76,7 @@ impl EncKey {
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
         let ephemeral_keypair = crypto_kx::Keypair::generate(&mut rng);
         // `crypto_kx` generates a pair of shared secrets, see <https://libsodium.gitbook.io/doc/key_exchange>
-        // we use the transimission key of the ephemeral sender (equals to the receiving
+        // we use the transmission key of the ephemeral sender (equals to the receiving
         // key of the server) as the shared secret.
         let shared_secret = ephemeral_keypair.session_keys_to(&self.0).tx;
         let cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());

@@ -148,7 +148,7 @@ where
     T: NodeValue,
     N: Namespace,
 {
-    /// Initializze an empty NMT
+    /// Initialize an empty NMT
     pub fn new(height: usize) -> Self {
         let namespace_ranges: BTreeMap<N, Range<u64>> = BTreeMap::new();
         let inner = InnerTree::<E, H, T, N, ARITY>::new(height);
