@@ -30,7 +30,7 @@
 //! let sig = BLSSignatureScheme::sign(&pp, &sk, &msg, &mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&pp, &pk, &msg, &sig).is_ok());
 //!
-//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! # Ok::<(), Box<dyn ark_std::error::Error>>(())
 //! ```
 //!
 //! ## Generating independent keys from the same IKM
@@ -66,7 +66,7 @@
 //! let sig = BLSSignatureScheme::sign(&pp, &sk2, &msg, &mut rng)?;
 //! assert!(BLSSignatureScheme::verify(&pp, &pk2, &msg, &sig).is_ok());
 //!
-//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! # Ok::<(), Box<dyn ark_std::error::Error>>(())
 //! ```
 //!
 //! [zeroize]: https://github.com/RustCrypto/utils/tree/master/zeroize
