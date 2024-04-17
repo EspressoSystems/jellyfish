@@ -40,7 +40,7 @@ ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 criterion = "0.5.1"
 rand_chacha = { workspace = true }
-sha2 = { workspace = true }
+sha2 = "0.10"
 
 [[bench]]
 name = "bls-signature"

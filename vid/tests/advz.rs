@@ -2,10 +2,8 @@
 use ark_bls12_381::Bls12_381;
 use ark_ff::{Field, PrimeField};
 use ark_std::rand::seq::SliceRandom;
-use jf_primitives::{
-    pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::advz::Advz,
-};
+use jf_pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme};
+use jf_vid::advz::Advz;
 use sha2::Sha256;
 
 mod vid;

@@ -241,7 +241,7 @@ mod mt_tests {
         ToTraversalPath, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fq as Fq377;
-    use ark_bls12_381::Fq as Fq381;
+    use ark_bls12_381::Fr as Fr381;
     use ark_bn254::Fq as Fq254;
     use hashbrown::HashMap;
     use jf_rescue::RescueParameter;
@@ -251,7 +251,7 @@ mod mt_tests {
     fn test_universal_mt_builder() {
         test_universal_mt_builder_helper::<Fq254>();
         test_universal_mt_builder_helper::<Fq377>();
-        test_universal_mt_builder_helper::<Fq381>();
+        test_universal_mt_builder_helper::<Fr381>();
     }
 
     fn test_universal_mt_builder_helper<F: RescueParameter>() {
@@ -274,7 +274,7 @@ mod mt_tests {
     fn test_non_membership_lookup_and_verify() {
         test_non_membership_lookup_and_verify_helper::<Fq254>();
         test_non_membership_lookup_and_verify_helper::<Fq377>();
-        test_non_membership_lookup_and_verify_helper::<Fq381>();
+        test_non_membership_lookup_and_verify_helper::<Fr381>();
     }
 
     fn test_non_membership_lookup_and_verify_helper<F: RescueParameter>() {
@@ -304,11 +304,11 @@ mod mt_tests {
     fn test_update_and_lookup() {
         test_update_and_lookup_helper::<BigUint, Fq254>();
         test_update_and_lookup_helper::<BigUint, Fq377>();
-        test_update_and_lookup_helper::<BigUint, Fq381>();
+        test_update_and_lookup_helper::<BigUint, Fr381>();
 
         test_update_and_lookup_helper::<Fq254, Fq254>();
         test_update_and_lookup_helper::<Fq377, Fq377>();
-        test_update_and_lookup_helper::<Fq381, Fq381>();
+        test_update_and_lookup_helper::<Fr381, Fr381>();
     }
 
     fn test_update_and_lookup_helper<I, F>()
@@ -364,7 +364,7 @@ mod mt_tests {
     fn test_universal_mt_forget_remember() {
         test_universal_mt_forget_remember_helper::<Fq254>();
         test_universal_mt_forget_remember_helper::<Fq377>();
-        test_universal_mt_forget_remember_helper::<Fq381>();
+        test_universal_mt_forget_remember_helper::<Fr381>();
     }
 
     fn test_universal_mt_forget_remember_helper<F: RescueParameter>() {
@@ -557,11 +557,11 @@ mod mt_tests {
     fn test_persistent_update() {
         test_persistent_update_helper::<BigUint, Fq254>();
         test_persistent_update_helper::<BigUint, Fq377>();
-        test_persistent_update_helper::<BigUint, Fq381>();
+        test_persistent_update_helper::<BigUint, Fr381>();
 
         test_persistent_update_helper::<Fq254, Fq254>();
         test_persistent_update_helper::<Fq377, Fq377>();
-        test_persistent_update_helper::<Fq381, Fq381>();
+        test_persistent_update_helper::<Fr381, Fr381>();
     }
 
     fn test_persistent_update_helper<I, F>()
@@ -600,7 +600,7 @@ mod mt_tests {
     fn test_universal_mt_serde() {
         test_universal_mt_serde_helper::<Fq254>();
         test_universal_mt_serde_helper::<Fq377>();
-        test_universal_mt_serde_helper::<Fq381>();
+        test_universal_mt_serde_helper::<Fr381>();
     }
 
     fn test_universal_mt_serde_helper<F: RescueParameter + ToTraversalPath<3>>() {

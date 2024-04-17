@@ -28,9 +28,9 @@ use jf_rescue::gadgets::RescueNativeGadget;
 ///
 /// ```
 /// use ark_bls12_377::Fq;
-/// use jf_primitives::circuit::merkle_tree::MerkleTreeGadget;
+/// use jf_merkle_tree::gadgets::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_primitives::merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
+/// use jf_merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
 ///
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
@@ -113,9 +113,9 @@ where
 ///
 /// ```
 /// use ark_bls12_377::Fq;
-/// use jf_primitives::circuit::merkle_tree::{MerkleTreeGadget, UniversalMerkleTreeGadget};
+/// use jf_merkle_tree::gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget};
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_primitives::merkle_tree::{MerkleTreeScheme, MerkleCommitment, UniversalMerkleTreeScheme,
+/// use jf_merkle_tree::{MerkleTreeScheme, MerkleCommitment, UniversalMerkleTreeScheme,
 ///     prelude::RescueSparseMerkleTree};
 /// use hashbrown::HashMap;
 /// use num_bigint::BigUint;

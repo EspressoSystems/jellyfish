@@ -17,7 +17,7 @@ ark-poly = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 derivative = { workspace = true }
-digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
+digest = { workspace = true }
 displaydoc = { workspace = true }
 generic-array = { version = "0", features = [
         "serde",
@@ -38,7 +38,7 @@ ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
 criterion = "0.5.1"
 jf-pcs = { path = "../pcs", features = ["test-srs"] }
-sha2 = "0.10.1"
+sha2 = "0.10"
 
 [[bench]]
 name = "advz"

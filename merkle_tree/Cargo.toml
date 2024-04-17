@@ -21,7 +21,7 @@ derivative = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
-itertools = { workspace = true }
+itertools = { workspace = true, features = ["use_alloc"] }
 jf-primitives-core = { path = "../core", default-features = false }
 jf-relation = { path = "../relation", optional = true, default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
@@ -35,10 +35,12 @@ tagged-base64 = { workspace = true }
 [dev-dependencies]
 ark-ed-on-bls12-377 = "0.4.0"
 ark-ed-on-bls12-381 = "0.4.0"
+ark-ed-on-bls12-381-bandersnatch = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
+ark-std = { workspace = true, features = ["std"] }
 bincode = "1.3"
 criterion = "0.5.1"
-sha2 = { workspace = true }
+sha2 = "0.10"
 
 [[bench]]
 name = "merkle_path"
@@ -62,6 +64,5 @@ std = [
         "jf-primitives-core/std",
 ]
 gadgets = [
-    "jf-relation",
-    "jf-rescue/gadgets",
+    "jf-relation", "jf-rescue/gadgets",
 ]

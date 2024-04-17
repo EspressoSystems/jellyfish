@@ -4,7 +4,7 @@ use ark_std::{
     vec,
 };
 use core::iter::zip;
-use jf_primitives::vid::{VidError, VidResult, VidScheme};
+use jf_vid::{VidError, VidResult, VidScheme};
 
 /// Correctness test generic over anything that impls [`VidScheme`]
 ///

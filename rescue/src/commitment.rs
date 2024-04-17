@@ -108,6 +108,7 @@ mod test {
             let bad_blind = blind + $tr::from(1u8);
             assert!(
                 FixedLengthRescueCommitment::<$tr, 3, 4>::verify(&input, Some(&bad_blind), &c)
+                    .unwrap()
                     .is_err()
             );
             // bad input

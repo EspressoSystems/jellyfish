@@ -23,7 +23,7 @@ ark-poly = { version = "0.4.0", default-features = false }
 ark-serialize = { version = "0.4.0", default-features = false }
 ark-std = { version = "0.4.0", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
-digest = { version = "0.10", default-features = false }
+digest = { version = "0.10.1", default-features = false, features = [ "alloc" ] }
 displaydoc = { version = "0.2", default-features = false }
 hashbrown = "0.14.3"
 merlin = { version = "3.0.0", default-features = false }

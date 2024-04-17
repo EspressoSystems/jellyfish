@@ -112,7 +112,7 @@ mod mt_tests {
         *,
     };
     use ark_bls12_377::Fq as Fq377;
-    use ark_bls12_381::Fq as Fq381;
+    use ark_bls12_381::Fr as Fr381;
     use ark_bn254::Fq as Fq254;
     use jf_rescue::RescueParameter;
 
@@ -120,7 +120,7 @@ mod mt_tests {
     fn test_mt_builder() {
         test_mt_builder_helper::<Fq254>();
         test_mt_builder_helper::<Fq377>();
-        test_mt_builder_helper::<Fq381>();
+        test_mt_builder_helper::<Fr381>();
     }
 
     fn test_mt_builder_helper<F: RescueParameter>() {
@@ -132,7 +132,7 @@ mod mt_tests {
     fn test_mt_insertion() {
         test_mt_insertion_helper::<Fq254>();
         test_mt_insertion_helper::<Fq377>();
-        test_mt_insertion_helper::<Fq381>();
+        test_mt_insertion_helper::<Fr381>();
     }
 
     fn test_mt_insertion_helper<F: RescueParameter>() {
@@ -153,7 +153,7 @@ mod mt_tests {
     fn test_mt_lookup() {
         test_mt_lookup_helper::<Fq254>();
         test_mt_lookup_helper::<Fq377>();
-        test_mt_lookup_helper::<Fq381>();
+        test_mt_lookup_helper::<Fr381>();
     }
 
     fn test_mt_lookup_helper<F: RescueParameter>() {
@@ -207,7 +207,7 @@ mod mt_tests {
     fn test_mt_forget_remember() {
         test_mt_forget_remember_helper::<Fq254>();
         test_mt_forget_remember_helper::<Fq377>();
-        test_mt_forget_remember_helper::<Fq381>();
+        test_mt_forget_remember_helper::<Fr381>();
     }
 
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
@@ -269,7 +269,7 @@ mod mt_tests {
     fn test_mt_serde() {
         test_mt_serde_helper::<Fq254>();
         test_mt_serde_helper::<Fq377>();
-        test_mt_serde_helper::<Fq381>();
+        test_mt_serde_helper::<Fr381>();
     }
 
     fn test_mt_serde_helper<F: RescueParameter>() {
@@ -296,7 +296,7 @@ mod mt_tests {
     fn test_mt_iter() {
         test_mt_iter_helper::<Fq254>();
         test_mt_iter_helper::<Fq377>();
-        test_mt_iter_helper::<Fq381>();
+        test_mt_iter_helper::<Fr381>();
     }
 
     fn test_mt_iter_helper<F: RescueParameter>() {
