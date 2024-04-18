@@ -843,7 +843,7 @@ pub(crate) mod icicle {
                 ));
             }
 
-            let size = polys
+            let num_coeffs = polys
                 .iter()
                 .map(|poly| poly.degree() + 1)
                 .max()
@@ -852,14 +852,18 @@ pub(crate) mod icicle {
             let mut scalars_on_device = HostOrDeviceSlice::<
                 '_,
                 <Self::IC as IcicleCurve>::ScalarField,
-            >::cuda_malloc(size * polys.len())?;
+            >::cuda_malloc(num_coeffs * polys.len())?;
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
             let zero_for_padding = E::ScalarField::zero();
             let scalars: Vec<<Self::IC as IcicleCurve>::ScalarField> = polys
                 .iter()
-                .flat_map(|poly| poly.coeffs().iter().pad_using(size, |_| &zero_for_padding))
+                .flat_map(|poly| {
+                    poly.coeffs()
+                        .iter()
+                        .pad_using(num_coeffs, |_| &zero_for_padding)
+                })
                 .collect::<Vec<_>>()
                 .into_par_iter()
                 .map(|&s| Self::ark_field_to_icicle(s))
