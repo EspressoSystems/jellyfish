@@ -847,7 +847,7 @@ pub(crate) mod icicle {
                 .iter()
                 .map(|poly| poly.degree() + 1)
                 .max()
-                .unwrap_or(0);
+                .unwrap_or(1);
 
             let mut scalars_on_device = HostOrDeviceSlice::<
                 '_,
