@@ -39,11 +39,9 @@ generic-array = { version = "0", features = [
         "serde",
 ] } # not a direct dependency, but we need serde
 hashbrown = { workspace = true }
-icicle-bls12-377 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true, features = ["arkworks"] }
-icicle-bls12-381 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true, features = ["arkworks"] }
-icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true, features = ["arkworks"] }
-icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
-icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.0", optional = true }
+icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true, features = ["arkworks"] }
+icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true }
+icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true }
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-relation = { path = "../relation", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }

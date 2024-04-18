@@ -1,14 +1,21 @@
 #![cfg(feature = "test-srs")]
-use ark_bls12_381::Bls12_381;
+use ark_bn254::Bn254;
 use ark_ff::{Field, PrimeField};
 use ark_std::rand::seq::SliceRandom;
 use jf_primitives::{
     pcs::{checked_fft_size, prelude::UnivariateKzgPCS, PolynomialCommitmentScheme},
-    vid::advz::Advz,
+    vid::advz,
 };
 use sha2::Sha256;
 
 mod vid;
+
+#[cfg(not(feature = "gpu-vid"))]
+/// Internal Jellyfish VID scheme
+type Advz<E, H> = advz::Advz<E, H>;
+#[cfg(feature = "gpu-vid")]
+/// Internal Jellyfish VID scheme
+type Advz<E, H> = advz::AdvzGPU<'static, E, H>;
 
 #[test]
 fn round_trip() {
@@ -21,7 +28,7 @@ fn round_trip() {
     let supported_degree = vid_sizes.iter().max_by_key(|v| v.0).unwrap().0 - 1;
     let mut rng = jf_utils::test_rng();
     multiplicities.shuffle(&mut rng);
-    let srs = UnivariateKzgPCS::<Bls12_381>::gen_srs_for_testing(
+    let srs = UnivariateKzgPCS::<Bn254>::gen_srs_for_testing(
         &mut rng,
         checked_fft_size(supported_degree as usize).unwrap()
             * *multiplicities.iter().max().unwrap() as usize,
@@ -30,13 +37,13 @@ fn round_trip() {
 
     println!(
             "modulus byte len: {}",
-            (<<UnivariateKzgPCS<Bls12_381> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
+            (<<UnivariateKzgPCS<Bn254> as PolynomialCommitmentScheme>::Evaluation as Field>::BasePrimeField
                 ::MODULUS_BIT_SIZE - 7)/8 + 1
         );
 
     vid::round_trip(
         |recovery_threshold, num_storage_nodes, multiplicity| {
-            Advz::<Bls12_381, Sha256>::with_multiplicity(
+            Advz::<Bn254, Sha256>::with_multiplicity(
                 num_storage_nodes,
                 recovery_threshold,
                 multiplicity,

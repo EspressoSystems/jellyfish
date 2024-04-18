@@ -378,6 +378,9 @@ where
     ) -> VidResult<Vec<KzgCommit<E>>> {
         // let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
         // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
+        if polys.is_empty() {
+            return Ok(vec![]);
+        }
         let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
         <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
             srs_on_gpu, polys, stream,
