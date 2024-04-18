@@ -35,7 +35,7 @@ derivative = { workspace = true }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { workspace = true }
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
-generic-array = { version = "0", features = [
+generic-array = { version = "1", features = [
         "serde",
 ] } # not a direct dependency, but we need serde
 hashbrown = { workspace = true }
