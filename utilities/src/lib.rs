@@ -3,6 +3,7 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! Jellyfish utilities library.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // Temporarily allow warning for nightly compilation with [`displaydoc`].
