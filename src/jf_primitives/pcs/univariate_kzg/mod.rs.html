@@ -1458,6 +1458,12 @@
 <a href="#1456" id="1456">1456</a>
 <a href="#1457" id="1457">1457</a>
 <a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
+<a href="#1463" id="1463">1463</a>
+<a href="#1464" id="1464">1464</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2115,6 +2121,7 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>icicle {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::icicle_deps::{curves::<span class="kw-2">*</span>, <span class="kw-2">*</span>};
+    <span class="kw">use </span>itertools::Itertools;
 
     <span class="doccomment">/// Trait for GPU-accelerated PCS.commit APIs
     </span><span class="kw">pub trait </span>GPUCommittable&lt;E: Pairing&gt; {
@@ -2159,8 +2166,7 @@
             <span class="prelude-val">Ok</span>(comm)
         }
 
-        <span class="doccomment">/// Similar to [`Self::gpu_commit()`] but for a batch of poly of
-        /// the same degree
+        <span class="doccomment">/// Similar to [`Self::gpu_commit()`] but for a batch of polys
         </span><span class="kw">fn </span>gpu_batch_commit(
             prover_param: <span class="kw">impl </span>Borrow&lt;UnivariateProverParam&lt;E&gt;&gt;,
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
@@ -2171,12 +2177,7 @@
 
             <span class="kw">let </span>stream = warmup_new_stream().unwrap();
 
-            <span class="kw">let </span>degree = polys[<span class="number">0</span>].degree();
-            <span class="kw">if </span>polys.iter().any(|p| p.degree() != degree) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                    <span class="string">"all polys should have the same degree"</span>.to_string(),
-                ));
-            }
+            <span class="kw">let </span>degree = polys.iter().map(|poly| poly.degree()).max().unwrap_or(<span class="number">0</span>);
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>commit_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
@@ -2296,8 +2297,8 @@
             <span class="prelude-val">Ok</span>(scalars_on_device)
         }
 
-        <span class="doccomment">/// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of poly
-        /// of the same degree at once
+        <span class="doccomment">/// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of
+        /// polys at once
         </span><span class="kw">fn </span>load_batch_poly_to_gpu&lt;<span class="lifetime">'poly</span>&gt;(
             polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
         ) -&gt; <span class="prelude-ty">Result</span>&lt;HostOrDeviceSlice&lt;<span class="lifetime">'poly</span>, &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt;, PCSError&gt;
@@ -2308,23 +2309,27 @@
                 ));
             }
 
-            <span class="kw">let </span>size = polys[<span class="number">0</span>].degree() + <span class="number">1</span>;
-            <span class="kw">if </span>polys.iter().any(|p| p.degree() + <span class="number">1 </span>!= size) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidParameters(
-                    <span class="string">"all polys should have the same degree"</span>.to_string(),
-                ));
-            }
+            <span class="kw">let </span>num_coeffs = polys
+                .iter()
+                .map(|poly| poly.degree() + <span class="number">1</span>)
+                .max()
+                .unwrap_or(<span class="number">1</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>scalars_on_device = HostOrDeviceSlice::&lt;
                 <span class="lifetime">'_</span>,
                 &lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField,
-            &gt;::cuda_malloc(size * polys.len())<span class="question-mark">?</span>;
+            &gt;::cuda_malloc(num_coeffs * polys.len())<span class="question-mark">?</span>;
 
             <span class="attr">#[cfg(feature = <span class="string">"kzg-print-trace"</span>)]
             </span><span class="kw">let </span>conv_time = <span class="macro">start_timer!</span>(|| <span class="string">"Type Conversion: ark-&gt;ICICLE: Scalar"</span>);
+            <span class="kw">let </span>zero_for_padding = E::ScalarField::zero();
             <span class="kw">let </span>scalars: Vec&lt;&lt;<span class="self">Self</span>::IC <span class="kw">as </span>IcicleCurve&gt;::ScalarField&gt; = polys
                 .iter()
-                .flat_map(|poly| poly.coeffs())
+                .flat_map(|poly| {
+                    poly.coeffs()
+                        .iter()
+                        .pad_using(num_coeffs, |<span class="kw">_</span>| <span class="kw-2">&amp;</span>zero_for_padding)
+                })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
                 .into_par_iter()
                 .map(|<span class="kw-2">&amp;</span>s| <span class="self">Self</span>::ark_field_to_icicle(s))
@@ -2849,17 +2854,24 @@
                 );
 
                 <span class="comment">// batch commit
-                </span><span class="kw">let </span>batch_size = rng.gen_range(<span class="number">10</span>..<span class="number">100</span>);
-                <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..batch_size).map(|<span class="kw">_</span>| &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;E::ScalarField&gt;&gt;::rand(
-                        degree, rng,
-                    )).collect();
-                <span class="kw">let </span>comms_gpu =
-                    &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
-                <span class="kw">let </span>comms_cpu = UnivariateKzgPCS::&lt;E&gt;::batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
-                <span class="macro">assert_eq!</span>(comms_gpu, comms_cpu);
-                <span class="macro">assert!</span>(
-                    &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>[]).is_ok()
-                );
+                </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">5 </span>{
+                    <span class="kw">let </span>batch_size = <span class="number">10 </span>+ i;
+                    <span class="kw">let </span>polys: Vec&lt;<span class="kw">_</span>&gt; = (<span class="number">0</span>..batch_size)
+                        .map(|<span class="kw">_</span>| {
+                            &lt;DensePolynomial&lt;E::ScalarField&gt; <span class="kw">as </span>DenseUVPolynomial&lt;
+                                    E::ScalarField,
+                                &gt;&gt;::rand(degree, rng)
+                        })
+                        .collect();
+                    <span class="kw">let </span>comms_gpu =
+                        &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>comms_cpu = UnivariateKzgPCS::&lt;E&gt;::batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
+                    <span class="macro">assert_eq!</span>(comms_gpu, comms_cpu);
+                    <span class="macro">assert!</span>(
+                        &lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit(<span class="kw-2">&amp;</span>ck, <span class="kw-2">&amp;</span>[])
+                            .is_ok()
+                    );
+                }
             }
             <span class="prelude-val">Ok</span>(())
         }
