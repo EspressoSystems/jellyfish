@@ -39,11 +39,6 @@ pub use multi_pairing::*;
 pub use serialize::*;
 
 #[inline]
-pub fn curve_cofactor<P: Config>() -> u64 {
-    P::COFACTOR[0]
-}
-
-#[inline]
 pub fn field_byte_len<F: PrimeField>() -> usize {
     ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
 }

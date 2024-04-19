@@ -28,7 +28,7 @@ use ark_std::{
 };
 use jf_primitives_core::crhf::CRHF;
 use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
-use jf_utils::{curve_cofactor, fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
+use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
 use zeroize::Zeroize;
 
@@ -425,6 +425,11 @@ where
         // challenge will be 248 bits
         fq_to_fr_with_mask(&challenge_fq)
     }
+}
+
+#[inline]
+pub(crate) fn curve_cofactor<P: Config>() -> u64 {
+    P::COFACTOR[0]
 }
 
 #[cfg(test)]
