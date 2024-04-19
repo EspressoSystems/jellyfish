@@ -6,6 +6,7 @@
 
 //! Implementations of [`Precomputable`] for `Advz`.
 
+use crate::VidError;
 use crate::{
     advz::{
         polynomial_eval, AdvzInternal, Common, HasherDigest, KzgCommit, KzgEvalsMerkleTree,
@@ -14,13 +15,15 @@ use crate::{
     precomputable::Precomputable,
     vid, VidDisperse, VidResult,
 };
+use alloc::string::ToString;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{end_timer, start_timer, vec::Vec};
 use jf_merkle_tree::{MerkleCommitment, MerkleTreeScheme};
 use jf_pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS};
-
 use jf_utils::canonical;
 use serde::{Deserialize, Serialize};
+
+use super::Advz;
 
 impl<E, H, T> Precomputable for AdvzInternal<E, H, T>
 where
@@ -139,6 +142,26 @@ where
             commit,
         })
     }
+
+    fn is_consistent_precompute(
+        commit: &Self::Commit,
+        precompute_data: &Self::PrecomputeData,
+        payload_byte_len: u32,
+        num_storage_nodes: u32,
+    ) -> VidResult<()> {
+        if *commit
+            != Advz::<E, H>::derive_commit(
+                &precompute_data.poly_commits,
+                payload_byte_len,
+                num_storage_nodes,
+            )?
+        {
+            return Err(VidError::Argument(
+                "precompute data inconsistent with commit".to_string(),
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[derive(
@@ -217,7 +240,7 @@ mod tests {
 
     #[test]
     fn commit_disperse_recover_with_precomputed_data() {
-        let (advz, bytes_random) = advz_init();
+        let (advz, bytes_random, _) = advz_init();
         let (commit, data) = advz.commit_only_precompute(&bytes_random).unwrap();
         let disperse = advz.disperse_precompute(&bytes_random, &data).unwrap();
         let (shares, common) = (disperse.shares, disperse.common);
@@ -230,5 +253,18 @@ mod tests {
             .recover_payload(&shares, &common)
             .expect("recover_payload should succeed");
         assert_eq!(bytes_recovered, bytes_random);
+    }
+
+    #[test]
+    fn commit_and_verify_consistent_precomputed_data() {
+        let (advz, bytes_random, num_storage_nodes) = advz_init();
+        let (commit, data) = advz.commit_only_precompute(&bytes_random).unwrap();
+        assert!(Advz::is_consistent_precompute(
+            &commit,
+            &data,
+            bytes_random.len() as u32,
+            num_storage_nodes
+        )
+        .is_ok())
     }
 }

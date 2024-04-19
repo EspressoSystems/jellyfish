@@ -36,4 +36,13 @@ pub trait Precomputable: VidScheme {
     ) -> VidResult<VidDisperse<Self>>
     where
         B: AsRef<[u8]>;
+
+    /// Check that a [`Precomputable::PrecomputeData`] is consistent with a
+    /// [`VidScheme::Commit`].
+    fn is_consistent_precompute(
+        commit: &Self::Commit,
+        precompute_data: &Self::PrecomputeData,
+        payload_byte_len: u32,
+        num_storage_nodes: u32,
+    ) -> VidResult<()>;
 }
