@@ -29,6 +29,8 @@ mod toeplitz;
 pub mod transcript;
 pub mod univariate_kzg;
 
+pub use errors::PCSError;
+
 use ark_ff::{FftField, Field};
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -40,7 +42,6 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec::Vec,
 };
-use errors::PCSError;
 
 /// This trait defines APIs for polynomial commitment schemes.
 /// Note that for our usage, this PCS is not hiding.

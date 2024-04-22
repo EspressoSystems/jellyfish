@@ -9,7 +9,7 @@
 use super::RescueNativeGadget;
 use crate::{RescueParameter, CRHF_RATE};
 use ark_std::{vec, vec::Vec};
-use jf_relation::{errors::CircuitError, Circuit, PlonkCircuit, Variable};
+use jf_relation::{Circuit, CircuitError, PlonkCircuit, Variable};
 
 /// Commitment gadget
 pub trait CommitmentGadget {
@@ -57,8 +57,8 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
-    use jf_primitives_core::commitment::CommitmentScheme;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
+    use jf_traits::commitment::CommitmentScheme;
 
     const TEST_INPUT_LEN: usize = 10;
     const TEST_INPUT_LEN_PLUS_ONE: usize = 10 + 1;

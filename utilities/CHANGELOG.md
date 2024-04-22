@@ -6,4 +6,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.4.4
 
 - See `CHANGELOG_OLD.md` for all previous changes.
-- `hash_to_group` and `reed_solomon_code` is moved from `jf-primitives` to here.
+- `reed_solomon_code` is moved from `jf-primitives` to here.

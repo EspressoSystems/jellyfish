@@ -10,9 +10,10 @@ use ark_ff::PrimeField;
 use ark_std::{boxed::Box, format, string::ToString, vec, vec::Vec};
 use jf_relation::{
     constants::GATE_WIDTH,
-    errors::{CircuitError, CircuitError::ParameterError},
     gates::{FifthRootGate, Gate},
-    Circuit, PlonkCircuit, Variable,
+    Circuit, CircuitError,
+    CircuitError::ParameterError,
+    PlonkCircuit, Variable,
 };
 use jf_utils::compute_len_to_next_multiple;
 

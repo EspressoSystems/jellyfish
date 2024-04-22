@@ -11,7 +11,7 @@ use crate::{
     internal::MerkleNode, prelude::RescueSparseMerkleTree, MerkleTreeScheme, ToTraversalPath,
 };
 use ark_std::vec::Vec;
-use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 use jf_rescue::RescueParameter;
 
 type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;

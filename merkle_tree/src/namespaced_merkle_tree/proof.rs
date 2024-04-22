@@ -15,7 +15,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
 use core::{fmt::Debug, marker::PhantomData};
 use itertools::Itertools;
-use jf_primitives_core::VerificationResult;
+use jf_traits::VerificationResult;
 use serde::{Deserialize, Serialize};
 
 /// Indicates whether the namespace proof represents a populated set or an empty

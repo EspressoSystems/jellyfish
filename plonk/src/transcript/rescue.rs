@@ -16,9 +16,9 @@ use ark_ec::{
 };
 use ark_std::vec::Vec;
 use jf_pcs::prelude::Commitment;
-use jf_primitives_core::crhf::CRHF;
 use jf_relation::gadgets::ecc::{SWToTEConParam, TEPoint};
 use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter, STATE_SIZE};
+use jf_traits::crhf::CRHF;
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 /// Transcript with rescue hash function.

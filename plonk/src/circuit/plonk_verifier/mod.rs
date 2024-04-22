@@ -15,12 +15,13 @@ use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
-    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
         ecc::{MultiScalarMultiplicationCircuit, PointVariable, SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
-    Circuit, PlonkCircuit, Variable,
+    Circuit, CircuitError,
+    CircuitError::ParameterError,
+    PlonkCircuit, Variable,
 };
 
 mod gadgets;

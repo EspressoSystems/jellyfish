@@ -16,7 +16,6 @@ extern crate std;
 extern crate alloc;
 
 mod conversion;
-pub mod hash_to_group;
 mod macros;
 mod multi_pairing;
 pub mod par_utils;

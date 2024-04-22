@@ -7,7 +7,7 @@ export RUSTFLAGS="-C overflow-checks=on"
 cargo test --release -p jf-utils #-- -Zunstable-options --report-time
 cargo test --release -p jf-plonk --lib --bins #-- -Zunstable-options --report-time
 cargo test --release -p jf-primitives --features "test-srs, gadgets" #-- -Zunstable-options --report-time # enable test-srs feature for gen_srs_for_testing
-cargo test --release -p jf-primitives-core #-- -Zunstable-options --report-time
+cargo test --release -p jf-traits #-- -Zunstable-options --report-time
 cargo test --release -p jf-merkle-tree --features gadgets #-- -Zunstable-options --report-time
 cargo test --release -p jf-pcs --features test-srs #-- -Zunstable-options --report-time
 cargo test --release -p jf-rescue --features gadgets #-- -Zunstable-options --report-time

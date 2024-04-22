@@ -8,7 +8,7 @@
 //! RescueMerkleTree and RescueSparseMerkleTree.
 
 use ark_ff::PrimeField;
-use jf_relation::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 
 mod universal_merkle_tree;
 use ark_std::{string::ToString, vec::Vec};

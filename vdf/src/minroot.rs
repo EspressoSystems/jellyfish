@@ -5,14 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 //! Instantiation of the MinRoot Delay function <https://eprint.iacr.org/2022/1626.pdf>.
 
+use crate::{VDFError, VDF};
 use ark_ec::AffineRepr;
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::marker::PhantomData;
-use jf_primitives_core::VerificationResult;
-
-use crate::{VDFError, VDF};
+use jf_traits::VerificationResult;
 
 /// MinRoot compatible field
 pub trait MinRootField: PrimeField {

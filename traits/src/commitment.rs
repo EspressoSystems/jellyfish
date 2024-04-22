@@ -6,9 +6,8 @@
 
 //! Trait definition for commitment scheme.
 
-use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, UniformRand};
-
 use crate::VerificationResult;
+use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, UniformRand};
 
 /// A trait for cryptographic commitment scheme
 pub trait CommitmentScheme {

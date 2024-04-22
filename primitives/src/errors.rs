@@ -28,8 +28,6 @@ pub enum PrimitivesError {
     FailedDecryption(String),
     /// Rescue Error: {0}
     RescueError(RescueError),
-    /// Inconsistent Structure error, {0}
-    InconsistentStructureError(String),
 }
 
 impl From<SerializationError> for PrimitivesError {

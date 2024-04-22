@@ -7,8 +7,9 @@
 //! Definitions and constructions of plonk constraint system
 use crate::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
-    errors::{CircuitError, CircuitError::*},
     gates::*,
+    CircuitError,
+    CircuitError::*,
 };
 use ark_ff::{FftField, Field, PrimeField};
 use ark_poly::{
@@ -1689,7 +1690,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[cfg(test)]
 pub(crate) mod test {
     use super::{Arithmetization, Circuit, PlonkCircuit};
-    use crate::{constants::compute_coset_representatives, errors::CircuitError};
+    use crate::{constants::compute_coset_representatives, CircuitError};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;

@@ -13,7 +13,7 @@ use ark_crypto_primitives::sponge::{
     CryptographicSponge, FieldBasedCryptographicSponge, SpongeExt,
 };
 use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec::Vec};
-use jf_primitives_core::prf::PRF;
+use jf_traits::prf::PRF;
 use jf_utils::pad_with_zeros;
 
 /// Rescue PRF

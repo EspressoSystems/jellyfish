@@ -8,7 +8,7 @@
 //! non-native fields.
 
 use super::{from_emulated_field, EmulationConfig, SerializableEmulatedStruct};
-use crate::{errors::CircuitError, gates::*, BoolVar, Circuit, PlonkCircuit, Variable};
+use crate::{gates::*, BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveConfig, CurveGroup, ScalarMul,

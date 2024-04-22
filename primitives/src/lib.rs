@@ -28,6 +28,8 @@ pub mod errors;
 pub mod gadgets;
 pub mod vrf;
 
+pub use errors::PrimitivesError;
+
 // Re-exporting rescue
 pub use jf_merkle_tree as merkle_tree;
 pub use jf_pcs as pcs;

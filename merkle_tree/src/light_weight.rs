@@ -18,7 +18,7 @@ use super::{
 use crate::{errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme};
 use alloc::sync::Arc;
 use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
-use jf_primitives_core::VerificationResult;
+use jf_traits::VerificationResult;
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};

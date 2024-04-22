@@ -14,9 +14,10 @@ use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUND
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_relation::{
-    errors::CircuitError::{self, ParameterError},
     gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
-    Circuit, PlonkCircuit,
+    Circuit,
+    CircuitError::{self, ParameterError},
+    PlonkCircuit,
 };
 use jf_utils::{compute_len_to_next_multiple, field_switching};
 

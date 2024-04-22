@@ -26,8 +26,8 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_primitives_core::crhf::CRHF;
 use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
+use jf_traits::crhf::CRHF;
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
 use tagged_base64::tagged;
 use zeroize::Zeroize;

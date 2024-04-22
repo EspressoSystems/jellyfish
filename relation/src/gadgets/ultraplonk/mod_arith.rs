@@ -7,9 +7,10 @@
 //! Modular arithmetic gates
 use crate::{
     constants::GATE_WIDTH,
-    errors::CircuitError::{self, ParameterError},
     gadgets::utils::next_multiple,
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{self, ParameterError},
+    PlonkCircuit, Variable,
 };
 use ark_ff::PrimeField;
 use ark_std::{format, string::ToString, vec, vec::Vec};

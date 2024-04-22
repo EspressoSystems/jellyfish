@@ -17,9 +17,8 @@ use ark_ec::{
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
-    errors::CircuitError,
     gadgets::ecc::{PointVariable, TEPoint},
-    BoolVar, Circuit, PlonkCircuit, Variable,
+    BoolVar, Circuit, CircuitError, PlonkCircuit, Variable,
 };
 use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter};
 use jf_utils::{challenge_bit_len, field_bit_len, fr_to_fq};

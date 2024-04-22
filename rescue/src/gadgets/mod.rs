@@ -15,7 +15,7 @@ pub mod prf;
 use crate::{RescueMatrix, RescueVector, PRP};
 use ark_ff::PrimeField;
 use ark_std::vec::Vec;
-use jf_relation::{errors::CircuitError, Circuit};
+use jf_relation::{Circuit, CircuitError};
 pub use native::{RescueNativeGadget, RescueStateVar};
 pub use non_native::{RescueNonNativeGadget, RescueNonNativeStateVar};
 

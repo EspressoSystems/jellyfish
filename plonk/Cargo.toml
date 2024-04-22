@@ -1,8 +1,6 @@
 [package]
 name = "jf-plonk"
-description = "UltraPlonk implementation"
-# can change back to version.workspace = true after the following issue is fixed:
-# https://github.com/DevinR528/cargo-sort/issues/47
+description = "TurboPlonk and UntraPlonk implementation."
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
@@ -24,9 +22,9 @@ hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-pcs = { path = "../pcs", default-features = false }
 jf-primitives = { path = "../primitives", default-features = false }
-jf-primitives-core = { path = "../core", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false, features = ["gadgets"] }
+jf-traits = { path = "../traits", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }

@@ -24,7 +24,7 @@ use ark_std::{
     string::String,
 };
 use displaydoc::Display;
-use jf_primitives_core::VerificationResult;
+use jf_traits::VerificationResult;
 
 pub mod minroot;
 

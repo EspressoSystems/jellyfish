@@ -31,7 +31,6 @@ pub struct CirculantMatrix<F: FftField> {
 
 impl<F: FftField> CirculantMatrix<F> {
     /// Construct a Circulant matrix by its first column vector
-    #[allow(dead_code)]
     pub fn new(col: Vec<F>) -> Self {
         Self { col }
     }

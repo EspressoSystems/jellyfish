@@ -8,7 +8,7 @@
 
 use super::RescueNativeGadget;
 use crate::RescueParameter;
-use jf_relation::{errors::CircuitError, PlonkCircuit, Variable};
+use jf_relation::{CircuitError, PlonkCircuit, Variable};
 
 /// Circuit implementation of a PRF.
 pub trait PRFGadget {
@@ -39,8 +39,8 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
-    use jf_primitives_core::prf::PRF;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
+    use jf_traits::prf::PRF;
 
     macro_rules! test_prf_circuit {
         ($base_field:tt) => {

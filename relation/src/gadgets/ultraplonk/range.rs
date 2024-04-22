@@ -6,8 +6,9 @@
 
 //! Range proof gates.
 use crate::{
-    errors::CircuitError::{self, ParameterError},
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{self, ParameterError},
+    PlonkCircuit, Variable,
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{string::ToString, vec::Vec};

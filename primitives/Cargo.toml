@@ -1,6 +1,6 @@
 [package]
 name = "jf-primitives"
-description = "Cryptographic primitives"
+description = "Cryptographic primitives."
 version = { workspace = true }
 authors = { workspace = true }
 edition = { workspace = true }
@@ -25,10 +25,10 @@ digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { workspace = true }
 jf-merkle-tree = { path = "../merkle_tree", default-features = false }
 jf-pcs = { path = "../pcs", default-features = false }
-jf-primitives-core = { path = "../core", default-features = false }
 jf-relation = { path = "../relation", optional = true, default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
 jf-signature = { path = "../signature", default-features = false, features = [ "bls", "schnorr" ] }
+jf-traits = { path = "../traits", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 jf-vdf = { path = "../vdf", default-features = false }
 jf-vid = { path = "../vid", default-features = false }
@@ -79,4 +79,4 @@ parallel = [
         "rayon",
 ]
 test-srs = ["jf-pcs/test-srs", "jf-vid/test-srs"]
-gpu-vid = ["jf-pcs/icicle", "jf-vid/gpu-vid"]
+gpu-vid = ["jf-vid/gpu-vid"]

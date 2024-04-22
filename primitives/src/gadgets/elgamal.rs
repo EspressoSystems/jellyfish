@@ -14,9 +14,8 @@ use ark_ec::{
 use ark_ff::PrimeField;
 use ark_std::{vec, vec::Vec};
 use jf_relation::{
-    errors::CircuitError,
     gadgets::ecc::{PointVariable, TEPoint},
-    Circuit, PlonkCircuit, Variable,
+    Circuit, CircuitError, PlonkCircuit, Variable,
 };
 use jf_rescue::{
     gadgets::{RescueGadget, RescueStateVar},

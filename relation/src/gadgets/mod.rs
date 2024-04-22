@@ -30,7 +30,7 @@ mod utils;
 
 /// Utils for test
 pub mod test_utils {
-    use crate::{errors::CircuitError, Arithmetization, Circuit, PlonkCircuit};
+    use crate::{Arithmetization, Circuit, CircuitError, PlonkCircuit};
     use ark_ff::PrimeField;
 
     /// two circuit with the same statement should have the same extended
