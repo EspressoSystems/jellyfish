@@ -21,10 +21,7 @@ extern crate derivative;
 #[doc(hidden)]
 extern crate alloc;
 
-pub mod elgamal;
 pub mod errors;
-#[cfg(feature = "gadgets")]
-pub mod gadgets;
 pub mod vrf;
 
 pub use errors::PrimitivesError;
@@ -36,5 +33,3 @@ pub use jf_rescue as rescue;
 pub use jf_signature as signatures;
 pub use jf_vdf as vdf;
 pub use jf_vid as vid;
-
-pub(crate) mod utils;

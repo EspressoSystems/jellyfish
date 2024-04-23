@@ -6,11 +6,23 @@
 
 //! Implements the ElGamal encryption scheme.
 
-use crate::{
-    elgamal::Direction::{Decrypt, Encrypt},
-    errors::PrimitivesError,
-    rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE},
-};
+#![cfg_attr(not(feature = "std"), no_std)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[macro_use]
+extern crate derivative;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
+
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveGroup, Group,
@@ -20,14 +32,20 @@ use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
     rand::{CryptoRng, Rng, RngCore},
-    string::ToString,
+    string::{String, ToString},
     vec,
     vec::Vec,
 };
+use displaydoc::Display;
+use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 use jf_utils::pad_with_zeros;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use zeroize::Zeroize;
+
+/// Parameter error: {0}
+#[derive(Display, Debug)]
+pub struct ParameterError(String);
 
 // =====================================================
 // encrypt key
@@ -56,6 +74,16 @@ impl<P: Config> Hash for EncKey<P> {
 impl<P: Config> PartialEq for EncKey<P> {
     fn eq(&self, other: &Self) -> bool {
         self.key.into_affine() == other.key.into_affine()
+    }
+}
+
+impl<P> From<&EncKey<P>> for (P::BaseField, P::BaseField)
+where
+    P: Config,
+{
+    fn from(pk: &EncKey<P>) -> Self {
+        let point = pk.key.into_affine();
+        (point.x, point.y)
     }
 }
 
@@ -136,9 +164,9 @@ where
     }
 
     /// Reconstruct the ciphertext from a list of scalars.
-    pub fn from_scalars(scalars: &[P::BaseField]) -> Result<Self, PrimitivesError> {
+    pub fn from_scalars(scalars: &[P::BaseField]) -> Result<Self, ParameterError> {
         if scalars.len() < 2 {
-            return Err(PrimitivesError::ParameterError(
+            return Err(ParameterError(
                 "At least 2 scalars in length for ciphertext".to_string(),
             ));
         }
@@ -231,7 +259,7 @@ where
         // since key was just sampled and to be used only once, we can allow NONCE = 0
         Ciphertext {
             ephemeral: ephemeral_key_pair.enc_key(),
-            data: apply_counter_mode_stream::<F>(&key, msg, &F::zero(), Encrypt),
+            data: apply_counter_mode_stream::<F>(&key, msg, &F::zero(), Direction::Encrypt),
         }
     }
 
@@ -271,7 +299,7 @@ where
             F::zero(),
         ]));
         // since key was just samples and to be used only once, we can have NONCE = 0
-        apply_counter_mode_stream::<F>(&key, ctext.data.as_slice(), &F::zero(), Decrypt)
+        apply_counter_mode_stream::<F>(&key, ctext.data.as_slice(), &F::zero(), Direction::Decrypt)
     }
 }
 

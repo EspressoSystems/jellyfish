@@ -6,7 +6,7 @@
 
 //! Circuit implementation of the ElGamal scheme.
 
-use crate::elgamal::{Ciphertext, EncKey};
+use crate::{Ciphertext, EncKey};
 use ark_ec::{
     twisted_edwards::{Affine, TECurveConfig},
     AffineRepr, CurveGroup,
@@ -249,8 +249,10 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        elgamal::{apply_counter_mode_stream, Direction::Encrypt, KeyPair},
-        gadgets::elgamal::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+        apply_counter_mode_stream,
+        gadgets::{ElGamalEncryptionGadget, ElGamalEncryptionHelperGadget},
+        Direction::Encrypt,
+        KeyPair,
     };
     use ark_ec::{twisted_edwards::TECurveConfig, CurveGroup};
     use ark_ed_on_bls12_377::{EdwardsConfig as ParamEd377, Fq as FqEd377};
