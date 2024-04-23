@@ -48,6 +48,7 @@ hex = "^0.4.3"
 name = "plonk-benches"
 path = "benches/bench.rs"
 harness = false
+required-features = ["test-srs"]
 
 [features]
 default = ["parallel"]
