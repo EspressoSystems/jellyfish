@@ -10,7 +10,17 @@
 //! We only provide an ultra-thin wrapper for stable APIs for jellyfish users,
 //! independent of RustCrypto's upstream changes.
 
-use crate::errors::PrimitivesError;
+#![cfg_attr(not(feature = "std"), no_std)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
+#![deny(missing_docs)]
+#[cfg(test)]
+extern crate std;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
+
 use ark_serialize::*;
 use ark_std::{
     fmt, format,
@@ -22,6 +32,8 @@ use chacha20poly1305::{
     aead::{Aead, AeadCore, Payload},
     KeyInit, XChaCha20Poly1305, XNonce,
 };
+use derivative::Derivative;
+use displaydoc::Display;
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Clone, Eq, Derivative, Serialize, Deserialize)]
@@ -60,6 +72,13 @@ impl fmt::Debug for EncKey {
     }
 }
 
+/// AEAD Error.
+// This type is deliberately opaque as in `crypto_kx`.
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Display)]
+pub struct AEADError;
+
+impl ark_std::error::Error for AEADError {}
+
 impl EncKey {
     /// Encrypt a message with authenticated associated data which is an
     /// optional bytestring which is not encrypted, but is authenticated
@@ -72,7 +91,7 @@ impl EncKey {
         mut rng: impl RngCore + CryptoRng,
         message: &[u8],
         aad: &[u8],
-    ) -> Result<Ciphertext, PrimitivesError> {
+    ) -> Result<Ciphertext, AEADError> {
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
         let ephemeral_keypair = crypto_kx::Keypair::generate(&mut rng);
         // `crypto_kx` generates a pair of shared secrets, see <https://libsodium.gitbook.io/doc/key_exchange>
@@ -85,7 +104,7 @@ impl EncKey {
         // encrypt the message and associated data using crypto box
         let ct = cipher
             .encrypt(&nonce, Payload { msg: message, aad })
-            .map_err(|e| PrimitivesError::InternalError(format!("{e:?}")))?;
+            .map_err(|_| AEADError)?;
 
         Ok(Ciphertext {
             nonce: Nonce(nonce),
@@ -162,7 +181,7 @@ impl KeyPair {
     /// Decrypt a ciphertext with authenticated associated data provided.
     /// If the associated data is different that that used during encryption,
     /// then decryption will fail.
-    pub fn decrypt(&self, ciphertext: &Ciphertext, aad: &[u8]) -> Result<Vec<u8>, PrimitivesError> {
+    pub fn decrypt(&self, ciphertext: &Ciphertext, aad: &[u8]) -> Result<Vec<u8>, AEADError> {
         let shared_secret = crypto_kx::Keypair::from(self.dec_key.0.clone())
             .session_keys_from(&ciphertext.ephemeral_pk.0)
             .rx;
@@ -175,7 +194,7 @@ impl KeyPair {
                     aad,
                 },
             )
-            .map_err(|e| PrimitivesError::FailedDecryption(format!("{e:?}")))?;
+            .map_err(|_| AEADError)?;
         Ok(plaintext)
     }
 }
@@ -371,7 +390,7 @@ mod test {
     use rand_chacha::ChaCha20Rng;
 
     #[test]
-    fn test_aead_encryption() -> Result<(), PrimitivesError> {
+    fn test_aead_encryption() -> Result<(), AEADError> {
         let mut rng = ChaCha20Rng::from_seed([0u8; 32]);
         let keypair1 = KeyPair::generate(&mut rng);
         let keypair2 = KeyPair::generate(&mut rng);

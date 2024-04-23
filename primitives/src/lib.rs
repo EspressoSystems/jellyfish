@@ -21,7 +21,6 @@ extern crate derivative;
 #[doc(hidden)]
 extern crate alloc;
 
-pub mod aead;
 pub mod elgamal;
 pub mod errors;
 #[cfg(feature = "gadgets")]
