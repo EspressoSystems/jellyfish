@@ -27,7 +27,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_primitives::pcs::{
+use jf_pcs::{
     prelude::{Commitment, UnivariateKzgPCS},
     PolynomialCommitmentScheme,
 };

@@ -20,7 +20,6 @@ use ark_ec::{
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_std::{format, vec, vec::Vec};
-use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
     gadgets::{
         ecc::{PointVariable, SWToTEConParam},
@@ -30,6 +29,7 @@ use jf_relation::{
     CircuitError::ParameterError,
     PlonkCircuit,
 };
+use jf_rescue::RescueParameter;
 use jf_utils::{bytes_to_field_elements, field_switching};
 
 /// Aggregate polynomial commitments into a single commitment (in the

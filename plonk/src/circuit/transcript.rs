@@ -229,7 +229,7 @@ mod tests {
         AffineRepr, CurveGroup,
     };
     use ark_std::{format, vec, UniformRand};
-    use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
+    use jf_pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 

@@ -21,7 +21,6 @@ espresso-systems-common = { git = "https://github.com/espressosystems/espresso-s
 hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-pcs = { path = "../pcs", default-features = false }
-jf-primitives = { path = "../primitives", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false, features = ["gadgets"] }
 jf-traits = { path = "../traits", default-features = false }
@@ -60,7 +59,6 @@ std = [
     "ark-poly/std",
     "downcast-rs/std",
     "itertools/use_std",
-    "jf-primitives/std",
     "jf-relation/std",
     "jf-utils/std",
     "jf-rescue/std",
@@ -76,7 +74,6 @@ parallel = [
     "ark-poly/parallel",
     "jf-utils/parallel",
     "jf-relation/parallel",
-    "jf-primitives/parallel",
     "dep:rayon",
 ]
 test-srs = []

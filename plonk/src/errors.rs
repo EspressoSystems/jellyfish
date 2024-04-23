@@ -8,7 +8,7 @@
 
 use ark_std::{format, string::String};
 use displaydoc::Display;
-use jf_primitives::pcs::errors::PCSError;
+use jf_pcs::errors::PCSError;
 use jf_relation::CircuitError;
 
 /// A `enum` specifying the possible failure modes of the Plonk.

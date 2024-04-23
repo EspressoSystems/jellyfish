@@ -13,7 +13,6 @@ use ark_ec::{
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
-use jf_primitives::rescue::RescueParameter;
 use jf_relation::{
     gadgets::{
         ecc::{MultiScalarMultiplicationCircuit, PointVariable, SWToTEConParam, TEPoint},
@@ -23,6 +22,7 @@ use jf_relation::{
     CircuitError::ParameterError,
     PlonkCircuit, Variable,
 };
+use jf_rescue::RescueParameter;
 
 mod gadgets;
 mod poly;

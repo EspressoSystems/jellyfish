@@ -1,12 +1,19 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the Jellyfish library.
+
+// You should have received a copy of the MIT License
+// along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
 //! BLS signature based VRF
 use super::Vrf;
-use crate::errors::PrimitivesError;
 use ark_std::{
     boxed::Box,
     rand::{CryptoRng, RngCore},
+    string::{String, ToString},
     vec::Vec,
 };
 use digest::{Digest, DynDigest};
+use displaydoc::Display;
 use jf_signature::{
     bls_over_bls12381::{BLSSignKey, BLSSignature, BLSSignatureScheme, BLSVerKey},
     SignatureScheme,
@@ -43,6 +50,11 @@ impl BLSVRFScheme {
     }
 }
 
+/// VRF Error: {0}
+#[derive(Debug, Display)]
+pub struct BLSVRFError(String);
+impl ark_std::error::Error for BLSVRFError {}
+
 impl Vrf for BLSVRFScheme {
     /// Public Parameter.
     /// For BLS signatures, we want to use default
@@ -65,11 +77,14 @@ impl Vrf for BLSVRFScheme {
     /// The output of VRF evaluation.
     type Output = Vec<u8>;
 
+    /// VRF Error
+    type Error = BLSVRFError;
+
     /// generate public parameters from RNG.
     fn param_gen<R: CryptoRng + RngCore>(
         &self,
         _prng: Option<&mut R>,
-    ) -> Result<Self::PublicParameter, PrimitivesError> {
+    ) -> Result<Self::PublicParameter, BLSVRFError> {
         Ok(())
     }
 
@@ -78,8 +93,9 @@ impl Vrf for BLSVRFScheme {
         &self,
         pp: &Self::PublicParameter,
         prng: &mut R,
-    ) -> Result<(Self::SecretKey, Self::PublicKey), PrimitivesError> {
-        Ok(<BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)?)
+    ) -> Result<(Self::SecretKey, Self::PublicKey), BLSVRFError> {
+        <BLSSignatureScheme as SignatureScheme>::key_gen(pp, prng)
+            .map_err(|e| BLSVRFError(e.to_string()))
     }
 
     /// Creates the VRF proof associated with a VRF secret key.
@@ -89,10 +105,9 @@ impl Vrf for BLSVRFScheme {
         secret_key: &Self::SecretKey,
         input: &Self::Input,
         prng: &mut R,
-    ) -> Result<Self::Proof, PrimitivesError> {
-        Ok(<BLSSignatureScheme as SignatureScheme>::sign(
-            pp, secret_key, input, prng,
-        )?)
+    ) -> Result<Self::Proof, BLSVRFError> {
+        <BLSSignatureScheme as SignatureScheme>::sign(pp, secret_key, input, prng)
+            .map_err(|e| BLSVRFError(e.to_string()))
     }
 
     /// Computes the VRF output associated with a VRF proof.
@@ -100,7 +115,7 @@ impl Vrf for BLSVRFScheme {
         &mut self,
         _pp: &Self::PublicParameter,
         proof: &Self::Proof,
-    ) -> Result<Self::Output, PrimitivesError> {
+    ) -> Result<Self::Output, BLSVRFError> {
         let proof_serialized = proof.serialize();
         let mut hasher = (*self.hasher).box_clone();
         hasher.update(&proof_serialized);
@@ -115,7 +130,7 @@ impl Vrf for BLSVRFScheme {
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
         input: &Self::Input,
-    ) -> Result<(bool, Option<Self::Output>), PrimitivesError> {
+    ) -> Result<(bool, Option<Self::Output>), BLSVRFError> {
         if <BLSSignatureScheme as SignatureScheme>::verify(pp, public_key, input, proof).is_ok() {
             Ok((true, Some(Self::proof_to_hash(self, pp, proof).unwrap())))
         } else {
@@ -126,10 +141,9 @@ impl Vrf for BLSVRFScheme {
 
 #[cfg(test)]
 mod test {
-    use jf_utils::test_rng;
-
     use super::*;
     use ark_std::rand::Rng;
+    use jf_utils::test_rng;
 
     pub(crate) fn sign_and_verify<H: Digest>(
         vrf: &mut BLSVRFScheme,
