@@ -111,15 +111,15 @@ mod mt_tests {
         prelude::{RescueMerkleTree, RescueSparseMerkleTree},
         *,
     };
-    use ark_bls12_377::Fq as Fq377;
+    use ark_bls12_377::Fr as Fr377;
     use ark_bls12_381::Fr as Fr381;
-    use ark_bn254::Fq as Fq254;
+    use ark_bn254::Fr as Fr254;
     use jf_rescue::RescueParameter;
 
     #[test]
     fn test_mt_builder() {
-        test_mt_builder_helper::<Fq254>();
-        test_mt_builder_helper::<Fq377>();
+        test_mt_builder_helper::<Fr254>();
+        test_mt_builder_helper::<Fr377>();
         test_mt_builder_helper::<Fr381>();
     }
 
@@ -130,8 +130,8 @@ mod mt_tests {
 
     #[test]
     fn test_mt_insertion() {
-        test_mt_insertion_helper::<Fq254>();
-        test_mt_insertion_helper::<Fq377>();
+        test_mt_insertion_helper::<Fr254>();
+        test_mt_insertion_helper::<Fr377>();
         test_mt_insertion_helper::<Fr381>();
     }
 
@@ -151,8 +151,8 @@ mod mt_tests {
 
     #[test]
     fn test_mt_lookup() {
-        test_mt_lookup_helper::<Fq254>();
-        test_mt_lookup_helper::<Fq377>();
+        test_mt_lookup_helper::<Fr254>();
+        test_mt_lookup_helper::<Fr377>();
         test_mt_lookup_helper::<Fr381>();
     }
 
@@ -205,8 +205,8 @@ mod mt_tests {
 
     #[test]
     fn test_mt_forget_remember() {
-        test_mt_forget_remember_helper::<Fq254>();
-        test_mt_forget_remember_helper::<Fq377>();
+        test_mt_forget_remember_helper::<Fr254>();
+        test_mt_forget_remember_helper::<Fr377>();
         test_mt_forget_remember_helper::<Fr381>();
     }
 
@@ -267,8 +267,8 @@ mod mt_tests {
 
     #[test]
     fn test_mt_serde() {
-        test_mt_serde_helper::<Fq254>();
-        test_mt_serde_helper::<Fq377>();
+        test_mt_serde_helper::<Fr254>();
+        test_mt_serde_helper::<Fr377>();
         test_mt_serde_helper::<Fr381>();
     }
 
@@ -294,8 +294,8 @@ mod mt_tests {
 
     #[test]
     fn test_mt_iter() {
-        test_mt_iter_helper::<Fq254>();
-        test_mt_iter_helper::<Fq377>();
+        test_mt_iter_helper::<Fr254>();
+        test_mt_iter_helper::<Fr377>();
         test_mt_iter_helper::<Fr381>();
     }
 

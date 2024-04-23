@@ -112,15 +112,15 @@ mod mt_tests {
         prelude::{RescueLightWeightMerkleTree, RescueMerkleTree},
         *,
     };
-    use ark_bls12_377::Fq as Fq377;
+    use ark_bls12_377::Fr as Fr377;
     use ark_bls12_381::Fr as Fr381;
-    use ark_bn254::Fq as Fq254;
+    use ark_bn254::Fr as Fr254;
     use jf_rescue::RescueParameter;
 
     #[test]
     fn test_light_mt_builder() {
-        test_light_mt_builder_helper::<Fq254>();
-        test_light_mt_builder_helper::<Fq377>();
+        test_light_mt_builder_helper::<Fr254>();
+        test_light_mt_builder_helper::<Fr377>();
         test_light_mt_builder_helper::<Fr381>();
     }
 
@@ -134,8 +134,8 @@ mod mt_tests {
 
     #[test]
     fn test_light_mt_insertion() {
-        test_light_mt_insertion_helper::<Fq254>();
-        test_light_mt_insertion_helper::<Fq377>();
+        test_light_mt_insertion_helper::<Fr254>();
+        test_light_mt_insertion_helper::<Fr377>();
         test_light_mt_insertion_helper::<Fr381>();
     }
 
@@ -159,8 +159,8 @@ mod mt_tests {
 
     #[test]
     fn test_light_mt_lookup() {
-        test_light_mt_lookup_helper::<Fq254>();
-        test_light_mt_lookup_helper::<Fq377>();
+        test_light_mt_lookup_helper::<Fr254>();
+        test_light_mt_lookup_helper::<Fr377>();
         test_light_mt_lookup_helper::<Fr381>();
     }
 
@@ -225,8 +225,8 @@ mod mt_tests {
 
     #[test]
     fn test_light_mt_serde() {
-        test_light_mt_serde_helper::<Fq254>();
-        test_light_mt_serde_helper::<Fq377>();
+        test_light_mt_serde_helper::<Fr254>();
+        test_light_mt_serde_helper::<Fr377>();
         test_light_mt_serde_helper::<Fr381>();
     }
 
