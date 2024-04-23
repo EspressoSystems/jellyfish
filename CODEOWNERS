@@ -28,8 +28,14 @@
 # Owner of `jf-signature` crate
 /signature/ @alxiong @mrain
 
-# Owner of `jf-primitives` crate
-/primitives/ @alxiong @mrain
+# Owner of `jf-aead` crate
+/aead/ @alxiong
+
+# Owner of `jf-elgamal` crate
+/elgamal/ @alxiong @mrain
+
+# Owner of `jf-vrf` crate
+/vrf/ @alxiong @mrain
 
 # Owner of `jf-plonk` crate
 /plonk/ @alxiong @mrain
