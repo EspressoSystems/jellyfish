@@ -15,23 +15,23 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 ## Crates
 
 ### Helper
-- ['utilities'](jf_utils): utilities and helper functions.
+- ['jf-utils'](utilities): utilities and helper functions.
 
 ### Primitives
-- ['traits'](jf_traits): trait definitions for PRF, CRHF and commitment scheme.
-- ['rescue'](jf_rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
-- ['elgamal'](jf_elgamal): a Rescue-based ElGamal encryption scheme implementation.
-- ['signature'](jf_signature): signature scheme trait definition, and BLS/Schnorr signature scheme implementations.
-- ['vrf'](jf_vrf): verifiable random function trait definition and BLS-based implementation.
-- ['aead'](jf_aead): authenticated encryption with associated data (AEAD) implementation.
-- ['merkle_tree'](jf_merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
-- ['pcs'](jf_pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
-- ['vdf'](jf_vdf): verifiable delay function (VDF) trait definitions and (non-verifiable) MinRoot implementation.
-- ['vid'](jf_vid): verifiable information dispersal (VID) trait definition and implementation.
+- ['jf-traits'](traits): trait definitions for PRF, CRHF and commitment scheme.
+- ['jf-rescue'](rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
+- ['jf-elgamal'](elgamal): a Rescue-based ElGamal encryption scheme implementation.
+- ['jf-signature'](signature): signature scheme trait definition, and BLS/Schnorr signature scheme implementations.
+- ['jf-vrf'](vrf): verifiable random function trait definition and BLS-based implementation.
+- ['jf-aead'](aead): authenticated encryption with associated data (AEAD) implementation.
+- ['jf-merkle-tree'](merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
+- ['jf-pcs'](pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
+- ['jf-vdf'](vdf): verifiable delay function (VDF) trait definitions and (non-verifiable) MinRoot implementation.
+- ['jf-vid'](vid): verifiable information dispersal (VID) trait definition and implementation.
 
 ### Plonk
-- ['relation'](jf_relation): Jellyfish constraint system for PLONK.
-- ['plonk'](jf_plonk): KZG-PCS based TurboPlonk and UltraPlonk implementations.
+- ['jf-relation'](relation): Jellyfish constraint system for PLONK.
+- ['jf-plonk'](plonk): KZG-PCS based TurboPlonk and UltraPlonk implementations.
 
 ## Development environment setup
 
