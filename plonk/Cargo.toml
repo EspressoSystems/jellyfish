@@ -73,6 +73,7 @@ parallel = [
     "ark-ec/parallel",
     "ark-poly/parallel",
     "jf-utils/parallel",
+    "jf-pcs/parallel",
     "jf-relation/parallel",
     "dep:rayon",
 ]
