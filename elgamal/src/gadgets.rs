@@ -21,7 +21,6 @@ use jf_rescue::{
     gadgets::{RescueGadget, RescueStateVar},
     RescueParameter, PRP, STATE_SIZE,
 };
-use jf_utils::compute_len_to_next_multiple;
 
 /// Variables holding an encryption key.
 #[derive(Debug)]
@@ -243,6 +242,15 @@ where
             ephemeral,
             symm_ctxts,
         })
+    }
+}
+
+#[inline]
+fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {
+    if len % multiple == 0 {
+        len
+    } else {
+        len + multiple - len % multiple
     }
 }
 
