@@ -19,7 +19,6 @@ ark-pallas = "0.4.0"
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
-jf-traits = { path = "../traits", default-features = false }
 
 [dev-dependencies]
 criterion = "0.5.1"

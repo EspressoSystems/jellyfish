@@ -16,12 +16,11 @@ use super::{
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment,
     MerkleTreeScheme, NodeValue,
 };
-use crate::errors::MerkleTreeError;
+use crate::{errors::MerkleTreeError, VerificationResult};
 use alloc::collections::{btree_map::Entry, BTreeMap};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::{borrow::Borrow, fmt::Debug, hash::Hash, marker::PhantomData, ops::Range};
-use jf_traits::VerificationResult;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 mod hash;

@@ -7,8 +7,14 @@
 # Owner of `jf-relation` crate
 /relation/ @alxiong @mrain
 
-# Owner of `jf-traits` crate
-/traits/ @alxiong @mrain
+# Owner of `jf-prf` crate
+/prf/ @alxiong @mrain
+
+# Owner of `jf-crhf` crate
+/crhf/ @alxiong @mrain
+
+# Owner of `jf-commitment` crate
+/commitment/ @alxiong @mrain
 
 # Owner of `jf-merkle-tree` crate
 /merkle-tree/ @mrain

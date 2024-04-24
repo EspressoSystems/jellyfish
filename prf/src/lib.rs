@@ -4,9 +4,10 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! This module implements a pseudo random function that is derived from
-//! the rescue hash function.
+//! Trait definition for Pseudorandom function (PRF).
+#![no_std]
 
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
     fmt::Debug,
@@ -15,15 +16,13 @@ use ark_std::{
 };
 /// Trait for Pseudo-random Functions
 pub trait PRF {
-    // TODO: (alex) add `CanonicalDeserialize` to `Input`, `CanonicalSerialize` to
-    // `Output`, both to `Seed`, when we move to arkworks 0.4.0
     /// Input to the PRF
-    type Input: Clone;
+    type Input: Clone + CanonicalDeserialize;
     /// Output of the PRF
-    type Output: Clone + Debug + PartialEq + Eq;
+    type Output: Clone + Debug + PartialEq + Eq + CanonicalSerialize;
     /// The random seed/key that index a specific function from the PRF
     /// ensembles
-    type Seed: Clone + Debug + Default + UniformRand;
+    type Seed: Clone + Debug + Default + UniformRand + CanonicalSerialize + CanonicalDeserialize;
     /// Error type
     type Error: ark_std::error::Error;
 

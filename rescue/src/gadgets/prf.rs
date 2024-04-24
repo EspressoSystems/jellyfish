@@ -39,8 +39,8 @@ mod tests {
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
     use ark_std::vec::Vec;
+    use jf_prf::PRF;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
-    use jf_traits::prf::PRF;
 
     macro_rules! test_prf_circuit {
         ($base_field:tt) => {

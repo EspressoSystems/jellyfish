@@ -20,10 +20,10 @@ dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
+jf-crhf = { path = "../crhf", default-features = false }
 jf-pcs = { path = "../pcs", default-features = false }
 jf-relation = { path = "../relation", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false, features = ["gadgets"] }
-jf-traits = { path = "../traits", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }

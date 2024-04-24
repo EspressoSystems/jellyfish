@@ -27,7 +27,7 @@ use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
     AffineRepr, CurveGroup, Group,
 };
-use ark_ff::UniformRand;
+use ark_ff::{Field, UniformRand};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
@@ -38,7 +38,6 @@ use ark_std::{
 };
 use displaydoc::Display;
 use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
-use jf_utils::pad_with_zeros;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use zeroize::Zeroize;
@@ -380,6 +379,22 @@ where
     // remove dummy padding elements
     output.truncate(data.len());
     output
+}
+
+#[inline]
+fn pad_with_zeros<F: Field>(vec: &mut Vec<F>, multiple: usize) {
+    let len = vec.len();
+    let new_len = compute_len_to_next_multiple(len, multiple);
+    vec.resize(new_len, F::zero())
+}
+
+#[inline]
+fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {
+    if len % multiple == 0 {
+        len
+    } else {
+        len + multiple - len % multiple
+    }
 }
 
 #[cfg(test)]

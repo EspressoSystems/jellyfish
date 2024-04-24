@@ -23,9 +23,9 @@ digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
+jf-crhf = { path = "../crhf", default-features = false }
 jf-relation = { path = "../relation", optional = true, default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
-jf-traits = { path = "../traits", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }

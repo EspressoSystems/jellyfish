@@ -11,7 +11,9 @@ use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::marker::PhantomData;
-use jf_traits::VerificationResult;
+
+/// Glorified bool type
+type VerificationResult = Result<(), ()>;
 
 /// MinRoot compatible field
 pub trait MinRootField: PrimeField {

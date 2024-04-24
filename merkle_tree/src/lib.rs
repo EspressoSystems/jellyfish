@@ -33,14 +33,15 @@ pub(crate) mod internal;
 pub mod prelude;
 pub use crate::errors::MerkleTreeError;
 
+use self::internal::MerkleTreeIter;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, vec, vec::Vec};
-use jf_traits::VerificationResult;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 
-use self::internal::MerkleTreeIter;
+/// Glorified bool type
+pub(crate) type VerificationResult = Result<(), ()>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree

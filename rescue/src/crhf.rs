@@ -13,7 +13,7 @@ use ark_crypto_primitives::sponge::{
     CryptographicSponge, FieldBasedCryptographicSponge, SpongeExt,
 };
 use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec::Vec};
-use jf_traits::crhf::CRHF;
+use jf_crhf::CRHF;
 use jf_utils::pad_with_zeros;
 
 /// CRHF

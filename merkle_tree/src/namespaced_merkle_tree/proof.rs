@@ -10,12 +10,12 @@ use super::{
 };
 use crate::{
     errors::MerkleTreeError, internal::MerkleProof, DigestAlgorithm, MerkleTreeScheme, NodeValue,
+    VerificationResult,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
 use core::{fmt::Debug, marker::PhantomData};
 use itertools::Itertools;
-use jf_traits::VerificationResult;
 use serde::{Deserialize, Serialize};
 
 /// Indicates whether the namespace proof represents a populated set or an empty

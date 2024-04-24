@@ -8,7 +8,11 @@
 
 use crate::{crhf::FixedLengthRescueCRHF, RescueError, RescueParameter};
 use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString};
-use jf_traits::{commitment::CommitmentScheme, crhf::CRHF, VerificationResult};
+use jf_commitment::CommitmentScheme;
+use jf_crhf::CRHF;
+
+/// Glorified bool type;
+type VerificationResult = Result<(), ()>;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 /// Rescue-based Commitment instance for fixed-length input

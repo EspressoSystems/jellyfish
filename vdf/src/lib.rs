@@ -24,7 +24,6 @@ use ark_std::{
     string::String,
 };
 use displaydoc::Display;
-use jf_traits::VerificationResult;
 
 pub mod minroot;
 
@@ -33,6 +32,9 @@ pub mod minroot;
 pub struct VDFError(String);
 
 impl ark_std::error::Error for VDFError {}
+
+/// Glorified bool type.
+type VerificationResult = Result<(), ()>;
 
 /// A trait for VDF proof, evaluation and verification.
 pub trait VDF {

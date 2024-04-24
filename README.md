@@ -18,7 +18,9 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 - ['jf-utils'](utilities): utilities and helper functions.
 
 ### Primitives
-- ['jf-traits'](traits): trait definitions for PRF, CRHF and commitment scheme.
+- ['jf-prf'](prf): trait definitions for pesudorandom function (PRF).
+- ['jf-crhf'](crhf): trait definitions for collision-resistant hash function (CRHF).
+- ['jf-commitment'](commitment): trait definitions for cryptographic commitment scheme.
 - ['jf-rescue'](rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
 - ['jf-elgamal'](elgamal): a Rescue-based ElGamal encryption scheme implementation.
 - ['jf-signature'](signature): signature scheme trait definition, and BLS/Schnorr signature scheme implementations.

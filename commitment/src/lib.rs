@@ -3,13 +3,18 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! Trait definition for cryptographic commitment scheme
+#![no_std]
 
-//! Trait definition for commitment scheme.
-
-use crate::VerificationResult;
 use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, UniformRand};
 
-/// A trait for cryptographic commitment scheme
+/// A glorified [`bool`] that leverages compile lints to encourage the caller to
+/// use the result.
+///
+/// Intended as the return type for verification of proofs, signatures, etc.
+/// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
+type VerificationResult = Result<(), ()>;
+
 pub trait CommitmentScheme {
     /// Input to the commitment
     type Input;
