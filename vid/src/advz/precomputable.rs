@@ -6,14 +6,13 @@
 
 //! Implementations of [`Precomputable`] for `Advz`.
 
-use crate::VidError;
 use crate::{
     advz::{
         polynomial_eval, AdvzInternal, Common, HasherDigest, KzgCommit, KzgEvalsMerkleTree,
         MaybeGPU, Pairing, PolynomialMultiplier, UnivariateKzgPCS,
     },
     precomputable::Precomputable,
-    vid, VidDisperse, VidResult,
+    vid, VidDisperse, VidError, VidResult,
 };
 use alloc::string::ToString;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
