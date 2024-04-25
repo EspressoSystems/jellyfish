@@ -1,0 +1,32 @@
+[package]
+name = "jf-aead"
+version = "0.1.0"
+description = "Authenticated encryption with associated data (AEAD)."
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+chacha20poly1305 = { version = "0.10.1", default-features = false, features = [
+        "alloc",
+        "rand_core",
+] }
+crypto_kx = { version = "0.2.1", features = ["serde"] }
+derivative = { workspace = true }
+displaydoc = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+bincode = "1.3"
+jf-utils = { path = "../utilities" }
+rand_chacha = { workspace = true }
+
+[features]
+default = []
+std = ["ark-serialize/std", "ark-std/std", "chacha20poly1305/std"]

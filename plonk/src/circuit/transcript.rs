@@ -11,18 +11,16 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
-use jf_primitives::{
-    circuit::rescue::RescueNativeGadget,
-    rescue::{RescueParameter, STATE_SIZE},
-};
 use jf_relation::{
-    errors::CircuitError::{self, ParameterError},
     gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::FpElemVar,
     },
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{self, ParameterError},
+    PlonkCircuit, Variable,
 };
+use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter, STATE_SIZE};
 
 /// Struct of variables representing a Rescue transcript type, including
 /// `STATE_SIZE` variables for the state, and a vector of variables for
@@ -231,7 +229,7 @@ mod tests {
         AffineRepr, CurveGroup,
     };
     use ark_std::{format, vec, UniformRand};
-    use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
+    use jf_pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 

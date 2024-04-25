@@ -51,7 +51,8 @@ macro_rules! plonk_prove_bench {
         let cs = gen_circuit_for_bench::<$bench_field>($num_gates, $bench_plonk_type).unwrap();
 
         let max_degree = $num_gates + 2;
-        let srs = PlonkKzgSnark::<$bench_curve>::universal_setup(max_degree, rng).unwrap();
+        let srs =
+            PlonkKzgSnark::<$bench_curve>::universal_setup_for_testing(max_degree, rng).unwrap();
 
         let (pk, _) = PlonkKzgSnark::<$bench_curve>::preprocess(&srs, &cs).unwrap();
 

@@ -21,6 +21,7 @@ pub mod errors;
 pub mod proof_system;
 pub mod transcript;
 
+pub use errors::PlonkError;
 pub use jf_relation::PlonkType;
 
 #[cfg(feature = "test-apis")]

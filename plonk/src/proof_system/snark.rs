@@ -33,13 +33,11 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_primitives::{
-    pcs::{prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString},
-    rescue::RescueParameter,
-};
+use jf_pcs::{prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString};
 use jf_relation::{
     constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization,
 };
+use jf_rescue::RescueParameter;
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -669,17 +667,15 @@ pub mod test {
         vec::Vec,
     };
     use core::ops::{Mul, Neg};
-    use jf_primitives::{
-        pcs::{
-            prelude::{Commitment, UnivariateKzgPCS},
-            PolynomialCommitmentScheme,
-        },
-        rescue::RescueParameter,
+    use jf_pcs::{
+        prelude::{Commitment, UnivariateKzgPCS},
+        PolynomialCommitmentScheme,
     };
     use jf_relation::{
         constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
         MergeableCircuitType, PlonkCircuit,
     };
+    use jf_rescue::RescueParameter;
     use jf_utils::test_rng;
 
     // Different `m`s lead to different circuits.

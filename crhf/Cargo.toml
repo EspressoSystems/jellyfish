@@ -1,0 +1,15 @@
+[package]
+name = "jf-crhf"
+version = "0.1.0"
+description = "Collision-resistant hash function (CRHF)"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }

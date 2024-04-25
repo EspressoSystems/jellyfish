@@ -24,11 +24,8 @@ use ark_serialize::*;
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
-use jf_primitives::{
-    pcs::prelude::{
-        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
-    },
-    rescue::RescueParameter,
+use jf_pcs::prelude::{
+    Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
 };
 use jf_relation::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
@@ -38,6 +35,7 @@ use jf_relation::{
     },
     PlonkCircuit,
 };
+use jf_rescue::RescueParameter;
 use jf_utils::{field_switching, fq_to_fr, fr_to_fq};
 use tagged_base64::tagged;
 
