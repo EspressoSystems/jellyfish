@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["CRHF_RATE","ROUNDS","STATE_SIZE"],"mod":["errors","sponge"],"struct":["PRP","Permutation","RescueMatrix","RescueVector"],"trait":["RescueParameter"]};

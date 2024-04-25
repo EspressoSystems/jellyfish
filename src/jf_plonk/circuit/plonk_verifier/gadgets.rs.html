@@ -603,6 +603,7 @@
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
 <a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -625,15 +626,16 @@
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_std::{format, vec, vec::Vec};
-<span class="kw">use </span>jf_primitives::rescue::RescueParameter;
 <span class="kw">use </span>jf_relation::{
-    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
-    Circuit, PlonkCircuit,
+    Circuit, CircuitError,
+    CircuitError::ParameterError,
+    PlonkCircuit,
 };
+<span class="kw">use </span>jf_rescue::RescueParameter;
 <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching};
 
 <span class="doccomment">/// Aggregate polynomial commitments into a single commitment (in the

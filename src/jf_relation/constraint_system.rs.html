@@ -2419,6 +2419,7 @@
 <a href="#2417" id="2417">2417</a>
 <a href="#2418" id="2418">2418</a>
 <a href="#2419" id="2419">2419</a>
+<a href="#2420" id="2420">2420</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2428,8 +2429,9 @@
 </span><span class="doccomment">//! Definitions and constructions of plonk constraint system
 </span><span class="kw">use crate</span>::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_MUL_SELECTORS},
-    errors::{CircuitError, CircuitError::<span class="kw-2">*</span>},
     gates::<span class="kw-2">*</span>,
+    CircuitError,
+    CircuitError::<span class="kw-2">*</span>,
 };
 <span class="kw">use </span>ark_ff::{FftField, Field, PrimeField};
 <span class="kw">use </span>ark_poly::{
@@ -4110,7 +4112,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>test {
     <span class="kw">use super</span>::{Arithmetization, Circuit, PlonkCircuit};
-    <span class="kw">use crate</span>::{constants::compute_coset_representatives, errors::CircuitError};
+    <span class="kw">use crate</span>::{constants::compute_coset_representatives, CircuitError};
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;
     <span class="kw">use </span>ark_ed_on_bls12_381::Fq <span class="kw">as </span>FqEd381;

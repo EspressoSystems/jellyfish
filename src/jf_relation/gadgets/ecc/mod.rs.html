@@ -1308,7 +1308,7 @@
 //! non-native fields.
 
 </span><span class="kw">use super</span>::{from_emulated_field, EmulationConfig, SerializableEmulatedStruct};
-<span class="kw">use crate</span>::{errors::CircuitError, gates::<span class="kw-2">*</span>, BoolVar, Circuit, PlonkCircuit, Variable};
+<span class="kw">use crate</span>::{gates::<span class="kw-2">*</span>, BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 <span class="kw">use </span>ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig <span class="kw">as </span>Config},
     AffineRepr, CurveConfig, CurveGroup, ScalarMul,

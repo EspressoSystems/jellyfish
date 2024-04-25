@@ -948,8 +948,6 @@
 <a href="#946" id="946">946</a>
 <a href="#947" id="947">947</a>
 <a href="#948" id="948">948</a>
-<a href="#949" id="949">949</a>
-<a href="#950" id="950">950</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -976,11 +974,8 @@
 <span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec};
 <span class="kw">use </span>espresso_systems_common::jellyfish::tag;
 <span class="kw">use </span>hashbrown::HashMap;
-<span class="kw">use </span>jf_primitives::{
-    pcs::prelude::{
-        Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
-    },
-    rescue::RescueParameter,
+<span class="kw">use </span>jf_pcs::prelude::{
+    Commitment, UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam,
 };
 <span class="kw">use </span>jf_relation::{
     constants::{compute_coset_representatives, GATE_WIDTH, N_TURBO_PLONK_SELECTORS},
@@ -990,6 +985,7 @@
     },
     PlonkCircuit,
 };
+<span class="kw">use </span>jf_rescue::RescueParameter;
 <span class="kw">use </span>jf_utils::{field_switching, fq_to_fr, fr_to_fq};
 <span class="kw">use </span>tagged_base64::tagged;
 

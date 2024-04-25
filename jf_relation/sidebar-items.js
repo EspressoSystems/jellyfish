@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["constants","constraint_system","errors","gadgets","gates"]};
+window.SIDEBAR_ITEMS = {"enum":["CircuitError"],"mod":["constants","constraint_system","gadgets","gates"]};

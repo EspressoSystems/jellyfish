@@ -190,8 +190,6 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -209,12 +207,10 @@
     short_weierstrass::{Affine, SWCurveConfig <span class="kw">as </span>SWParam},
 };
 <span class="kw">use </span>ark_std::vec::Vec;
-<span class="kw">use </span>jf_primitives::{
-    crhf::{VariableLengthRescueCRHF, CRHF},
-    pcs::prelude::Commitment,
-    rescue::{RescueParameter, STATE_SIZE},
-};
+<span class="kw">use </span>jf_crhf::CRHF;
+<span class="kw">use </span>jf_pcs::prelude::Commitment;
 <span class="kw">use </span>jf_relation::gadgets::ecc::{SWToTEConParam, TEPoint};
+<span class="kw">use </span>jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter, STATE_SIZE};
 <span class="kw">use </span>jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 <span class="doccomment">/// Transcript with rescue hash function.

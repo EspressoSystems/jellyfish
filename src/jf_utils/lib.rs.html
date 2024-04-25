@@ -103,21 +103,59 @@
 <a href="#101" id="101">101</a>
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
+</span><span class="doccomment">//! Jellyfish utilities library.
 
-</span><span class="attr">#![cfg_attr(not(test), no_std)]
+</span><span class="attr">#![cfg_attr(not(feature = <span class="string">"std"</span>), no_std)]
+</span><span class="comment">// Temporarily allow warning for nightly compilation with [`displaydoc`].
+</span><span class="attr">#![allow(warnings)]
+#[cfg(test)]
+</span><span class="kw">extern crate </span>std;
 
-</span><span class="kw">mod </span>conversion;
+<span class="attr">#[cfg(any(not(feature = <span class="string">"std"</span>), target_has_atomic = <span class="string">"ptr"</span>))]
+#[doc(hidden)]
+</span><span class="kw">extern crate </span>alloc;
+
+<span class="kw">mod </span>conversion;
 <span class="kw">mod </span>macros;
 <span class="kw">mod </span>multi_pairing;
 <span class="kw">pub mod </span>par_utils;
+<span class="kw">pub mod </span>reed_solomon_code;
 <span class="kw">mod </span>serialize;
 
-<span class="kw">use </span>ark_ff::Field;
+<span class="kw">use </span>ark_ec::twisted_edwards::TECurveConfig <span class="kw">as </span>Config;
+<span class="kw">use </span>ark_ff::{Field, PrimeField};
 <span class="kw">use </span>ark_std::{
     ops::Mul,
     rand::{<span class="self">self</span>, rngs::StdRng},
@@ -130,6 +168,23 @@
 </span><span class="kw">pub use </span>macros::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>multi_pairing::<span class="kw-2">*</span>;
 <span class="kw">pub use </span>serialize::<span class="kw-2">*</span>;
+
+<span class="attr">#[inline]
+</span><span class="kw">pub fn </span>field_byte_len&lt;F: PrimeField&gt;() -&gt; usize {
+    ((F::MODULUS_BIT_SIZE + <span class="number">7</span>) / <span class="number">8</span>) <span class="kw">as </span>usize
+}
+
+<span class="attr">#[inline]
+</span><span class="kw">pub fn </span>field_bit_len&lt;F: PrimeField&gt;() -&gt; usize {
+    F::MODULUS_BIT_SIZE <span class="kw">as </span>usize
+}
+
+<span class="attr">#[inline]
+</span><span class="kw">pub fn </span>challenge_bit_len&lt;F: PrimeField&gt;() -&gt; usize {
+    <span class="comment">// Our challenge is of size 248 bits
+    // This is enough for a soundness error of 2^-128
+    </span>(field_byte_len::&lt;F&gt;() - <span class="number">1</span>) &lt;&lt; <span class="number">3
+</span>}
 
 <span class="attr">#[inline]
 </span><span class="kw">pub fn </span>compute_len_to_next_multiple(len: usize, multiple: usize) -&gt; usize {
@@ -179,7 +234,6 @@
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>ark_ec::CurveGroup;
-    <span class="kw">use </span>ark_ff::PrimeField;
 
     <span class="kw">fn </span>test_hadamard_template&lt;Fr: PrimeField, G1: CurveGroup&lt;ScalarField = Fr&gt;&gt;() {
         <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();

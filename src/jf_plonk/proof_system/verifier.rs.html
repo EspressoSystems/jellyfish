@@ -931,6 +931,7 @@
 <a href="#929" id="929">929</a>
 <a href="#930" id="930">930</a>
 <a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -954,8 +955,9 @@
 <span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_std::{format, vec, vec::Vec};
 <span class="kw">use </span>core::ops::Neg;
-<span class="kw">use </span>jf_primitives::{pcs::prelude::Commitment, rescue::RescueParameter};
+<span class="kw">use </span>jf_pcs::prelude::Commitment;
 <span class="kw">use </span>jf_relation::{constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam};
+<span class="kw">use </span>jf_rescue::RescueParameter;
 <span class="kw">use </span>jf_utils::multi_pairing;
 
 <span class="doccomment">/// (Aggregated) polynomial commitment evaluation info.

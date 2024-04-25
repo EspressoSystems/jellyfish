@@ -186,6 +186,7 @@
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -194,8 +195,9 @@
 
 </span><span class="doccomment">//! Range proof gates.
 </span><span class="kw">use crate</span>::{
-    errors::CircuitError::{<span class="self">self</span>, ParameterError},
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{<span class="self">self</span>, ParameterError},
+    PlonkCircuit, Variable,
 };
 <span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
 <span class="kw">use </span>ark_std::{string::ToString, vec::Vec};

@@ -1582,6 +1582,7 @@
 <a href="#1580" id="1580">1580</a>
 <a href="#1581" id="1581">1581</a>
 <a href="#1582" id="1582">1582</a>
+<a href="#1583" id="1583">1583</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1591,9 +1592,10 @@
 </span><span class="doccomment">//! Modular arithmetic gates
 </span><span class="kw">use crate</span>::{
     constants::GATE_WIDTH,
-    errors::CircuitError::{<span class="self">self</span>, ParameterError},
     gadgets::utils::next_multiple,
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{<span class="self">self</span>, ParameterError},
+    PlonkCircuit, Variable,
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec};

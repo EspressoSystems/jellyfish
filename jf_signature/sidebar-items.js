@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["SignatureError"],"mod":["bls_over_bls12381","bls_over_bn254","constants"],"trait":["AggregateableSignatureSchemes","SignatureScheme"]};

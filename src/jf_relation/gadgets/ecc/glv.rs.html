@@ -721,7 +721,6 @@
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
 <a href="#721" id="721">721</a>
-<a href="#722" id="722">722</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -729,9 +728,8 @@
 // along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 
 </span><span class="kw">use crate</span>::{
-    errors::CircuitError,
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
-    BoolVar, Circuit, PlonkCircuit, Variable,
+    BoolVar, Circuit, CircuitError, PlonkCircuit, Variable,
 };
 <span class="kw">use </span>ark_ec::{
     twisted_edwards::{Projective, TECurveConfig},

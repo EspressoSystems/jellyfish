@@ -51,7 +51,7 @@
 
 </span><span class="doccomment">//! Helper functions for circuit gadgets implementation
 
-</span><span class="kw">use </span><span class="kw">crate</span>::errors::CircuitError;
+</span><span class="kw">use </span><span class="kw">crate</span>::CircuitError;
 <span class="kw">use </span>ark_std::{cmp::Ordering, string::ToString};
 
 <span class="comment">// helper function to find the next multiple of `divisor` for `current` value
@@ -71,7 +71,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use </span><span class="kw">super</span>::next_multiple;
-    <span class="kw">use </span><span class="kw">crate</span>::errors::CircuitError;
+    <span class="kw">use </span><span class="kw">crate</span>::CircuitError;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_helper_next_multiple() -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {

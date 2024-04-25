@@ -829,6 +829,7 @@
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
 <a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -844,15 +845,16 @@
 };
 <span class="kw">use </span>ark_ff::{BigInteger, PrimeField};
 <span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec};
-<span class="kw">use </span>jf_primitives::rescue::RescueParameter;
 <span class="kw">use </span>jf_relation::{
-    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::{
         ecc::{MultiScalarMultiplicationCircuit, PointVariable, SWToTEConParam, TEPoint},
         ultraplonk::mod_arith::{FpElem, FpElemVar},
     },
-    Circuit, PlonkCircuit, Variable,
+    Circuit, CircuitError,
+    CircuitError::ParameterError,
+    PlonkCircuit, Variable,
 };
+<span class="kw">use </span>jf_rescue::RescueParameter;
 
 <span class="kw">mod </span>gadgets;
 <span class="kw">mod </span>poly;

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_batched_nv","merge_polynomials"],"struct":["Commitment","MultilinearProverParam","MultilinearUniversalParams","MultilinearVerifierParam","UnivariateProverParam","UnivariateUniversalParams","UnivariateVerifierParam"]};

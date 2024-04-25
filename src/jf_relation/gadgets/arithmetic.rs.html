@@ -991,7 +991,6 @@
 <a href="#989" id="989">989</a>
 <a href="#990" id="990">990</a>
 <a href="#991" id="991">991</a>
-<a href="#992" id="992">992</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1003,12 +1002,11 @@
 </span><span class="kw">use </span><span class="kw">super</span>::utils::next_multiple;
 <span class="kw">use crate</span>::{
     constants::{GATE_WIDTH, N_MUL_SELECTORS},
-    errors::CircuitError,
     gates::{
         ConstantAdditionGate, ConstantMultiplicationGate, FifthRootGate, LinCombGate, MulAddGate,
         QuadPolyGate,
     },
-    Circuit, PlonkCircuit, Variable,
+    Circuit, CircuitError, PlonkCircuit, Variable,
 };
 <span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>ark_std::{borrow::ToOwned, boxed::Box, string::ToString, vec::Vec};
@@ -1497,8 +1495,8 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use crate</span>::{
-        constants::GATE_WIDTH, errors::CircuitError,
-        gadgets::test_utils::test_variable_independence_for_circuit, Circuit, PlonkCircuit,
+        constants::GATE_WIDTH, gadgets::test_utils::test_variable_independence_for_circuit,
+        Circuit, CircuitError, PlonkCircuit,
     };
     <span class="kw">use </span>ark_bls12_377::Fq <span class="kw">as </span>Fq377;
     <span class="kw">use </span>ark_ed_on_bls12_377::Fq <span class="kw">as </span>FqEd377;

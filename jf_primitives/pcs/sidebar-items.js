@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["checked_fft_size"],"mod":["errors","prelude","transcript"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString","UnivariatePCS"]};

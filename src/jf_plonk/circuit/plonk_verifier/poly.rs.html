@@ -813,6 +813,7 @@
 <a href="#811" id="811">811</a>
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -830,8 +831,9 @@
 <span class="kw">use </span>ark_std::{format, string::ToString, vec, vec::Vec, One};
 <span class="kw">use </span>jf_relation::{
     constants::GATE_WIDTH,
-    errors::{CircuitError, CircuitError::ParameterError},
     gadgets::ultraplonk::mod_arith::{FpElem, FpElemVar},
+    CircuitError,
+    CircuitError::ParameterError,
     PlonkCircuit,
 };
 <span class="kw">use </span>jf_utils::field_switching;

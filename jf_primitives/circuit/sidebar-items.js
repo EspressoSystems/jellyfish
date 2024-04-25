@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["commitment","elgamal","merkle_tree","prf","rescue","signature"]};

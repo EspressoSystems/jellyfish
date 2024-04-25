@@ -1757,10 +1757,6 @@
 <a href="#1755" id="1755">1755</a>
 <a href="#1756" id="1756">1756</a>
 <a href="#1757" id="1757">1757</a>
-<a href="#1758" id="1758">1758</a>
-<a href="#1759" id="1759">1759</a>
-<a href="#1760" id="1760">1760</a>
-<a href="#1761" id="1761">1761</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1796,13 +1792,11 @@
     vec,
     vec::Vec,
 };
-<span class="kw">use </span>jf_primitives::{
-    pcs::{prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString},
-    rescue::RescueParameter,
-};
+<span class="kw">use </span>jf_pcs::{prelude::UnivariateKzgPCS, PolynomialCommitmentScheme, StructuredReferenceString};
 <span class="kw">use </span>jf_relation::{
     constants::compute_coset_representatives, gadgets::ecc::SWToTEConParam, Arithmetization,
 };
+<span class="kw">use </span>jf_rescue::RescueParameter;
 <span class="kw">use </span>jf_utils::par_utils::parallelizable_slice_iter;
 <span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
 </span><span class="kw">use </span>rayon::prelude::<span class="kw-2">*</span>;
@@ -2432,17 +2426,15 @@
         vec::Vec,
     };
     <span class="kw">use </span>core::ops::{Mul, Neg};
-    <span class="kw">use </span>jf_primitives::{
-        pcs::{
-            prelude::{Commitment, UnivariateKzgPCS},
-            PolynomialCommitmentScheme,
-        },
-        rescue::RescueParameter,
+    <span class="kw">use </span>jf_pcs::{
+        prelude::{Commitment, UnivariateKzgPCS},
+        PolynomialCommitmentScheme,
     };
     <span class="kw">use </span>jf_relation::{
         constants::GATE_WIDTH, gadgets::ecc::SWToTEConParam, Arithmetization, Circuit,
         MergeableCircuitType, PlonkCircuit,
     };
+    <span class="kw">use </span>jf_rescue::RescueParameter;
     <span class="kw">use </span>jf_utils::test_rng;
 
     <span class="comment">// Different `m`s lead to different circuits.

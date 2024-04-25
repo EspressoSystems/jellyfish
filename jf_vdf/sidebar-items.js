@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["minroot"],"struct":["VDFError"],"trait":["VDF"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["checked_fft_size"],"mod":["errors","multilinear_kzg","prelude","transcript","univariate_kzg"],"trait":["PolynomialCommitmentScheme","StructuredReferenceString","UnivariatePCS"]};
