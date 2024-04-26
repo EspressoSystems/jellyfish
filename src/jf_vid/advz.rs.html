@@ -1264,8 +1264,6 @@
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
 </span><span class="kw">use super</span>::{vid, VidDisperse, VidError, VidResult, VidScheme};
-<span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
-</span><span class="kw">use </span><span class="kw">crate</span>::icicle_deps::<span class="kw-2">*</span>;
 <span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr};
 <span class="kw">use </span>ark_ff::{Field, PrimeField};
 <span class="kw">use </span>ark_poly::{
@@ -1293,6 +1291,8 @@
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
     MerkleCommitment, MerkleTreeScheme,
 };
+<span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
+</span><span class="kw">use </span>jf_pcs::icicle_deps::<span class="kw-2">*</span>;
 <span class="kw">use </span>jf_pcs::{
     prelude::{UnivariateKzgPCS, UnivariateKzgProof},
     PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
