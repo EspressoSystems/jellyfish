@@ -9,8 +9,6 @@
 //! `advz` named for the authors Alhaddad-Duan-Varia-Zhang.
 
 use super::{vid, VidDisperse, VidError, VidResult, VidScheme};
-#[cfg(feature = "gpu-vid")]
-use crate::icicle_deps::*;
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{Field, PrimeField};
 use ark_poly::{
@@ -38,6 +36,8 @@ use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
     MerkleCommitment, MerkleTreeScheme,
 };
+#[cfg(feature = "gpu-vid")]
+use jf_pcs::icicle_deps::*;
 use jf_pcs::{
     prelude::{UnivariateKzgPCS, UnivariateKzgProof},
     PolynomialCommitmentScheme, StructuredReferenceString, UnivariatePCS,
