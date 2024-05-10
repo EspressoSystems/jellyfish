@@ -23,7 +23,8 @@ zeroize = { version = "1.5", default-features = false }
 jf-utils = { path = "../utilities", default-features = false }
 
 [features]
-default = []
+default = ["parallel"]
 std = [
     "ark-std/std", "digest/std", "jf-signature/std", "zeroize/std",
 ]
+parallel = ["jf-signature/parallel"]
