@@ -36,4 +36,4 @@ std = [
     "jf-rescue/std", "zeroize/std",
 ]
 gadgets = ["jf-relation", "jf-rescue/gadgets"]
-parallel = ["rayon"]
+parallel = ["jf-relation/parallel", "jf-rescue/parallel", "rayon"]

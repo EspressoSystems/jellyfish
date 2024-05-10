@@ -76,6 +76,7 @@ parallel = [
     "jf-utils/parallel",
     "jf-pcs/parallel",
     "jf-relation/parallel",
+    "jf-rescue/parallel",
     "dep:rayon",
 ]
 test-srs = []

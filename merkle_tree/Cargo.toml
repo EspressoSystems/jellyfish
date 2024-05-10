@@ -47,7 +47,7 @@ name = "merkle_path"
 harness = false
 
 [features]
-default = []
+default = ["parallel"]
 std = [
         "ark-bls12-377/std",
         "ark-bls12-381/std",
@@ -65,3 +65,4 @@ std = [
 gadgets = [
     "jf-relation", "jf-rescue/gadgets",
 ]
+parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]

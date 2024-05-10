@@ -50,7 +50,7 @@ harness = false
 required-features = ["bls"]
 
 [features]
-default = []
+default = ["parallel"]
 std = [
         "ark-bls12-381/std",
         "ark-bn254/std",
@@ -72,3 +72,4 @@ gadgets = [
     "jf-relation",
     "jf-rescue/gadgets",
 ]
+parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
