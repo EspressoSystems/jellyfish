@@ -473,6 +473,8 @@
 <a href="#471" id="471">471</a>
 <a href="#472" id="472">472</a>
 <a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -563,14 +565,16 @@
     rand::{CryptoRng, RngCore},
 };
 <span class="kw">use </span>blst::{min_sig::<span class="kw-2">*</span>, BLST_ERROR};
+<span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>tagged_base64::tagged;
 <span class="kw">use </span>zeroize::{Zeroize, Zeroizing};
 
 <span class="attr">#[tagged(tag::BLS_SIGNING_KEY)]
-#[derive(Clone, Debug, Zeroize)]
+#[derive(Clone, Derivative, Zeroize)]
 #[zeroize(drop)]
+#[derivative(Debug)]
 </span><span class="doccomment">/// A BLS Secret Key (Signing Key).
-</span><span class="kw">pub struct </span>BLSSignKey(SecretKey);
+</span><span class="kw">pub struct </span>BLSSignKey(<span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)] </span>SecretKey);
 
 <span class="kw">impl </span>Deref <span class="kw">for </span>BLSSignKey {
     <span class="kw">type </span>Target = SecretKey;

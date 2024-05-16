@@ -584,6 +584,8 @@
 <a href="#582" id="582">582</a>
 <a href="#583" id="583">583</a>
 <a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -646,6 +648,7 @@
     vec::Vec,
     One, UniformRand,
 };
+<span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>digest::DynDigest;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 <span class="kw">use </span>sha3::Keccak256;
@@ -819,13 +822,14 @@
     PartialEq,
     CanonicalSerialize,
     CanonicalDeserialize,
-    Debug,
+    Derivative,
     Ord,
     PartialOrd,
 )]
 #[zeroize(drop)]
+#[derivative(Debug)]
 </span><span class="doccomment">/// Signing key for BLS signature.
-</span><span class="kw">pub struct </span>SignKey(<span class="kw">pub</span>(<span class="kw">crate</span>) ScalarField);
+</span><span class="kw">pub struct </span>SignKey(<span class="attr">#[derivative(Debug = <span class="string">"ignore"</span>)] </span><span class="kw">pub</span>(<span class="kw">crate</span>) ScalarField);
 
 <span class="comment">// =====================================================
 // Verification key
