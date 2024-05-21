@@ -15,7 +15,7 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v25
 
-      - uses: cachix/cachix-action@v14
+      - uses: cachix/cachix-action@v15
         with:
           name: espresso-systems-private
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
