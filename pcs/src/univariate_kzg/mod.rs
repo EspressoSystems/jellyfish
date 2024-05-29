@@ -1412,6 +1412,8 @@ mod tests {
             test_gpu_e2e_template::<Bn254>().unwrap();
         }
 
+        /// Stress test with varied polynomial degrees for GPU memory
+        /// leakage/fragmentation.
         fn stress_test_gpu_template<E: Pairing>() -> Result<(), PCSError>
         where
             UnivariateKzgPCS<E>: GPUCommittable<E>,

@@ -1002,8 +1002,8 @@ mod tests {
     #[ignore]
     #[test]
     #[cfg(feature = "gpu-vid")]
+    /// Stress test with varied payload sizes for GPU memory leakage/fragmentation.
     fn stress_test_gpu_disperse() {
-        // run with 'print-trace' feature to see timer output
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(recovery_threshold as usize, &mut rng);
