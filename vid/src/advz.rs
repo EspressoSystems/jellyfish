@@ -63,7 +63,7 @@ pub type AdvzGPU<'srs, E, H> = AdvzInternal<
     E,
     H,
     (
-        HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+        DeviceVec<IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
         CudaStream,
     ),
 >;
@@ -1002,7 +1002,8 @@ mod tests {
     #[ignore]
     #[test]
     #[cfg(feature = "gpu-vid")]
-    /// Stress test with varied payload sizes for GPU memory leakage/fragmentation.
+    /// Stress test with varied payload sizes for GPU memory
+    /// leakage/fragmentation.
     fn stress_test_gpu_disperse() {
         let (recovery_threshold, num_storage_nodes) = (256, 512);
         let mut rng = jf_utils::test_rng();

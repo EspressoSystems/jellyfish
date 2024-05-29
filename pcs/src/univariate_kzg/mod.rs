@@ -652,6 +652,8 @@ where
 pub(crate) mod icicle {
     use super::*;
     use crate::icicle_deps::{curves::*, *};
+    use core::ops::DerefMut;
+    use icicle_core::{ntt::FieldImpl, traits::ArkConvertible};
     use itertools::Itertools;
 
     /// Trait for GPU-accelerated PCS.commit APIs
@@ -685,14 +687,14 @@ pub(crate) mod icicle {
         /// - we assume a stream is already prepared, you can create one if not
         /// via `warmup_new_stream()`
         fn gpu_commit_with_loaded_prover_param(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
+            prover_param_on_gpu: &DeviceSlice<IcicleAffine<Self::IC>>,
             poly: &DensePolynomial<E::ScalarField>,
             stream: &CudaStream,
         ) -> Result<Commitment<E>, PCSError> {
             let poly_on_gpu = Self::load_poly_to_gpu(poly)?;
             let msm_result_on_gpu =
                 Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, 1, stream)?;
-            let comm = Self::load_commitments_to_host(msm_result_on_gpu, stream)?[0];
+            let comm = Self::load_commitments_to_host(&msm_result_on_gpu, stream)?[0];
 
             Ok(comm)
         }
@@ -728,7 +730,7 @@ pub(crate) mod icicle {
         /// Compute `PCS::commit()` with SRS already loaded on GPU
         /// Return a vector of commitments on CPU
         fn gpu_batch_commit_with_loaded_prover_param(
-            prover_param_on_gpu: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
+            prover_param_on_gpu: &DeviceSlice<IcicleAffine<Self::IC>>,
             polys: &[DensePolynomial<E::ScalarField>],
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
@@ -739,7 +741,7 @@ pub(crate) mod icicle {
             let poly_on_gpu = Self::load_batch_poly_to_gpu(polys)?;
             let msm_result_on_gpu =
                 Self::commit_on_gpu(prover_param_on_gpu, &poly_on_gpu, polys.len(), stream)?;
-            let comms = Self::load_commitments_to_host(msm_result_on_gpu, stream)?;
+            let comms = Self::load_commitments_to_host(&msm_result_on_gpu, stream)?;
 
             Ok(comms)
         }
@@ -763,10 +765,10 @@ pub(crate) mod icicle {
 
         /// load SRS for prover onto GPU once, and reuse for future poly-commit
         /// of degree<=`supported_degree`
-        fn load_prover_param_to_gpu<'srs>(
+        fn load_prover_param_to_gpu(
             prover_param: impl Borrow<UnivariateProverParam<E>>,
             supported_degree: usize,
-        ) -> Result<HostOrDeviceSlice<'srs, IcicleAffine<Self::IC>>, PCSError> {
+        ) -> Result<DeviceVec<IcicleAffine<Self::IC>>, PCSError> {
             let prover_param = prover_param.borrow();
             if supported_degree > prover_param.powers_of_g.len() - 1 {
                 return Err(PCSError::InvalidParameters(format!(
@@ -777,7 +779,7 @@ pub(crate) mod icicle {
             }
 
             let mut bases_on_device =
-                HostOrDeviceSlice::<'_, IcicleAffine<Self::IC>>::cuda_malloc(supported_degree + 1)?;
+                DeviceVec::<IcicleAffine<Self::IC>>::cuda_malloc(supported_degree + 1)?;
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Group");
@@ -791,7 +793,7 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let load_time = start_timer!(|| "Load group elements: CPU->GPU");
-            bases_on_device.copy_from_host(&bases)?;
+            bases_on_device.copy_from_host(HostSlice::from_slice(&bases))?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
@@ -800,19 +802,21 @@ pub(crate) mod icicle {
 
         /// Load polynomial's coefficients onto GPU, preparing for poly-commit
         /// on GPU later
-        fn load_poly_to_gpu<'poly>(
+        fn load_poly_to_gpu(
             poly: &DensePolynomial<E::ScalarField>,
-        ) -> Result<HostOrDeviceSlice<'poly, <Self::IC as IcicleCurve>::ScalarField>, PCSError>
-        {
+        ) -> Result<DeviceVec<<Self::IC as IcicleCurve>::ScalarField>, PCSError> {
             let size = poly.degree() + 1;
             let mut scalars_on_device =
-                HostOrDeviceSlice::<'_, <Self::IC as IcicleCurve>::ScalarField>::cuda_malloc(size)?;
+                DeviceVec::<<Self::IC as IcicleCurve>::ScalarField>::cuda_malloc(size)?;
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
-            // We assume that two types use the same underline repr.
+            // Somewhat faster type conversion
+            let bigints = parallelizable_slice_iter(&poly.coeffs()[..size])
+                .map(|s| s.into_bigint())
+                .collect::<Vec<_>>();
             let scalars = unsafe {
-                poly.coeffs()[..size]
+                bigints
                     .align_to::<<Self::IC as IcicleCurve>::ScalarField>()
                     .1
             };
@@ -821,7 +825,7 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let load_time = start_timer!(|| "Load scalars: CPU->GPU");
-            scalars_on_device.copy_from_host(scalars)?;
+            scalars_on_device.copy_from_host(HostSlice::from_slice(scalars))?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
@@ -830,10 +834,9 @@ pub(crate) mod icicle {
 
         /// Similar to [`Self::load_poly_to_gpu()`] but handling a batch of
         /// polys at once
-        fn load_batch_poly_to_gpu<'poly>(
+        fn load_batch_poly_to_gpu(
             polys: &[DensePolynomial<E::ScalarField>],
-        ) -> Result<HostOrDeviceSlice<'poly, <Self::IC as IcicleCurve>::ScalarField>, PCSError>
-        {
+        ) -> Result<DeviceVec<<Self::IC as IcicleCurve>::ScalarField>, PCSError> {
             if polys.is_empty() {
                 return Err(PCSError::InvalidParameters(
                     "number of polys must be positive".to_string(),
@@ -846,10 +849,10 @@ pub(crate) mod icicle {
                 .max()
                 .unwrap_or(1);
 
-            let mut scalars_on_device = HostOrDeviceSlice::<
-                '_,
-                <Self::IC as IcicleCurve>::ScalarField,
-            >::cuda_malloc(num_coeffs * polys.len())?;
+            let mut scalars_on_device =
+                DeviceVec::<<Self::IC as IcicleCurve>::ScalarField>::cuda_malloc(
+                    num_coeffs * polys.len(),
+                )?;
 
             #[cfg(feature = "kzg-print-trace")]
             let conv_time = start_timer!(|| "Type Conversion: ark->ICICLE: Scalar");
@@ -870,7 +873,7 @@ pub(crate) mod icicle {
 
             #[cfg(feature = "kzg-print-trace")]
             let load_time = start_timer!(|| "Load scalars: CPU->GPU");
-            scalars_on_device.copy_from_host(&scalars)?;
+            scalars_on_device.copy_from_host(HostSlice::from_slice(&scalars))?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
@@ -886,9 +889,6 @@ pub(crate) mod icicle {
         ///   greater
         ///
         /// # NOTE
-        /// - if you pass in `HostOrDeviceSlice::Host`, then `icicle_core::msm`
-        ///   will push them onto GPU first; if they are already on GPU, i.e.
-        ///   `HostOrDeviceSlice::Device`, then msm will be executed directly
         /// - the result is also temporarily on GPU, you can use
         ///   `Self::load_commitments_to_host()` to load back to host CPU.
         /// - this function is async/non-blocking, thus returns a CudaStream
@@ -896,30 +896,29 @@ pub(crate) mod icicle {
         /// - default implementation assume normal(non-montgomery) affine for
         ///   bases and scalars, consider overwrite this function if you want
         ///   otherwise
-        fn commit_on_gpu<'comm>(
-            prover_param: &mut HostOrDeviceSlice<'_, IcicleAffine<Self::IC>>,
-            poly: &HostOrDeviceSlice<'_, <Self::IC as IcicleCurve>::ScalarField>,
+        fn commit_on_gpu(
+            prover_param: &DeviceSlice<IcicleAffine<Self::IC>>,
+            poly: &DeviceSlice<<Self::IC as IcicleCurve>::ScalarField>,
             batch_size: usize,
             stream: &CudaStream,
-        ) -> Result<HostOrDeviceSlice<'comm, IcicleProjective<Self::IC>>, PCSError> {
-            let trimmed_prover_param = match prover_param {
-                HostOrDeviceSlice::Device(ck, device_id) => {
-                    HostOrDeviceSlice::Device(&mut ck[..poly.len()], *device_id)
-                },
-                HostOrDeviceSlice::Host(ck) => HostOrDeviceSlice::Host(ck[..poly.len()].to_vec()),
+        ) -> Result<DeviceVec<IcicleProjective<Self::IC>>, PCSError> {
+            let trimmed_prover_param = unsafe {
+                DeviceSlice::from_slice(ark_std::slice::from_raw_parts(
+                    prover_param.as_ptr(),
+                    poly.len(),
+                ))
             };
 
-            let mut msm_result =
-                HostOrDeviceSlice::<'_, IcicleProjective<Self::IC>>::cuda_malloc(batch_size)?;
+            let mut msm_result = DeviceVec::<IcicleProjective<Self::IC>>::cuda_malloc(batch_size)?;
 
             let mut cfg = MSMConfig::default();
-            cfg.ctx.stream = &stream;
+            cfg.ctx.stream = stream;
             cfg.is_async = true; // non-blocking
 
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM dispatched");
 
-            icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, trimmed_prover_param, &cfg, msm_result.deref_mut())?;
 
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
@@ -931,7 +930,7 @@ pub(crate) mod icicle {
         /// After `Self::commit_on_gpu()`, you can choose to load the result
         /// back to host CPU
         fn load_commitments_to_host(
-            commitments_on_gpu: HostOrDeviceSlice<'_, IcicleProjective<Self::IC>>,
+            commitments_on_gpu: &DeviceSlice<IcicleProjective<Self::IC>>,
             stream: &CudaStream,
         ) -> Result<Vec<Commitment<E>>, PCSError> {
             #[cfg(feature = "kzg-print-trace")]
@@ -946,7 +945,7 @@ pub(crate) mod icicle {
             let load_time = start_timer!(|| "Load MSM result GPU->CPU");
             let mut msm_host_result =
                 vec![IcicleProjective::<Self::IC>::zero(); commitments_on_gpu.len()];
-            commitments_on_gpu.copy_to_host(&mut msm_host_result[..])?;
+            commitments_on_gpu.copy_to_host(HostSlice::from_mut_slice(&mut msm_host_result[..]))?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(load_time);
 
@@ -965,67 +964,56 @@ pub(crate) mod icicle {
 
     impl GPUCommittable<Bn254> for UnivariateKzgPCS<Bn254> {
         type IC = IcicleBn254;
-        // NOTE: we are directly using montgomery form, different from default!
         fn ark_field_to_icicle(f: ark_bn254::Fr) -> icicle_bn254::curve::ScalarField {
-            icicle_bn254::curve::ScalarField::from(f.0 .0)
+            unsafe { ark_std::mem::transmute(f.into_bigint()) }
         }
 
-        // NOTE: we are directly using montgomery form, different from default!
         fn ark_affine_to_icicle(p: ark_bn254::G1Affine) -> icicle_bn254::curve::G1Affine {
             icicle_bn254::curve::G1Affine {
-                x: icicle_bn254::curve::BaseField::from(p.x.0 .0),
-                y: icicle_bn254::curve::BaseField::from(p.y.0 .0),
+                x: unsafe { ark_std::mem::transmute(p.x.into_bigint()) },
+                y: unsafe { ark_std::mem::transmute(p.y.into_bigint()) },
             }
         }
 
         fn icicle_projective_to_ark(p: icicle_bn254::curve::G1Projective) -> ark_bn254::G1Affine {
-            use ark_ff::biginteger::BigInteger256;
-
             let ic_affine: icicle_bn254::curve::G1Affine = p.into();
-            let x_limbs: [u64; 4] = ic_affine.x.into();
-            let y_limbs: [u64; 4] = ic_affine.y.into();
 
             if ic_affine == icicle_bn254::curve::G1Affine::zero() {
                 ark_bn254::G1Affine::zero()
             } else {
                 ark_bn254::G1Affine {
-                    x: BigInteger256::new(x_limbs).into(),
-                    y: BigInteger256::new(y_limbs).into(),
+                    x: ark_bn254::Fq::from_bigint(unsafe { ark_std::mem::transmute(ic_affine.x) })
+                        .unwrap(),
+                    y: ark_bn254::Fq::from_bigint(unsafe { ark_std::mem::transmute(ic_affine.y) })
+                        .unwrap(),
                     infinity: false,
                 }
             }
         }
 
-        // NOTE: both bases and scalars are in montgomery form on GPU
-        fn commit_on_gpu<'comm>(
-            prover_param: &mut HostOrDeviceSlice<'_, icicle_bn254::curve::G1Affine>,
-            poly: &HostOrDeviceSlice<'_, icicle_bn254::curve::ScalarField>,
+        fn commit_on_gpu(
+            prover_param: &DeviceSlice<icicle_bn254::curve::G1Affine>,
+            poly: &DeviceSlice<icicle_bn254::curve::ScalarField>,
             batch_size: usize,
             stream: &CudaStream,
-        ) -> Result<HostOrDeviceSlice<'comm, icicle_bn254::curve::G1Projective>, PCSError> {
+        ) -> Result<DeviceVec<icicle_bn254::curve::G1Projective>, PCSError> {
             let trimmed_srs_size = poly.len() / batch_size;
-            let trimmed_prover_param = match prover_param {
-                HostOrDeviceSlice::Device(ck, device_id) => {
-                    HostOrDeviceSlice::Device(&mut ck[..trimmed_srs_size], *device_id)
-                },
-                HostOrDeviceSlice::Host(ck) => {
-                    HostOrDeviceSlice::Host(ck[..trimmed_srs_size].to_vec())
-                },
+            let trimmed_prover_param = unsafe {
+                DeviceSlice::from_slice(ark_std::slice::from_raw_parts(
+                    prover_param.as_ptr(),
+                    trimmed_srs_size,
+                ))
             };
             let mut msm_result =
-                HostOrDeviceSlice::<'_, icicle_bn254::curve::G1Projective>::cuda_malloc(
-                    batch_size,
-                )?;
+                DeviceVec::<icicle_bn254::curve::G1Projective>::cuda_malloc(batch_size)?;
 
             let mut cfg = MSMConfig::default();
             cfg.ctx.stream = stream;
             cfg.is_async = true;
-            cfg.are_scalars_montgomery_form = true;
-            cfg.are_points_montgomery_form = true;
 
             #[cfg(feature = "kzg-print-trace")]
             let msm_time = start_timer!(|| "GPU-accelerated MSM");
-            icicle_core::msm::msm(poly, &trimmed_prover_param, &cfg, &mut msm_result)?;
+            icicle_core::msm::msm(poly, trimmed_prover_param, &cfg, msm_result.deref_mut())?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(msm_time);
 
@@ -1040,6 +1028,7 @@ pub(crate) mod icicle {
     }
 }
 
+#[inline]
 fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial<F>>(
     p: &P,
 ) -> (usize, Vec<F::BigInt>) {
@@ -1051,12 +1040,15 @@ fn skip_leading_zeros_and_convert_to_bigints<F: PrimeField, P: DenseUVPolynomial
     (num_leading_zeros, coeffs)
 }
 
+#[inline]
 fn convert_to_bigints<F: PrimeField>(p: &[F]) -> Vec<F::BigInt> {
     #[cfg(feature = "kzg-print-trace")]
     let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to
     bigints");
 
-    let coeffs = p.iter().map(|s| s.into_bigint()).collect::<Vec<_>>();
+    let coeffs = parallelizable_slice_iter(p)
+        .map(|s| s.into_bigint())
+        .collect::<Vec<_>>();
 
     #[cfg(feature = "kzg-print-trace")]
     end_timer!(to_bigint_time);
@@ -1302,15 +1294,16 @@ mod tests {
     #[cfg(feature = "icicle")]
     mod icicle {
         use super::*;
-        #[cfg(feature = "kzg-print-trace")]
-        use crate::icicle_deps::warmup_new_stream;
         use crate::{
             icicle_deps::{curves::*, warmup_new_stream, IcicleCurve},
             univariate_kzg::icicle::GPUCommittable,
         };
         use core::mem::size_of;
         use icicle_core::traits::{ArkConvertible, MontgomeryConvertible};
-        use icicle_cuda_runtime::{error::CudaResultWrap, memory::HostOrDeviceSlice};
+        use icicle_cuda_runtime::{
+            error::CudaResultWrap,
+            memory::{DeviceVec, HostOrDeviceSlice},
+        };
 
         #[cfg(feature = "kzg-print-trace")]
         fn gpu_profiling<E: Pairing>() -> Result<(), PCSError>
@@ -1459,7 +1452,7 @@ mod tests {
         where
             UnivariateKzgPCS<E>: GPUCommittable<E>,
             <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField:
-                ArkConvertible<ArkEquivalent = E::ScalarField> + MontgomeryConvertible,
+                ArkConvertible<ArkEquivalent = E::ScalarField>,
         {
             type ICScalarField<E> =
                 <<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC as IcicleCurve>::ScalarField;
@@ -1478,11 +1471,10 @@ mod tests {
                 .copied()
                 .map(ICScalarField::<E>::from_ark)
                 .collect();
-            let mut d_scalars = HostOrDeviceSlice::cuda_malloc(size).unwrap();
-            d_scalars.copy_from_host(&ic_scalars).unwrap();
-            ICScalarField::<E>::to_mont(&mut d_scalars).wrap().unwrap();
-            d_scalars.copy_to_host(&mut ic_scalars).unwrap();
-            let transformed_scalars = unsafe { scalars.align_to::<ICScalarField<E>>().1 };
+            let bigints = parallelizable_slice_iter(&scalars)
+                .map(|s| s.into_bigint())
+                .collect::<Vec<_>>();
+            let transformed_scalars = unsafe { bigints.align_to::<ICScalarField<E>>().1 };
             assert_eq!(ic_scalars, transformed_scalars);
         }
 
