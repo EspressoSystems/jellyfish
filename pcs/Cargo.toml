@@ -66,3 +66,4 @@ icicle = [
     "anyhow", "ark-bn254", "icicle-cuda-runtime", "icicle-core",
     "icicle-bn254", "parallel",
 ]
+kzg-print-trace = ["ark-std/print-trace"]

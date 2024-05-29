@@ -1305,8 +1305,8 @@ mod tests {
         #[cfg(feature = "kzg-print-trace")]
         use crate::icicle_deps::warmup_new_stream;
         use crate::{
-            icicle_deps::{curves::*, IcicleCurve},
-            pcs::univariate_kzg::icicle::GPUCommittable,
+            icicle_deps::{curves::*, warmup_new_stream, IcicleCurve},
+            univariate_kzg::icicle::GPUCommittable,
         };
         use core::mem::size_of;
         use icicle_core::traits::{ArkConvertible, MontgomeryConvertible};
@@ -1410,6 +1410,47 @@ mod tests {
         #[test]
         fn test_gpu_e2e() {
             test_gpu_e2e_template::<Bn254>().unwrap();
+        }
+
+        fn stress_test_gpu_template<E: Pairing>() -> Result<(), PCSError>
+        where
+            UnivariateKzgPCS<E>: GPUCommittable<E>,
+        {
+            let rng = &mut test_rng();
+            let supported_degree = 2usize.pow(20);
+            let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, supported_degree)?;
+            let (ck, vk) = pp.trim(supported_degree)?;
+
+            let stream = warmup_new_stream().unwrap();
+
+            let mut prover_pram =
+                <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
+                    &ck,
+                    supported_degree,
+                )
+                .unwrap();
+
+            for i in 0..100 {
+                let degree = (rng.next_u32() % supported_degree as u32) as usize;
+                // batch size 10
+                let polys: Vec<_> = (0..10)
+                .map(|_| {
+                    <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                        degree, rng,
+                    )
+                })
+                .collect();
+                let comms_gpu =
+                    <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(&mut prover_pram, &polys, &stream)?;
+                ark_std::println!("{}", i);
+            }
+            Ok(())
+        }
+
+        #[test]
+        #[ignore]
+        fn stress_test_gpu() {
+            stress_test_gpu_template::<Bn254>().unwrap();
         }
 
         fn test_gpu_ark_conversion_template<E: Pairing>()
