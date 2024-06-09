@@ -79,7 +79,7 @@ pub(crate) fn get_uni_domain<F: PrimeField>(
 /// Given an MLE W, and a list of univariate polynomials l, generate the
 /// univariate polynomial that composes W with l.
 ///
-/// Returns an error if l's length does not matches number of variables in W.
+/// Returns an error if l's length does not matches the number of variables in W.
 pub(crate) fn compute_w_circ_l<F: PrimeField>(
     w: &DenseMultilinearExtension<F>,
     l: &[DensePolynomial<F>],
@@ -130,7 +130,7 @@ pub fn get_batched_nv(num_var: usize, polynomials_len: usize) -> usize {
 }
 
 /// merge a set of polynomials. Returns an error if the
-/// polynomials do not share a same number of nvs.
+/// polynomials do not share the same number of nvs.
 pub fn merge_polynomials<F: PrimeField>(
     polynomials: &[MLE<F>],
 ) -> Result<DenseMultilinearExtension<F>, PCSError> {
