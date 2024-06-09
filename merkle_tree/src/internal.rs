@@ -83,7 +83,7 @@ where
 /// A merkle path is a bottom-up list of nodes from leaf to the root.
 pub type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
 
-/// A merkle commitment consists a root hash value, a tree height and number of
+/// A merkle commitment consists of a root hash value, a tree height and number of
 /// leaves
 #[derive(
     Eq,
