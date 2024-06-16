@@ -1,0 +1,1 @@
+searchState.loadedDescShard("jf_crhf", 0, "Trait definition for Collision-resistant hash function …\nA trait for CRHF (based on ark-primitives’ definition, …\nError type\nInput to the CRHF\nOutput of the CRHF\nevaluate inputs and return hash output")
