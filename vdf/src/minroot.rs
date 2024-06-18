@@ -57,6 +57,13 @@ pub struct MinRootPP {
 )]
 pub struct MinRootElement<F: MinRootField>(F, F);
 
+impl <F: MinRootField> MinRootElement<F> {
+    /// Constructor
+    pub fn new(x: F, y: F) -> Self {
+        Self(x, y)
+    }
+}
+
 impl<F, T> From<T> for MinRootElement<F>
 where
     T: AffineRepr<BaseField = F>,
