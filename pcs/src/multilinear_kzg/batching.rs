@@ -26,11 +26,11 @@ use ark_std::{end_timer, format, start_timer, string::ToString, vec, vec::Vec};
 /// - the prover parameters for multilinear KZG,
 /// - a list of MLEs,
 /// - a batch commitment to all MLEs
-/// - and a same number of points,
+/// - and the same number of points,
 /// compute a batch opening for all the polynomials.
 ///
 /// For simplicity, this API requires each MLE to have only one point. If
-/// the caller wish to use more than one points per MLE, it should be
+/// the caller wishes to use more than one point per MLE, it should be
 /// handled at the caller layer.
 ///
 /// Returns an error if the lengths do not match.

@@ -139,7 +139,7 @@ where
     fn digest_leaf(pos: &I, elem: &E) -> Result<T, MerkleTreeError>;
 }
 
-/// An trait for Merkle tree index type.
+/// A trait for Merkle tree index type.
 pub trait ToTraversalPath<const ARITY: usize> {
     /// Convert the given index to a vector of branch indices given tree height
     /// and ARITY.
@@ -183,7 +183,7 @@ pub trait MerkleCommitment<T: NodeValue>:
 }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
-/// accumulator for fixed-length array. Supports generate membership proof at a
+/// accumulator for fixed-length array. Supports generating membership proof at a
 /// given position and verify a membership proof.
 pub trait MerkleTreeScheme: Sized {
     /// Merkle tree element type
@@ -243,7 +243,7 @@ pub trait MerkleTreeScheme: Sized {
     // ) -> Result<(), MerkleTreeError>;
 
     /// Return an iterator that iterates through all element that are not
-    /// forgetton
+    /// forgotten
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
@@ -272,7 +272,7 @@ pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {
 }
 
 /// A universal merkle tree is abstracted as a random-access array or a
-/// key-value map. It allows manipulation at any given position, and has ability
+/// key-value map. It allows manipulation at any given position, and has the ability
 /// to generate/verify a non-membership proof.
 pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Non membership proof for a given index
