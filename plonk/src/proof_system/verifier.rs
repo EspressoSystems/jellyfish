@@ -10,6 +10,7 @@ use super::structs::{
 use crate::{
     constants::*,
     errors::{PlonkError, SnarkError::ParameterError},
+    lagrange::LagrangeCoeffs,
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
@@ -143,8 +144,8 @@ where
         }
 
         let vanish_eval = self.evaluate_vanishing_poly(&challenges.zeta);
-        let (lagrange_1_eval, lagrange_n_eval) =
-            self.evaluate_lagrange_1_and_n(&challenges.zeta, &vanish_eval);
+        let lagrange_1_eval = self.domain.first_lagrange_coeff(challenges.zeta);
+        let lagrange_n_eval = self.domain.last_lagrange_coeff(challenges.zeta);
 
         // compute the constant term of the linearization polynomial
         let lin_poly_constant = self.compute_lin_poly_constant_term(
@@ -821,23 +822,6 @@ where
         self.domain.evaluate_vanishing_polynomial(*zeta)
     }
 
-    /// Evaluate the first and the last lagrange polynomial at point `zeta`
-    /// given the vanishing polynomial evaluation `vanish_eval`.
-    #[inline]
-    pub(crate) fn evaluate_lagrange_1_and_n(
-        &self,
-        zeta: &E::ScalarField,
-        vanish_eval: &E::ScalarField,
-    ) -> (E::ScalarField, E::ScalarField) {
-        let divisor =
-            E::ScalarField::from(self.domain.size() as u32) * (*zeta - E::ScalarField::one());
-        let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor =
-            E::ScalarField::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
-        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
-        (lagrange_1_eval, lagrange_n_eval)
-    }
-
     #[inline]
     /// Return the list of polynomial commitments to be opened at point `zeta`.
     /// The order should be consistent with the prover side.
@@ -900,25 +884,23 @@ where
         vanish_eval: &E::ScalarField,
         circuit_is_merged: bool,
     ) -> Result<E::ScalarField, PlonkError> {
-        // If z is a root of the vanishing polynomial, directly return zero.
-        if vanish_eval.is_zero() {
-            return Ok(E::ScalarField::zero());
-        }
         let len = match circuit_is_merged {
             false => pub_input.len(),
             true => pub_input.len() / 2,
         };
 
+        let mut result = E::ScalarField::zero();
+        let lagrange_coeffs = self.domain.lagrange_coeffs_for_range(0..len, *z);
+        for (val, lagrange_i) in pub_input.iter().take(len).zip(lagrange_coeffs) {
+            result += lagrange_i * val;
+        }
+
+        // TODO: (alex) deal with merged circuit later
         let vanish_eval_div_n = E::ScalarField::from(self.domain.size() as u32)
             .inverse()
             .ok_or(PlonkError::DivisionError)?
             * (*vanish_eval);
-        let mut result = E::ScalarField::zero();
-        for (i, val) in pub_input.iter().take(len).enumerate() {
-            let lagrange_i =
-                vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));
-            result += lagrange_i * val;
-        }
+
         if circuit_is_merged {
             let n = self.domain.size();
             for (i, val) in pub_input.iter().skip(len).enumerate() {

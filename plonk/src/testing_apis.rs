@@ -244,12 +244,11 @@ where
         ),
         PlonkError,
     > {
-        let verifier: verifier::Verifier<E> = (*self).clone().into();
-
-        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
-        let (lagrange_1_eval, lagrange_n_eval) =
-            verifier.evaluate_lagrange_1_and_n(zeta, &vanish_eval);
-        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+        let lagrange_1_eval = self.domain.first_lagrange_coeff(zeta);
+        let lagrange_n_eval = self.domain.last_lagrange_coeff(zeta);
+        // TODO: (alex) remove this, once the `evaluate_pi_poly()` is updated
+        let vanish_eval = self.evaluate_vanishing_poly(&challenges.zeta);
+        let pi_eval = self.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
         Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))
     }
 
