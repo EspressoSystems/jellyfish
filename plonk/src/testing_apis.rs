@@ -14,6 +14,7 @@
 use crate::{
     constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
+    lagrange::LagrangeCoeffs,
     proof_system::{
         structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
         verifier,
@@ -244,11 +245,12 @@ where
         ),
         PlonkError,
     > {
-        let lagrange_1_eval = self.domain.first_lagrange_coeff(zeta);
-        let lagrange_n_eval = self.domain.last_lagrange_coeff(zeta);
+        let verifier: verifier::Verifier<E> = (*self).clone().into();
+        let lagrange_1_eval = verifier.domain.first_lagrange_coeff(*zeta);
+        let lagrange_n_eval = verifier.domain.last_lagrange_coeff(*zeta);
         // TODO: (alex) remove this, once the `evaluate_pi_poly()` is updated
-        let vanish_eval = self.evaluate_vanishing_poly(&challenges.zeta);
-        let pi_eval = self.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
+        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
         Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))
     }
 
