@@ -37,13 +37,15 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
     // special care when tau in H, as both numerator and denominator is zero
     fn first_lagrange_coeff(&self, tau: F) -> F {
         let offset = self.coset_offset();
+        if tau == F::one() * offset {
+            return F::one();
+        }
+
         let z_h_at_tau = self.evaluate_vanishing_polynomial(tau);
         if z_h_at_tau.is_zero() {
-            if tau == F::one() * offset {
-                F::one()
-            } else {
-                F::zero()
-            }
+            // the case where tau is the first element in the coset
+            // already early-return
+            F::zero()
         } else {
             let denominator = self.size_as_field_element()
                 * offset.pow([self.size() as u64 - 1])
@@ -56,13 +58,15 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
     // with g^n-1 = g^-1
     fn last_lagrange_coeff(&self, tau: F) -> F {
         let offset = self.coset_offset();
+        if tau == self.group_gen_inv() * offset {
+            return F::one();
+        }
+
         let z_h_at_tau = self.evaluate_vanishing_polynomial(tau);
         if z_h_at_tau.is_zero() {
-            if tau == self.group_gen_inv() * offset {
-                F::one()
-            } else {
-                F::zero()
-            }
+            // the case where tau is the last element in the coset
+            // already early-return
+            F::zero()
         } else {
             let denominator = self.size_as_field_element()
                 * offset.pow([self.size() as u64 - 1])
@@ -117,7 +121,7 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
             let v_0_inv = self.size_as_field_element() * offset.pow([self.size() as u64 - 1]);
             let mut l_i = z_h_at_tau.inverse().unwrap() * v_0_inv * group_gen_inv.pow([start]);
 
-            let mut negative_cur_elem = -offset * group_gen.pow([start]);
+            let mut negative_cur_elem = -offset * group_start;
             let mut lagrange_coefficients_inverse = vec![F::zero(); size];
             for coeff in lagrange_coefficients_inverse.iter_mut() {
                 let r_i = tau + negative_cur_elem;
