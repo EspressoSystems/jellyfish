@@ -248,9 +248,8 @@ where
         let verifier: verifier::Verifier<E> = (*self).clone().into();
         let lagrange_1_eval = verifier.domain.first_lagrange_coeff(*zeta);
         let lagrange_n_eval = verifier.domain.last_lagrange_coeff(*zeta);
-        // TODO: (alex) remove this, once the `evaluate_pi_poly()` is updated
         let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
-        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, false)?;
         Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))
     }
 
@@ -277,7 +276,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::ScalarField,
         lagrange_1_eval: &E::ScalarField,
         lagrange_n_eval: &E::ScalarField,
         alpha_powers: &[E::ScalarField],
@@ -291,7 +289,6 @@ where
                 verify_keys,
                 public_inputs,
                 batch_proof,
-                vanish_eval,
                 lagrange_1_eval,
                 lagrange_n_eval,
                 alpha_powers,

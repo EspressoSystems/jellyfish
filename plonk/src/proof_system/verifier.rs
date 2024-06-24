@@ -153,7 +153,6 @@ where
             verify_keys,
             public_inputs,
             batch_proof,
-            &vanish_eval,
             &lagrange_1_eval,
             &lagrange_n_eval,
             &alpha_powers,
@@ -357,7 +356,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::ScalarField,
         lagrange_1_eval: &E::ScalarField,
         lagrange_n_eval: &E::ScalarField,
         alpha_powers: &[E::ScalarField],
@@ -387,7 +385,7 @@ where
                 ),
             )
         {
-            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vanish_eval, vk.is_merged)?
+            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vk.is_merged)?
                 - alpha_powers[0] * lagrange_1_eval;
             let num_wire_types = GATE_WIDTH
                 + 1
@@ -881,7 +879,6 @@ where
         &self,
         pub_input: &[E::ScalarField],
         z: &E::ScalarField,
-        vanish_eval: &E::ScalarField,
         circuit_is_merged: bool,
     ) -> Result<E::ScalarField, PlonkError> {
         let len = match circuit_is_merged {
@@ -895,18 +892,15 @@ where
             result += lagrange_i * val;
         }
 
-        // TODO: (alex) deal with merged circuit later
-        let vanish_eval_div_n = E::ScalarField::from(self.domain.size() as u32)
-            .inverse()
-            .ok_or(PlonkError::DivisionError)?
-            * (*vanish_eval);
-
         if circuit_is_merged {
             let n = self.domain.size();
-            for (i, val) in pub_input.iter().skip(len).enumerate() {
-                let lagrange_n_minus_i = vanish_eval_div_n * self.domain.element(n - i - 1)
-                    / (*z - self.domain.element(n - i - 1));
-                result += lagrange_n_minus_i * val;
+            let last_l_lagrange_coeff = self.domain.lagrange_coeffs_for_range(n - len..n, *z);
+            for (val, lagrange_n_minus_i) in pub_input
+                .iter()
+                .skip(len)
+                .zip(last_l_lagrange_coeff.iter().rev())
+            {
+                result += *lagrange_n_minus_i * *val;
             }
         }
         Ok(result)
