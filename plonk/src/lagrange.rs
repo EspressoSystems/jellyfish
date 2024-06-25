@@ -47,9 +47,9 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
             // already early-return
             F::zero()
         } else {
-            let denominator = self.size_as_field_element()
-                * offset.pow([self.size() as u64 - 1])
-                * (tau - offset);
+            let offset_pow_size_minus_one = self.coset_offset_pow_size() / offset;
+            let denominator =
+                self.size_as_field_element() * offset_pow_size_minus_one * (tau - offset);
             z_h_at_tau * denominator.inverse().unwrap()
         }
     }
@@ -68,8 +68,9 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
             // already early-return
             F::zero()
         } else {
+            let offset_pow_size_minus_one = self.coset_offset_pow_size() / offset;
             let denominator = self.size_as_field_element()
-                * offset.pow([self.size() as u64 - 1])
+                * offset_pow_size_minus_one
                 * (tau - offset * self.group_gen_inv());
             z_h_at_tau * self.group_gen_inv() * denominator.inverse().unwrap()
         }
@@ -118,7 +119,7 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
             let start = range.start as u64;
 
             // v_0_inv = n * h^(n-1)
-            let v_0_inv = self.size_as_field_element() * offset.pow([self.size() as u64 - 1]);
+            let v_0_inv = self.size_as_field_element() * self.coset_offset_pow_size() / offset;
             let mut l_i = z_h_at_tau.inverse().unwrap() * v_0_inv * group_gen_inv.pow([start]);
 
             let mut negative_cur_elem = -offset * group_start;
