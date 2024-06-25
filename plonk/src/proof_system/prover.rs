@@ -783,43 +783,10 @@ impl<E: Pairing> Prover<E> {
         let n = pk.domain_size();
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
-        let zero = E::ScalarField::zero();
-        let one = E::ScalarField::one();
-
-        // NOTE: we didn't use `domain.first/last_lagrange_coeff()` to save more compute
-        // as we only need the value divided by vanish_eval
-        let offset = self.domain.coset_offset();
-        let (lagrange_1_coeff_div_vanish, lagrange_n_coeff_div_vanish) =
-            if eval_point == one * offset {
-                // when eval_point is first element in the domain
-                (
-                    self.domain
-                        .evaluate_vanishing_polynomial(eval_point)
-                        .inverse()
-                        .unwrap(),
-                    zero,
-                )
-            } else if eval_point == self.domain.group_gen_inv() * offset {
-                // when eval_point is last element in the domain
-                (
-                    zero,
-                    self.domain
-                        .evaluate_vanishing_polynomial(eval_point)
-                        .inverse()
-                        .unwrap(),
-                )
-            } else {
-                let size_f = self.domain.size_as_field_element();
-                let h_pow = offset.pow([self.domain.size() as u64 - 1]);
-                let group_gen_inv = self.domain.group_gen_inv();
-                (
-                    (size_f * h_pow * (eval_point - offset)).inverse().unwrap(),
-                    group_gen_inv
-                        * (size_f * h_pow * (eval_point - offset * group_gen_inv))
-                            .inverse()
-                            .unwrap(),
-                )
-            };
+        let vanish_eval = self.domain.evaluate_vanishing_polynomial(eval_point);
+        let lagrange_n_coeff_div_vanish = self.domain.last_lagrange_coeff(eval_point) / vanish_eval;
+        let lagrange_1_coeff_div_vanish =
+            self.domain.first_lagrange_coeff(eval_point) / vanish_eval;
 
         let mut alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
@@ -877,7 +844,7 @@ impl<E: Pairing> Prover<E> {
         // The check that p(X) = 1 at point 1.
         //
         // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
-        let term_p_1 = (p_x - one) * lagrange_1_coeff_div_vanish;
+        let term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff_div_vanish;
         result_2 += alpha_power * term_p_1;
         alpha_power *= challenges.alpha;
 
@@ -885,7 +852,7 @@ impl<E: Pairing> Prover<E> {
         //
         // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
         // (X - w^{n-1}))
-        let term_p_2 = (p_x - one) * lagrange_n_coeff_div_vanish;
+        let term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff_div_vanish;
         result_2 += alpha_power * term_p_2;
         alpha_power *= challenges.alpha;
 
@@ -896,7 +863,7 @@ impl<E: Pairing> Prover<E> {
         // [gamma*(1+beta) + merged_table(X) + beta * merged_table(Xw)]
         //        - (X - w^{n-1}) * p(Xw) * [gamma(1+beta) + h_1(X) + beta * h_1(Xw)] *
         //          [gamma(1+beta) + h_2(X) + beta * h_2(Xw)]
-        let beta_plus_one = one + challenges.beta;
+        let beta_plus_one = E::ScalarField::one() + challenges.beta;
         let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
         let term_p_3 = (eval_point - self.domain.group_gen_inv)
             * (p_x
