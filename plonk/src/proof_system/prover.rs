@@ -784,9 +784,10 @@ impl<E: Pairing> Prover<E> {
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
         let vanish_eval = self.domain.evaluate_vanishing_polynomial(eval_point);
-        let lagrange_n_coeff_div_vanish = self.domain.last_lagrange_coeff(eval_point) / vanish_eval;
-        let lagrange_1_coeff_div_vanish =
-            self.domain.first_lagrange_coeff(eval_point) / vanish_eval;
+        let (lagrange_1_coeff, lagrange_n_coeff) =
+            self.domain.first_and_last_lagrange_coeffs(eval_point);
+        let lagrange_1_coeff_div_vanish = lagrange_1_coeff / vanish_eval;
+        let lagrange_n_coeff_div_vanish = lagrange_n_coeff / vanish_eval;
 
         let mut alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
@@ -1026,8 +1027,8 @@ impl<E: Pairing> Prover<E> {
         let one = E::ScalarField::one();
 
         // compute lagrange_1 and lagrange_n
-        let lagrange_1_eval = self.domain.first_lagrange_coeff(challenges.zeta);
-        let lagrange_n_eval = self.domain.last_lagrange_coeff(challenges.zeta);
+        let (lagrange_1_eval, lagrange_n_eval) =
+            self.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         // compute the coefficient for polynomial `prod_lookup_poly`
         let merged_table_eval = eval_merged_table::<E>(

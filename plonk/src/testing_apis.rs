@@ -246,8 +246,8 @@ where
         PlonkError,
     > {
         let verifier: verifier::Verifier<E> = (*self).clone().into();
-        let lagrange_1_eval = verifier.domain.first_lagrange_coeff(*zeta);
-        let lagrange_n_eval = verifier.domain.last_lagrange_coeff(*zeta);
+        let (lagrange_1_eval, lagrange_n_eval) =
+            verifier.domain.first_and_last_lagrange_coeffs(*zeta);
         let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
         let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, false)?;
         Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))

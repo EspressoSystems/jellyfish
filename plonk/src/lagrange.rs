@@ -27,17 +27,25 @@ pub(crate) trait LagrangeCoeffs<F: FftField> {
     fn first_lagrange_coeff(&self, tau: F) -> F;
     /// Returns the last coefficient: `L_{n-1, Domain}(tau)`
     fn last_lagrange_coeff(&self, tau: F) -> F;
+    /// Returns (first, last) lagrange coeffs
+    fn first_and_last_lagrange_coeffs(&self, tau: F) -> (F, F) {
+        (
+            self.first_lagrange_coeff(tau),
+            self.last_lagrange_coeff(tau),
+        )
+    }
     /// Return a list of coefficients for `L_{range, Domain}(tau)`
     fn lagrange_coeffs_for_range(&self, range: Range<usize>, tau: F) -> Vec<F>;
 }
 
 impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
-    // L_0(tau) = Z_H(tau) * g^0 / (n * h^(n-1) *(tau - h * g^0))
+    // L_0(tau) = Z_H(tau) * g^0 / (n * h^(n-1) * (tau - h * g^0))
     // with g^0 = 1
     // special care when tau in H, as both numerator and denominator is zero
     fn first_lagrange_coeff(&self, tau: F) -> F {
         let offset = self.coset_offset();
-        if tau == F::one() * offset {
+        if tau == offset {
+            // when tau = g^0 * offset
             return F::one();
         }
 
@@ -73,6 +81,36 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
                 * offset_pow_size_minus_one
                 * (tau - offset * self.group_gen_inv());
             z_h_at_tau * self.group_gen_inv() * denominator.inverse().unwrap()
+        }
+    }
+
+    // a slightly cheaper implementation of the generic default
+    // saving repeated work when computing two coeffs separately
+    fn first_and_last_lagrange_coeffs(&self, tau: F) -> (F, F) {
+        let offset = self.coset_offset();
+        let group_gen_inv = self.group_gen_inv();
+        if tau == offset {
+            return (F::one(), F::zero());
+        }
+        if tau == group_gen_inv * offset {
+            return (F::zero(), F::one());
+        }
+
+        let z_h_at_tau = self.evaluate_vanishing_polynomial(tau);
+        if z_h_at_tau.is_zero() {
+            (F::zero(), F::zero())
+        } else {
+            let offset_pow_size_minus_one = self.coset_offset_pow_size() / offset;
+            let first_denominator =
+                self.size_as_field_element() * offset_pow_size_minus_one * (tau - offset);
+            let last_denominator = self.size_as_field_element()
+                * offset_pow_size_minus_one
+                * (tau - offset * group_gen_inv);
+
+            (
+                z_h_at_tau / first_denominator,
+                z_h_at_tau * group_gen_inv / last_denominator,
+            )
         }
     }
 

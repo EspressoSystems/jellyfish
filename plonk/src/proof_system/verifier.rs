@@ -144,8 +144,8 @@ where
         }
 
         let vanish_eval = self.evaluate_vanishing_poly(&challenges.zeta);
-        let lagrange_1_eval = self.domain.first_lagrange_coeff(challenges.zeta);
-        let lagrange_n_eval = self.domain.last_lagrange_coeff(challenges.zeta);
+        let (lagrange_1_eval, lagrange_n_eval) =
+            self.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         // compute the constant term of the linearization polynomial
         let lin_poly_constant = self.compute_lin_poly_constant_term(
