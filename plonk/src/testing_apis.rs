@@ -12,7 +12,6 @@
 #![allow(missing_docs)]
 
 use crate::{
-    constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
     proof_system::{
         structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
@@ -382,12 +381,12 @@ where
 /// exposing the internal states for testing purposes
 impl SolidityTranscript {
     /// Create a new transcript from specific internal states.
-    pub fn from_internal(transcript: Vec<u8>, state: [u8; KECCAK256_STATE_SIZE]) -> Self {
-        Self { transcript, state }
+    pub fn from_internal(transcript: Vec<u8>) -> Self {
+        Self { transcript }
     }
 
     /// Returns the internal states
-    pub fn internal(&self) -> (Vec<u8>, [u8; KECCAK256_STATE_SIZE]) {
-        (self.transcript.clone(), self.state.clone())
+    pub fn internal(&self) -> Vec<u8> {
+        self.transcript.clone()
     }
 }
