@@ -224,7 +224,11 @@ where
     for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
         transcript_var.append_commitments_vars(b"witness_poly_comms", wires_poly_comms)?;
     }
-    let tau = transcript_var.get_and_append_challenge_var::<E>(b"tau", circuit)?;
+    let tau = if verify_keys.iter().any(|vk| vk.support_lookup) {
+        transcript_var.get_and_append_challenge_var::<E>(b"tau", circuit)?
+    } else {
+        circuit.one()
+    };
 
     let beta = transcript_var.get_and_append_challenge_var::<E>(b"beta", circuit)?;
     let gamma = transcript_var.get_and_append_challenge_var::<E>(b"gamma", circuit)?;

@@ -286,7 +286,11 @@ where
         for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
             transcript.append_commitments(b"witness_poly_comms", wires_poly_comms)?;
         }
-        let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        let tau = if verify_keys.iter().any(|vk| vk.plookup_vk.is_some()) {
+            transcript.get_and_append_challenge::<E>(b"tau")?
+        } else {
+            E::ScalarField::one()
+        };
 
         for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
             if let Some(proof_lkup) = plookup_proof.as_ref() {

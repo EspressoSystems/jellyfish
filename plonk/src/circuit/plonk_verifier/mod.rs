@@ -50,6 +50,9 @@ pub struct VerifyingKeyVar<E: Pairing> {
     /// The constants K0, ..., K_num_wire_types that ensure wire subsets are
     /// disjoint.
     k: Vec<E::ScalarField>,
+
+    /// flag to indicate if this circuit supports lookup argument
+    support_lookup: bool,
 }
 
 impl<E: Pairing> VerifyingKeyVar<E> {
@@ -80,6 +83,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
             domain_size: verify_key.domain_size,
             num_inputs: verify_key.num_inputs,
             k: verify_key.k.clone(),
+            support_lookup: circuit.support_lookup(),
         })
     }
 
@@ -141,6 +145,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
             domain_size: self.domain_size,
             num_inputs: self.num_inputs + other.num_inputs,
             k: self.k.clone(),
+            support_lookup: circuit.support_lookup(),
         })
     }
 

@@ -254,7 +254,11 @@ where
         // Round 1.5
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
-        challenges.tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        if circuits.iter().any(|c| C::support_lookup(c)) {
+            challenges.tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        } else {
+            challenges.tau = E::ScalarField::one();
+        }
         let mut h_poly_comms_vec = vec![];
         let mut sorted_vec_list = vec![];
         let mut merged_table_list = vec![];
