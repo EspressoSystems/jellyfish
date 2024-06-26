@@ -906,30 +906,6 @@
 <a href="#906" id="906">906</a>
 <a href="#907" id="907">907</a>
 <a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
-<a href="#921" id="921">921</a>
-<a href="#922" id="922">922</a>
-<a href="#923" id="923">923</a>
-<a href="#924" id="924">924</a>
-<a href="#925" id="925">925</a>
-<a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
-<a href="#928" id="928">928</a>
-<a href="#929" id="929">929</a>
-<a href="#930" id="930">930</a>
-<a href="#931" id="931">931</a>
-<a href="#932" id="932">932</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -942,6 +918,7 @@
 <span class="kw">use crate</span>::{
     constants::<span class="kw-2">*</span>,
     errors::{PlonkError, SnarkError::ParameterError},
+    lagrange::LagrangeCoeffs,
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::<span class="kw-2">*</span>,
 };
@@ -1076,7 +1053,7 @@
 
         <span class="kw">let </span>vanish_eval = <span class="self">self</span>.evaluate_vanishing_poly(<span class="kw-2">&amp;</span>challenges.zeta);
         <span class="kw">let </span>(lagrange_1_eval, lagrange_n_eval) =
-            <span class="self">self</span>.evaluate_lagrange_1_and_n(<span class="kw-2">&amp;</span>challenges.zeta, <span class="kw-2">&amp;</span>vanish_eval);
+            <span class="self">self</span>.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         <span class="comment">// compute the constant term of the linearization polynomial
         </span><span class="kw">let </span>lin_poly_constant = <span class="self">self</span>.compute_lin_poly_constant_term(
@@ -1084,7 +1061,6 @@
             verify_keys,
             public_inputs,
             batch_proof,
-            <span class="kw-2">&amp;</span>vanish_eval,
             <span class="kw-2">&amp;</span>lagrange_1_eval,
             <span class="kw-2">&amp;</span>lagrange_n_eval,
             <span class="kw-2">&amp;</span>alpha_powers,
@@ -1288,7 +1264,6 @@
         verify_keys: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>VerifyingKey&lt;E&gt;],
         public_inputs: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>[E::ScalarField]],
         batch_proof: <span class="kw-2">&amp;</span>BatchProof&lt;E&gt;,
-        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         lagrange_1_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         lagrange_n_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         alpha_powers: <span class="kw-2">&amp;</span>[E::ScalarField],
@@ -1318,7 +1293,7 @@
                 ),
             )
         {
-            <span class="kw">let </span><span class="kw-2">mut </span>tmp = <span class="self">self</span>.evaluate_pi_poly(pi, <span class="kw-2">&amp;</span>challenges.zeta, vanish_eval, vk.is_merged)<span class="question-mark">?
+            <span class="kw">let </span><span class="kw-2">mut </span>tmp = <span class="self">self</span>.evaluate_pi_poly(pi, <span class="kw-2">&amp;</span>challenges.zeta, vk.is_merged)<span class="question-mark">?
                 </span>- alpha_powers[<span class="number">0</span>] * lagrange_1_eval;
             <span class="kw">let </span>num_wire_types = GATE_WIDTH
                 + <span class="number">1
@@ -1753,23 +1728,6 @@
         <span class="self">self</span>.domain.evaluate_vanishing_polynomial(<span class="kw-2">*</span>zeta)
     }
 
-    <span class="doccomment">/// Evaluate the first and the last lagrange polynomial at point `zeta`
-    /// given the vanishing polynomial evaluation `vanish_eval`.
-    </span><span class="attr">#[inline]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>evaluate_lagrange_1_and_n(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        zeta: <span class="kw-2">&amp;</span>E::ScalarField,
-        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
-    ) -&gt; (E::ScalarField, E::ScalarField) {
-        <span class="kw">let </span>divisor =
-            E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - E::ScalarField::one());
-        <span class="kw">let </span>lagrange_1_eval = <span class="kw-2">*</span>vanish_eval / divisor;
-        <span class="kw">let </span>divisor =
-            E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32) * (<span class="kw-2">*</span>zeta - <span class="self">self</span>.domain.group_gen_inv);
-        <span class="kw">let </span>lagrange_n_eval = <span class="kw-2">*</span>vanish_eval * <span class="self">self</span>.domain.group_gen_inv / divisor;
-        (lagrange_1_eval, lagrange_n_eval)
-    }
-
     <span class="attr">#[inline]
     </span><span class="doccomment">/// Return the list of polynomial commitments to be opened at point `zeta`.
     /// The order should be consistent with the prover side.
@@ -1829,34 +1787,28 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pub_input: <span class="kw-2">&amp;</span>[E::ScalarField],
         z: <span class="kw-2">&amp;</span>E::ScalarField,
-        vanish_eval: <span class="kw-2">&amp;</span>E::ScalarField,
         circuit_is_merged: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt; {
-        <span class="comment">// If z is a root of the vanishing polynomial, directly return zero.
-        </span><span class="kw">if </span>vanish_eval.is_zero() {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(E::ScalarField::zero());
-        }
         <span class="kw">let </span>len = <span class="kw">match </span>circuit_is_merged {
             <span class="bool-val">false </span>=&gt; pub_input.len(),
             <span class="bool-val">true </span>=&gt; pub_input.len() / <span class="number">2</span>,
         };
 
-        <span class="kw">let </span>vanish_eval_div_n = E::ScalarField::from(<span class="self">self</span>.domain.size() <span class="kw">as </span>u32)
-            .inverse()
-            .ok_or(PlonkError::DivisionError)<span class="question-mark">?
-            </span>* (<span class="kw-2">*</span>vanish_eval);
         <span class="kw">let </span><span class="kw-2">mut </span>result = E::ScalarField::zero();
-        <span class="kw">for </span>(i, val) <span class="kw">in </span>pub_input.iter().take(len).enumerate() {
-            <span class="kw">let </span>lagrange_i =
-                vanish_eval_div_n * <span class="self">self</span>.domain.element(i) / (<span class="kw-2">*</span>z - <span class="self">self</span>.domain.element(i));
+        <span class="kw">let </span>lagrange_coeffs = <span class="self">self</span>.domain.lagrange_coeffs_for_range(<span class="number">0</span>..len, <span class="kw-2">*</span>z);
+        <span class="kw">for </span>(val, lagrange_i) <span class="kw">in </span>pub_input.iter().take(len).zip(lagrange_coeffs) {
             result += lagrange_i * val;
         }
+
         <span class="kw">if </span>circuit_is_merged {
             <span class="kw">let </span>n = <span class="self">self</span>.domain.size();
-            <span class="kw">for </span>(i, val) <span class="kw">in </span>pub_input.iter().skip(len).enumerate() {
-                <span class="kw">let </span>lagrange_n_minus_i = vanish_eval_div_n * <span class="self">self</span>.domain.element(n - i - <span class="number">1</span>)
-                    / (<span class="kw-2">*</span>z - <span class="self">self</span>.domain.element(n - i - <span class="number">1</span>));
-                result += lagrange_n_minus_i * val;
+            <span class="kw">let </span>last_l_lagrange_coeff = <span class="self">self</span>.domain.lagrange_coeffs_for_range(n - len..n, <span class="kw-2">*</span>z);
+            <span class="kw">for </span>(val, lagrange_n_minus_i) <span class="kw">in </span>pub_input
+                .iter()
+                .skip(len)
+                .zip(last_l_lagrange_coeff.iter().rev())
+            {
+                result += <span class="kw-2">*</span>lagrange_n_minus_i * <span class="kw-2">*</span>val;
             }
         }
         <span class="prelude-val">Ok</span>(result)

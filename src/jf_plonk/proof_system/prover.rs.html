@@ -1129,13 +1129,6 @@
 <a href="#1129" id="1129">1129</a>
 <a href="#1130" id="1130">1130</a>
 <a href="#1131" id="1131">1131</a>
-<a href="#1132" id="1132">1132</a>
-<a href="#1133" id="1133">1133</a>
-<a href="#1134" id="1134">1134</a>
-<a href="#1135" id="1135">1135</a>
-<a href="#1136" id="1136">1136</a>
-<a href="#1137" id="1137">1137</a>
-<a href="#1138" id="1138">1138</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1151,6 +1144,7 @@
 <span class="kw">use crate</span>::{
     constants::domain_size_ratio,
     errors::{PlonkError, SnarkError::<span class="kw-2">*</span>},
+    lagrange::LagrangeCoeffs,
     proof_system::structs::CommitKey,
 };
 <span class="kw">use </span>ark_ec::pairing::Pairing;
@@ -1441,7 +1435,7 @@
         plookup_evals: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;DensePolynomial&lt;E::ScalarField&gt;, PlonkError&gt; {
         <span class="kw">let </span>r_circ = <span class="self">Self</span>::compute_lin_poly_circuit_contribution(pk, <span class="kw-2">&amp;</span>poly_evals.wires_evals);
-        <span class="kw">let </span>r_perm = <span class="self">Self</span>::compute_lin_poly_copy_constraint_contribution(
+        <span class="kw">let </span>r_perm = <span class="self">self</span>.compute_lin_poly_copy_constraint_contribution(
             pk,
             challenges,
             poly_evals,
@@ -1451,7 +1445,6 @@
         <span class="comment">// compute Plookup contribution if support lookup
         </span><span class="kw">let </span>r_lookup = plookup_evals.map(|plookup_evals| {
             <span class="self">self</span>.compute_lin_poly_plookup_contribution(
-                pk,
                 challenges,
                 <span class="kw-2">&amp;</span>poly_evals.wires_evals,
                 plookup_evals,
@@ -1921,11 +1914,12 @@
         <span class="kw">let </span>n = pk.domain_size();
         <span class="kw">let </span>m = <span class="self">self</span>.quot_domain.size();
         <span class="kw">let </span>domain_size_ratio = m / n;
-        <span class="kw">let </span>n_field = E::ScalarField::from(n <span class="kw">as </span>u64);
-        <span class="kw">let </span>lagrange_n_coeff =
-            <span class="self">self</span>.domain.group_gen_inv / (n_field * (eval_point - <span class="self">self</span>.domain.group_gen_inv));
-        <span class="kw">let </span>lagrange_1_coeff =
-            E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
+        <span class="kw">let </span>vanish_eval = <span class="self">self</span>.domain.evaluate_vanishing_polynomial(eval_point);
+        <span class="kw">let </span>(lagrange_1_coeff, lagrange_n_coeff) =
+            <span class="self">self</span>.domain.first_and_last_lagrange_coeffs(eval_point);
+        <span class="kw">let </span>lagrange_1_coeff_div_vanish = lagrange_1_coeff / vanish_eval;
+        <span class="kw">let </span>lagrange_n_coeff_div_vanish = lagrange_n_coeff / vanish_eval;
+
         <span class="kw">let </span><span class="kw-2">mut </span>alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
         <span class="comment">// extract polynomial evaluations
@@ -1975,14 +1969,14 @@
         //
         // Fh(X)/Z_H(X) = (Ln(X) * (h1(X) - h2(wX))) / Z_H(X) = (h1(X) - h2(wX)) *
         // w^{n-1} / (n * (X - w^{n-1}))
-        </span><span class="kw">let </span>term_h = (h_1_x - h_2_xw) * lagrange_n_coeff;
+        </span><span class="kw">let </span>term_h = (h_1_x - h_2_xw) * lagrange_n_coeff_div_vanish;
         <span class="kw">let </span><span class="kw-2">mut </span>result_2 = alpha_power * term_h;
         alpha_power <span class="kw-2">*</span>= challenges.alpha;
 
         <span class="comment">// The check that p(X) = 1 at point 1.
         //
         // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
-        </span><span class="kw">let </span>term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff;
+        </span><span class="kw">let </span>term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff_div_vanish;
         result_2 += alpha_power * term_p_1;
         alpha_power <span class="kw-2">*</span>= challenges.alpha;
 
@@ -1990,7 +1984,7 @@
         //
         // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
         // (X - w^{n-1}))
-        </span><span class="kw">let </span>term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff;
+        </span><span class="kw">let </span>term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff_div_vanish;
         result_2 += alpha_power * term_p_2;
         alpha_power <span class="kw-2">*</span>= challenges.alpha;
 
@@ -2113,15 +2107,13 @@
 
     <span class="comment">// Compute the wire permutation part of the linearization polynomial
     </span><span class="kw">fn </span>compute_lin_poly_copy_constraint_contribution(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
         challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
         poly_evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::ScalarField&gt;,
         prod_perm_poly: <span class="kw-2">&amp;</span>DensePolynomial&lt;E::ScalarField&gt;,
     ) -&gt; DensePolynomial&lt;E::ScalarField&gt; {
-        <span class="kw">let </span>dividend = challenges.zeta.pow([pk.domain_size() <span class="kw">as </span>u64]) - E::ScalarField::one();
-        <span class="kw">let </span>divisor = E::ScalarField::from(pk.domain_size() <span class="kw">as </span>u32)
-            * (challenges.zeta - E::ScalarField::one());
-        <span class="kw">let </span>lagrange_1_eval = dividend / divisor;
+        <span class="kw">let </span>lagrange_1_eval = <span class="self">self</span>.domain.first_lagrange_coeff(challenges.zeta);
 
         <span class="comment">// Compute the coefficient of z(X)
         </span><span class="kw">let </span>coeff = poly_evals.wires_evals.iter().enumerate().fold(
@@ -2154,7 +2146,6 @@
     <span class="comment">// Compute the Plookup part of the linearization polynomial
     </span><span class="kw">fn </span>compute_lin_poly_plookup_contribution(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        pk: <span class="kw-2">&amp;</span>ProvingKey&lt;E&gt;,
         challenges: <span class="kw-2">&amp;</span>Challenges&lt;E::ScalarField&gt;,
         w_evals: <span class="kw-2">&amp;</span>[E::ScalarField],
         plookup_evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;,
@@ -2164,16 +2155,11 @@
         <span class="kw">let </span>alpha_4 = alpha_2.square();
         <span class="kw">let </span>alpha_5 = alpha_4 * challenges.alpha;
         <span class="kw">let </span>alpha_6 = alpha_4 * alpha_2;
-        <span class="kw">let </span>n = pk.domain_size();
         <span class="kw">let </span>one = E::ScalarField::one();
-        <span class="kw">let </span>vanish_eval = challenges.zeta.pow([n <span class="kw">as </span>u64]) - one;
 
         <span class="comment">// compute lagrange_1 and lagrange_n
-        </span><span class="kw">let </span>divisor = E::ScalarField::from(n <span class="kw">as </span>u32) * (challenges.zeta - one);
-        <span class="kw">let </span>lagrange_1_eval = vanish_eval / divisor;
-        <span class="kw">let </span>divisor =
-            E::ScalarField::from(n <span class="kw">as </span>u32) * (challenges.zeta - <span class="self">self</span>.domain.group_gen_inv);
-        <span class="kw">let </span>lagrange_n_eval = vanish_eval * <span class="self">self</span>.domain.group_gen_inv / divisor;
+        </span><span class="kw">let </span>(lagrange_1_eval, lagrange_n_eval) =
+            <span class="self">self</span>.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         <span class="comment">// compute the coefficient for polynomial `prod_lookup_poly`
         </span><span class="kw">let </span>merged_table_eval = eval_merged_table::&lt;E&gt;(
