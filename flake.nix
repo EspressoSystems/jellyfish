@@ -63,6 +63,7 @@
               clangStdenv
               llvm_15
               typos
+              grcov
             ] ++ lib.optionals stdenv.isDarwin
               [ darwin.apple_sdk.frameworks.Security ];
 
