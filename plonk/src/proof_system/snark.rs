@@ -255,10 +255,11 @@ where
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
         if circuits.iter().any(|c| C::support_lookup(c)) {
-            challenges.tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+            challenges.tau = Some(transcript.get_and_append_challenge::<E>(b"tau")?);
         } else {
-            challenges.tau = E::ScalarField::one();
+            challenges.tau = None;
         }
+
         let mut h_poly_comms_vec = vec![];
         let mut sorted_vec_list = vec![];
         let mut merged_table_list = vec![];
@@ -269,7 +270,7 @@ where
                         prng,
                         &prove_keys[i].commit_key,
                         circuits[i],
-                        challenges.tau,
+                        challenges.tau.unwrap(),
                     )?;
                 online_oracles[i].plookup_oracles.h_polys = h_polys;
                 transcript.append_commitments(b"h_poly_comms", &h_poly_comms)?;
@@ -1429,7 +1430,7 @@ pub mod test {
             let point = domain.element(i);
             let next_point = point * domain.group_gen;
             let merged_lookup_wire_eval = eval_merged_lookup_witness::<E>(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 oracles.wire_polys[5].evaluate(&point),
                 oracles.wire_polys[0].evaluate(&point),
                 oracles.wire_polys[1].evaluate(&point),
@@ -1438,7 +1439,7 @@ pub mod test {
                 q_dom_sep_poly_ref.evaluate(&point),
             );
             let merged_table_eval = eval_merged_table::<E>(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 range_table_poly_ref.evaluate(&point),
                 key_table_poly_ref.evaluate(&point),
                 pk.q_lookup_poly()?.evaluate(&point),
@@ -1447,7 +1448,7 @@ pub mod test {
                 table_dom_sep_poly_ref.evaluate(&point),
             );
             let merged_table_next_eval = eval_merged_table::<E>(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 range_table_poly_ref.evaluate(&next_point),
                 key_table_poly_ref.evaluate(&next_point),
                 pk.q_lookup_poly()?.evaluate(&next_point),
