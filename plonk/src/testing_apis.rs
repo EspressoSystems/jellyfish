@@ -35,7 +35,7 @@ use jf_rescue::RescueParameter;
 /// A wrapper of crate::proof_system::structs::Challenges
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub struct Challenges<F: Field> {
-    pub tau: F,
+    pub tau: Option<F>,
     pub alpha: F,
     pub beta: F,
     pub gamma: F,
