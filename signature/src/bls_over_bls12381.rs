@@ -88,14 +88,16 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
 };
 use blst::{min_sig::*, BLST_ERROR};
+use derivative::Derivative;
 use tagged_base64::tagged;
 use zeroize::{Zeroize, Zeroizing};
 
 #[tagged(tag::BLS_SIGNING_KEY)]
-#[derive(Clone, Debug, Zeroize)]
+#[derive(Clone, Derivative, Zeroize)]
 #[zeroize(drop)]
+#[derivative(Debug)]
 /// A BLS Secret Key (Signing Key).
-pub struct BLSSignKey(SecretKey);
+pub struct BLSSignKey(#[derivative(Debug = "ignore")] SecretKey);
 
 impl Deref for BLSSignKey {
     type Target = SecretKey;

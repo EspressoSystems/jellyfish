@@ -60,6 +60,7 @@ use ark_std::{
     vec::Vec,
     One, UniformRand,
 };
+use derivative::Derivative;
 use digest::DynDigest;
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
@@ -233,13 +234,14 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
     PartialEq,
     CanonicalSerialize,
     CanonicalDeserialize,
-    Debug,
+    Derivative,
     Ord,
     PartialOrd,
 )]
 #[zeroize(drop)]
+#[derivative(Debug)]
 /// Signing key for BLS signature.
-pub struct SignKey(pub(crate) ScalarField);
+pub struct SignKey(#[derivative(Debug = "ignore")] pub(crate) ScalarField);
 
 // =====================================================
 // Verification key

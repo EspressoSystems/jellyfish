@@ -103,10 +103,19 @@ where
 // =====================================================
 #[tagged(tag::SCHNORR_SIGNING_KEY)]
 #[derive(
-    Clone, Hash, Default, Zeroize, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Debug,
+    Clone,
+    Hash,
+    Default,
+    Zeroize,
+    Eq,
+    PartialEq,
+    CanonicalSerialize,
+    CanonicalDeserialize,
+    Derivative,
 )]
+#[derivative(Debug)]
 /// Signing key for Schnorr signature.
-pub struct SignKey<F: PrimeField>(pub(crate) F);
+pub struct SignKey<F: PrimeField>(#[derivative(Debug = "ignore")] pub(crate) F);
 
 impl<F: PrimeField> Drop for SignKey<F> {
     fn drop(&mut self) {
