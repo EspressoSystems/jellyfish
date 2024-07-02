@@ -17,7 +17,6 @@ use jf_relation::{
 /// Plonk IOP verifier challenges.
 #[derive(Debug, Default)]
 pub(crate) struct ChallengesVar {
-    pub(crate) tau: Variable,
     pub(crate) alpha: Variable,
     pub(crate) beta: Variable,
     pub(crate) gamma: Variable,
@@ -29,7 +28,6 @@ pub(crate) struct ChallengesVar {
 /// Plonk IOP verifier challenges.
 #[derive(Debug, Default)]
 pub(crate) struct ChallengesFpElemVar<F: PrimeField> {
-    pub(crate) _tau: FpElemVar<F>,
     pub(crate) alphas: [FpElemVar<F>; 3],
     pub(crate) beta: FpElemVar<F>,
     pub(crate) gamma: FpElemVar<F>,
@@ -61,12 +59,6 @@ pub(crate) fn challenge_var_to_fp_elem_var<F: PrimeField>(
     )?;
 
     Ok(ChallengesFpElemVar {
-        _tau: FpElemVar::new_unchecked(
-            circuit,
-            challenge_var.tau,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
-        )?,
         alphas: [alpha_fp_elem_var, alpha_2_fp_elem_var, alpha_3_fp_elem_var],
         beta: FpElemVar::new_unchecked(
             circuit,

@@ -831,7 +831,7 @@ impl<E: Pairing> VerifyingKey<E> {
 /// Plonk IOP verifier challenges.
 #[derive(Debug, Default)]
 pub(crate) struct Challenges<F: Field> {
-    pub(crate) tau: F,
+    pub(crate) tau: Option<F>,
     pub(crate) alpha: F,
     pub(crate) beta: F,
     pub(crate) gamma: F,

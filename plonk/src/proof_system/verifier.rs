@@ -286,7 +286,11 @@ where
         for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
             transcript.append_commitments(b"witness_poly_comms", wires_poly_comms)?;
         }
-        let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        let tau = if verify_keys.iter().any(|vk| vk.plookup_vk.is_some()) {
+            Some(transcript.get_and_append_challenge::<E>(b"tau")?)
+        } else {
+            None
+        };
 
         for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
             if let Some(proof_lkup) = plookup_proof.as_ref() {
@@ -628,7 +632,7 @@ where
             if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
                 let lookup_evals = &lookup_proof.poly_evals;
                 let merged_lookup_x = eval_merged_lookup_witness::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     w_evals[5],
                     w_evals[0],
                     w_evals[1],
@@ -637,7 +641,7 @@ where
                     lookup_evals.q_dom_sep_eval,
                 );
                 let merged_table_x = eval_merged_table::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     lookup_evals.range_table_eval,
                     lookup_evals.key_table_eval,
                     lookup_evals.q_lookup_eval,
@@ -646,7 +650,7 @@ where
                     lookup_evals.table_dom_sep_eval,
                 );
                 let merged_table_xw = eval_merged_table::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     lookup_evals.range_table_next_eval,
                     lookup_evals.key_table_next_eval,
                     lookup_evals.q_lookup_next_eval,
