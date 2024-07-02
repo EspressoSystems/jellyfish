@@ -6,7 +6,7 @@
 
 //! Helper functions for circuit gadgets implementation
 
-use crate::errors::CircuitError;
+use crate::CircuitError;
 use ark_std::{cmp::Ordering, string::ToString};
 
 // helper function to find the next multiple of `divisor` for `current` value
@@ -26,7 +26,7 @@ pub(crate) fn next_multiple(current: usize, divisor: usize) -> Result<usize, Cir
 #[cfg(test)]
 mod test {
     use super::next_multiple;
-    use crate::errors::CircuitError;
+    use crate::CircuitError;
 
     #[test]
     fn test_helper_next_multiple() -> Result<(), CircuitError> {

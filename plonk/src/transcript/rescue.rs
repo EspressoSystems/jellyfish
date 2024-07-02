@@ -15,12 +15,10 @@ use ark_ec::{
     short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_std::vec::Vec;
-use jf_primitives::{
-    crhf::{VariableLengthRescueCRHF, CRHF},
-    pcs::prelude::Commitment,
-    rescue::{RescueParameter, STATE_SIZE},
-};
+use jf_crhf::CRHF;
+use jf_pcs::prelude::Commitment;
 use jf_relation::gadgets::ecc::{SWToTEConParam, TEPoint};
+use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter, STATE_SIZE};
 use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 
 /// Transcript with rescue hash function.

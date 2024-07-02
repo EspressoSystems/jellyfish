@@ -5,9 +5,8 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use crate::{
-    errors::CircuitError,
     gadgets::ecc::{MultiScalarMultiplicationCircuit, PointVariable},
-    BoolVar, Circuit, PlonkCircuit, Variable,
+    BoolVar, Circuit, CircuitError, PlonkCircuit, Variable,
 };
 use ark_ec::{
     twisted_edwards::{Projective, TECurveConfig},

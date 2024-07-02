@@ -1,0 +1,20 @@
+[package]
+name = "jf-prf"
+version = "0.1.0"
+description = "Pseudorandom function (PRF)"
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+
+[features]
+default = []
+std = ["ark-std/std", "ark-serialize/std"]

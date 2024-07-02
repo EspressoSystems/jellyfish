@@ -7,9 +7,8 @@
 //! Twisted Edwards curve point addition
 
 use crate::{
-    errors::CircuitError,
     gadgets::{ecc::TEPoint, EmulatedVariable, EmulationConfig},
-    BoolVar, Circuit, PlonkCircuit,
+    BoolVar, Circuit, CircuitError, PlonkCircuit,
 };
 use ark_ff::PrimeField;
 

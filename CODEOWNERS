@@ -1,0 +1,47 @@
+# Default owners and repository maintainers:
+* @alxiong @mrain
+
+# Owner of `jf-utils` crate
+/utilities/ @alxiong @mrain
+
+# Owner of `jf-relation` crate
+/relation/ @alxiong @mrain
+
+# Owner of `jf-prf` crate
+/prf/ @alxiong @mrain
+
+# Owner of `jf-crhf` crate
+/crhf/ @alxiong @mrain
+
+# Owner of `jf-commitment` crate
+/commitment/ @alxiong @mrain
+
+# Owner of `jf-merkle-tree` crate
+/merkle-tree/ @mrain
+
+# Owner of `jf-pcs` crate
+/pcs/ @alxiong
+
+# Owner of `jf-rescue` crate
+/rescue/ @philippecamacho
+
+# Owner of `jf-vdf` crate
+/vdf/ @mrain
+
+# Owner of `jf-vid` crate
+/vid/ @ggutoski @akonring
+
+# Owner of `jf-signature` crate
+/signature/ @alxiong @mrain
+
+# Owner of `jf-aead` crate
+/aead/ @alxiong
+
+# Owner of `jf-elgamal` crate
+/elgamal/ @alxiong @mrain
+
+# Owner of `jf-vrf` crate
+/vrf/ @alxiong @mrain
+
+# Owner of `jf-plonk` crate
+/plonk/ @alxiong @mrain

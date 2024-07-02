@@ -24,7 +24,7 @@ use ark_ec::{
     short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_ff::PrimeField;
-use jf_primitives::pcs::prelude::Commitment;
+use jf_pcs::prelude::Commitment;
 use jf_utils::to_bytes;
 
 /// Defines transcript APIs.

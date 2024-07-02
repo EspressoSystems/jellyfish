@@ -1,0 +1,68 @@
+[package]
+name = "jf-pcs"
+version = "0.1.0"
+description = "Univariate and multilinear KZG polynomial commitment scheme (PCS) implementation."
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+anyhow = { version = "1.0", optional = true }
+ark-bn254 = { workspace = true, optional = true }
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+ark-poly = { workspace = true }
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+derivative = { workspace = true }
+displaydoc = { workspace = true }
+icicle-bn254 = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true, features = ["arkworks"] }
+icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true }
+icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git", tag = "v1.5.1", optional = true }
+itertools = { workspace = true, features = ["use_alloc"] }
+jf-utils = { path = "../utilities", default-features = false }
+merlin = { workspace = true }
+rayon = { version = "1.5.0", optional = true }
+
+[dev-dependencies]
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
+criterion = "0.5.1"
+
+[[bench]]
+name = "pcs"
+harness = false
+required-features = ["test-srs"]
+
+[[bench]]
+name = "pcs-size"
+path = "benches/pcs_size.rs"
+harness = false
+required-features = ["test-srs"]
+
+[[bench]]
+name = "kzg-gpu"
+path = "benches/kzg_gpu.rs"
+harness = false
+required-features = ["test-srs", "icicle"]
+
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-381/std", "ark-std/std", "ark-serialize/std", 
+    "ark-ff/std", "ark-ec/std", "ark-poly/std", "merlin/std", 
+    "itertools/use_std", "jf-utils/std",
+]
+test-srs = []
+parallel = [
+    "ark-ff/parallel", "ark-ec/parallel", "jf-utils/parallel",
+    "rayon",
+]
+icicle = [
+    "anyhow", "ark-bn254", "icicle-cuda-runtime", "icicle-core",
+    "icicle-bn254", "parallel",
+]

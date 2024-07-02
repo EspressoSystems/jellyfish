@@ -11,18 +11,16 @@ use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
 use ark_std::{string::ToString, vec::Vec};
 use core::marker::PhantomData;
-use jf_primitives::{
-    circuit::rescue::RescueNativeGadget,
-    rescue::{RescueParameter, STATE_SIZE},
-};
 use jf_relation::{
-    errors::CircuitError::{self, ParameterError},
     gadgets::{
         ecc::{PointVariable, SWToTEConParam},
         ultraplonk::mod_arith::FpElemVar,
     },
-    Circuit, PlonkCircuit, Variable,
+    Circuit,
+    CircuitError::{self, ParameterError},
+    PlonkCircuit, Variable,
 };
+use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter, STATE_SIZE};
 
 /// Struct of variables representing a Rescue transcript type, including
 /// `STATE_SIZE` variables for the state, and a vector of variables for
@@ -231,7 +229,7 @@ mod tests {
         AffineRepr, CurveGroup,
     };
     use ark_std::{format, vec, UniformRand};
-    use jf_primitives::pcs::prelude::{Commitment, UnivariateVerifierParam};
+    use jf_pcs::prelude::{Commitment, UnivariateVerifierParam};
     use jf_relation::gadgets::ecc::TEPoint;
     use jf_utils::{bytes_to_field_elements, field_switching, test_rng};
 
@@ -250,7 +248,7 @@ mod tests {
 
         let label = "testing".as_ref();
 
-        let mut transcipt_var = RescueTranscriptVar::new(&mut circuit);
+        let mut transcript_var = RescueTranscriptVar::new(&mut circuit);
         let mut transcript = RescueTranscript::<F>::new(label);
 
         for _ in 0..10 {
@@ -264,14 +262,14 @@ mod tests {
 
                 transcript.append_message(label, msg.as_bytes()).unwrap();
 
-                transcipt_var
+                transcript_var
                     .append_message_vars(label, &message_vars)
                     .unwrap();
             }
 
             let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
 
-            let challenge_var = transcipt_var
+            let challenge_var = transcript_var
                 .get_and_append_challenge_var::<E>(label, &mut circuit)
                 .unwrap();
 

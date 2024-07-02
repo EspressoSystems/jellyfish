@@ -6,7 +6,7 @@
 
 //! Comparison gadgets for circuit
 
-use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit, Variable};
+use crate::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 use ark_ff::{BigInteger, PrimeField};
 
 impl<F: PrimeField> PlonkCircuit<F> {
@@ -254,7 +254,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 mod test {
-    use crate::{errors::CircuitError, BoolVar, Circuit, PlonkCircuit};
+    use crate::{BoolVar, Circuit, CircuitError, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;

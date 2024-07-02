@@ -46,7 +46,7 @@ jobs:
         name: Enable Rust Caching
 
       - name: Spell Check
-        uses: crate-ci/typos@v1.19.0
+        uses: crate-ci/typos@v1.22.9
 
       - name: Format Check
         run: cargo +nightly fmt -- --check
@@ -62,19 +62,19 @@ jobs:
           token: ${{ github.token }}
 
       - name: Check Bench
-        run: cargo bench --features test-srs --no-run
+        run: cargo bench --features "test-srs bls schnorr gadgets" --no-run
 
       - name: Check all tests and binaries compilation
         run: |
           cargo check --workspace --tests --lib --bins
-          cargo check --workspace --features 'std parallel test-srs test-apis'
+          cargo check --workspace --features 'std parallel test-srs test-apis bls schnorr gadgets'
 
       - name: Check no_std support and WASM compilation
         env:
           RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
         run: |
-          cargo check --no-default-features
-          cargo build --target wasm32-unknown-unknown --no-default-features
+          cargo check --no-default-features --features "bls schnorr gadgets"
+          cargo build --target wasm32-unknown-unknown --no-default-features --features "bls schnorr gadgets"
 
       - name: Test
         run: bash ./scripts/run_tests.sh

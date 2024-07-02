@@ -13,6 +13,7 @@ use super::structs::{
 use crate::{
     constants::domain_size_ratio,
     errors::{PlonkError, SnarkError::*},
+    lagrange::LagrangeCoeffs,
     proof_system::structs::CommitKey,
 };
 use ark_ec::pairing::Pairing;
@@ -27,7 +28,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
-use jf_primitives::pcs::{
+use jf_pcs::{
     prelude::{Commitment, UnivariateKzgPCS},
     PolynomialCommitmentScheme,
 };
@@ -303,7 +304,7 @@ impl<E: Pairing> Prover<E> {
         plookup_evals: Option<&PlookupEvaluations<E::ScalarField>>,
     ) -> Result<DensePolynomial<E::ScalarField>, PlonkError> {
         let r_circ = Self::compute_lin_poly_circuit_contribution(pk, &poly_evals.wires_evals);
-        let r_perm = Self::compute_lin_poly_copy_constraint_contribution(
+        let r_perm = self.compute_lin_poly_copy_constraint_contribution(
             pk,
             challenges,
             poly_evals,
@@ -313,7 +314,6 @@ impl<E: Pairing> Prover<E> {
         // compute Plookup contribution if support lookup
         let r_lookup = plookup_evals.map(|plookup_evals| {
             self.compute_lin_poly_plookup_contribution(
-                pk,
                 challenges,
                 &poly_evals.wires_evals,
                 plookup_evals,
@@ -783,11 +783,12 @@ impl<E: Pairing> Prover<E> {
         let n = pk.domain_size();
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
-        let n_field = E::ScalarField::from(n as u64);
-        let lagrange_n_coeff =
-            self.domain.group_gen_inv / (n_field * (eval_point - self.domain.group_gen_inv));
-        let lagrange_1_coeff =
-            E::ScalarField::one() / (n_field * (eval_point - E::ScalarField::one()));
+        let vanish_eval = self.domain.evaluate_vanishing_polynomial(eval_point);
+        let (lagrange_1_coeff, lagrange_n_coeff) =
+            self.domain.first_and_last_lagrange_coeffs(eval_point);
+        let lagrange_1_coeff_div_vanish = lagrange_1_coeff / vanish_eval;
+        let lagrange_n_coeff_div_vanish = lagrange_n_coeff / vanish_eval;
+
         let mut alpha_power = challenges.alpha * challenges.alpha * challenges.alpha;
 
         // extract polynomial evaluations
@@ -837,14 +838,14 @@ impl<E: Pairing> Prover<E> {
         //
         // Fh(X)/Z_H(X) = (Ln(X) * (h1(X) - h2(wX))) / Z_H(X) = (h1(X) - h2(wX)) *
         // w^{n-1} / (n * (X - w^{n-1}))
-        let term_h = (h_1_x - h_2_xw) * lagrange_n_coeff;
+        let term_h = (h_1_x - h_2_xw) * lagrange_n_coeff_div_vanish;
         let mut result_2 = alpha_power * term_h;
         alpha_power *= challenges.alpha;
 
         // The check that p(X) = 1 at point 1.
         //
         // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
-        let term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff;
+        let term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff_div_vanish;
         result_2 += alpha_power * term_p_1;
         alpha_power *= challenges.alpha;
 
@@ -852,7 +853,7 @@ impl<E: Pairing> Prover<E> {
         //
         // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
         // (X - w^{n-1}))
-        let term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff;
+        let term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff_div_vanish;
         result_2 += alpha_power * term_p_2;
         alpha_power *= challenges.alpha;
 
@@ -975,15 +976,13 @@ impl<E: Pairing> Prover<E> {
 
     // Compute the wire permutation part of the linearization polynomial
     fn compute_lin_poly_copy_constraint_contribution(
+        &self,
         pk: &ProvingKey<E>,
         challenges: &Challenges<E::ScalarField>,
         poly_evals: &ProofEvaluations<E::ScalarField>,
         prod_perm_poly: &DensePolynomial<E::ScalarField>,
     ) -> DensePolynomial<E::ScalarField> {
-        let dividend = challenges.zeta.pow([pk.domain_size() as u64]) - E::ScalarField::one();
-        let divisor = E::ScalarField::from(pk.domain_size() as u32)
-            * (challenges.zeta - E::ScalarField::one());
-        let lagrange_1_eval = dividend / divisor;
+        let lagrange_1_eval = self.domain.first_lagrange_coeff(challenges.zeta);
 
         // Compute the coefficient of z(X)
         let coeff = poly_evals.wires_evals.iter().enumerate().fold(
@@ -1016,7 +1015,6 @@ impl<E: Pairing> Prover<E> {
     // Compute the Plookup part of the linearization polynomial
     fn compute_lin_poly_plookup_contribution(
         &self,
-        pk: &ProvingKey<E>,
         challenges: &Challenges<E::ScalarField>,
         w_evals: &[E::ScalarField],
         plookup_evals: &PlookupEvaluations<E::ScalarField>,
@@ -1026,16 +1024,11 @@ impl<E: Pairing> Prover<E> {
         let alpha_4 = alpha_2.square();
         let alpha_5 = alpha_4 * challenges.alpha;
         let alpha_6 = alpha_4 * alpha_2;
-        let n = pk.domain_size();
         let one = E::ScalarField::one();
-        let vanish_eval = challenges.zeta.pow([n as u64]) - one;
 
         // compute lagrange_1 and lagrange_n
-        let divisor = E::ScalarField::from(n as u32) * (challenges.zeta - one);
-        let lagrange_1_eval = vanish_eval / divisor;
-        let divisor =
-            E::ScalarField::from(n as u32) * (challenges.zeta - self.domain.group_gen_inv);
-        let lagrange_n_eval = vanish_eval * self.domain.group_gen_inv / divisor;
+        let (lagrange_1_eval, lagrange_n_eval) =
+            self.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         // compute the coefficient for polynomial `prod_lookup_poly`
         let merged_table_eval = eval_merged_table::<E>(

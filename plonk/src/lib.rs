@@ -18,9 +18,11 @@ extern crate derivative;
 pub mod circuit;
 pub mod constants;
 pub mod errors;
+pub(crate) mod lagrange;
 pub mod proof_system;
 pub mod transcript;
 
+pub use errors::PlonkError;
 pub use jf_relation::PlonkType;
 
 #[cfg(feature = "test-apis")]

@@ -14,6 +14,7 @@
 use crate::{
     constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
+    lagrange::LagrangeCoeffs,
     proof_system::{
         structs::{self, BatchProof, PlookupProof, ProofEvaluations, VerifyingKey},
         verifier,
@@ -28,8 +29,9 @@ use ark_ff::Field;
 use ark_poly::Radix2EvaluationDomain;
 use ark_std::vec::Vec;
 use hashbrown::HashMap;
-use jf_primitives::{pcs::prelude::Commitment, rescue::RescueParameter};
+use jf_pcs::prelude::Commitment;
 use jf_relation::gadgets::ecc::SWToTEConParam;
+use jf_rescue::RescueParameter;
 
 /// A wrapper of crate::proof_system::structs::Challenges
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
@@ -244,11 +246,10 @@ where
         PlonkError,
     > {
         let verifier: verifier::Verifier<E> = (*self).clone().into();
-
-        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
         let (lagrange_1_eval, lagrange_n_eval) =
-            verifier.evaluate_lagrange_1_and_n(zeta, &vanish_eval);
-        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, &vanish_eval, false)?;
+            verifier.domain.first_and_last_lagrange_coeffs(*zeta);
+        let vanish_eval = verifier.evaluate_vanishing_poly(zeta);
+        let pi_eval = verifier.evaluate_pi_poly(public_input, zeta, false)?;
         Ok((vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval))
     }
 
@@ -275,7 +276,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::ScalarField,
         lagrange_1_eval: &E::ScalarField,
         lagrange_n_eval: &E::ScalarField,
         alpha_powers: &[E::ScalarField],
@@ -289,7 +289,6 @@ where
                 verify_keys,
                 public_inputs,
                 batch_proof,
-                vanish_eval,
                 lagrange_1_eval,
                 lagrange_n_eval,
                 alpha_powers,

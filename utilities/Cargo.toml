@@ -9,10 +9,15 @@ rust-version = { workspace = true }
 
 [dependencies]
 ark-ec = { workspace = true }
+ark-ed-on-bls12-377 = "0.4.0"
+ark-ed-on-bls12-381 = "0.4.0"
 ark-ff = { workspace = true }
+ark-poly = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 digest = { workspace = true }
+displaydoc = { workspace = true }
+rand_chacha = { workspace = true }
 rayon = { version = "1.5.0", optional = true }
 serde = { workspace = true }
 sha2 = { workspace = true }
@@ -22,9 +27,8 @@ tagged-base64 = { workspace = true }
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
-ark-ed-on-bls12-377 = "0.4.0"
-ark-ed-on-bls12-381 = "0.4.0"
 ark-ed-on-bn254 = "0.4.0"
+criterion = "0.5.1"
 
 [features]
 default = []
@@ -33,7 +37,9 @@ std = [
     "ark-std/std",
     "ark-ec/std",
     "ark-serialize/std",
+    "ark-poly/std",
     "digest/std",
+    "rand_chacha/std",
     "serde/std",
     "sha2/std",
 ]

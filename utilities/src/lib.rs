@@ -3,16 +3,27 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! Jellyfish utilities library.
 
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
+// Temporarily allow warning for nightly compilation with [`displaydoc`].
+#![allow(warnings)]
+#[cfg(test)]
+extern crate std;
+
+#[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
+#[doc(hidden)]
+extern crate alloc;
 
 mod conversion;
 mod macros;
 mod multi_pairing;
 pub mod par_utils;
+pub mod reed_solomon_code;
 mod serialize;
 
-use ark_ff::Field;
+use ark_ec::twisted_edwards::TECurveConfig as Config;
+use ark_ff::{Field, PrimeField};
 use ark_std::{
     ops::Mul,
     rand::{self, rngs::StdRng},
@@ -25,6 +36,23 @@ pub use conversion::*;
 pub use macros::*;
 pub use multi_pairing::*;
 pub use serialize::*;
+
+#[inline]
+pub fn field_byte_len<F: PrimeField>() -> usize {
+    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
+}
+
+#[inline]
+pub fn field_bit_len<F: PrimeField>() -> usize {
+    F::MODULUS_BIT_SIZE as usize
+}
+
+#[inline]
+pub fn challenge_bit_len<F: PrimeField>() -> usize {
+    // Our challenge is of size 248 bits
+    // This is enough for a soundness error of 2^-128
+    (field_byte_len::<F>() - 1) << 3
+}
 
 #[inline]
 pub fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {
@@ -74,7 +102,6 @@ pub fn test_rng() -> StdRng {
 mod tests {
     use super::*;
     use ark_ec::CurveGroup;
-    use ark_ff::PrimeField;
 
     fn test_hadamard_template<Fr: PrimeField, G1: CurveGroup<ScalarField = Fr>>() {
         let mut rng = test_rng();
