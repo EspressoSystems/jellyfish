@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["KECCAK256_STATE_SIZE"]};
+window.SIDEBAR_ITEMS = {};

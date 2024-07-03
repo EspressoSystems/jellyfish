@@ -1755,6 +1755,11 @@
 <a href="#1755" id="1755">1755</a>
 <a href="#1756" id="1756">1756</a>
 <a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -2011,7 +2016,12 @@
         <span class="comment">// Round 1.5
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
-        </span>challenges.tau = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>;
+        </span><span class="kw">if </span>circuits.iter().any(|c| C::support_lookup(c)) {
+            challenges.tau = <span class="prelude-val">Some</span>(transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>);
+        } <span class="kw">else </span>{
+            challenges.tau = <span class="prelude-val">None</span>;
+        }
+
         <span class="kw">let </span><span class="kw-2">mut </span>h_poly_comms_vec = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>sorted_vec_list = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>merged_table_list = <span class="macro">vec!</span>[];
@@ -2022,7 +2032,7 @@
                         prng,
                         <span class="kw-2">&amp;</span>prove_keys[i].commit_key,
                         circuits[i],
-                        challenges.tau,
+                        challenges.tau.unwrap(),
                     )<span class="question-mark">?</span>;
                 online_oracles[i].plookup_oracles.h_polys = h_polys;
                 transcript.append_commitments(<span class="string">b"h_poly_comms"</span>, <span class="kw-2">&amp;</span>h_poly_comms)<span class="question-mark">?</span>;
@@ -3182,7 +3192,7 @@
             <span class="kw">let </span>point = domain.element(i);
             <span class="kw">let </span>next_point = point * domain.group_gen;
             <span class="kw">let </span>merged_lookup_wire_eval = eval_merged_lookup_witness::&lt;E&gt;(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 oracles.wire_polys[<span class="number">5</span>].evaluate(<span class="kw-2">&amp;</span>point),
                 oracles.wire_polys[<span class="number">0</span>].evaluate(<span class="kw-2">&amp;</span>point),
                 oracles.wire_polys[<span class="number">1</span>].evaluate(<span class="kw-2">&amp;</span>point),
@@ -3191,7 +3201,7 @@
                 q_dom_sep_poly_ref.evaluate(<span class="kw-2">&amp;</span>point),
             );
             <span class="kw">let </span>merged_table_eval = eval_merged_table::&lt;E&gt;(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 range_table_poly_ref.evaluate(<span class="kw-2">&amp;</span>point),
                 key_table_poly_ref.evaluate(<span class="kw-2">&amp;</span>point),
                 pk.q_lookup_poly()<span class="question-mark">?</span>.evaluate(<span class="kw-2">&amp;</span>point),
@@ -3200,7 +3210,7 @@
                 table_dom_sep_poly_ref.evaluate(<span class="kw-2">&amp;</span>point),
             );
             <span class="kw">let </span>merged_table_next_eval = eval_merged_table::&lt;E&gt;(
-                challenges.tau,
+                challenges.tau.unwrap(),
                 range_table_poly_ref.evaluate(<span class="kw-2">&amp;</span>next_point),
                 key_table_poly_ref.evaluate(<span class="kw-2">&amp;</span>next_point),
                 pk.q_lookup_poly()<span class="question-mark">?</span>.evaluate(<span class="kw-2">&amp;</span>next_point),

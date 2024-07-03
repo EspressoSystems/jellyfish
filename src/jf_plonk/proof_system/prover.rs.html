@@ -1294,7 +1294,7 @@
         <span class="kw">let </span>prod_lookup_poly = <span class="self">self</span>.mask_polynomial(
             prng,
             cs.compute_lookup_prod_polynomial(
-                <span class="kw-2">&amp;</span>challenges.tau,
+                <span class="kw-2">&amp;</span>challenges.tau.unwrap(),
                 <span class="kw-2">&amp;</span>challenges.beta,
                 <span class="kw-2">&amp;</span>challenges.gamma,
                 merged_lookup_table.unwrap(),
@@ -1938,7 +1938,7 @@
         <span class="kw">let </span>key_table_xw = key_table_coset_fft[(i + domain_size_ratio) % m];
         <span class="kw">let </span>table_dom_sep_xw = table_dom_sep_coset_fft[(i + domain_size_ratio) % m];
         <span class="kw">let </span>merged_table_x = eval_merged_table::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             range_table_x,
             key_table_x,
             q_lookup_coset_fft[i],
@@ -1947,7 +1947,7 @@
             table_dom_sep_x,
         );
         <span class="kw">let </span>merged_table_xw = eval_merged_table::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             range_table_xw,
             key_table_xw,
             q_lookup_coset_fft[(i + domain_size_ratio) % m],
@@ -1956,7 +1956,7 @@
             table_dom_sep_xw,
         );
         <span class="kw">let </span>merged_lookup_x = eval_merged_lookup_witness::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             w[<span class="number">5</span>],
             w[<span class="number">0</span>],
             w[<span class="number">1</span>],
@@ -2163,7 +2163,7 @@
 
         <span class="comment">// compute the coefficient for polynomial `prod_lookup_poly`
         </span><span class="kw">let </span>merged_table_eval = eval_merged_table::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             plookup_evals.range_table_eval,
             plookup_evals.key_table_eval,
             plookup_evals.q_lookup_eval,
@@ -2172,7 +2172,7 @@
             plookup_evals.table_dom_sep_eval,
         );
         <span class="kw">let </span>merged_table_next_eval = eval_merged_table::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             plookup_evals.range_table_next_eval,
             plookup_evals.key_table_next_eval,
             plookup_evals.q_lookup_next_eval,
@@ -2181,7 +2181,7 @@
             plookup_evals.table_dom_sep_next_eval,
         );
         <span class="kw">let </span>merged_lookup_eval = eval_merged_lookup_witness::&lt;E&gt;(
-            challenges.tau,
+            challenges.tau.unwrap(),
             w_evals[<span class="number">5</span>],
             w_evals[<span class="number">0</span>],
             w_evals[<span class="number">1</span>],

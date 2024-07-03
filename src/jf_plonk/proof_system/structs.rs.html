@@ -1779,7 +1779,7 @@
 <span class="doccomment">/// Plonk IOP verifier challenges.
 </span><span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Challenges&lt;F: Field&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tau: F,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) tau: <span class="prelude-ty">Option</span>&lt;F&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) alpha: F,
     <span class="kw">pub</span>(<span class="kw">crate</span>) beta: F,
     <span class="kw">pub</span>(<span class="kw">crate</span>) gamma: F,

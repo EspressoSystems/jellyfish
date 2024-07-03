@@ -188,14 +188,6 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -215,7 +207,6 @@
 <span class="doccomment">/// Plonk IOP verifier challenges.
 </span><span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ChallengesVar {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) tau: Variable,
     <span class="kw">pub</span>(<span class="kw">crate</span>) alpha: Variable,
     <span class="kw">pub</span>(<span class="kw">crate</span>) beta: Variable,
     <span class="kw">pub</span>(<span class="kw">crate</span>) gamma: Variable,
@@ -227,7 +218,6 @@
 <span class="doccomment">/// Plonk IOP verifier challenges.
 </span><span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>ChallengesFpElemVar&lt;F: PrimeField&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) _tau: FpElemVar&lt;F&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) alphas: [FpElemVar&lt;F&gt;; <span class="number">3</span>],
     <span class="kw">pub</span>(<span class="kw">crate</span>) beta: FpElemVar&lt;F&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) gamma: FpElemVar&lt;F&gt;,
@@ -259,12 +249,6 @@
     )<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(ChallengesFpElemVar {
-        _tau: FpElemVar::new_unchecked(
-            circuit,
-            challenge_var.tau,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
-        )<span class="question-mark">?</span>,
         alphas: [alpha_fp_elem_var, alpha_2_fp_elem_var, alpha_3_fp_elem_var],
         beta: FpElemVar::new_unchecked(
             circuit,
