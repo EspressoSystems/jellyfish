@@ -163,7 +163,7 @@ impl<E: Pairing> Prover<E> {
         let prod_lookup_poly = self.mask_polynomial(
             prng,
             cs.compute_lookup_prod_polynomial(
-                &challenges.tau,
+                &challenges.tau.unwrap(),
                 &challenges.beta,
                 &challenges.gamma,
                 merged_lookup_table.unwrap(),
@@ -807,7 +807,7 @@ impl<E: Pairing> Prover<E> {
         let key_table_xw = key_table_coset_fft[(i + domain_size_ratio) % m];
         let table_dom_sep_xw = table_dom_sep_coset_fft[(i + domain_size_ratio) % m];
         let merged_table_x = eval_merged_table::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             range_table_x,
             key_table_x,
             q_lookup_coset_fft[i],
@@ -816,7 +816,7 @@ impl<E: Pairing> Prover<E> {
             table_dom_sep_x,
         );
         let merged_table_xw = eval_merged_table::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             range_table_xw,
             key_table_xw,
             q_lookup_coset_fft[(i + domain_size_ratio) % m],
@@ -825,7 +825,7 @@ impl<E: Pairing> Prover<E> {
             table_dom_sep_xw,
         );
         let merged_lookup_x = eval_merged_lookup_witness::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             w[5],
             w[0],
             w[1],
@@ -1032,7 +1032,7 @@ impl<E: Pairing> Prover<E> {
 
         // compute the coefficient for polynomial `prod_lookup_poly`
         let merged_table_eval = eval_merged_table::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             plookup_evals.range_table_eval,
             plookup_evals.key_table_eval,
             plookup_evals.q_lookup_eval,
@@ -1041,7 +1041,7 @@ impl<E: Pairing> Prover<E> {
             plookup_evals.table_dom_sep_eval,
         );
         let merged_table_next_eval = eval_merged_table::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             plookup_evals.range_table_next_eval,
             plookup_evals.key_table_next_eval,
             plookup_evals.q_lookup_next_eval,
@@ -1050,7 +1050,7 @@ impl<E: Pairing> Prover<E> {
             plookup_evals.table_dom_sep_next_eval,
         );
         let merged_lookup_eval = eval_merged_lookup_witness::<E>(
-            challenges.tau,
+            challenges.tau.unwrap(),
             w_evals[5],
             w_evals[0],
             w_evals[1],
