@@ -6,42 +6,41 @@
 
 //! This module implements solidity transcript.
 use super::PlonkTranscript;
-use crate::{constants::KECCAK256_STATE_SIZE, errors::PlonkError};
-use ark_ec::pairing::Pairing;
-use ark_ff::PrimeField;
+use crate::{
+    errors::PlonkError,
+    proof_system::structs::{ProofEvaluations, VerifyingKey},
+};
+use ark_ec::{
+    pairing::Pairing,
+    short_weierstrass::{Affine, SWCurveConfig},
+    AffineRepr,
+};
+use ark_ff::{BigInteger, PrimeField};
 use ark_std::vec::Vec;
+use jf_pcs::prelude::Commitment;
 use sha3::{Digest, Keccak256};
 
 /// Transcript with `keccak256` hash function.
 ///
-/// It is almost identical to `RescueTranscript` except using Solidity's
-/// `keccak256` for Solidity-friendly protocols.
-///
 /// It is currently implemented simply as
 /// - an append only vector of field elements
-/// - a state that is initialized with 0
 ///
 /// We keep appending new elements to the transcript vector,
-/// and when a challenge is to be generated,
-/// we reset the state with the fresh challenge.
+/// and when a challenge is generated they are appended too.
 ///
-/// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
-/// 2. challenge = state\[0\]
-/// 3. transcript = vec!\[challenge\]
+/// 1. challenge = hash(transcript)
+/// 2. transcript = transcript || challenge
 pub struct SolidityTranscript {
     pub(crate) transcript: Vec<u8>,
-    pub(crate) state: [u8; KECCAK256_STATE_SIZE], // 64 bytes state size
 }
 
-impl<F> PlonkTranscript<F> for SolidityTranscript {
+impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
     /// Create a new plonk transcript. `label` is omitted for efficiency.
     fn new(_label: &'static [u8]) -> Self {
         SolidityTranscript {
             transcript: Vec::new(),
-            state: [0u8; KECCAK256_STATE_SIZE],
         }
     }
-
     /// Append the message to the transcript. `_label` is omitted for
     /// efficiency.
     fn append_message(&mut self, _label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError> {
@@ -50,27 +49,149 @@ impl<F> PlonkTranscript<F> for SolidityTranscript {
         Ok(())
     }
 
+    // override default implementation since we want to use BigEndian serialization
+    fn append_commitment<E, P>(
+        &mut self,
+        label: &'static [u8],
+        comm: &Commitment<E>,
+    ) -> Result<(), PlonkError>
+    where
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
+        P: SWCurveConfig<BaseField = F>,
+    {
+        let zero = F::zero();
+        let (x, y) = if comm.0.is_zero() {
+            // this is solidity precompile representation of Points of Infinity
+            (&zero, &zero)
+        } else {
+            comm.0.xy().unwrap()
+        };
+
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            label,
+            &[x.into_bigint().to_bytes_be(), y.into_bigint().to_bytes_be()].concat(),
+        )
+    }
+
+    // override default implementation since we want to use BigEndian serialization
+    fn append_challenge<E>(
+        &mut self,
+        label: &'static [u8],
+        challenge: &E::ScalarField,
+    ) -> Result<(), PlonkError>
+    where
+        E: Pairing<BaseField = F>,
+        E::ScalarField: PrimeField,
+    {
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            label,
+            &challenge.into_bigint().to_bytes_be(),
+        )
+    }
+
+    fn append_vk_and_pub_input<E, P>(
+        &mut self,
+        vk: &VerifyingKey<E>,
+        pub_input: &[E::ScalarField],
+    ) -> Result<(), PlonkError>
+    where
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
+        E::ScalarField: PrimeField,
+        P: SWCurveConfig<BaseField = F>,
+    {
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"field size in bits",
+            E::ScalarField::MODULUS_BIT_SIZE.to_be_bytes().as_ref(),
+        )?;
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"domain size",
+            vk.domain_size.to_be_bytes().as_ref(),
+        )?;
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"input size",
+            vk.num_inputs.to_be_bytes().as_ref(),
+        )?;
+
+        for ki in vk.k.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"wire subsets separators",
+                &ki.into_bigint().to_bytes_be(),
+            )?;
+        }
+        <Self as PlonkTranscript<F>>::append_commitments(
+            self,
+            b"selector commitments",
+            &vk.selector_comms,
+        )?;
+        <Self as PlonkTranscript<F>>::append_commitments(
+            self,
+            b"sigma commitments",
+            &vk.sigma_comms,
+        )?;
+
+        for input in pub_input.iter() {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"public input",
+                &input.into_bigint().to_bytes_be(),
+            )?;
+        }
+
+        Ok(())
+    }
+
+    fn append_proof_evaluations<E: Pairing>(
+        &mut self,
+        evals: &ProofEvaluations<E::ScalarField>,
+    ) -> Result<(), PlonkError>
+    where
+        E::ScalarField: PrimeField,
+    {
+        for w_eval in &evals.wires_evals {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"wire_evals",
+                &w_eval.into_bigint().to_bytes_be(),
+            )?;
+        }
+        for sigma_eval in &evals.wire_sigma_evals {
+            <Self as PlonkTranscript<F>>::append_message(
+                self,
+                b"wire_sigma_evals",
+                &sigma_eval.into_bigint().to_bytes_be(),
+            )?;
+        }
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"perm_next_eval",
+            &evals.perm_next_eval.into_bigint().to_bytes_be(),
+        )
+    }
+
     /// Generate the challenge for the current transcript,
     /// and then append it to the transcript. `_label` is omitted for
     /// efficiency.
     fn get_and_append_challenge<E>(
         &mut self,
-        _label: &'static [u8],
+        label: &'static [u8],
     ) -> Result<E::ScalarField, PlonkError>
     where
-        E: Pairing,
+        E: Pairing<BaseField = F>,
+        E::ScalarField: PrimeField,
     {
-        // 1. state = keccak256(state|transcript))
-        let input = [self.state.as_ref(), self.transcript.as_ref()].concat();
-
         let mut hasher = Keccak256::new();
-        hasher.update(&input);
+        hasher.update(&self.transcript);
         let buf = hasher.finalize();
 
-        self.state.copy_from_slice(&buf);
+        let challenge = E::ScalarField::from_be_bytes_mod_order(&buf);
+        <Self as PlonkTranscript<F>>::append_challenge::<E>(self, label, &challenge)?;
 
-        // 2. challenge: sample field from random bytes.
-        let challenge = E::ScalarField::from_be_bytes_mod_order(&self.state);
         Ok(challenge)
     }
 }
