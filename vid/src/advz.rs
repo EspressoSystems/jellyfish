@@ -63,7 +63,7 @@ pub type AdvzGPU<'srs, E, H> = AdvzInternal<
     E,
     H,
     (
-        HostOrDeviceSlice<'srs, IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
+        DeviceVec<IcicleAffine<<UnivariateKzgPCS<E> as GPUCommittable<E>>::IC>>,
         CudaStream,
     ),
 >;
@@ -997,6 +997,28 @@ mod tests {
         #[cfg(feature = "gpu-vid")]
         let _ = advz_gpu.disperse(payload_random.clone());
         let _ = advz.disperse(payload_random);
+    }
+
+    #[ignore]
+    #[test]
+    #[cfg(feature = "gpu-vid")]
+    /// Stress test with varied payload sizes for GPU memory
+    /// leakage/fragmentation.
+    fn stress_test_gpu_disperse() {
+        let (recovery_threshold, num_storage_nodes) = (256, 512);
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(recovery_threshold as usize, &mut rng);
+        let mut advz_gpu =
+            AdvzGPU::<'_, Bn254, Sha256>::new(num_storage_nodes, recovery_threshold, &srs).unwrap();
+
+        for i in 0..100 {
+            let payload_size = rng.next_u32() % (1 << 25);
+            let payload_random = init_random_payload(payload_size as usize, &mut rng);
+
+            let _ = advz_gpu.disperse(payload_random.clone());
+
+            ark_std::println!("{}", i);
+        }
     }
 
     #[ignore]

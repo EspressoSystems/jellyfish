@@ -419,7 +419,10 @@ pub mod icicle_deps {
         curve::{Affine as IcicleAffine, Curve as IcicleCurve, Projective as IcicleProjective},
         msm::{MSMConfig, MSM},
     };
-    pub use icicle_cuda_runtime::{memory::HostOrDeviceSlice, stream::CudaStream};
+    pub use icicle_cuda_runtime::{
+        memory::{DeviceSlice, DeviceVec, HostOrDeviceSlice, HostSlice},
+        stream::CudaStream,
+    };
 
     /// curve-specific types both from arkworks and from ICICLE
     /// including Pairing, CurveCfg, Fr, Fq etc.
@@ -435,8 +438,8 @@ pub mod icicle_deps {
     /// Create a new stream and warmup
     pub fn warmup_new_stream() -> anyhow::Result<CudaStream> {
         let stream = CudaStream::create().map_err(|e| anyhow!("{:?}", e))?;
-        let _warmup_bytes = HostOrDeviceSlice::<'_, u8>::cuda_malloc_async(1024, &stream)
-            .map_err(|e| anyhow!("{:?}", e))?;
+        let _warmup_bytes =
+            DeviceVec::<u8>::cuda_malloc_async(1024, &stream).map_err(|e| anyhow!("{:?}", e))?;
         Ok(stream)
     }
 }
