@@ -52,7 +52,7 @@ where
     H: DigestAlgorithm<E, u64, T>,
     T: NodeValue,
 {
-    /// Construct a new Merkle tree with given height from a data slice
+    /// Construct a new Merkle tree with a given height from a data slice
     /// * `height` - height of the Merkle tree, if `None`, it will calculate the
     ///   minimum height that could hold all elements.
     /// * `elems` - an iterator to all elements

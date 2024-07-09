@@ -181,7 +181,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     ///
     /// This function takes 2^{num_var +1} number of scalar multiplications over
     /// G1:
-    /// - it prodceeds with `num_var` number of rounds,
+    /// - it proceeds with `num_var` number of rounds,
     /// - at round i, we compute an MSM for `2^{num_var - i + 1}` number of G2
     ///   elements.
     fn open(
@@ -197,11 +197,11 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     /// - the prover parameters for multilinear KZG,
     /// - a list of polynomials,
     /// - a (batch) commitment to all polynomials,
-    /// - and a same number of points,
+    /// - and the same number of points,
     /// compute a batch opening for all the polynomials.
     ///
     /// For simplicity, this API requires each MLE to have only one point. If
-    /// the caller wish to use more than one points per MLE, it should be
+    /// the caller wish to use more than one point per MLE, it should be
     /// handled at the caller layer.
     ///
     /// Returns an error if the lengths do not match.

@@ -235,7 +235,7 @@ pub struct Merkle3AryNodeVar {
 /// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
 /// Contains:
 /// * a list of node variables in the path,
-/// * a variable correseponsing to the position of the element.
+/// * a variable corresponding to the position of the element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryNonMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
@@ -245,7 +245,7 @@ pub struct Merkle3AryNonMembershipProofVar {
 /// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
 /// Contains:
 /// * a list of node variables in the path,
-/// * a variable correseponsing to the value of the element.
+/// * a variable corresponding to the value of the element.
 #[derive(Debug, Clone)]
 pub struct Merkle3AryMembershipProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,

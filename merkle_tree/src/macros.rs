@@ -129,7 +129,7 @@ macro_rules! impl_merkle_tree_scheme {
     };
 }
 
-/// Macro for generating a forgetable merkle tree implementation
+/// Macro for generating a forgettable merkle tree implementation
 #[macro_export]
 macro_rules! impl_forgetable_merkle_tree_scheme {
     ($name: ident) => {

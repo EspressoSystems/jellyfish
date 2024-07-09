@@ -32,7 +32,7 @@ pub trait CommitmentScheme {
         r: Option<&Self::Randomness>,
     ) -> Result<Self::Output, Self::Error>;
 
-    /// Verify algorithm that output `Ok` if accepted, or `Err` if rejected.
+    /// Verify the algorithm that outputs `Ok` if accepted, or `Err` if rejected.
     fn verify<T: Borrow<Self::Input>>(
         input: T,
         r: Option<&Self::Randomness>,
