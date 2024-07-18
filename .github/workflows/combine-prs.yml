@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: combine-prs
         id: combine-prs
-        uses: github/combine-prs@v5.0.0
+        uses: github/combine-prs@v5.1.0
         with:
           github_token: ${{ secrets.ORG_GITHUB_PAT }}
           labels: "dependabot,combined-pr"
