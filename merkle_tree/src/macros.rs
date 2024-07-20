@@ -143,7 +143,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Arc::new(MerkleNode::ForgettenSubtree {
+                    root: Arc::new(MerkleNode::ForgottenSubtree {
                         value: com.digest(),
                     }),
                     height: com.height(),

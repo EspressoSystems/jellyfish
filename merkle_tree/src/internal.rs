@@ -46,7 +46,7 @@ pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
         elem: E,
     },
     /// The subtree is forgotten from the memory
-    ForgettenSubtree {
+    ForgottenSubtree {
         /// Merkle hash value of this forgotten subtree
         #[serde(with = "canonical")]
         value: T,
@@ -70,13 +70,13 @@ where
                 elem: _,
             } => *value,
             Self::Branch { value, children: _ } => *value,
-            Self::ForgettenSubtree { value } => *value,
+            Self::ForgottenSubtree { value } => *value,
         }
     }
 
     #[inline]
     pub(crate) fn is_forgotten(&self) -> bool {
-        matches!(self, Self::ForgettenSubtree { .. })
+        matches!(self, Self::ForgottenSubtree { .. })
     }
 }
 
@@ -311,7 +311,7 @@ where
                     .map(|(pos, elem)| {
                         let pos = pos as u64;
                         Ok(if pos < num_leaves - 1 {
-                            Arc::new(MerkleNode::ForgettenSubtree {
+                            Arc::new(MerkleNode::ForgottenSubtree {
                                 value: H::digest_leaf(&pos, elem.borrow())?,
                             })
                         } else {
@@ -331,7 +331,7 @@ where
             })
             .collect::<Result<Vec<_>, MerkleTreeError>>()?;
         for i in 1..cur_nodes.len() - 1 {
-            cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
+            cur_nodes[i] = Arc::new(MerkleNode::ForgottenSubtree {
                 value: cur_nodes[i].value(),
             })
         }
@@ -351,7 +351,7 @@ where
                 })
                 .collect::<Result<Vec<_>, MerkleTreeError>>()?;
             for i in 1..cur_nodes.len() - 1 {
-                cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
+                cur_nodes[i] = Arc::new(MerkleNode::ForgottenSubtree {
                     value: cur_nodes[i].value(),
                 })
             }
@@ -411,7 +411,7 @@ where
                                     if let MerkleNode::Empty = **child {
                                         Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgottenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -422,11 +422,11 @@ where
                         if children.iter().all(|child| {
                             matches!(
                                 **child,
-                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { .. }
+                                MerkleNode::Empty | MerkleNode::ForgottenSubtree { .. }
                             )
                         }) {
                             (
-                                Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
+                                Arc::new(MerkleNode::ForgottenSubtree { value: *value }),
                                 LookupResult::Ok(elem, proof),
                             )
                         } else {
@@ -451,7 +451,7 @@ where
                                     if let MerkleNode::Empty = **child {
                                         Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgottenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -473,7 +473,7 @@ where
                     elem: elem.clone(),
                 }];
                 (
-                    Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
+                    Arc::new(MerkleNode::ForgottenSubtree { value: *value }),
                     LookupResult::Ok(elem, proof),
                 )
             },
@@ -503,7 +503,7 @@ where
         }
 
         match (self, &proof[height]) {
-            (Self::ForgettenSubtree { value }, Self::Branch { children, .. }) => {
+            (Self::ForgottenSubtree { value }, Self::Branch { children, .. }) => {
                 // Recurse into the appropriate sub-tree to remember the rest of the path.
                 let mut children = children.clone();
                 children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
@@ -519,7 +519,7 @@ where
                     children,
                 }))
             },
-            (Self::ForgettenSubtree { .. }, node) => {
+            (Self::ForgottenSubtree { .. }, node) => {
                 // Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
                 // proof. Safe because we already checked our hash value matches the proof.
                 Ok(Arc::new(node.clone()))
@@ -575,7 +575,7 @@ where
                                     if let MerkleNode::Empty = **child {
                                         Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgottenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -594,7 +594,7 @@ where
                                     if let MerkleNode::Empty = **child {
                                         Arc::new(MerkleNode::Empty)
                                     } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
+                                        Arc::new(MerkleNode::ForgottenSubtree {
                                             value: child.value(),
                                         })
                                     }
@@ -662,7 +662,7 @@ where
                 )?;
                 let mut children = children.clone();
                 children[branch] = result.0;
-                if matches!(*children[branch], MerkleNode::ForgettenSubtree { .. }) {
+                if matches!(*children[branch], MerkleNode::ForgottenSubtree { .. }) {
                     // If the branch containing the update was forgotten by
                     // user, the update failed and nothing was changed, so we
                     // can short-circuit without recomputing this node's value.
@@ -740,7 +740,7 @@ where
                     }
                 }
             },
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }
@@ -837,7 +837,7 @@ where
                 }
             },
             MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 
@@ -871,7 +871,7 @@ where
                 while data.peek().is_some() && frontier < cap {
                     if frontier > 0 && !children[frontier - 1].is_forgotten() {
                         children[frontier - 1] =
-                            Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                            Arc::new(MerkleNode::<E, u64, T>::ForgottenSubtree {
                                 value: children[frontier - 1].value(),
                             });
                     }
@@ -915,7 +915,7 @@ where
                     while data.peek().is_some() && frontier < cap {
                         if frontier > 0 && !children[frontier - 1].is_forgotten() {
                             children[frontier - 1] =
-                                Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                                Arc::new(MerkleNode::<E, u64, T>::ForgottenSubtree {
                                     value: children[frontier - 1].value(),
                                 });
                         }
@@ -942,7 +942,7 @@ where
                 }
             },
             MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }
