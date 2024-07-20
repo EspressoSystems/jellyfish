@@ -20,7 +20,6 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Changed
 
 - [#559](https://github.com/EspressoSystems/jellyfish/pull/559) (`jf-primitives`) GPU-accelerated `batch_commit()` now doesn't require the input polynomials to be of the same degree.
-- [#636](https://github.com/EspressoSystems/jellyfish/pull/637) (`jf-merkle-tree`) Fix typo, `ForgettenSubtree` to `ForgottenSubtree`
 
 ### Removed
 
