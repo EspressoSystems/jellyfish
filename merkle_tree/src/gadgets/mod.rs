@@ -602,7 +602,7 @@ mod test {
 
             if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
                 let left_sib = if uid % 3 == 0 { 1 } else { 0 };
-                children[left_sib] = Arc::new(MerkleNode::ForgettenSubtree { value: F::zero() });
+                children[left_sib] = Arc::new(MerkleNode::ForgottenSubtree { value: F::zero() });
             }
             let path_vars: Merkle3AryMembershipProofVar =
                 MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
