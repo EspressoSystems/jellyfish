@@ -128,7 +128,7 @@ where
     ) -> VidResult<Self> {
         // TODO intelligent choice of multiplicity
         // https://github.com/EspressoSystems/jellyfish/issues/534
-        let multiplicity = 1;
+        let multiplicity = 3;
 
         Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
     }
