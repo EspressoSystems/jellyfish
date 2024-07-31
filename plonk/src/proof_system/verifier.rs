@@ -10,6 +10,7 @@ use super::structs::{
 use crate::{
     constants::*,
     errors::{PlonkError, SnarkError::ParameterError},
+    lagrange::LagrangeCoeffs,
     proof_system::structs::{eval_merged_lookup_witness, eval_merged_table, OpenKey},
     transcript::*,
 };
@@ -144,7 +145,7 @@ where
 
         let vanish_eval = self.evaluate_vanishing_poly(&challenges.zeta);
         let (lagrange_1_eval, lagrange_n_eval) =
-            self.evaluate_lagrange_1_and_n(&challenges.zeta, &vanish_eval);
+            self.domain.first_and_last_lagrange_coeffs(challenges.zeta);
 
         // compute the constant term of the linearization polynomial
         let lin_poly_constant = self.compute_lin_poly_constant_term(
@@ -152,7 +153,6 @@ where
             verify_keys,
             public_inputs,
             batch_proof,
-            &vanish_eval,
             &lagrange_1_eval,
             &lagrange_n_eval,
             &alpha_powers,
@@ -286,7 +286,11 @@ where
         for wires_poly_comms in batch_proof.wires_poly_comms_vec.iter() {
             transcript.append_commitments(b"witness_poly_comms", wires_poly_comms)?;
         }
-        let tau = transcript.get_and_append_challenge::<E>(b"tau")?;
+        let tau = if verify_keys.iter().any(|vk| vk.plookup_vk.is_some()) {
+            Some(transcript.get_and_append_challenge::<E>(b"tau")?)
+        } else {
+            None
+        };
 
         for plookup_proof in batch_proof.plookup_proofs_vec.iter() {
             if let Some(proof_lkup) = plookup_proof.as_ref() {
@@ -356,7 +360,6 @@ where
         verify_keys: &[&VerifyingKey<E>],
         public_inputs: &[&[E::ScalarField]],
         batch_proof: &BatchProof<E>,
-        vanish_eval: &E::ScalarField,
         lagrange_1_eval: &E::ScalarField,
         lagrange_n_eval: &E::ScalarField,
         alpha_powers: &[E::ScalarField],
@@ -386,7 +389,7 @@ where
                 ),
             )
         {
-            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vanish_eval, vk.is_merged)?
+            let mut tmp = self.evaluate_pi_poly(pi, &challenges.zeta, vk.is_merged)?
                 - alpha_powers[0] * lagrange_1_eval;
             let num_wire_types = GATE_WIDTH
                 + 1
@@ -629,7 +632,7 @@ where
             if let Some(lookup_proof) = batch_proof.plookup_proofs_vec[i].as_ref() {
                 let lookup_evals = &lookup_proof.poly_evals;
                 let merged_lookup_x = eval_merged_lookup_witness::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     w_evals[5],
                     w_evals[0],
                     w_evals[1],
@@ -638,7 +641,7 @@ where
                     lookup_evals.q_dom_sep_eval,
                 );
                 let merged_table_x = eval_merged_table::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     lookup_evals.range_table_eval,
                     lookup_evals.key_table_eval,
                     lookup_evals.q_lookup_eval,
@@ -647,7 +650,7 @@ where
                     lookup_evals.table_dom_sep_eval,
                 );
                 let merged_table_xw = eval_merged_table::<E>(
-                    challenges.tau,
+                    challenges.tau.unwrap(),
                     lookup_evals.range_table_next_eval,
                     lookup_evals.key_table_next_eval,
                     lookup_evals.q_lookup_next_eval,
@@ -821,23 +824,6 @@ where
         self.domain.evaluate_vanishing_polynomial(*zeta)
     }
 
-    /// Evaluate the first and the last lagrange polynomial at point `zeta`
-    /// given the vanishing polynomial evaluation `vanish_eval`.
-    #[inline]
-    pub(crate) fn evaluate_lagrange_1_and_n(
-        &self,
-        zeta: &E::ScalarField,
-        vanish_eval: &E::ScalarField,
-    ) -> (E::ScalarField, E::ScalarField) {
-        let divisor =
-            E::ScalarField::from(self.domain.size() as u32) * (*zeta - E::ScalarField::one());
-        let lagrange_1_eval = *vanish_eval / divisor;
-        let divisor =
-            E::ScalarField::from(self.domain.size() as u32) * (*zeta - self.domain.group_gen_inv);
-        let lagrange_n_eval = *vanish_eval * self.domain.group_gen_inv / divisor;
-        (lagrange_1_eval, lagrange_n_eval)
-    }
-
     #[inline]
     /// Return the list of polynomial commitments to be opened at point `zeta`.
     /// The order should be consistent with the prover side.
@@ -897,34 +883,28 @@ where
         &self,
         pub_input: &[E::ScalarField],
         z: &E::ScalarField,
-        vanish_eval: &E::ScalarField,
         circuit_is_merged: bool,
     ) -> Result<E::ScalarField, PlonkError> {
-        // If z is a root of the vanishing polynomial, directly return zero.
-        if vanish_eval.is_zero() {
-            return Ok(E::ScalarField::zero());
-        }
         let len = match circuit_is_merged {
             false => pub_input.len(),
             true => pub_input.len() / 2,
         };
 
-        let vanish_eval_div_n = E::ScalarField::from(self.domain.size() as u32)
-            .inverse()
-            .ok_or(PlonkError::DivisionError)?
-            * (*vanish_eval);
         let mut result = E::ScalarField::zero();
-        for (i, val) in pub_input.iter().take(len).enumerate() {
-            let lagrange_i =
-                vanish_eval_div_n * self.domain.element(i) / (*z - self.domain.element(i));
+        let lagrange_coeffs = self.domain.lagrange_coeffs_for_range(0..len, *z);
+        for (val, lagrange_i) in pub_input.iter().take(len).zip(lagrange_coeffs) {
             result += lagrange_i * val;
         }
+
         if circuit_is_merged {
             let n = self.domain.size();
-            for (i, val) in pub_input.iter().skip(len).enumerate() {
-                let lagrange_n_minus_i = vanish_eval_div_n * self.domain.element(n - i - 1)
-                    / (*z - self.domain.element(n - i - 1));
-                result += lagrange_n_minus_i * val;
+            let last_l_lagrange_coeff = self.domain.lagrange_coeffs_for_range(n - len..n, *z);
+            for (val, lagrange_n_minus_i) in pub_input
+                .iter()
+                .skip(len)
+                .zip(last_l_lagrange_coeff.iter().rev())
+            {
+                result += *lagrange_n_minus_i * *val;
             }
         }
         Ok(result)
