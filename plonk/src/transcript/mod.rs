@@ -67,6 +67,14 @@ pub trait PlonkTranscript<F> {
             vk.num_inputs.to_le_bytes().as_ref(),
         )?;
 
+        // include [x]_2 G2 point from SRS
+        // all G1 points from SRS are implicit reflected in committed polys
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"SRS G2 element",
+            &to_bytes!(&vk.open_key.beta_h)?,
+        )?;
+
         for ki in vk.k.iter() {
             <Self as PlonkTranscript<F>>::append_message(
                 self,
