@@ -129,7 +129,7 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
         <Self as PlonkTranscript<F>>::append_message(
             self,
             b"SRS G2 element",
-            &to_bytes!(&vk.open_key.beta_h)?,
+            &to_bytes!(&vk.open_key.powers_of_h[1])?,
         )?;
 
         for ki in vk.k.iter() {
