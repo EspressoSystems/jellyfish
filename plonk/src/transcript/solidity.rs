@@ -116,6 +116,11 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
             b"input size",
             vk.num_inputs.to_be_bytes().as_ref(),
         )?;
+        <Self as PlonkTranscript<F>>::append_message(
+            self,
+            b"EVM word alignment padding",
+            &[0u8; 12],
+        )?;
 
         // include [x]_2 G2 point from SRS
         // all G1 points from SRS are implicit reflected in committed polys
