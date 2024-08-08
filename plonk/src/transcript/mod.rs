@@ -24,6 +24,7 @@ use ark_ec::{
     short_weierstrass::{Affine, SWCurveConfig as SWParam},
 };
 use ark_ff::PrimeField;
+use ark_std::vec::Vec;
 use jf_pcs::prelude::Commitment;
 use jf_utils::to_bytes;
 
@@ -51,8 +52,7 @@ pub trait PlonkTranscript<F> {
         E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
+        self.append_message(
             b"field size in bits",
             E::ScalarField::MODULUS_BIT_SIZE.to_le_bytes().as_ref(),
         )?;
@@ -75,36 +75,10 @@ pub trait PlonkTranscript<F> {
             &to_bytes!(&vk.open_key.powers_of_h[1])?,
         )?;
 
-        for ki in vk.k.iter() {
-            <Self as PlonkTranscript<F>>::append_message(
-                self,
-                b"wire subsets separators",
-                &to_bytes!(ki)?,
-            )?;
-        }
-        for selector_com in vk.selector_comms.iter() {
-            <Self as PlonkTranscript<F>>::append_message(
-                self,
-                b"selector commitments",
-                &to_bytes!(selector_com)?,
-            )?;
-        }
-
-        for sigma_comms in vk.sigma_comms.iter() {
-            <Self as PlonkTranscript<F>>::append_message(
-                self,
-                b"sigma commitments",
-                &to_bytes!(sigma_comms)?,
-            )?;
-        }
-
-        for input in pub_input.iter() {
-            <Self as PlonkTranscript<F>>::append_message(
-                self,
-                b"public input",
-                &to_bytes!(input)?,
-            )?;
-        }
+        self.append_field_elems::<E>(b"wire subsets separators", &vk.k)?;
+        self.append_commitments(b"selector commitments", &vk.selector_comms)?;
+        self.append_commitments(b"sigma commitments", &vk.sigma_comms)?;
+        self.append_field_elems::<E>(b"public input", pub_input)?;
 
         Ok(())
     }
@@ -141,83 +115,77 @@ pub trait PlonkTranscript<F> {
         <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(comm)?)
     }
 
-    /// Append a challenge to the transcript.
-    fn append_challenge<E>(
+    /// Append a field element to the transcript.
+    fn append_field_elem<E>(
         &mut self,
         label: &'static [u8],
-        challenge: &E::ScalarField,
+        field: &E::ScalarField,
     ) -> Result<(), PlonkError>
     where
         E: Pairing<BaseField = F>,
     {
-        <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(challenge)?)
+        <Self as PlonkTranscript<F>>::append_message(self, label, &to_bytes!(field)?)
+    }
+
+    /// Append a list of field elements to the transcript
+    fn append_field_elems<E>(
+        &mut self,
+        label: &'static [u8],
+        fields: &[E::ScalarField],
+    ) -> Result<(), PlonkError>
+    where
+        E: Pairing<BaseField = F>,
+    {
+        for f in fields {
+            self.append_field_elem::<E>(label, f)?;
+        }
+        Ok(())
     }
 
     /// Append a proof evaluation to the transcript.
-    fn append_proof_evaluations<E: Pairing>(
+    fn append_proof_evaluations<E: Pairing<BaseField = F>>(
         &mut self,
         evals: &ProofEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
-        for w_eval in &evals.wires_evals {
-            <Self as PlonkTranscript<F>>::append_message(self, b"wire_evals", &to_bytes!(w_eval)?)?;
-        }
-        for sigma_eval in &evals.wire_sigma_evals {
-            <Self as PlonkTranscript<F>>::append_message(
-                self,
-                b"wire_sigma_evals",
-                &to_bytes!(sigma_eval)?,
-            )?;
-        }
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"perm_next_eval",
-            &to_bytes!(&evals.perm_next_eval)?,
-        )
+        self.append_field_elems::<E>(b"wire_evals", &evals.wires_evals)?;
+        self.append_field_elems::<E>(b"wire_sigma_evals", &evals.wire_sigma_evals)?;
+        self.append_field_elem::<E>(b"perm_next_eval", &evals.perm_next_eval)
     }
 
     /// Append the plookup evaluation to the transcript.
-    fn append_plookup_evaluations<E: Pairing>(
+    fn append_plookup_evaluations<E: Pairing<BaseField = F>>(
         &mut self,
         evals: &PlookupEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"lookup_table_eval",
-            &to_bytes!(&evals.range_table_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_1_eval",
-            &to_bytes!(&evals.h_1_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"prod_next_eval",
-            &to_bytes!(&evals.prod_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"lookup_table_next_eval",
-            &to_bytes!(&evals.range_table_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_1_next_eval",
-            &to_bytes!(&evals.h_1_next_eval)?,
-        )?;
-        <Self as PlonkTranscript<F>>::append_message(
-            self,
-            b"h_2_next_eval",
-            &to_bytes!(&evals.h_2_next_eval)?,
-        )
+        self.append_field_elem::<E>(b"lookup_table_eval", &evals.range_table_eval)?;
+        self.append_field_elem::<E>(b"h_1_eval", &evals.h_1_eval)?;
+        self.append_field_elem::<E>(b"prod_next_eval", &evals.prod_next_eval)?;
+        self.append_field_elem::<E>(b"lookup_table_next_eval", &evals.range_table_next_eval)?;
+        self.append_field_elem::<E>(b"h_1_next_eval", &evals.h_1_next_eval)?;
+        self.append_field_elem::<E>(b"h_2_next_eval", &evals.h_2_next_eval)
     }
 
-    /// Generate the challenge for the current transcript,
-    /// and then append it to the transcript.
-    fn get_and_append_challenge<E>(
-        &mut self,
-        label: &'static [u8],
-    ) -> Result<E::ScalarField, PlonkError>
+    /// Generate a single challenge for the current round
+    fn get_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
     where
         E: Pairing<BaseField = F>;
+
+    /// Generate multiple challenges for the current round
+    /// Implementers should be careful about domain separation for each
+    /// challenge The default implementation assume `self.get_challenge()`
+    /// already implements proper domain separation for each challenge
+    /// generation, thus simply call it multiple times.
+    fn get_n_challenges<E>(
+        &mut self,
+        labels: &[&'static [u8]],
+    ) -> Result<Vec<E::ScalarField>, PlonkError>
+    where
+        E: Pairing<BaseField = F>,
+    {
+        let mut challenges = Vec::new();
+        for label in labels {
+            challenges.push(self.get_challenge::<E>(label)?);
+        }
+        Ok(challenges)
+    }
 }
