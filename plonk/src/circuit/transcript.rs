@@ -161,6 +161,8 @@ where
     // For efficiency purpose, label is not used for rescue FS.
     // Note that this function currently only supports bls12-377
     // curve due to its decomposition method.
+    //
+    // `_label` is omitted for efficiency.
     pub(crate) fn get_challenge_var<E>(
         &mut self,
         _label: &'static [u8],

@@ -214,7 +214,7 @@ where
             // protocol transcript. This approach is more secure as `r` depends not only
             // on the proofs, but also the list of public inputs and verifying keys.
             for pcs_info in pcs_infos {
-                transcript.append_field::<E>(b"u", &pcs_info.u)?;
+                transcript.append_field_elem::<E>(b"u", &pcs_info.u)?;
             }
             transcript.get_challenge::<E>(b"r")?
         };

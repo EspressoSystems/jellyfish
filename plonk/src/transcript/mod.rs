@@ -75,15 +75,14 @@ pub trait PlonkTranscript<F> {
             &to_bytes!(&vk.open_key.powers_of_h[1])?,
         )?;
 
-        self.append_fields::<E>(b"wire subsets separators", &vk.k)?;
+        self.append_field_elems::<E>(b"wire subsets separators", &vk.k)?;
         self.append_commitments(b"selector commitments", &vk.selector_comms)?;
         self.append_commitments(b"sigma commitments", &vk.sigma_comms)?;
-        self.append_fields::<E>(b"public input", pub_input)?;
+        self.append_field_elems::<E>(b"public input", pub_input)?;
 
         Ok(())
     }
 
-    // TODO: (alex) accept &str instead of &[u8]
     /// Append the message to the transcript.
     fn append_message(&mut self, label: &'static [u8], msg: &[u8]) -> Result<(), PlonkError>;
 
@@ -97,7 +96,6 @@ pub trait PlonkTranscript<F> {
         E: Pairing<BaseField = F, G1Affine = Affine<P>>,
         P: SWParam<BaseField = F>,
     {
-        // TODO: (alex) append index to the label for each commitment
         for comm in comms.iter() {
             self.append_commitment(label, comm)?;
         }
@@ -118,7 +116,7 @@ pub trait PlonkTranscript<F> {
     }
 
     /// Append a field element to the transcript.
-    fn append_field<E>(
+    fn append_field_elem<E>(
         &mut self,
         label: &'static [u8],
         field: &E::ScalarField,
@@ -130,7 +128,7 @@ pub trait PlonkTranscript<F> {
     }
 
     /// Append a list of field elements to the transcript
-    fn append_fields<E>(
+    fn append_field_elems<E>(
         &mut self,
         label: &'static [u8],
         fields: &[E::ScalarField],
@@ -139,7 +137,7 @@ pub trait PlonkTranscript<F> {
         E: Pairing<BaseField = F>,
     {
         for f in fields {
-            self.append_field::<E>(label, f)?;
+            self.append_field_elem::<E>(label, f)?;
         }
         Ok(())
     }
@@ -149,9 +147,9 @@ pub trait PlonkTranscript<F> {
         &mut self,
         evals: &ProofEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
-        self.append_fields::<E>(b"wire_evals", &evals.wires_evals)?;
-        self.append_fields::<E>(b"wire_sigma_evals", &evals.wire_sigma_evals)?;
-        self.append_field::<E>(b"perm_next_eval", &evals.perm_next_eval)
+        self.append_field_elems::<E>(b"wire_evals", &evals.wires_evals)?;
+        self.append_field_elems::<E>(b"wire_sigma_evals", &evals.wire_sigma_evals)?;
+        self.append_field_elem::<E>(b"perm_next_eval", &evals.perm_next_eval)
     }
 
     /// Append the plookup evaluation to the transcript.
@@ -159,12 +157,12 @@ pub trait PlonkTranscript<F> {
         &mut self,
         evals: &PlookupEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
-        self.append_field::<E>(b"lookup_table_eval", &evals.range_table_eval)?;
-        self.append_field::<E>(b"h_1_eval", &evals.h_1_eval)?;
-        self.append_field::<E>(b"prod_next_eval", &evals.prod_next_eval)?;
-        self.append_field::<E>(b"lookup_table_next_eval", &evals.range_table_next_eval)?;
-        self.append_field::<E>(b"h_1_next_eval", &evals.h_1_next_eval)?;
-        self.append_field::<E>(b"h_2_next_eval", &evals.h_2_next_eval)
+        self.append_field_elem::<E>(b"lookup_table_eval", &evals.range_table_eval)?;
+        self.append_field_elem::<E>(b"h_1_eval", &evals.h_1_eval)?;
+        self.append_field_elem::<E>(b"prod_next_eval", &evals.prod_next_eval)?;
+        self.append_field_elem::<E>(b"lookup_table_next_eval", &evals.range_table_next_eval)?;
+        self.append_field_elem::<E>(b"h_1_next_eval", &evals.h_1_next_eval)?;
+        self.append_field_elem::<E>(b"h_2_next_eval", &evals.h_2_next_eval)
     }
 
     /// Generate a single challenge for the current round
@@ -172,7 +170,7 @@ pub trait PlonkTranscript<F> {
     where
         E: Pairing<BaseField = F>;
 
-    /// Generate multiple challenge for the current round
+    /// Generate multiple challenges for the current round
     /// Implementers should be careful about domain separation for each
     /// challenge The default implementation assume `self.get_challenge()`
     /// already implements proper domain separation for each challenge

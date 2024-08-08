@@ -123,7 +123,7 @@ where
         Ok(())
     }
 
-    fn append_field<E>(
+    fn append_field_elem<E>(
         &mut self,
         _label: &'static [u8],
         challenge: &E::ScalarField,

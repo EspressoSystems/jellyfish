@@ -76,7 +76,7 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
     }
 
     // override default implementation since we want to use BigEndian serialization
-    fn append_field<E>(
+    fn append_field_elem<E>(
         &mut self,
         label: &'static [u8],
         challenge: &E::ScalarField,
@@ -116,6 +116,9 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
             b"input size",
             vk.num_inputs.to_be_bytes().as_ref(),
         )?;
+        // in EVM, memory word size is 32 bytes, the first 3 fields put onto the
+        // transcript occupies 4+8+8=20 bytes, thus to align with the memory
+        // boundray, we pad with 12 bytes of zeros.
         <Self as PlonkTranscript<F>>::append_message(
             self,
             b"EVM word alignment padding",
@@ -136,10 +139,10 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
             &to_bytes!(&vk.open_key.powers_of_h[1])?,
         )?;
 
-        self.append_fields::<E>(b"wire subsets separators", &vk.k)?;
+        self.append_field_elems::<E>(b"wire subsets separators", &vk.k)?;
         self.append_commitments(b"selector commitments", &vk.selector_comms)?;
         self.append_commitments(b"sigma commitments", &vk.sigma_comms)?;
-        self.append_fields::<E>(b"public input", pub_input)
+        self.append_field_elems::<E>(b"public input", pub_input)
     }
 
     fn get_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
