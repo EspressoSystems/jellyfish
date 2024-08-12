@@ -78,6 +78,7 @@ pub type AdvzGPU<'srs, E, H> = AdvzInternal<
 pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
+    T: Sync,
 {
     recovery_threshold: u32,
     num_storage_nodes: u32,
@@ -120,6 +121,7 @@ type KzgEvalsMerkleTreeProof<E, H> =
 impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
+    T: Sync,
 {
     pub(crate) fn new_internal(
         num_storage_nodes: u32,  // n (code rate: r = k/n)
@@ -390,6 +392,7 @@ impl<E, H, T> VidScheme for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // use HasherNode<H> instead of Output<H> to easily meet trait bounds
@@ -560,7 +563,7 @@ where
         );
 
         // verify aggregate proof
-        (0..self.multiplicity as usize)
+        parallelizable_slice_iter(&(0..self.multiplicity as usize).collect::<Vec<_>>())
             .map(|i| {
                 let aggregate_eval = polynomial_eval(
                     share.evals[i * polys_len..(i + 1) * polys_len]
@@ -575,7 +578,7 @@ where
                         .multi_open_domain
                         .element((share.index as usize * multiplicity) + i),
                     &aggregate_eval,
-                    &share.aggregate_proofs[i],
+                    &share.aggregate_proofs[*i],
                 )
                 .map_err(vid)?
                 .then_some(())
@@ -695,6 +698,7 @@ impl<E, H, SrsRef> AdvzInternal<E, H, SrsRef>
 where
     E: Pairing,
     H: HasherDigest,
+    SrsRef: Sync,
     AdvzInternal<E, H, SrsRef>: MaybeGPU<E>,
 {
     fn evaluate_polys(

@@ -1,8 +1,13 @@
-// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// Copyright (c) 2024 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+
+// Select `N` (examples: 1, 6, 64, ...) and then run
+// ```
+// RAYON_NUM_THREADS=N cargo bench --bench=advz_multiplicity --features="test-srs"
+// ```
 
 use ark_bn254::Bn254;
 use ark_ec::pairing::Pairing;
