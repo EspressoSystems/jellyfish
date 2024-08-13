@@ -4,10 +4,19 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-// Select `N` (examples: 1, 6, 64, ...) and then run
-// ```
-// RAYON_NUM_THREADS=N cargo bench --bench=advz_multiplicity --features="test-srs"
-// ```
+//! Benchmarks demonstrating performance improvement in [`Advz::verify_share`]
+//! from use of parallelism over `multiplicity`.
+//!
+//! Run
+//! ```
+//! cargo bench --bench=advz_multiplicity --features="test-srs"
+//! ```
+//!
+//! By
+//! [default](https://github.com/rayon-rs/rayon/blob/main/FAQ.md#how-many-threads-will-rayon-spawn)
+//! the number of threads = number of available CPU cores. You can override this
+//! choice by prevising the above command with `RAYON_NUM_THREADS=N `. Example:
+//! set `N=1` to eliminate parallelism.
 
 use ark_bn254::Bn254;
 use ark_ec::pairing::Pairing;
