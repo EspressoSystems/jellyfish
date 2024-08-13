@@ -563,33 +563,43 @@ where
         );
 
         // verify aggregate proof
-        parallelizable_slice_iter(&(0..self.multiplicity as usize).collect::<Vec<_>>())
-            .map(|i| {
-                let aggregate_eval = polynomial_eval(
-                    share.evals[i * polys_len..(i + 1) * polys_len]
-                        .iter()
-                        .map(FieldMultiplier),
-                    pseudorandom_scalar,
-                );
-                Ok(UnivariateKzgPCS::verify(
-                    &self.vk,
-                    &aggregate_poly_commit,
-                    &self
-                        .multi_open_domain
-                        .element((share.index as usize * multiplicity) + i),
-                    &aggregate_eval,
-                    &share.aggregate_proofs[*i],
-                )
-                .map_err(vid)?
-                .then_some(())
-                .ok_or(()))
-            })
-            // abort immediately on any failure of verification
-            .find_any(|result| match result {
-                Ok(success) => success.is_err(),
-                Err(_) => true,
-            })
-            .unwrap_or(Ok(Ok(())))
+        //
+        // some boilerplate needed to accommodate builds without `parallel`
+        // feature.
+        let multiplicities = Vec::from_iter((0..self.multiplicity as usize));
+        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
+            let aggregate_eval = polynomial_eval(
+                share.evals[i * polys_len..(i + 1) * polys_len]
+                    .iter()
+                    .map(FieldMultiplier),
+                pseudorandom_scalar,
+            );
+            Ok(UnivariateKzgPCS::verify(
+                &self.vk,
+                &aggregate_poly_commit,
+                &self
+                    .multi_open_domain
+                    .element((share.index as usize * multiplicity) + i),
+                &aggregate_eval,
+                &share.aggregate_proofs[*i],
+            )
+            .map_err(vid)?
+            .then_some(())
+            .ok_or(()))
+        });
+        let abort = |result: &VidResult<Result<(), ()>>| match result {
+            Ok(success) => success.is_err(),
+            Err(_) => true,
+        };
+
+        // abort immediately on any failure of verification
+        #[cfg(feature = "parallel")]
+        let result = verification_iter.find_any(abort);
+
+        #[cfg(not(feature = "parallel"))]
+        let result = verification_iter.clone().find(abort); // `clone` because we need mutable
+
+        result.unwrap_or(Ok(Ok(())))
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
