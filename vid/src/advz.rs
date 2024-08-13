@@ -584,7 +584,12 @@ where
                 .then_some(())
                 .ok_or(()))
             })
-            .collect()
+            // abort immediately on any failure of verification
+            .find_any(|result| match result {
+                Ok(success) => success.is_err(),
+                Err(_) => true,
+            })
+            .unwrap_or(Ok(Ok(())))
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
