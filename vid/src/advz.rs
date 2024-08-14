@@ -507,29 +507,31 @@ where
         commit: &Self::Commit,
     ) -> VidResult<Result<(), ()>> {
         // check arguments
-        let multiplicity: usize = common.multiplicity.try_into().map_err(vid)?;
-        if share.evals.len() / multiplicity != common.poly_commits.len() {
-            return Err(VidError::Argument(format!(
-                "(share eval, common poly commit) lengths differ ({},{})",
-                share.evals.len() / multiplicity,
-                common.poly_commits.len()
-            )));
-        }
-
         if common.num_storage_nodes != self.num_storage_nodes {
             return Err(VidError::Argument(format!(
-                "common num_storage_nodes differs from self ({},{})",
+                "common num_storage_nodes {} differs from self {}",
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-
-        let polys_len = common.poly_commits.len();
+        if common.multiplicity != self.multiplicity {
+            return Err(VidError::Argument(format!(
+                "common multiplicity {} differs from self {}",
+                common.multiplicity, self.multiplicity
+            )));
+        }
+        let multiplicity: usize = common.multiplicity.try_into().map_err(vid)?;
+        if share.evals.len() / multiplicity != common.poly_commits.len() {
+            return Err(VidError::Argument(format!(
+                "number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}",
+                share.evals.len(), multiplicity,
+                common.poly_commits.len()
+            )));
+        }
+        Self::is_consistent(commit, common)?;
 
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
-
-        Self::is_consistent(commit, common)?;
 
         // verify eval proof
         // TODO: check all indices that represents the shares
@@ -567,6 +569,7 @@ where
         // some boilerplate needed to accommodate builds without `parallel`
         // feature.
         let multiplicities = Vec::from_iter((0..self.multiplicity as usize));
+        let polys_len = common.poly_commits.len();
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(

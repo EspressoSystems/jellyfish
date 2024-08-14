@@ -282,9 +282,10 @@ fn verify_share_with_different_multiplicity() {
 
     // verify shares using `multiplicity` != `leader_multiplicity`
     for share in shares {
-        advz.verify_share(&share, &common, &commit)
-            .unwrap()
-            .expect_err("different multiplicity should fail verification");
+        assert_arg_err(
+            advz.verify_share(&share, &common, &commit),
+            format!("inconsistent multiplicities should be arg error").as_str(),
+        );
     }
 }
 
