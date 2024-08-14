@@ -78,6 +78,7 @@ pub type AdvzGPU<'srs, E, H> = AdvzInternal<
 pub struct AdvzInternal<E, H, T>
 where
     E: Pairing,
+    T: Sync,
 {
     recovery_threshold: u32,
     num_storage_nodes: u32,
@@ -120,6 +121,7 @@ type KzgEvalsMerkleTreeProof<E, H> =
 impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
+    T: Sync,
 {
     pub(crate) fn new_internal(
         num_storage_nodes: u32,  // n (code rate: r = k/n)
@@ -139,8 +141,6 @@ where
         multiplicity: u32,       // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        // TODO support any degree, give multiple shares to nodes if needed
-        // https://github.com/EspressoSystems/jellyfish/issues/393
         if num_storage_nodes < recovery_threshold {
             return Err(VidError::Argument(format!(
                 "recovery_threshold {} exceeds num_storage_nodes {}",
@@ -392,6 +392,7 @@ impl<E, H, T> VidScheme for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // use HasherNode<H> instead of Output<H> to easily meet trait bounds
@@ -562,28 +563,43 @@ where
         );
 
         // verify aggregate proof
-        (0..self.multiplicity as usize)
-            .map(|i| {
-                let aggregate_eval = polynomial_eval(
-                    share.evals[i * polys_len..(i + 1) * polys_len]
-                        .iter()
-                        .map(FieldMultiplier),
-                    pseudorandom_scalar,
-                );
-                Ok(UnivariateKzgPCS::verify(
-                    &self.vk,
-                    &aggregate_poly_commit,
-                    &self
-                        .multi_open_domain
-                        .element((share.index as usize * multiplicity) + i),
-                    &aggregate_eval,
-                    &share.aggregate_proofs[i],
-                )
-                .map_err(vid)?
-                .then_some(())
-                .ok_or(()))
-            })
-            .collect()
+        //
+        // some boilerplate needed to accommodate builds without `parallel`
+        // feature.
+        let multiplicities = Vec::from_iter((0..self.multiplicity as usize));
+        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
+            let aggregate_eval = polynomial_eval(
+                share.evals[i * polys_len..(i + 1) * polys_len]
+                    .iter()
+                    .map(FieldMultiplier),
+                pseudorandom_scalar,
+            );
+            Ok(UnivariateKzgPCS::verify(
+                &self.vk,
+                &aggregate_poly_commit,
+                &self
+                    .multi_open_domain
+                    .element((share.index as usize * multiplicity) + i),
+                &aggregate_eval,
+                &share.aggregate_proofs[*i],
+            )
+            .map_err(vid)?
+            .then_some(())
+            .ok_or(()))
+        });
+        let abort = |result: &VidResult<Result<(), ()>>| match result {
+            Ok(success) => success.is_err(),
+            Err(_) => true,
+        };
+
+        // abort immediately on any failure of verification
+        #[cfg(feature = "parallel")]
+        let result = verification_iter.find_any(abort);
+
+        #[cfg(not(feature = "parallel"))]
+        let result = verification_iter.clone().find(abort); // `clone` because we need mutable
+
+        result.unwrap_or(Ok(Ok(())))
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
@@ -697,6 +713,7 @@ impl<E, H, SrsRef> AdvzInternal<E, H, SrsRef>
 where
     E: Pairing,
     H: HasherDigest,
+    SrsRef: Sync,
     AdvzInternal<E, H, SrsRef>: MaybeGPU<E>,
 {
     fn evaluate_polys(

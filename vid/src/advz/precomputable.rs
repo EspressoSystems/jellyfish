@@ -26,6 +26,7 @@ impl<E, H, T> Precomputable for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     type PrecomputeData = PrecomputeData<E>;

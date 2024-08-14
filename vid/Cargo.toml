@@ -46,6 +46,11 @@ name = "advz"
 harness = false
 required-features = ["test-srs"]
 
+[[bench]]
+name = "advz_multiplicity"
+harness = false
+required-features = ["test-srs"]
+
 [features]
 default = ["parallel"]
 std = [
