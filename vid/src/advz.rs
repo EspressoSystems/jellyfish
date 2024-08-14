@@ -568,8 +568,18 @@ where
         // feature.
         let multiplicities = Vec::from_iter((0..self.multiplicity as usize));
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
+            let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
-                share.evals[i * polys_len..(i + 1) * polys_len]
+                share
+                    .evals
+                    .get(range.clone())
+                    .ok_or_else(|| {
+                        VidError::Internal(anyhow::anyhow!(
+                            "share evals range {:?} out of bounds for length {}",
+                            range,
+                            share.evals.len()
+                        ))
+                    })?
                     .iter()
                     .map(FieldMultiplier),
                 pseudorandom_scalar,
