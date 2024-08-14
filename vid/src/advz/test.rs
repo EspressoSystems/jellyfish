@@ -6,6 +6,7 @@ use ark_std::{
     vec,
 };
 use jf_pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
+use jf_utils::field_byte_len;
 use sha2::Sha256;
 
 #[ignore]
@@ -236,6 +237,54 @@ fn sad_path_recover_payload_corrupt_shares() {
             advz.recover_payload(&shares_bad_indices, &common)
                 .expect_err("recover_payload should fail when indices are out of bounds");
         }
+    }
+}
+
+#[test]
+fn verify_share_with_different_multiplicity() {
+    // play with these items
+    let multiplicity = 4;
+    let leader_multiplicity = 2;
+    let num_storage_nodes = 6;
+    let recovery_threshold = 4;
+
+    // more items as a function of the above
+    assert_ne!(
+        multiplicity, leader_multiplicity,
+        "leader_multiplicity should differ from multiplicity for this test"
+    );
+    let max_degree = recovery_threshold * multiplicity.max(leader_multiplicity);
+    let mut rng = jf_utils::test_rng();
+    let srs = init_srs(max_degree as usize, &mut rng);
+    type E = Bn254;
+    type H = Sha256;
+    let advz =
+        Advz::<E, H>::with_multiplicity(num_storage_nodes, recovery_threshold, multiplicity, &srs)
+            .unwrap();
+    let mut leader_advz = Advz::<E, H>::with_multiplicity(
+        num_storage_nodes,
+        recovery_threshold,
+        leader_multiplicity,
+        &srs,
+    )
+    .unwrap();
+    let payload = {
+        // ensure payload is large enough to fill at least 1 polynomial at
+        // maximum multiplicity.
+        let coeff_byte_len = field_byte_len::<<E as Pairing>::ScalarField>();
+        let payload_byte_len = max_degree as usize * coeff_byte_len;
+        init_random_payload(payload_byte_len, &mut rng)
+    };
+
+    // compute shares using `leader_multiplicity`
+    let disperse = leader_advz.disperse(payload).unwrap();
+    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+
+    // verify shares using `multiplicity` != `leader_multiplicity`
+    for share in shares {
+        advz.verify_share(&share, &common, &commit)
+            .unwrap()
+            .expect_err("different multiplicity should fail verification");
     }
 }
 
