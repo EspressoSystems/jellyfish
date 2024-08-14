@@ -1251,6 +1251,23 @@
 <a href="#1251" id="1251">1251</a>
 <a href="#1252" id="1252">1252</a>
 <a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1331,6 +1348,7 @@
 </span><span class="kw">pub struct </span>AdvzInternal&lt;E, H, T&gt;
 <span class="kw">where
     </span>E: Pairing,
+    T: Sync,
 {
     recovery_threshold: u32,
     num_storage_nodes: u32,
@@ -1373,6 +1391,7 @@
 <span class="kw">impl</span>&lt;E, H, T&gt; AdvzInternal&lt;E, H, T&gt;
 <span class="kw">where
     </span>E: Pairing,
+    T: Sync,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_internal(
         num_storage_nodes: u32,  <span class="comment">// n (code rate: r = k/n)
@@ -1392,9 +1411,7 @@
         </span>multiplicity: u32,       <span class="comment">// batch m chunks, keep the rate r = (m*k)/(m*n)
         </span>srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
-        <span class="comment">// TODO support any degree, give multiple shares to nodes if needed
-        // https://github.com/EspressoSystems/jellyfish/issues/393
-        </span><span class="kw">if </span>num_storage_nodes &lt; recovery_threshold {
+        <span class="kw">if </span>num_storage_nodes &lt; recovery_threshold {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"recovery_threshold {} exceeds num_storage_nodes {}"</span>,
                 recovery_threshold, num_storage_nodes
@@ -1645,6 +1662,7 @@
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="comment">// use HasherNode&lt;H&gt; instead of Output&lt;H&gt; to easily meet trait bounds
@@ -1815,28 +1833,43 @@
         );
 
         <span class="comment">// verify aggregate proof
-        </span>(<span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize)
-            .map(|i| {
-                <span class="kw">let </span>aggregate_eval = polynomial_eval(
-                    share.evals[i * polys_len..(i + <span class="number">1</span>) * polys_len]
-                        .iter()
-                        .map(FieldMultiplier),
-                    pseudorandom_scalar,
-                );
-                <span class="prelude-val">Ok</span>(UnivariateKzgPCS::verify(
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.vk,
-                    <span class="kw-2">&amp;</span>aggregate_poly_commit,
-                    <span class="kw-2">&amp;</span><span class="self">self
-                        </span>.multi_open_domain
-                        .element((share.index <span class="kw">as </span>usize * multiplicity) + i),
-                    <span class="kw-2">&amp;</span>aggregate_eval,
-                    <span class="kw-2">&amp;</span>share.aggregate_proofs[i],
-                )
-                .map_err(vid)<span class="question-mark">?
-                </span>.then_some(())
-                .ok_or(()))
-            })
-            .collect()
+        //
+        // some boilerplate needed to accommodate builds without `parallel`
+        // feature.
+        </span><span class="kw">let </span>multiplicities = Vec::from_iter((<span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize));
+        <span class="kw">let </span>verification_iter = parallelizable_slice_iter(<span class="kw-2">&amp;</span>multiplicities).map(|i| {
+            <span class="kw">let </span>aggregate_eval = polynomial_eval(
+                share.evals[i * polys_len..(i + <span class="number">1</span>) * polys_len]
+                    .iter()
+                    .map(FieldMultiplier),
+                pseudorandom_scalar,
+            );
+            <span class="prelude-val">Ok</span>(UnivariateKzgPCS::verify(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.vk,
+                <span class="kw-2">&amp;</span>aggregate_poly_commit,
+                <span class="kw-2">&amp;</span><span class="self">self
+                    </span>.multi_open_domain
+                    .element((share.index <span class="kw">as </span>usize * multiplicity) + i),
+                <span class="kw-2">&amp;</span>aggregate_eval,
+                <span class="kw-2">&amp;</span>share.aggregate_proofs[<span class="kw-2">*</span>i],
+            )
+            .map_err(vid)<span class="question-mark">?
+            </span>.then_some(())
+            .ok_or(()))
+        });
+        <span class="kw">let </span>abort = |result: <span class="kw-2">&amp;</span>VidResult&lt;<span class="prelude-ty">Result</span>&lt;(), ()&gt;&gt;| <span class="kw">match </span>result {
+            <span class="prelude-val">Ok</span>(success) =&gt; success.is_err(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+        };
+
+        <span class="comment">// abort immediately on any failure of verification
+        </span><span class="attr">#[cfg(feature = <span class="string">"parallel"</span>)]
+        </span><span class="kw">let </span>result = verification_iter.find_any(abort);
+
+        <span class="attr">#[cfg(not(feature = <span class="string">"parallel"</span>))]
+        </span><span class="kw">let </span>result = verification_iter.clone().find(abort); <span class="comment">// `clone` because we need mutable
+
+        </span>result.unwrap_or(<span class="prelude-val">Ok</span>(<span class="prelude-val">Ok</span>(())))
     }
 
     <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
@@ -1950,6 +1983,7 @@
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    SrsRef: Sync,
     AdvzInternal&lt;E, H, SrsRef&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="kw">fn </span>evaluate_polys(

@@ -565,6 +565,9 @@
 <a href="#565" id="565">565</a>
 <a href="#566" id="566">566</a>
 <a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -633,6 +636,7 @@
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="kw">fn </span>payload_proof&lt;B&gt;(
@@ -769,6 +773,7 @@
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="kw">fn </span>payload_proof&lt;B&gt;(
@@ -846,6 +851,7 @@
 <span class="kw">where
     </span>E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal&lt;E, H, T&gt;: MaybeGPU&lt;E&gt;,
 {
     <span class="comment">// lots of index manipulation
