@@ -242,9 +242,20 @@ fn sad_path_recover_payload_corrupt_shares() {
 
 #[test]
 fn verify_share_with_different_multiplicity() {
+    // leader_multiplicity < everyone else's multiplicity
+    verify_share_with_different_multiplicity_helper::<Bn254, Sha256>(4, 2);
+    // leader_multiplicity > everyone else's multiplicity
+    verify_share_with_different_multiplicity_helper::<Bn254, Sha256>(2, 4);
+}
+
+fn verify_share_with_different_multiplicity_helper<E, H>(
+    multiplicity: u32,
+    leader_multiplicity: u32,
+) where
+    E: Pairing,
+    H: HasherDigest,
+{
     // play with these items
-    let multiplicity = 4;
-    let leader_multiplicity = 2;
     let num_storage_nodes = 6;
     let recovery_threshold = 4;
 
@@ -256,8 +267,6 @@ fn verify_share_with_different_multiplicity() {
     let max_degree = recovery_threshold * multiplicity.max(leader_multiplicity);
     let mut rng = jf_utils::test_rng();
     let srs = init_srs(max_degree as usize, &mut rng);
-    type E = Bn254;
-    type H = Sha256;
     let advz =
         Advz::<E, H>::with_multiplicity(num_storage_nodes, recovery_threshold, multiplicity, &srs)
             .unwrap();
