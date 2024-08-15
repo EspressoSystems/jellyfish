@@ -190,11 +190,12 @@ where
 
     /// Batchly verify multiple (aggregated) PCS opening proofs.
     ///
-    /// We need to verify that
+    /// We need to verify that:
     /// - `e(Ai, [x]2) = e(Bi, [1]2) for i \in {0, .., m-1}`, where
     /// - `Ai = [open_proof_i] + u_i * [shifted_open_proof_i]` and
     /// - `Bi = eval_point_i * [open_proof_i] + u_i * next_eval_point_i *
     ///   [shifted_open_proof_i] + comm_i - eval_i * [1]1`.
+    ///
     /// By Schwartz-Zippel lemma, it's equivalent to check that for a random r:
     /// - `e(A0 + ... + r^{m-1} * Am, [x]2) = e(B0 + ... + r^{m-1} * Bm, [1]2)`.
     pub(crate) fn batch_verify_opening_proofs<T>(

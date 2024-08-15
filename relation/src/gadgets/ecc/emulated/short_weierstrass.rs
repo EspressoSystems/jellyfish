@@ -153,28 +153,36 @@ impl<F: PrimeField> PlonkCircuit<F> {
     /// Constrain variable `p2` to be the point addition of `p0` and
     /// `p1` over an elliptic curve.
     /// Let p0 = (x0, y0, inf0), p1 = (x1, y1, inf1), p2 = (x2, y2, inf2)
-    /// The addition formula for affine points of sw curve is
-    ///   If either p0 or p1 is infinity, then p2 equals to another point.
+    /// The addition formula for affine points of sw curve is as follows:
+    ///
+    /// If either p0 or p1 is infinity, then p2 equals to another point.
     ///   1. if p0 == p1
-    ///     - if y0 == 0 then inf2 = 1
-    ///     - Calculate s = (3 * x0^2 + a) / (2 * y0)
-    ///     - x2 = s^2 - x0 - x1
-    ///     - y2 = s(x0 - x2) - y0
+    ///      - if y0 == 0 then inf2 = 1
+    ///      - Calculate s = (3 * x0^2 + a) / (2 * y0)
+    ///      - x2 = s^2 - x0 - x1
+    ///      - y2 = s(x0 - x2) - y0
     ///   2. Otherwise
-    ///     - if x0 == x1 then inf2 = 1
-    ///     - Calculate s = (y0 - y1) / (x0 - x1)
-    ///     - x2 = s^2 - x0 - x1
-    ///     - y2 = s(x0 - x2) - y0
+    ///      - if x0 == x1 then inf2 = 1
+    ///      - Calculate s = (y0 - y1) / (x0 - x1)
+    ///      - x2 = s^2 - x0 - x1
+    ///      - y2 = s(x0 - x2) - y0
+    ///
     /// The first case is equivalent to the following:
+    ///
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 != y1 || y0 != 0 || inf2 == 0
     /// - (x0 + x1 + x2) * (y0 + y0)^2 == (3 * x0^2 + a)^2
     /// - (y2 + y0) * (y0 + y0) == (3 * x0^2 + a) (x0 - x2)
+    ///
     /// The second case is equivalent to the following:
+    ///
     /// - inf0 == 1 || inf1 == 1 || x0 != x1 || y0 == y1 || inf2 == 0
     /// - (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
     /// - (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
+    ///
     /// First check in both cases can be combined into the following:
+    ///
     /// inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 && y0 != 0)
+    ///
     /// For the rest equality checks,
     ///   - Both LHS and RHS must be multiplied with an indicator variable
     ///     (!inf0 && !inf1). So that if either p0 or p1 is infinity, those

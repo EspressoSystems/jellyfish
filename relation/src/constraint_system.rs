@@ -822,10 +822,10 @@ impl<F: FftField> PlonkCircuit<F> {
         self.eval_domain.size() != 1
     }
 
-    /// Re-arrange the order of the gates so that
+    /// Re-arrange the order of the gates so that:
     /// 1. io gates are in the front.
     /// 2. variable table lookup gate are at the rear so that they do not affect
-    /// the range gates when merging the lookup tables.
+    ///    the range gates when merging the lookup tables.
     ///
     /// Remember to pad gates before calling the method.
     fn rearrange_gates(&mut self) -> Result<(), CircuitError> {
