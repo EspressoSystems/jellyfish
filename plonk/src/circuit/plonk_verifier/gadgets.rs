@@ -34,16 +34,20 @@ use jf_utils::{bytes_to_field_elements, field_switching};
 
 /// Aggregate polynomial commitments into a single commitment (in the
 /// ScalarsAndBases form). Useful in batch opening.
+///
 /// The verification key type is guaranteed to match the Plonk proof type.
+///
 /// The returned commitment is a generalization of `[F]1` described
 /// in Sec 8.3, step 10 of https://eprint.iacr.org/2019/953.pdf
-/// input
+///
+/// Input:
 /// - vks: verification key variable
 /// - challenges: challenge variable in FpElemVar form
 /// - poly_evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
 /// - batch_proof: batched proof inputs
 /// - non_native_field_info: aux information for non-native field
-/// Output
+///
+/// Output:
 /// - scalar and bases prepared for MSM
 /// - buffer info for u and v powers
 pub(super) fn aggregate_poly_commitments_circuit<E, F>(
