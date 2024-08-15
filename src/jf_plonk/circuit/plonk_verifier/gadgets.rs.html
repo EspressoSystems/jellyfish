@@ -600,6 +600,10 @@
 <a href="#600" id="600">600</a>
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -636,16 +640,20 @@
 
 <span class="doccomment">/// Aggregate polynomial commitments into a single commitment (in the
 /// ScalarsAndBases form). Useful in batch opening.
+///
 /// The verification key type is guaranteed to match the Plonk proof type.
+///
 /// The returned commitment is a generalization of `[F]1` described
 /// in Sec 8.3, step 10 of https://eprint.iacr.org/2019/953.pdf
-/// input
+///
+/// Input:
 /// - vks: verification key variable
 /// - challenges: challenge variable in FpElemVar form
 /// - poly_evals: zeta^n, zeta^n-1 and Lagrange evaluated at 1
 /// - batch_proof: batched proof inputs
 /// - non_native_field_info: aux information for non-native field
-/// Output
+///
+/// Output:
 /// - scalar and bases prepared for MSM
 /// - buffer info for u and v powers
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>aggregate_poly_commitments_circuit&lt;E, F&gt;(

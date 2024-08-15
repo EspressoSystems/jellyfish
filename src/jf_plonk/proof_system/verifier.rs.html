@@ -910,6 +910,7 @@
 <a href="#910" id="910">910</a>
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1102,11 +1103,12 @@
 
     <span class="doccomment">/// Batchly verify multiple (aggregated) PCS opening proofs.
     ///
-    /// We need to verify that
+    /// We need to verify that:
     /// - `e(Ai, [x]2) = e(Bi, [1]2) for i \in {0, .., m-1}`, where
     /// - `Ai = [open_proof_i] + u_i * [shifted_open_proof_i]` and
     /// - `Bi = eval_point_i * [open_proof_i] + u_i * next_eval_point_i *
     ///   [shifted_open_proof_i] + comm_i - eval_i * [1]1`.
+    ///
     /// By Schwartz-Zippel lemma, it's equivalent to check that for a random r:
     /// - `e(A0 + ... + r^{m-1} * Am, [x]2) = e(B0 + ... + r^{m-1} * Bm, [1]2)`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>batch_verify_opening_proofs&lt;T&gt;(

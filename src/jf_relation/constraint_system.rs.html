@@ -3242,10 +3242,10 @@
         <span class="self">self</span>.eval_domain.size() != <span class="number">1
     </span>}
 
-    <span class="doccomment">/// Re-arrange the order of the gates so that
+    <span class="doccomment">/// Re-arrange the order of the gates so that:
     /// 1. io gates are in the front.
     /// 2. variable table lookup gate are at the rear so that they do not affect
-    /// the range gates when merging the lookup tables.
+    ///    the range gates when merging the lookup tables.
     ///
     /// Remember to pad gates before calling the method.
     </span><span class="kw">fn </span>rearrange_gates(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
