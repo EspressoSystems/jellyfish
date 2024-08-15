@@ -27,16 +27,15 @@ where
 {
     // play with these items
     //
-    // CODE_RATE is merely a convenient way to automatically choose polynomial
-    // degree as a function of storage node count.
-    // If desired, you could set polynomial degrees independent of storage node
-    // count.
-    const CODE_RATE: u32 = 4; // ratio of num_storage_nodes : polynomial_degree
+    // INVERSE_CODE_RATE is merely a convenient way to automatically choose
+    // polynomial degree as a function of storage node count. If desired, you
+    // could set polynomial degrees independent of storage node count.
+    const INVERSE_CODE_RATE: u32 = 4; // ratio of num_storage_nodes : polynomial_degree
     let storage_node_counts = [512, 1024];
     let payload_byte_lens = [1 * MB];
 
     // more items as a function of the above
-    let poly_degrees_iter = storage_node_counts.iter().map(|c| c / CODE_RATE);
+    let poly_degrees_iter = storage_node_counts.iter().map(|c| c / INVERSE_CODE_RATE);
     let supported_degree = poly_degrees_iter.clone().max().unwrap();
     let vid_sizes_iter = poly_degrees_iter.zip(storage_node_counts);
     let mut rng = jf_utils::test_rng();

@@ -66,6 +66,7 @@ impl<E, H, T> PayloadProver<SmallRangeProof<KzgProof<E>>> for AdvzInternal<E, H,
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     fn payload_proof<B>(
@@ -202,6 +203,7 @@ impl<E, H, T> PayloadProver<LargeRangeProof<KzgEval<E>>> for AdvzInternal<E, H, 
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     fn payload_proof<B>(
@@ -279,6 +281,7 @@ impl<E, H, T> AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     // lots of index manipulation
@@ -385,7 +388,7 @@ mod tests {
         advz::{
             bytes_to_field::elem_byte_capacity,
             payload_prover::{LargeRangeProof, SmallRangeProof, Statement},
-            tests::*,
+            test::*,
             *,
         },
         payload_prover::PayloadProver,

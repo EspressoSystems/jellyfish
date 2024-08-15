@@ -26,6 +26,7 @@ impl<E, H, T> Precomputable for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     type PrecomputeData = PrecomputeData<E>;
@@ -166,7 +167,7 @@ where
 mod tests {
     use crate::{
         advz::{
-            tests::{advz_init, init_random_payload, init_srs},
+            test::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         precomputable::Precomputable,
