@@ -63,7 +63,7 @@
               clangStdenv
               llvm_15
               typos
-              grcov
+              # grcov # TODO uncomment this line after https://github.com/mozilla/grcov/issues/1187#issuecomment-2252214718
             ] ++ lib.optionals stdenv.isDarwin
               [ darwin.apple_sdk.frameworks.Security ];
 
