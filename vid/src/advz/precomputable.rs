@@ -167,7 +167,7 @@ where
 mod tests {
     use crate::{
         advz::{
-            tests::{advz_init, init_random_payload, init_srs},
+            test::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         precomputable::Precomputable,

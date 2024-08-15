@@ -388,7 +388,7 @@ mod tests {
         advz::{
             bytes_to_field::elem_byte_capacity,
             payload_prover::{LargeRangeProof, SmallRangeProof, Statement},
-            tests::*,
+            test::*,
             *,
         },
         payload_prover::PayloadProver,
