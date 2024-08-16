@@ -529,7 +529,7 @@ where
         }
         if share.eval_proofs.len() != multiplicity {
             return Err(VidError::Argument(format!(
-                "number of eval_proofs {} differs from common multiplicty {}",
+                "number of eval_proofs {} differs from common multiplicity {}",
                 share.eval_proofs.len(),
                 multiplicity,
             )));
