@@ -98,7 +98,7 @@ pub trait VidScheme {
 
     /// Corrupt the share index, making the index out of bounds.
     /// This causes `verify_share` to fail with a value of Ok(Err)
-    #[cfg(any(test, feature = "test-srs"))]
+    #[cfg(all(test, feature = "test-srs"))]
     fn corrupt_share_index(&self, share: Self::Share) -> Self::Share;
 }
 

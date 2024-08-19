@@ -730,7 +730,7 @@ where
         common.multiplicity
     }
 
-    #[cfg(any(test, feature = "test-srs"))]
+    #[cfg(all(test, feature = "test-srs"))]
     fn corrupt_share_index(&self, mut share: Self::Share) -> Self::Share {
         share.index = share.index + self.num_storage_nodes;
         share
