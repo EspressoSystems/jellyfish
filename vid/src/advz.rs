@@ -32,6 +32,7 @@ use bytes_to_field::{bytes_to_field, field_to_bytes};
 use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
+use itertools::Itertools;
 use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
     MerkleCommitment, MerkleTreeScheme,
@@ -918,34 +919,37 @@ where
         E: Pairing,
         H: HasherDigest,
     {
-        let code_word_size = (self.num_storage_nodes * self.multiplicity) as usize;
-        let num_of_polys = all_storage_node_evals[0].len();
-        let mut shares = Vec::with_capacity(self.num_storage_nodes as usize);
-        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity as usize);
-        let mut proofs = Vec::with_capacity(self.multiplicity as usize);
-        let mut eval_proofs = Vec::with_capacity(self.multiplicity as usize);
-        let mut index = 0;
-        for i in 0..code_word_size {
-            evals.extend(all_storage_node_evals[i].iter());
-            proofs.push(aggregate_proofs[i].clone());
-            eval_proofs.push(
-                all_evals_commit
+        // compute share data
+        let share_data = all_storage_node_evals
+            .iter()
+            .zip(aggregate_proofs)
+            .enumerate()
+            .map(|(i, (eval, proof))| {
+                let eval_proof = all_evals_commit
                     .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
                     .expect_ok()
                     .map_err(vid)?
-                    .1,
-            );
-            if (i + 1) % self.multiplicity as usize == 0 {
-                shares.push(Share {
-                    index,
-                    evals: mem::take(&mut evals),
-                    aggregate_proofs: mem::take(&mut proofs),
-                    eval_proofs: mem::take(&mut eval_proofs),
-                });
-                index += 1;
-            }
-        }
-        Ok(shares)
+                    .1;
+                Ok((eval.clone(), proof, eval_proof))
+            })
+            .collect::<Result<Vec<_>, VidError>>()?;
+
+        // split share data into chunks of size multiplicity
+        Ok(share_data
+            .into_iter()
+            .chunks(self.multiplicity as usize)
+            .into_iter()
+            .enumerate()
+            .map(|(index, chunk)| {
+                let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
+                Share {
+                    index: index as u32,
+                    evals: evals.into_iter().flatten().collect::<Vec<_>>(),
+                    aggregate_proofs: proofs,
+                    eval_proofs,
+                }
+            })
+            .collect())
     }
 }
 
