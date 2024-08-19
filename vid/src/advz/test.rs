@@ -257,7 +257,7 @@ fn verify_share_with_multiplicity() {
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     for share in shares {
-        assert!(advz.verify_share(&share, &common, &commit).is_ok())
+        assert!(advz.verify_share(&share, &common, &commit).unwrap().is_ok())
     }
 }
 

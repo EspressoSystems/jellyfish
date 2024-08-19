@@ -545,7 +545,7 @@ where
         for i in 0..self.multiplicity {
             if KzgEvalsMerkleTree::<E, H>::verify(
                 common.all_evals_digest,
-                &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index + i),
+                &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * self.multiplicity) + i),
                 &share.eval_proofs[i as usize],
             )
             .map_err(vid)?
