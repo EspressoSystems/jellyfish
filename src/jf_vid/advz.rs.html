@@ -999,6 +999,22 @@
 <a href="#999" id="999">999</a>
 <a href="#1000" id="1000">1000</a>
 <a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
+<a href="#1005" id="1005">1005</a>
+<a href="#1006" id="1006">1006</a>
+<a href="#1007" id="1007">1007</a>
+<a href="#1008" id="1008">1008</a>
+<a href="#1009" id="1009">1009</a>
+<a href="#1010" id="1010">1010</a>
+<a href="#1011" id="1011">1011</a>
+<a href="#1012" id="1012">1012</a>
+<a href="#1013" id="1013">1013</a>
+<a href="#1014" id="1014">1014</a>
+<a href="#1015" id="1015">1015</a>
+<a href="#1016" id="1016">1016</a>
+<a href="#1017" id="1017">1017</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1033,6 +1049,7 @@
 <span class="kw">use </span>core::mem;
 <span class="kw">use </span>derivative::Derivative;
 <span class="kw">use </span>digest::crypto_common::Output;
+<span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
     MerkleCommitment, MerkleTreeScheme,
@@ -1311,7 +1328,7 @@
     // TODO further aggregate into a single KZG proof.
     </span>aggregate_proofs: Vec&lt;KzgProof&lt;E&gt;&gt;,
 
-    evals_proof: KzgEvalsMerkleTreeProof&lt;E, H&gt;,
+    eval_proofs: Vec&lt;KzgEvalsMerkleTreeProof&lt;E, H&gt;&gt;,
 }
 
 <span class="doccomment">/// The [`VidScheme::Common`] type for [`Advz`].
@@ -1528,25 +1545,33 @@
                 common.poly_commits.len()
             )));
         }
+        <span class="kw">if </span>share.eval_proofs.len() != multiplicity {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
+                <span class="string">"number of eval_proofs {} differs from common multiplicity {}"</span>,
+                share.eval_proofs.len(),
+                multiplicity,
+            )));
+        }
+
         <span class="self">Self</span>::is_consistent(commit, common)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>share.index &gt;= <span class="self">self</span>.num_storage_nodes {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(())); <span class="comment">// not an arg error
         </span>}
 
-        <span class="comment">// verify eval proof
-        // TODO: check all indices that represents the shares
-        </span><span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
-            common.all_evals_digest,
-            <span class="kw-2">&amp;</span>KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(share.index <span class="kw">as </span>u64),
-            <span class="kw-2">&amp;</span>share.evals_proof,
-        )
-        .map_err(vid)<span class="question-mark">?
-        </span>.is_err()
-        {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
+        <span class="comment">// verify eval proofs
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.multiplicity {
+            <span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
+                common.all_evals_digest,
+                <span class="kw-2">&amp;</span>KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from((share.index * <span class="self">self</span>.multiplicity) + i),
+                <span class="kw-2">&amp;</span>share.eval_proofs[i <span class="kw">as </span>usize],
+            )
+            .map_err(vid)<span class="question-mark">?
+            </span>.is_err()
+            {
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
+            }
         }
-
         <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(common, commit)<span class="question-mark">?</span>;
 
         <span class="comment">// Compute aggregate polynomial [commitment|evaluation]
@@ -1900,7 +1925,7 @@
     /// Each share contains (for multiplicity m):
     /// 1. (m * num_poly) evaluations.
     /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
-    /// 3. a merkle tree membership proof.
+    /// 3. m merkle tree membership proofs.
     </span><span class="kw">fn </span>assemble_shares(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         all_storage_node_evals: Vec&lt;Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;,
@@ -1911,30 +1936,37 @@
         </span>E: Pairing,
         H: HasherDigest,
     {
-        <span class="kw">let </span>code_word_size = (<span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
-        <span class="kw">let </span>num_of_polys = all_storage_node_evals[<span class="number">0</span>].len();
-        <span class="kw">let </span><span class="kw-2">mut </span>shares = Vec::with_capacity(<span class="self">self</span>.num_storage_nodes <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_of_polys * <span class="self">self</span>.multiplicity <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(<span class="self">self</span>.multiplicity <span class="kw">as </span>usize);
-        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..code_word_size {
-            evals.extend(all_storage_node_evals[i].iter());
-            proofs.push(aggregate_proofs[i].clone());
-            <span class="kw">if </span>(i + <span class="number">1</span>) % <span class="self">self</span>.multiplicity <span class="kw">as </span>usize == <span class="number">0 </span>{
-                shares.push(Share {
-                    index,
-                    evals: mem::take(<span class="kw-2">&amp;mut </span>evals),
-                    aggregate_proofs: mem::take(<span class="kw-2">&amp;mut </span>proofs),
-                    evals_proof: all_evals_commit <span class="comment">// TODO: check MT lookup for each index
-                        </span>.lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(index <span class="kw">as </span>u64))
-                        .expect_ok()
-                        .map_err(vid)<span class="question-mark">?
-                        </span>.<span class="number">1</span>,
-                });
-                index += <span class="number">1</span>;
-            }
-        }
-        <span class="prelude-val">Ok</span>(shares)
+        <span class="comment">// compute share data
+        </span><span class="kw">let </span>share_data = all_storage_node_evals
+            .into_iter()
+            .zip(aggregate_proofs)
+            .enumerate()
+            .map(|(i, (eval, proof))| {
+                <span class="kw">let </span>eval_proof = all_evals_commit
+                    .lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(i <span class="kw">as </span>u64))
+                    .expect_ok()
+                    .map_err(vid)<span class="question-mark">?
+                    </span>.<span class="number">1</span>;
+                <span class="prelude-val">Ok</span>((eval, proof, eval_proof))
+            })
+            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
+
+        <span class="comment">// split share data into chunks of size multiplicity
+        </span><span class="prelude-val">Ok</span>(share_data
+            .into_iter()
+            .chunks(<span class="self">self</span>.multiplicity <span class="kw">as </span>usize)
+            .into_iter()
+            .enumerate()
+            .map(|(index, chunk)| {
+                <span class="kw">let </span>(evals, proofs, eval_proofs): (Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>, <span class="kw">_</span>) = chunk.multiunzip();
+                Share {
+                    index: index <span class="kw">as </span>u32,
+                    evals: evals.into_iter().flatten().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                    aggregate_proofs: proofs,
+                    eval_proofs,
+                }
+            })
+            .collect())
     }
 }
 
