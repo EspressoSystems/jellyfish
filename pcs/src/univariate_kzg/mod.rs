@@ -111,7 +111,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         if TypeId::of::<E>() == TypeId::of::<ark_bn254::Bn254>() {
             let points = &prover_param.powers_of_g as _ as &[ark_bn254::G1Affine];
             let scalars = poly.coeffs() as _ as &[ark_bn254::Fr];
-            let commitment = succinct::msm(points, scalars);
+            let commitment = succinct::msm(points, scalars) as _ as E::G1Affine;
             return Ok(Commitment(commitment));
         }
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
