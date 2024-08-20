@@ -921,7 +921,7 @@ where
     {
         // compute share data
         let share_data = all_storage_node_evals
-            .iter()
+            .into_iter()
             .zip(aggregate_proofs)
             .enumerate()
             .map(|(i, (eval, proof))| {
@@ -930,7 +930,7 @@ where
                     .expect_ok()
                     .map_err(vid)?
                     .1;
-                Ok((eval.clone(), proof, eval_proof))
+                Ok((eval, proof, eval_proof))
             })
             .collect::<Result<Vec<_>, VidError>>()?;
 
