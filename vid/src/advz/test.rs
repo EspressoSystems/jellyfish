@@ -291,7 +291,7 @@ fn sad_path_verify_share_with_multiplicity() {
             let next_eval_proof = shares[(i + 1) % shares.len()].eval_proofs
                 [common.multiplicity as usize - 1]
                 .clone();
-            share_bad_eval_proofs.eval_proofs[0] = next_eval_proof;
+            share_bad_eval_proofs.eval_proofs[common.multiplicity as usize - 1] = next_eval_proof;
             advz.verify_share(&share_bad_eval_proofs, &common, &commit)
                 .unwrap()
                 .expect_err("bad share evals proof should fail verification");
