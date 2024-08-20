@@ -262,6 +262,43 @@ fn verify_share_with_multiplicity() {
 }
 
 #[test]
+fn sad_path_verify_share_with_multiplicity() {
+    let advz_params = AdvzParams {
+        recovery_threshold: 16,
+        num_storage_nodes: 20,
+        multiplicity: 32, // payload fitting into a single polynomial
+        payload_len: 8200,
+    };
+    let (mut advz, payload) = advz_init_with(advz_params);
+
+    let disperse = advz.disperse(payload).unwrap();
+    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+    for (i, share) in shares.iter().enumerate() {
+        // corrupt the last evaluation of the share
+        {
+            let mut share_bad_eval = share.clone();
+            share_bad_eval.evals[common.multiplicity as usize - 1].double_in_place();
+            advz.verify_share(&share_bad_eval, &common, &commit)
+                .unwrap()
+                .expect_err("bad share value should fail verification");
+        }
+
+        // corrupt the first eval proof of this share by assigning it the value of last
+        // eval proof of the next share
+        {
+            let mut share_bad_eval_proofs = share.clone();
+            let next_eval_proof = shares[(i + 1) % shares.len()].eval_proofs
+                [common.multiplicity as usize - 1]
+                .clone();
+            share_bad_eval_proofs.eval_proofs[0] = next_eval_proof;
+            advz.verify_share(&share_bad_eval_proofs, &common, &commit)
+                .unwrap()
+                .expect_err("bad share evals proof should fail verification");
+        }
+    }
+}
+
+#[test]
 fn verify_share_with_different_multiplicity() {
     // leader_multiplicity < everyone else's multiplicity
     verify_share_with_different_multiplicity_helper::<Bn254, Sha256>(4, 2);
