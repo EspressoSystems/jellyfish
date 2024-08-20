@@ -32,6 +32,7 @@ use bytes_to_field::{bytes_to_field, field_to_bytes};
 use core::mem;
 use derivative::Derivative;
 use digest::crypto_common::Output;
+use itertools::Itertools;
 use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
     MerkleCommitment, MerkleTreeScheme,
@@ -310,7 +311,7 @@ where
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
-    evals_proof: KzgEvalsMerkleTreeProof<E, H>,
+    eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
@@ -527,25 +528,33 @@ where
                 common.poly_commits.len()
             )));
         }
+        if share.eval_proofs.len() != multiplicity {
+            return Err(VidError::Argument(format!(
+                "number of eval_proofs {} differs from common multiplicity {}",
+                share.eval_proofs.len(),
+                multiplicity,
+            )));
+        }
+
         Self::is_consistent(commit, common)?;
 
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
 
-        // verify eval proof
-        // TODO: check all indices that represents the shares
-        if KzgEvalsMerkleTree::<E, H>::verify(
-            common.all_evals_digest,
-            &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
-            &share.evals_proof,
-        )
-        .map_err(vid)?
-        .is_err()
-        {
-            return Ok(Err(()));
+        // verify eval proofs
+        for i in 0..self.multiplicity {
+            if KzgEvalsMerkleTree::<E, H>::verify(
+                common.all_evals_digest,
+                &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * self.multiplicity) + i),
+                &share.eval_proofs[i as usize],
+            )
+            .map_err(vid)?
+            .is_err()
+            {
+                return Ok(Err(()));
+            }
         }
-
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
         // Compute aggregate polynomial [commitment|evaluation]
@@ -899,7 +908,7 @@ where
     /// Each share contains (for multiplicity m):
     /// 1. (m * num_poly) evaluations.
     /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
-    /// 3. a merkle tree membership proof.
+    /// 3. m merkle tree membership proofs.
     fn assemble_shares(
         &self,
         all_storage_node_evals: Vec<Vec<<E as Pairing>::ScalarField>>,
@@ -910,30 +919,37 @@ where
         E: Pairing,
         H: HasherDigest,
     {
-        let code_word_size = (self.num_storage_nodes * self.multiplicity) as usize;
-        let num_of_polys = all_storage_node_evals[0].len();
-        let mut shares = Vec::with_capacity(self.num_storage_nodes as usize);
-        let mut evals = Vec::with_capacity(num_of_polys * self.multiplicity as usize);
-        let mut proofs = Vec::with_capacity(self.multiplicity as usize);
-        let mut index = 0;
-        for i in 0..code_word_size {
-            evals.extend(all_storage_node_evals[i].iter());
-            proofs.push(aggregate_proofs[i].clone());
-            if (i + 1) % self.multiplicity as usize == 0 {
-                shares.push(Share {
-                    index,
-                    evals: mem::take(&mut evals),
-                    aggregate_proofs: mem::take(&mut proofs),
-                    evals_proof: all_evals_commit // TODO: check MT lookup for each index
-                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(index as u64))
-                        .expect_ok()
-                        .map_err(vid)?
-                        .1,
-                });
-                index += 1;
-            }
-        }
-        Ok(shares)
+        // compute share data
+        let share_data = all_storage_node_evals
+            .into_iter()
+            .zip(aggregate_proofs)
+            .enumerate()
+            .map(|(i, (eval, proof))| {
+                let eval_proof = all_evals_commit
+                    .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
+                    .expect_ok()
+                    .map_err(vid)?
+                    .1;
+                Ok((eval, proof, eval_proof))
+            })
+            .collect::<Result<Vec<_>, VidError>>()?;
+
+        // split share data into chunks of size multiplicity
+        Ok(share_data
+            .into_iter()
+            .chunks(self.multiplicity as usize)
+            .into_iter()
+            .enumerate()
+            .map(|(index, chunk)| {
+                let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
+                Share {
+                    index: index as u32,
+                    evals: evals.into_iter().flatten().collect::<Vec<_>>(),
+                    aggregate_proofs: proofs,
+                    eval_proofs,
+                }
+            })
+            .collect())
     }
 }
 

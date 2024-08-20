@@ -5,7 +5,10 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec,
 };
-use jf_pcs::{checked_fft_size, prelude::UnivariateUniversalParams};
+use jf_pcs::{
+    checked_fft_size,
+    prelude::{Commitment, UnivariateUniversalParams},
+};
 use jf_utils::field_byte_len;
 use sha2::Sha256;
 
@@ -104,7 +107,7 @@ fn sad_path_verify_share_corrupt_share() {
             // (without also causing a deserialization failure).
             // So we use another share's proof instead.
             let share_bad_evals_proof = Share {
-                evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
+                eval_proofs: shares[(i + 1) % shares.len()].eval_proofs.clone(),
                 ..share.clone()
             };
             advz.verify_share(&share_bad_evals_proof, &common, &commit)
@@ -241,6 +244,64 @@ fn sad_path_recover_payload_corrupt_shares() {
 }
 
 #[test]
+fn verify_share_with_multiplicity() {
+    let advz_params = AdvzParams {
+        recovery_threshold: 16,
+        num_storage_nodes: 20,
+        multiplicity: 4,
+        payload_len: 4000,
+    };
+    let (mut advz, payload) = advz_init_with(advz_params);
+
+    let disperse = advz.disperse(payload).unwrap();
+    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+
+    for share in shares {
+        assert!(advz.verify_share(&share, &common, &commit).unwrap().is_ok())
+    }
+}
+
+#[test]
+fn sad_path_verify_share_with_multiplicity() {
+    // regression test for https://github.com/EspressoSystems/jellyfish/issues/654
+    let advz_params = AdvzParams {
+        recovery_threshold: 16,
+        num_storage_nodes: 20,
+        multiplicity: 32, // payload fitting into a single polynomial
+        payload_len: 8200,
+    };
+    let (mut advz, payload) = advz_init_with(advz_params);
+
+    let disperse = advz.disperse(payload).unwrap();
+    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+    for (i, share) in shares.iter().enumerate() {
+        // corrupt the last evaluation of the share
+        {
+            let mut share_bad_eval = share.clone();
+            share_bad_eval.evals[common.multiplicity as usize - 1].double_in_place();
+            advz.verify_share(&share_bad_eval, &common, &commit)
+                .unwrap()
+                .expect_err("bad share value should fail verification");
+        }
+
+        // check that verification fails if any of the eval_proofs are
+        // inconsistent with the merkle root.
+        // corrupt the last eval proof of this share by assigning it to the value of
+        // last eval proof of the next share.
+        {
+            let mut share_bad_eval_proofs = share.clone();
+            let next_eval_proof = shares[(i + 1) % shares.len()].eval_proofs
+                [common.multiplicity as usize - 1]
+                .clone();
+            share_bad_eval_proofs.eval_proofs[common.multiplicity as usize - 1] = next_eval_proof;
+            advz.verify_share(&share_bad_eval_proofs, &common, &commit)
+                .unwrap()
+                .expect_err("bad share evals proof should fail verification");
+        }
+    }
+}
+
+#[test]
 fn verify_share_with_different_multiplicity() {
     // leader_multiplicity < everyone else's multiplicity
     verify_share_with_different_multiplicity_helper::<Bn254, Sha256>(4, 2);
@@ -298,17 +359,53 @@ fn verify_share_with_different_multiplicity_helper<E, H>(
     }
 }
 
+struct AdvzParams {
+    recovery_threshold: u32,
+    num_storage_nodes: u32,
+    multiplicity: u32,
+    payload_len: usize,
+}
+
 /// Routine initialization tasks.
 ///
 /// Returns the following tuple:
 /// 1. An initialized [`Advz`] instance.
 /// 2. A `Vec<u8>` filled with random bytes.
 pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
-    let (recovery_threshold, num_storage_nodes) = (4, 6);
+    let advz_params = AdvzParams {
+        recovery_threshold: 16,
+        num_storage_nodes: 20,
+        multiplicity: 1,
+        payload_len: 4000,
+    };
+    advz_init_with(advz_params)
+}
+
+fn advz_init_with(advz_params: AdvzParams) -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
     let mut rng = jf_utils::test_rng();
-    let srs = init_srs(recovery_threshold as usize, &mut rng);
-    let advz = Advz::new(num_storage_nodes, recovery_threshold, srs).unwrap();
-    let bytes_random = init_random_payload(4000, &mut rng);
+    let poly_len = advz_params.recovery_threshold * advz_params.multiplicity;
+    let srs = init_srs(poly_len as usize, &mut rng);
+    assert_ne!(
+        advz_params.multiplicity, 0,
+        "multiplicity should not be zero"
+    );
+    let advz = if advz_params.multiplicity > 1 {
+        Advz::with_multiplicity(
+            advz_params.num_storage_nodes,
+            advz_params.recovery_threshold,
+            advz_params.multiplicity,
+            srs,
+        )
+        .unwrap()
+    } else {
+        Advz::new(
+            advz_params.num_storage_nodes,
+            advz_params.recovery_threshold,
+            srs,
+        )
+        .unwrap()
+    };
+    let bytes_random = init_random_payload(advz_params.payload_len, &mut rng);
     (advz, bytes_random)
 }
 
