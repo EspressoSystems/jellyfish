@@ -283,7 +283,8 @@ fn sad_path_verify_share_with_multiplicity() {
                 .expect_err("bad share value should fail verification");
         }
 
-        // corrupt the first eval proof of this share by assigning it the value of last
+        // check that verification fails if any of the eval_proofs are inconsistent with the merkle root.
+        // corrupt the last eval proof of this share by assigning it to the value of last
         // eval proof of the next share
         {
             let mut share_bad_eval_proofs = share.clone();
