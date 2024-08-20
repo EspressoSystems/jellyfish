@@ -32,12 +32,15 @@ use ark_std::{
     vec::Vec,
     One, UniformRand, Zero,
 };
+use core::any::TypeId;
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use srs::{UnivariateProverParam, UnivariateUniversalParams, UnivariateVerifierParam};
 
 pub(crate) mod srs;
+#[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+mod succinct;
 
 /// KZG Polynomial Commitment Scheme on univariate polynomial.
 pub struct UnivariateKzgPCS<E> {
@@ -104,6 +107,13 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
             )));
         }
 
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        if TypeId::of::<E>() == TypeId::of::<ark_bn254::Bn254>() {
+            let points = &prover_param.powers_of_g as _ as &[ark_bn254::G1Affine];
+            let scalars = poly.coeffs() as _ as &[ark_bn254::Fr];
+            let commitment = succinct::msm(points, scalars);
+            return Ok(Commitment(commitment));
+        }
         let (num_leading_zeros, plain_coeffs) = skip_leading_zeros_and_convert_to_bigints(poly);
 
         #[cfg(feature = "kzg-print-trace")]
