@@ -263,6 +263,7 @@ fn verify_share_with_multiplicity() {
 
 #[test]
 fn sad_path_verify_share_with_multiplicity() {
+    // regression test for https://github.com/EspressoSystems/jellyfish/issues/654
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
