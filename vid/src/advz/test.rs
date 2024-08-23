@@ -248,7 +248,7 @@ fn verify_share_with_multiplicity() {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
-        multiplicity: 4,
+        max_multiplicity: 4,
         payload_len: 4000,
     };
     let (mut advz, payload) = advz_init_with(advz_params);
@@ -267,7 +267,7 @@ fn sad_path_verify_share_with_multiplicity() {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
-        multiplicity: 32, // payload fitting into a single polynomial
+        max_multiplicity: 32, // payload fitting into a single polynomial
         payload_len: 8200,
     };
     let (mut advz, payload) = advz_init_with(advz_params);
@@ -362,7 +362,7 @@ fn verify_share_with_different_multiplicity_helper<E, H>(
 struct AdvzParams {
     recovery_threshold: u32,
     num_storage_nodes: u32,
-    multiplicity: u32,
+    max_multiplicity: u32,
     payload_len: usize,
 }
 
@@ -375,7 +375,7 @@ pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
-        multiplicity: 1,
+        max_multiplicity: 1,
         payload_len: 4000,
     };
     advz_init_with(advz_params)
@@ -383,17 +383,17 @@ pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
 
 fn advz_init_with(advz_params: AdvzParams) -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
     let mut rng = jf_utils::test_rng();
-    let poly_len = advz_params.recovery_threshold * advz_params.multiplicity;
+    let poly_len = advz_params.recovery_threshold * advz_params.max_multiplicity;
     let srs = init_srs(poly_len as usize, &mut rng);
     assert_ne!(
-        advz_params.multiplicity, 0,
+        advz_params.max_multiplicity, 0,
         "multiplicity should not be zero"
     );
-    let advz = if advz_params.multiplicity > 1 {
+    let advz = if advz_params.max_multiplicity > 1 {
         Advz::with_multiplicity(
             advz_params.num_storage_nodes,
             advz_params.recovery_threshold,
-            advz_params.multiplicity,
+            advz_params.max_multiplicity,
             srs,
         )
         .unwrap()
