@@ -95,12 +95,14 @@ where
 
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
+        let chunk_size =
+            self.min_multiplicity(payload.len() as u32, self.recovery_threshold) as usize;
         for (i, evals_iter) in elems_iter
             .chunks(self.recovery_threshold as usize)
             .into_iter()
             .enumerate()
         {
-            let poly = self.polynomial(evals_iter);
+            let poly = self.polynomial(evals_iter, chunk_size);
             let points_range = Range {
                 // first polynomial? skip to the start of the proof range
                 start: if i == 0 { offset_elem } else { 0 },
@@ -260,14 +262,14 @@ where
                     .chain(proof.suffix_bytes.iter()),
             ))
             .chain(proof.suffix_elems.iter().cloned());
-
+        let chunk_size = (stmt.common.multiplicity * self.recovery_threshold) as usize;
         // rebuild the poly commits, check against `common`
         for (commit_index, evals_iter) in range_poly.into_iter().zip(
             elems_iter
                 .chunks(self.recovery_threshold as usize)
                 .into_iter(),
         ) {
-            let poly = self.polynomial(evals_iter);
+            let poly = self.polynomial(evals_iter, chunk_size);
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
             if poly_commit != stmt.common.poly_commits[commit_index] {
                 return Ok(Err(()));

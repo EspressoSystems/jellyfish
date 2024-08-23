@@ -39,7 +39,10 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let polys = self.bytes_to_polys(payload);
+        let payload_byte_len = payload.len().try_into().map_err(vid)?;
+        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let chunk_size = (multiplicity * self.recovery_threshold) as usize;
+        let polys = self.bytes_to_polys(payload, chunk_size);
         let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Ok((
@@ -63,22 +66,23 @@ where
             payload_byte_len,
             self.num_storage_nodes
         ));
-        let _chunk_size = self.multiplicity * self.recovery_threshold;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
+        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let chunk_size = multiplicity * self.recovery_threshold;
+        let code_word_size = multiplicity * self.num_storage_nodes;
 
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload);
+        let polys = self.bytes_to_polys(payload, chunk_size as usize);
         end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| ark_std::format!(
             "compute all storage node evals for {} polynomials with {} coefficients",
             polys.len(),
-            _chunk_size
+            chunk_size
         ));
-        let all_storage_node_evals = self.evaluate_polys(&polys)?;
+        let all_storage_node_evals = self.evaluate_polys(&polys, code_word_size as usize)?;
         end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
@@ -98,7 +102,7 @@ where
             all_evals_digest: all_evals_commit.commitment().digest(),
             payload_byte_len,
             num_storage_nodes: self.num_storage_nodes,
-            multiplicity: self.multiplicity,
+            multiplicity,
         };
         end_timer!(common_timer);
 
@@ -129,8 +133,12 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares =
-            self.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)?;
+        let shares = self.assemble_shares(
+            all_storage_node_evals,
+            aggregate_proofs,
+            all_evals_commit,
+            multiplicity,
+        )?;
         end_timer!(assemblage_timer);
         end_timer!(disperse_time);
 
