@@ -891,8 +891,26 @@ where
     }
 
     fn min_multiplicity(&self, payload_byte_len: u32, multiplicity: u32) -> u32 {
-        let _elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
-        multiplicity
+        let elem_bytes_len =
+            bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>() as u32;
+        let elems = payload_byte_len / elem_bytes_len;
+        let recovery_threshold = self.recovery_threshold;
+        if recovery_threshold * multiplicity < elems {
+            // payload is large. no change in multiplicity needed.
+            return multiplicity;
+        }
+
+        // payload is small: choose m such that 0 < m < multiplicity
+        // and m is the power of two that fits the payload best.
+        let mut m = multiplicity;
+        loop {
+            if elems <= recovery_threshold * m {
+                break;
+            } else {
+                m >> 1;
+            }
+        }
+        m
     }
 
     /// Derive a commitment from whatever data is needed.
