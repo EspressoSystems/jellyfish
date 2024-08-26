@@ -427,8 +427,6 @@ fn max_multiplicity() {
                 "derived multiplicity should equal max_multiplicity for large payload"
             );
         }
-        assert!(found_large_payload && found_small_payload, "missing tests");
-
         // sanity: verify shares
         for share in shares {
             advz.verify_share(&share, &common, &commit)
@@ -436,6 +434,9 @@ fn max_multiplicity() {
                 .unwrap();
         }
     }
+
+    assert!(found_large_payload, "missing test for large payload");
+    assert!(found_small_payload, "missing test for small payload");
 }
 
 struct AdvzParams {

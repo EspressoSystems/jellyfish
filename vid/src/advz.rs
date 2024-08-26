@@ -183,6 +183,8 @@ where
         // https://github.com/EspressoSystems/jellyfish/issues/339
         if chunk_size as usize != eval_domain.size() {
             return Err(VidError::Argument(format!(
+                // TODO GUS FIX THIS ERROR CHECK & MESSAGE
+                // TODO GUS EXPLAIN WHY WE ENFORCE POWER OF TWO
                 "recovery_threshold {} currently unsupported, round to {} instead",
                 chunk_size,
                 eval_domain.size()
@@ -858,7 +860,7 @@ where
     fn polynomial_internal<I>(
         domain_ref: &Radix2EvaluationDomain<KzgPoint<E>>,
         chunk_size: usize,
-        coeffs: I,
+        coeffs: I, // TODO GUS rename to evals, they're not coefficients!!
     ) -> KzgPolynomial<E>
     where
         I: Iterator,
@@ -876,6 +878,7 @@ where
         // then we were not given the correct number of coeffs. In that case
         // coeffs.len() could be anything, so there's nothing to sanity check.
         if pre_fft_len == chunk_size {
+            // TODO GUS don't panic, return internal error instead
             assert_eq!(coeffs_vec.len(), pre_fft_len);
         }
 
@@ -893,24 +896,28 @@ where
     fn min_multiplicity(&self, payload_byte_len: u32, multiplicity: u32) -> u32 {
         let elem_bytes_len =
             bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>() as u32;
-        let elems = payload_byte_len / elem_bytes_len;
+        let elems = payload_byte_len.div_ceil(elem_bytes_len);
         let recovery_threshold = self.recovery_threshold;
         if recovery_threshold * multiplicity < elems {
             // payload is large. no change in multiplicity needed.
             return multiplicity;
         }
 
-        // payload is small: choose m such that 0 < m < multiplicity
-        // and m is the power of two that fits the payload best.
-        let mut m = multiplicity;
-        loop {
-            if elems <= recovery_threshold * m {
-                break;
-            } else {
-                m >> 1;
-            }
+        // payload is small: choose the smallest `m` such that `0 < m <
+        // multiplicity` and the entire payload fits into `m *
+        // recovery_threshold` elements.
+        let m = elems.div_ceil(recovery_threshold).max(1);
+
+        // TODO TEMPORARY: multiplicity, recovery_threshold must be a power of 2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        //
+        // Round up to the nearest power of 2. Delete this line after this issue
+        // is fixed.
+        if m <= 1 {
+            1
+        } else {
+            1 << ((m - 1).ilog2() + 1)
         }
-        m
     }
 
     /// Derive a commitment from whatever data is needed.
