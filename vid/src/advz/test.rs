@@ -251,7 +251,7 @@ fn verify_share_with_multiplicity() {
         max_multiplicity: 4,
         payload_len: 4000,
     };
-    let (mut advz, payload) = advz_init_with(advz_params);
+    let (mut advz, payload) = advz_init_with::<Bls12_381>(advz_params);
 
     let disperse = advz.disperse(payload).unwrap();
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
@@ -270,7 +270,7 @@ fn sad_path_verify_share_with_multiplicity() {
         max_multiplicity: 32, // payload fitting into a single polynomial
         payload_len: 8200,
     };
-    let (mut advz, payload) = advz_init_with(advz_params);
+    let (mut advz, payload) = advz_init_with::<Bls12_381>(advz_params);
 
     let disperse = advz.disperse(payload).unwrap();
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
@@ -359,6 +359,85 @@ fn verify_share_with_different_multiplicity_helper<E, H>(
     }
 }
 
+#[test]
+fn max_multiplicity() {
+    // regression test for https://github.com/EspressoSystems/jellyfish/issues/663
+
+    // play with these items
+    let num_storage_nodes = 6;
+    let recovery_threshold = 4;
+    let max_multiplicity = 1 << 10; // intentionally large so as to fit many payload sizes into a single polynomial
+
+    // TODO add payload byte len 0 to this test
+    let payload_byte_lens = [1, 100, 1_000, 10_000, 100_000, 1_000_000];
+    type E = Bls12_381;
+
+    // more items as a function of the above
+    let (mut advz, payload_bytes) = advz_init_with::<E>(AdvzParams {
+        recovery_threshold,
+        num_storage_nodes,
+        max_multiplicity,
+        payload_len: *payload_byte_lens.iter().max().unwrap(),
+    });
+    let elem_byte_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+    let (mut found_small_payload, mut found_large_payload) = (false, false);
+
+    for payload_byte_len in payload_byte_lens {
+        let payload = &payload_bytes[..payload_byte_len];
+        let num_payload_elems = payload_byte_len.div_ceil(elem_byte_len) as u32;
+
+        let disperse = advz.disperse(payload).unwrap();
+        let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
+
+        // test: multiplicity set correctly
+        assert!(
+            common.multiplicity <= max_multiplicity,
+            "derived multiplicity should never exceed max_multiplicity"
+        );
+        if num_payload_elems < max_multiplicity * recovery_threshold {
+            // small payload
+            found_small_payload = true;
+            assert!(
+                num_payload_elems <= common.multiplicity * advz.recovery_threshold,
+                "derived multiplicity too small"
+            );
+
+            // TODO TEMPORARY: multiplicity, recovery_threshold must be a power
+            // of 2 https://github.com/EspressoSystems/jellyfish/issues/668
+            //
+            // After this issue is fixed the following test should use
+            // `common.multiplicity - 1` instead of `common.multiplicity / 2`.
+            assert!(
+                num_payload_elems > common.multiplicity / 2 * advz.recovery_threshold,
+                "derived multiplicity too large: payload_byte_len {}, common.multiplicity {}",
+                payload_byte_len,
+                common.multiplicity
+            );
+
+            assert_eq!(
+                common.poly_commits.len(),
+                1,
+                "small payload should fit into a single polynomial"
+            );
+        } else {
+            // large payload
+            found_large_payload = true;
+            assert_eq!(
+                common.multiplicity, max_multiplicity,
+                "derived multiplicity should equal max_multiplicity for large payload"
+            );
+        }
+        assert!(found_large_payload && found_small_payload, "missing tests");
+
+        // sanity: verify shares
+        for share in shares {
+            advz.verify_share(&share, &common, &commit)
+                .unwrap()
+                .unwrap();
+        }
+    }
+}
+
 struct AdvzParams {
     recovery_threshold: u32,
     num_storage_nodes: u32,
@@ -381,7 +460,7 @@ pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
     advz_init_with(advz_params)
 }
 
-fn advz_init_with(advz_params: AdvzParams) -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
+fn advz_init_with<E: Pairing>(advz_params: AdvzParams) -> (Advz<E, Sha256>, Vec<u8>) {
     let mut rng = jf_utils::test_rng();
     let poly_len = advz_params.recovery_threshold * advz_params.max_multiplicity;
     let srs = init_srs(poly_len as usize, &mut rng);
