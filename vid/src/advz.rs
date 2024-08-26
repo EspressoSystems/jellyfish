@@ -845,23 +845,19 @@ where
 
         parallelizable_chunks(payload, chunk_size * elem_bytes_len)
             .map(|chunk| {
-                Self::polynomial_internal(
-                    eval_domain_ref,
-                    chunk_size,
-                    bytes_to_field::<_, KzgEval<E>>(chunk),
-                )
+                Self::polynomial_internal(bytes_to_field::<_, KzgEval<E>>(chunk), chunk_size)
             })
             .collect()
     }
 
+    /// Return a polynomial that interpolates `evals` on a evaluation domain of
+    /// size `domain_size`.
+    ///
+    /// TODO: explain what happens when number of evals is not a power of 2.
     // This is an associated function, not a method, doesn't take in `self`, thus
     // more friendly to cross-thread `Sync`, especially when on of the generic
     // param of `Self` didn't implement `Sync`
-    fn polynomial_internal<I>(
-        domain_ref: &Radix2EvaluationDomain<KzgPoint<E>>,
-        chunk_size: usize,
-        coeffs: I, // TODO GUS rename to evals, they're not coefficients!!
-    ) -> KzgPolynomial<E>
+    fn polynomial_internal<I>(evals: I, domain_size: usize) -> KzgPolynomial<E>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
@@ -869,28 +865,46 @@ where
         // TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
-        let pre_fft_len = coeffs_vec.len();
-        EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
+        let mut evals_vec: Vec<_> = evals.map(|c| *c.borrow()).collect();
+        let pre_fft_len = evals_vec.len();
 
-        // sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.recovery_threshold * self.multiplicity
-        // then we were not given the correct number of coeffs. In that case
-        // coeffs.len() could be anything, so there's nothing to sanity check.
-        if pre_fft_len == chunk_size {
-            // TODO GUS don't panic, return internal error instead
-            assert_eq!(coeffs_vec.len(), pre_fft_len);
+        // Check for too many evals
+        // TODO GUS don't panic, return internal error instead
+        assert!(pre_fft_len <= domain_size);
+
+        let domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size)
+            .expect("TODO return error instead");
+        // .ok_or_else(|| {
+        //     VidError::Internal(anyhow::anyhow!(
+        //         "fail to construct domain of size {}",
+        //         chunk_size
+        //     ))
+        // })?;
+
+        domain.ifft_in_place(&mut evals_vec);
+
+        // sanity: the fft did not resize evals. If pre_fft_len < domain_size
+        // then we were given too few evals, in which caseso there's nothing to
+        // sanity check.
+        //
+        // TODO GUS don't panic, return internal error instead
+        if pre_fft_len == domain_size {
+            assert_eq!(evals_vec.len(), pre_fft_len);
         }
 
-        DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+        DenseUVPolynomial::from_coefficients_vec(evals_vec)
     }
 
-    fn polynomial<I>(&self, coeffs: I, chunk_size: usize) -> KzgPolynomial<E>
+    // TODO delete this method?
+    fn polynomial<I>(&self, evals: I, multiplicity: usize) -> KzgPolynomial<E>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
     {
-        Self::polynomial_internal(&self.eval_domain, chunk_size, coeffs)
+        Self::polynomial_internal(
+            evals,
+            usize::try_from(self.recovery_threshold).unwrap() * multiplicity,
+        )
     }
 
     fn min_multiplicity(&self, payload_byte_len: u32, multiplicity: u32) -> u32 {
