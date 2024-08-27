@@ -90,9 +90,8 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        let chunk_size = self.min_multiplicity(payload.len() as u32, self.max_multiplicity)
-            * self.recovery_threshold; // TODO tidy
-        let points: Vec<_> = Radix2EvaluationDomain::new(chunk_size as usize)
+        let multiplicity = self.min_multiplicity(payload.len() as u32, self.max_multiplicity); // TODO tidy
+        let points: Vec<_> = Radix2EvaluationDomain::new(multiplicity as usize)
             .expect("TODO return error instead")
             .elements()
             .collect(); // perf: we might not need all these points
@@ -104,7 +103,7 @@ where
             .into_iter()
             .enumerate()
         {
-            let poly = self.polynomial(evals_iter, chunk_size as usize);
+            let poly = self.polynomial(evals_iter, multiplicity as usize);
             let points_range = Range {
                 // first polynomial? skip to the start of the proof range
                 start: if i == 0 { offset_elem } else { 0 },
@@ -164,8 +163,10 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        // perf: we might not need all these points
-        let points: Vec<_> = self.eval_domain.elements().collect();
+        let points: Vec<_> = Radix2EvaluationDomain::new(stmt.common.multiplicity as usize)
+            .expect("TODO return error instead")
+            .elements()
+            .collect(); // perf: we might not need all these points
 
         // verify proof
         let mut cur_proof_index = 0;
@@ -266,14 +267,13 @@ where
                     .chain(proof.suffix_bytes.iter()),
             ))
             .chain(proof.suffix_elems.iter().cloned());
-        let chunk_size = (stmt.common.multiplicity * self.recovery_threshold) as usize;
         // rebuild the poly commits, check against `common`
         for (commit_index, evals_iter) in range_poly.into_iter().zip(
             elems_iter
                 .chunks(self.recovery_threshold as usize)
                 .into_iter(),
         ) {
-            let poly = self.polynomial(evals_iter, chunk_size);
+            let poly = self.polynomial(evals_iter, stmt.common.multiplicity as usize);
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
             if poly_commit != stmt.common.poly_commits[commit_index] {
                 return Ok(Err(()));
