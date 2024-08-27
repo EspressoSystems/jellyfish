@@ -115,7 +115,6 @@ where
                     points.len()
                 },
             };
-            ark_std::println!("points.len {}", points.len());
             proofs.extend(
                 UnivariateKzgPCS::multi_open(&self.ck, &poly, &points[points_range])
                     .expect("GUS WTF")
