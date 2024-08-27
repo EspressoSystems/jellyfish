@@ -25,7 +25,7 @@ use crate::{
 };
 use anyhow::anyhow;
 use ark_ec::pairing::Pairing;
-use ark_poly::EvaluationDomain;
+use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{format, ops::Range};
 use itertools::Itertools;
@@ -90,19 +90,21 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        // perf: we might not need all these points
-        let points: Vec<_> = self.eval_domain.elements().collect();
+        let chunk_size = self.min_multiplicity(payload.len() as u32, self.max_multiplicity)
+            * self.recovery_threshold; // TODO tidy
+        let points: Vec<_> = Radix2EvaluationDomain::new(chunk_size as usize)
+            .expect("TODO return error instead")
+            .elements()
+            .collect(); // perf: we might not need all these points
 
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
-        let chunk_size =
-            self.min_multiplicity(payload.len() as u32, self.recovery_threshold) as usize;
         for (i, evals_iter) in elems_iter
             .chunks(self.recovery_threshold as usize)
             .into_iter()
             .enumerate()
         {
-            let poly = self.polynomial(evals_iter, chunk_size);
+            let poly = self.polynomial(evals_iter, chunk_size as usize);
             let points_range = Range {
                 // first polynomial? skip to the start of the proof range
                 start: if i == 0 { offset_elem } else { 0 },
@@ -113,9 +115,11 @@ where
                     points.len()
                 },
             };
+            ark_std::println!("points.len {}", points.len());
             proofs.extend(
                 UnivariateKzgPCS::multi_open(&self.ck, &poly, &points[points_range])
-                    .map_err(vid)?
+                    .expect("GUS WTF")
+                    // .map_err(vid)?
                     .0,
             );
         }
@@ -478,7 +482,7 @@ mod tests {
                     };
 
                     let small_range_proof: SmallRangeProof<_> =
-                        advz.payload_proof(&payload, range.clone()).unwrap();
+                        advz.payload_proof(&payload, range.clone()).unwrap(); // TODO this fails!
                     advz.payload_verify(stmt.clone(), &small_range_proof)
                         .unwrap()
                         .unwrap();
