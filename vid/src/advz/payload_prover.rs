@@ -91,10 +91,11 @@ where
 
         // prepare list of input points
         let multiplicity = self.min_multiplicity(payload.len() as u32, self.max_multiplicity); // TODO tidy
-        let points: Vec<_> = Radix2EvaluationDomain::new(multiplicity as usize)
-            .expect("TODO return error instead")
-            .elements()
-            .collect(); // perf: we might not need all these points
+        let points: Vec<_> =
+            Radix2EvaluationDomain::new((self.recovery_threshold * multiplicity) as usize)
+                .expect("TODO return error instead")
+                .elements()
+                .collect(); // perf: we might not need all these points
 
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
@@ -163,10 +164,12 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        let points: Vec<_> = Radix2EvaluationDomain::new(stmt.common.multiplicity as usize)
-            .expect("TODO return error instead")
-            .elements()
-            .collect(); // perf: we might not need all these points
+        let points: Vec<_> = Radix2EvaluationDomain::new(
+            (self.recovery_threshold * stmt.common.multiplicity) as usize,
+        )
+        .expect("TODO return error instead")
+        .elements()
+        .collect(); // perf: we might not need all these points
 
         // verify proof
         let mut cur_proof_index = 0;
