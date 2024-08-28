@@ -40,7 +40,7 @@ where
     {
         let payload = payload.as_ref();
         let multiplicity = self.min_multiplicity(payload.len());
-        let polys = self.bytes_to_polys(payload);
+        let polys = self.bytes_to_polys(payload)?;
         let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Ok((
@@ -58,7 +58,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let polys = self.bytes_to_polys(payload);
+        let polys = self.bytes_to_polys(payload)?;
         let poly_commits = data.poly_commits.clone();
 
         self.disperse_with_polys_and_commits(payload, polys, poly_commits)

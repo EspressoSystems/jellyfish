@@ -407,7 +407,7 @@ where
         let multiplicity = self.min_multiplicity(payload_byte_len);
         let chunk_size = multiplicity * self.recovery_threshold;
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload);
+        let polys = self.bytes_to_polys(payload)?;
         end_timer!(bytes_to_polys_time);
 
         let poly_commits_time = start_timer!(|| "batch poly commit");
@@ -422,7 +422,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let polys = self.bytes_to_polys(payload);
+        let polys = self.bytes_to_polys(payload)?;
         let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
 
         self.disperse_with_polys_and_commits(payload, polys, poly_commits)
@@ -848,7 +848,10 @@ where
     }
 
     /// Partition payload into polynomial coefficients
-    fn bytes_to_polys(&self, payload: &[u8]) -> Vec<DensePolynomial<<E as Pairing>::ScalarField>>
+    fn bytes_to_polys(
+        &self,
+        payload: &[u8],
+    ) -> VidResult<Vec<DensePolynomial<<E as Pairing>::ScalarField>>>
     where
         E: Pairing,
     {
@@ -860,21 +863,30 @@ where
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let result = parallelizable_chunks(payload, domain_size * elem_bytes_len)
             .map(|chunk| {
-                Self::polynomial_internal(bytes_to_field::<_, KzgEval<E>>(chunk), domain_size)
+                Self::interpolate_polynomial(bytes_to_field::<_, KzgEval<E>>(chunk), domain_size)
             })
-            .collect();
+            .collect::<VidResult<Vec<_>>>();
         end_timer!(bytes_to_polys_time);
         result
     }
 
-    /// Return a polynomial that interpolates `evals` on a evaluation domain of
-    /// size `domain_size`.
+    /// Consume `evals` and return a polynomial that interpolates `evals` on a
+    /// evaluation domain of size `domain_size`.
     ///
-    /// TODO: explain what happens when number of evals is not a power of 2.
-    // This is an associated function, not a method, doesn't take in `self`, thus
-    // more friendly to cross-thread `Sync`, especially when on of the generic
-    // param of `Self` didn't implement `Sync`
-    fn polynomial_internal<I>(evals: I, domain_size: usize) -> KzgPolynomial<E>
+    /// Return an error if the length of `evals` exceeds `domain_size`.
+    ///
+    /// The degree-plus-1 of the returned polynomial is always a power of two
+    /// because:
+    ///
+    /// - We use FFT to interpolate, so `domain_size` is rounded up to the next
+    ///   power of two.
+    /// - [`KzgPolynomial`] implementation is stored in coefficient form.
+    ///
+    /// See https://github.com/EspressoSystems/jellyfish/issues/339
+    ///
+    /// Why is this method an associated function of `Self`? Because we want to
+    /// use a generic parameter of `Self`.
+    fn interpolate_polynomial<I>(evals: I, domain_size: usize) -> VidResult<KzgPolynomial<E>>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
@@ -884,32 +896,32 @@ where
         // https://github.com/EspressoSystems/jellyfish/issues/339
         let mut evals_vec: Vec<_> = evals.map(|c| *c.borrow()).collect();
         let pre_fft_len = evals_vec.len();
-
-        // Check for too many evals
-        // TODO GUS don't panic, return internal error instead
-        assert!(pre_fft_len <= domain_size);
-
-        let domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size)
-            .expect("TODO return error instead");
-        // .ok_or_else(|| {
-        //     VidError::Internal(anyhow::anyhow!(
-        //         "fail to construct domain of size {}",
-        //         chunk_size
-        //     ))
-        // })?;
+        if pre_fft_len > domain_size {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "number of evals {} exceeds domain_size {}",
+                pre_fft_len,
+                domain_size
+            )));
+        }
+        let domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size).ok_or_else(|| {
+            VidError::Internal(anyhow::anyhow!(
+                "fail to construct domain of size {domain_size}",
+            ))
+        })?;
 
         domain.ifft_in_place(&mut evals_vec);
 
         // sanity: the fft did not resize evals. If pre_fft_len < domain_size
-        // then we were given too few evals, in which caseso there's nothing to
+        // then we were given too few evals, in which case there's nothing to
         // sanity check.
-        //
-        // TODO GUS don't panic, return internal error instead
-        if pre_fft_len == domain_size {
-            assert_eq!(evals_vec.len(), pre_fft_len);
+        if pre_fft_len == domain_size && pre_fft_len != evals_vec.len() {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "unexpected output resize from {pre_fft_len} to {}",
+                evals_vec.len()
+            )));
         }
 
-        DenseUVPolynomial::from_coefficients_vec(evals_vec)
+        Ok(DenseUVPolynomial::from_coefficients_vec(evals_vec))
     }
 
     fn min_multiplicity(&self, payload_byte_len: usize) -> u32 {
