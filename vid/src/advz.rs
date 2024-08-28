@@ -88,11 +88,6 @@ where
     vk: KzgVerifierParam<E>,
     multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
-    // TODO might be able to eliminate this field and instead use
-    // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
-    // but that method consumes `other` and its doc is unclear.
-    eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
-
     // tuple of
     // - reference to the SRS/ProverParam loaded to GPU
     // - cuda stream handle
@@ -154,9 +149,16 @@ where
             )));
         }
 
+        // TODO TEMPORARY: enforce power-of-2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        if !recovery_threshold.is_power_of_two() {
+            return Err(VidError::Argument(format!(
+                "recovery_threshold {recovery_threshold} should be a power of two"
+            )));
+        }
         if !max_multiplicity.is_power_of_two() {
             return Err(VidError::Argument(format!(
-                "max multiplicity {max_multiplicity} should be a power of two"
+                "max_multiplicity {max_multiplicity} should be a power of two"
             )));
         }
 
@@ -171,25 +173,6 @@ where
             code_word_size as usize,
         )
         .map_err(vid)?;
-        let eval_domain = Radix2EvaluationDomain::new(chunk_size as usize).ok_or_else(|| {
-            VidError::Internal(anyhow::anyhow!(
-                "fail to construct domain of size {}",
-                chunk_size
-            ))
-        })?;
-
-        // TODO TEMPORARY: enforce power-of-2 chunk size
-        // Remove this restriction after we get KZG in eval form
-        // https://github.com/EspressoSystems/jellyfish/issues/339
-        if chunk_size as usize != eval_domain.size() {
-            return Err(VidError::Argument(format!(
-                // TODO GUS FIX THIS ERROR CHECK & MESSAGE
-                // TODO GUS EXPLAIN WHY WE ENFORCE POWER OF TWO
-                "recovery_threshold {} currently unsupported, round to {} instead",
-                chunk_size,
-                eval_domain.size()
-            )));
-        }
 
         Ok(Self {
             recovery_threshold,
@@ -198,7 +181,6 @@ where
             ck,
             vk,
             multi_open_domain,
-            eval_domain,
             srs_on_gpu_and_cuda_stream: None,
             _pd: Default::default(),
         })
@@ -695,6 +677,12 @@ where
         let elems_capacity = num_polys * chunk_size as usize;
         let fft_domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(chunk_size as usize)
             .expect("TODO return error instead");
+        // let eval_domain = Radix2EvaluationDomain::new(chunk_size as
+        // usize).ok_or_else(|| {     VidError::Internal(anyhow::anyhow!(
+        //         "fail to construct domain of size {}",
+        //         chunk_size
+        //     ))
+        // })?;
 
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
@@ -845,7 +833,6 @@ where
         E: Pairing,
     {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
-        let eval_domain_ref = &self.eval_domain;
 
         parallelizable_chunks(payload, chunk_size * elem_bytes_len)
             .map(|chunk| {
