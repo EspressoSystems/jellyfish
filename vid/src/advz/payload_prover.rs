@@ -90,7 +90,7 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        let multiplicity = self.min_multiplicity(payload.len() as u32, self.max_multiplicity); // TODO tidy
+        let multiplicity = self.min_multiplicity(payload.len());
         let points: Vec<_> =
             Radix2EvaluationDomain::new((self.recovery_threshold * multiplicity) as usize)
                 .expect("TODO return error instead")

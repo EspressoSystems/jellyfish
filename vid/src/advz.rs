@@ -404,7 +404,7 @@ where
     {
         let payload = payload.as_ref();
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
-        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let multiplicity = self.min_multiplicity(payload_byte_len);
         let chunk_size = multiplicity * self.recovery_threshold;
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload, chunk_size as usize);
@@ -427,7 +427,7 @@ where
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
         ));
-        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let multiplicity = self.min_multiplicity(payload.len());
         let chunk_size = multiplicity * self.recovery_threshold;
         let code_word_size = multiplicity * self.num_storage_nodes;
 
@@ -518,7 +518,7 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-        let multiplicity = self.min_multiplicity(common.payload_byte_len, self.max_multiplicity);
+        let multiplicity = self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?);
         if common.multiplicity != multiplicity {
             return Err(VidError::Argument(format!(
                 "common multiplicity {} differs from derived min {}",
@@ -898,26 +898,29 @@ where
         )
     }
 
-    fn min_multiplicity(&self, payload_byte_len: u32, multiplicity: u32) -> u32 {
-        let elem_bytes_len =
-            bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>() as u32;
-        let elems = payload_byte_len.div_ceil(elem_bytes_len);
-        let recovery_threshold = self.recovery_threshold;
-        if recovery_threshold * multiplicity < elems {
+    fn min_multiplicity(&self, payload_byte_len: usize) -> u32 {
+        let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        let elems: u32 = payload_byte_len
+            .div_ceil(elem_bytes_len)
+            .try_into()
+            .unwrap();
+        if self.recovery_threshold * self.max_multiplicity < elems {
             // payload is large. no change in multiplicity needed.
-            return multiplicity;
+            return self.max_multiplicity;
         }
 
         // payload is small: choose the smallest `m` such that `0 < m <
         // multiplicity` and the entire payload fits into `m *
         // recovery_threshold` elements.
-        let m = elems.div_ceil(recovery_threshold).max(1);
+        let m = elems.div_ceil(self.recovery_threshold).max(1);
 
-        // TODO TEMPORARY: multiplicity, recovery_threshold must be a power of 2
+        // TODO TEMPORARY: enforce power-of-2
         // https://github.com/EspressoSystems/jellyfish/issues/668
         //
-        // Round up to the nearest power of 2. Delete this line after this issue
-        // is fixed.
+        // Round up to the nearest power of 2.
+        //
+        // After the above issue is fixed: delete the following code and return
+        // `m` from above.ß
         if m <= 1 {
             1
         } else {

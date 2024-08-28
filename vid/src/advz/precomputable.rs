@@ -39,8 +39,7 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let payload_byte_len = payload.len().try_into().map_err(vid)?;
-        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let multiplicity = self.min_multiplicity(payload.len());
         let chunk_size = (multiplicity * self.recovery_threshold) as usize;
         let polys = self.bytes_to_polys(payload, chunk_size);
         let poly_commits: Vec<Commitment<E>> =
@@ -60,13 +59,12 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let disperse_time = start_timer!(|| ark_std::format!(
             "(PRECOMPUTE): VID disperse {} payload bytes to {} nodes",
             payload_byte_len,
             self.num_storage_nodes
         ));
-        let multiplicity = self.min_multiplicity(payload_byte_len, self.max_multiplicity);
+        let multiplicity = self.min_multiplicity(payload.len());
         let chunk_size = multiplicity * self.recovery_threshold;
         let code_word_size = multiplicity * self.num_storage_nodes;
 
@@ -97,6 +95,7 @@ where
             "(PRECOMPUTE): compute {} KZG commitments",
             polys.len()
         ));
+        let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let common = Common {
             poly_commits: data.poly_commits.clone(),
             all_evals_digest: all_evals_commit.commitment().digest(),
