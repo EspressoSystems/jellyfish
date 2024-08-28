@@ -912,18 +912,6 @@ where
         DenseUVPolynomial::from_coefficients_vec(evals_vec)
     }
 
-    // TODO delete this method?
-    fn polynomial<I>(&self, evals: I, multiplicity: usize) -> KzgPolynomial<E>
-    where
-        I: Iterator,
-        I::Item: Borrow<KzgEval<E>>,
-    {
-        Self::polynomial_internal(
-            evals,
-            usize::try_from(self.recovery_threshold).unwrap() * multiplicity,
-        )
-    }
-
     fn min_multiplicity(&self, payload_byte_len: usize) -> u32 {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
         let elems: u32 = payload_byte_len

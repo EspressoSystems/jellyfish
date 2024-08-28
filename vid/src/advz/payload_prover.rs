@@ -106,7 +106,10 @@ where
             .into_iter()
             .enumerate()
         {
-            let poly = self.polynomial(evals_iter, multiplicity as usize);
+            let poly = Self::polynomial_internal(
+                evals_iter,
+                (self.recovery_threshold * multiplicity) as usize,
+            );
             let points_range = Range {
                 // first polynomial? skip to the start of the proof range
                 start: if i == 0 { offset_elem } else { 0 },
@@ -277,7 +280,10 @@ where
                 .chunks(self.recovery_threshold as usize)
                 .into_iter(),
         ) {
-            let poly = self.polynomial(evals_iter, stmt.common.multiplicity as usize);
+            let poly = Self::polynomial_internal(
+                evals_iter,
+                (stmt.common.multiplicity * self.recovery_threshold) as usize,
+            );
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
             if poly_commit != stmt.common.poly_commits[commit_index] {
                 return Ok(Err(()));
