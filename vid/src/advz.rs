@@ -589,13 +589,7 @@ where
             usize::try_from(common.multiplicity * self.recovery_threshold).map_err(vid)?;
         let num_polys = common.poly_commits.len();
         let elems_capacity = num_polys * chunk_size;
-        let fft_domain =
-            Radix2EvaluationDomain::<KzgPoint<E>>::new(chunk_size).ok_or_else(|| {
-                VidError::Internal(anyhow::anyhow!(
-                    "fail to construct domain of size {}",
-                    chunk_size
-                ))
-            })?;
+        let fft_domain = Self::eval_domain(chunk_size)?;
 
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
@@ -889,11 +883,7 @@ where
                 domain_size
             )));
         }
-        let domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size).ok_or_else(|| {
-            VidError::Internal(anyhow::anyhow!(
-                "fail to construct domain of size {domain_size}",
-            ))
-        })?;
+        let domain = Self::eval_domain(domain_size)?;
 
         domain.ifft_in_place(&mut evals_vec);
 
@@ -981,6 +971,16 @@ where
         let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
         UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(chunk_size - 1, code_word_size)
             .map_err(vid)
+    }
+
+    fn eval_domain(
+        domain_size: usize,
+    ) -> VidResult<Radix2EvaluationDomain<<E as Pairing>::ScalarField>> {
+        Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size).ok_or_else(|| {
+            VidError::Internal(anyhow::anyhow!(
+                "fail to construct domain of size {domain_size}"
+            ))
+        })
     }
 }
 
