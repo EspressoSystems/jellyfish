@@ -366,10 +366,9 @@ fn max_multiplicity() {
     // play with these items
     let num_storage_nodes = 6;
     let recovery_threshold = 4;
-    let max_multiplicity = 1 << 10; // intentionally large so as to fit many payload sizes into a single polynomial
+    let max_multiplicity = 1 << 5; // intentionally large so as to fit many payload sizes into a single polynomial
 
-    // let payload_byte_lens = [0, 1, 100, 1_000, 10_000, 100_000, 1_000_000];
-    let payload_byte_lens = [1, 100, 1_000];
+    let payload_byte_lens = [0, 1, 100, 10_000];
     type E = Bls12_381;
 
     // more items as a function of the above
@@ -402,21 +401,28 @@ fn max_multiplicity() {
                 "derived multiplicity too small"
             );
 
-            // TODO TEMPORARY: multiplicity, recovery_threshold must be a power
-            // of 2 https://github.com/EspressoSystems/jellyfish/issues/668
-            //
-            // After this issue is fixed the following test should use
-            // `common.multiplicity - 1` instead of `common.multiplicity / 2`.
-            assert!(
-                num_payload_elems > common.multiplicity / 2 * advz.recovery_threshold,
-                "derived multiplicity too large: payload_byte_len {}, common.multiplicity {}",
-                payload_byte_len,
-                common.multiplicity
-            );
+            if num_payload_elems > 0 {
+                // TODO TEMPORARY: enforce power-of-2
+                // https://github.com/EspressoSystems/jellyfish/issues/668
+                //
+                // After this issue is fixed the following test should use
+                // `common.multiplicity - 1` instead of `common.multiplicity / 2`.
+                assert!(
+                    num_payload_elems > common.multiplicity / 2 * advz.recovery_threshold,
+                    "derived multiplicity too large: payload_byte_len {}, common.multiplicity {}",
+                    payload_byte_len,
+                    common.multiplicity
+                );
+            } else {
+                assert_eq!(
+                    common.multiplicity, 1,
+                    "zero-length payload should have multiplicity 1, found {}",
+                    common.multiplicity
+                );
+            }
 
-            assert_eq!(
-                common.poly_commits.len(),
-                1,
+            assert!(
+                common.poly_commits.len() <= 1,
                 "small payload should fit into a single polynomial"
             );
         } else {
@@ -440,7 +446,7 @@ fn max_multiplicity() {
         }
     }
 
-    // assert!(found_large_payload, "missing test for large payload");
+    assert!(found_large_payload, "missing test for large payload");
     assert!(found_small_payload, "missing test for small payload");
 }
 
