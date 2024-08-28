@@ -647,6 +647,7 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
+        // check args
         if shares.len() < self.recovery_threshold as usize {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -661,13 +662,12 @@ where
             )));
         }
 
-        // all shares must have equal evals len
+        // check args: all shares must have equal evals len
         let num_evals = shares
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
             .evals
             .len();
-        let multiplicity = common.multiplicity;
         if let Some((index, share)) = shares
             .iter()
             .enumerate()
@@ -681,26 +681,29 @@ where
                 share.evals.len()
             )));
         }
-        if num_evals != multiplicity as usize * common.poly_commits.len() {
+        if num_evals != common.multiplicity as usize * common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "num_evals should be (multiplicity * poly_commits): {} but is instead: {}",
-                multiplicity as usize * common.poly_commits.len(),
+                common.multiplicity as usize * common.poly_commits.len(),
                 num_evals,
             )));
         }
-        let chunk_size = multiplicity * self.recovery_threshold;
-        let num_polys = num_evals / multiplicity as usize;
 
+        // convenience quantities
+        let chunk_size = common.multiplicity * self.recovery_threshold;
+        let num_polys = common.poly_commits.len() as usize;
         let elems_capacity = num_polys * chunk_size as usize;
-        let mut elems = Vec::with_capacity(elems_capacity);
+        let fft_domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(chunk_size as usize)
+            .expect("TODO return error instead");
 
+        let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
             for share in shares {
                 // extract all evaluations for polynomial p from the share
-                for m in 0..multiplicity as usize {
+                for m in 0..common.multiplicity as usize {
                     evals.push((
-                        (share.index * multiplicity) as usize + m,
+                        (share.index * common.multiplicity) as usize + m,
                         share.evals[(m * num_polys) + p],
                     ))
                 }
@@ -715,11 +718,12 @@ where
             // TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            self.eval_domain.fft_in_place(&mut coeffs);
+            // TODO GUS fix this comment
+            fft_domain.fft_in_place(&mut coeffs);
 
             elems.append(&mut coeffs);
         }
-        assert_eq!(elems.len(), elems_capacity);
+        assert_eq!(elems.len(), elems_capacity); // 4 vs 2
 
         let mut payload: Vec<_> = field_to_bytes(elems).collect();
         payload.truncate(common.payload_byte_len.try_into().map_err(vid)?);
