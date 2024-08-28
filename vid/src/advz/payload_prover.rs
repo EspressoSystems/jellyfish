@@ -90,7 +90,7 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem);
 
         // prepare list of input points
-        let multiplicity = self.min_multiplicity(payload.len());
+        let multiplicity = self.min_multiplicity(payload.len())?;
 
         // TODO GUS delete `points`!!!
         let points: Vec<_> =

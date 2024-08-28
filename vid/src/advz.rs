@@ -163,7 +163,7 @@ where
 
         let (ck, vk) = UnivariateKzgPCS::trim_fft_size(
             srs,
-            usize::try_from(max_multiplicity * recovery_threshold - 1).unwrap(),
+            usize::try_from(max_multiplicity * recovery_threshold - 1).map_err(vid)?,
         )
         .map_err(vid)?;
 
@@ -269,7 +269,7 @@ where
             self.ck.powers_of_g.len() - 1,
         )
         .map_err(vid)?;
-        self.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
+        self.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().map_err(vid)?));
         Ok(())
     }
 }
@@ -364,12 +364,10 @@ where
         &mut self,
         polys: &[DensePolynomial<E::ScalarField>],
     ) -> VidResult<Vec<KzgCommit<E>>> {
-        // let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
-        // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
         if polys.is_empty() {
             return Ok(vec![]);
         }
-        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
+        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().map_err(vid)?; // safe by construction
         <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
             srs_on_gpu, polys, stream,
         )
@@ -396,7 +394,7 @@ where
     {
         let payload = payload.as_ref();
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
-        let multiplicity = self.min_multiplicity(payload_byte_len);
+        let multiplicity = self.min_multiplicity(payload_byte_len)?;
         let chunk_size = multiplicity * self.recovery_threshold;
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload)?;
@@ -433,7 +431,8 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-        let multiplicity = self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?);
+        let multiplicity =
+            self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?)?;
         if common.multiplicity != multiplicity {
             return Err(VidError::Argument(format!(
                 "common multiplicity {} differs from derived min {}",
@@ -586,7 +585,8 @@ where
         }
 
         // convenience quantities
-        let chunk_size = usize::try_from(common.multiplicity * self.recovery_threshold).unwrap();
+        let chunk_size =
+            usize::try_from(common.multiplicity * self.recovery_threshold).map_err(vid)?;
         let num_polys = common.poly_commits.len();
         let elems_capacity = num_polys * chunk_size;
         let fft_domain =
@@ -677,8 +677,8 @@ where
             "VID disperse {} payload bytes to {} nodes",
             payload_byte_len, self.num_storage_nodes
         ));
-        let multiplicity = self.min_multiplicity(payload.len());
-        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).unwrap();
+        let multiplicity = self.min_multiplicity(payload.len())?;
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
 
         // evaluate polynomials
@@ -843,8 +843,8 @@ where
     {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
         let domain_size =
-            usize::try_from(self.min_multiplicity(payload.len()) * self.recovery_threshold)
-                .unwrap();
+            usize::try_from(self.min_multiplicity(payload.len())? * self.recovery_threshold)
+                .map_err(vid)?;
 
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let result = parallelizable_chunks(payload, domain_size * elem_bytes_len)
@@ -910,15 +910,15 @@ where
         Ok(DenseUVPolynomial::from_coefficients_vec(evals_vec))
     }
 
-    fn min_multiplicity(&self, payload_byte_len: usize) -> u32 {
+    fn min_multiplicity(&self, payload_byte_len: usize) -> VidResult<u32> {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
         let elems: u32 = payload_byte_len
             .div_ceil(elem_bytes_len)
             .try_into()
-            .unwrap();
+            .map_err(vid)?;
         if self.recovery_threshold * self.max_multiplicity < elems {
             // payload is large. no change in multiplicity needed.
-            return self.max_multiplicity;
+            return Ok(self.max_multiplicity);
         }
 
         // payload is small: choose the smallest `m` such that `0 < m <
@@ -934,9 +934,9 @@ where
         // After the above issue is fixed: delete the following code and return
         // `m` from above.
         if m <= 1 {
-            1
+            Ok(1)
         } else {
-            1 << ((m - 1).ilog2() + 1)
+            Ok(1 << ((m - 1).ilog2() + 1))
         }
     }
 
@@ -977,8 +977,8 @@ where
         &self,
         multiplicity: u32,
     ) -> VidResult<Radix2EvaluationDomain<<E as Pairing>::ScalarField>> {
-        let chunk_size = usize::try_from(multiplicity * self.recovery_threshold).unwrap();
-        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).unwrap();
+        let chunk_size = usize::try_from(multiplicity * self.recovery_threshold).map_err(vid)?;
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
         UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(chunk_size - 1, code_word_size)
             .map_err(vid)
     }
