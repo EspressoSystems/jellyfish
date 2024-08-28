@@ -120,8 +120,7 @@ where
             };
             proofs.extend(
                 UnivariateKzgPCS::multi_open(&self.ck, &poly, &points[points_range])
-                    .expect("GUS WTF")
-                    // .map_err(vid)?
+                    .map_err(vid)?
                     .0,
             );
         }
@@ -489,7 +488,7 @@ mod tests {
                     };
 
                     let small_range_proof: SmallRangeProof<_> =
-                        advz.payload_proof(&payload, range.clone()).unwrap(); // TODO this fails!
+                        advz.payload_proof(&payload, range.clone()).unwrap();
                     advz.payload_verify(stmt.clone(), &small_range_proof)
                         .unwrap()
                         .unwrap();
