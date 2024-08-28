@@ -40,8 +40,7 @@ where
     {
         let payload = payload.as_ref();
         let multiplicity = self.min_multiplicity(payload.len());
-        let chunk_size = (multiplicity * self.recovery_threshold) as usize;
-        let polys = self.bytes_to_polys(payload, chunk_size);
+        let polys = self.bytes_to_polys(payload);
         let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Ok((
@@ -71,7 +70,7 @@ where
         // partition payload into polynomial coefficients
         // and count `elems_len` for later
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload, chunk_size as usize);
+        let polys = self.bytes_to_polys(payload);
         end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials

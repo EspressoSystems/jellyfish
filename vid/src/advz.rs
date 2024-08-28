@@ -407,7 +407,7 @@ where
         let multiplicity = self.min_multiplicity(payload_byte_len);
         let chunk_size = multiplicity * self.recovery_threshold;
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload, chunk_size as usize);
+        let polys = self.bytes_to_polys(payload);
         end_timer!(bytes_to_polys_time);
 
         let poly_commits_time = start_timer!(|| "batch poly commit");
@@ -433,7 +433,7 @@ where
 
         // partition payload into polynomial coefficients
         let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload, chunk_size as usize);
+        let polys = self.bytes_to_polys(payload);
         end_timer!(bytes_to_polys_time);
 
         // evaluate polynomials
@@ -824,15 +824,14 @@ where
         Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
     }
 
-    fn bytes_to_polys(
-        &self,
-        payload: &[u8],
-        chunk_size: usize,
-    ) -> Vec<DensePolynomial<<E as Pairing>::ScalarField>>
+    fn bytes_to_polys(&self, payload: &[u8]) -> Vec<DensePolynomial<<E as Pairing>::ScalarField>>
     where
         E: Pairing,
     {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        let chunk_size =
+            usize::try_from(self.min_multiplicity(payload.len()) * self.recovery_threshold)
+                .unwrap();
 
         parallelizable_chunks(payload, chunk_size * elem_bytes_len)
             .map(|chunk| {
@@ -920,7 +919,7 @@ where
         // Round up to the nearest power of 2.
         //
         // After the above issue is fixed: delete the following code and return
-        // `m` from above.ß
+        // `m` from above.
         if m <= 1 {
             1
         } else {
