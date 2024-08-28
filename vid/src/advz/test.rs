@@ -235,8 +235,9 @@ fn sad_path_recover_payload_corrupt_shares() {
     // corrupted index, out of bounds
     {
         let mut shares_bad_indices = shares.clone();
+        let multi_open_domain_size = advz.multi_open_domain(common.multiplicity).unwrap().size();
         for i in 0..shares_bad_indices.len() {
-            shares_bad_indices[i].index += u32::try_from(advz.multi_open_domain.size()).unwrap();
+            shares_bad_indices[i].index += u32::try_from(multi_open_domain_size).unwrap();
             advz.recover_payload(&shares_bad_indices, &common)
                 .expect_err("recover_payload should fail when indices are out of bounds");
         }

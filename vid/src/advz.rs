@@ -86,7 +86,6 @@ where
     max_multiplicity: u32,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
-    multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
     // tuple of
     // - reference to the SRS/ProverParam loaded to GPU
@@ -162,15 +161,9 @@ where
             )));
         }
 
-        // erasure code params
-        let chunk_size = max_multiplicity * recovery_threshold; // message length m
-        let code_word_size = max_multiplicity * num_storage_nodes; // code word length n
-        let poly_degree = chunk_size - 1;
-
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree as usize).map_err(vid)?;
-        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
-            poly_degree as usize,
-            code_word_size as usize,
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(
+            srs,
+            usize::try_from(max_multiplicity * recovery_threshold - 1).unwrap(),
         )
         .map_err(vid)?;
 
@@ -180,7 +173,6 @@ where
             max_multiplicity,
             ck,
             vk,
-            multi_open_domain,
             srs_on_gpu_and_cuda_stream: None,
             _pd: Default::default(),
         })
@@ -506,6 +498,7 @@ where
         // feature.
         let multiplicities = Vec::from_iter((0..multiplicity as usize));
         let polys_len = common.poly_commits.len();
+        let multi_open_domain = self.multi_open_domain(multiplicity)?;
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
@@ -526,9 +519,7 @@ where
             Ok(UnivariateKzgPCS::verify(
                 &self.vk,
                 &aggregate_poly_commit,
-                &self
-                    .multi_open_domain
-                    .element((share.index * multiplicity) as usize + i),
+                &multi_open_domain.element((share.index * multiplicity) as usize + i),
                 &aggregate_eval,
                 &share.aggregate_proofs[*i],
             )
@@ -595,17 +586,16 @@ where
         }
 
         // convenience quantities
-        let chunk_size = common.multiplicity * self.recovery_threshold;
-        let num_polys = common.poly_commits.len() as usize;
-        let elems_capacity = num_polys * chunk_size as usize;
-        let fft_domain = Radix2EvaluationDomain::<KzgPoint<E>>::new(chunk_size as usize)
-            .expect("TODO return error instead");
-        // let eval_domain = Radix2EvaluationDomain::new(chunk_size as
-        // usize).ok_or_else(|| {     VidError::Internal(anyhow::anyhow!(
-        //         "fail to construct domain of size {}",
-        //         chunk_size
-        //     ))
-        // })?;
+        let chunk_size = usize::try_from(common.multiplicity * self.recovery_threshold).unwrap();
+        let num_polys = common.poly_commits.len();
+        let elems_capacity = num_polys * chunk_size;
+        let fft_domain =
+            Radix2EvaluationDomain::<KzgPoint<E>>::new(chunk_size).ok_or_else(|| {
+                VidError::Internal(anyhow::anyhow!(
+                    "fail to construct domain of size {}",
+                    chunk_size
+                ))
+            })?;
 
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
@@ -622,7 +612,7 @@ where
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(&mut evals),
                 chunk_size as usize,
-                &self.multi_open_domain,
+                &self.multi_open_domain(common.multiplicity)?,
             )
             .map_err(vid)?;
 
@@ -689,6 +679,7 @@ where
         ));
         let multiplicity = self.min_multiplicity(payload.len());
         let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).unwrap();
+        let multi_open_domain = self.multi_open_domain(multiplicity)?;
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| format!(
@@ -698,17 +689,12 @@ where
         ));
         let all_storage_node_evals = {
             let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
-            // this is to avoid `SrsRef` not implementing `Sync` problem,
-            // instead of sending entire `self` cross thread, we only send a ref which is
-            // Sync
-            let multi_open_domain_ref = &self.multi_open_domain;
-
             let all_poly_evals = parallelizable_slice_iter(&polys)
                 .map(|poly| {
                     UnivariateKzgPCS::<E>::multi_open_rou_evals(
                         poly,
                         code_word_size,
-                        multi_open_domain_ref,
+                        &multi_open_domain,
                     )
                     .map_err(vid)
                 })
@@ -771,7 +757,7 @@ where
             &self.ck,
             &aggregate_poly,
             code_word_size as usize,
-            &self.multi_open_domain,
+            &multi_open_domain,
         )
         .map_err(vid)?;
         end_timer!(agg_proofs_timer);
@@ -985,6 +971,16 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize().into())
+    }
+
+    fn multi_open_domain(
+        &self,
+        multiplicity: u32,
+    ) -> VidResult<Radix2EvaluationDomain<<E as Pairing>::ScalarField>> {
+        let chunk_size = usize::try_from(multiplicity * self.recovery_threshold).unwrap();
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).unwrap();
+        UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(chunk_size - 1, code_word_size)
+            .map_err(vid)
     }
 }
 
