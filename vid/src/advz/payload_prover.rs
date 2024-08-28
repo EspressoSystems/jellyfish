@@ -91,6 +91,8 @@ where
 
         // prepare list of input points
         let multiplicity = self.min_multiplicity(payload.len());
+
+        // TODO GUS delete `points`!!!
         let points: Vec<_> =
             Radix2EvaluationDomain::new((self.recovery_threshold * multiplicity) as usize)
                 .expect("TODO return error instead")

@@ -829,13 +829,13 @@ where
         E: Pairing,
     {
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
-        let chunk_size =
+        let domain_size =
             usize::try_from(self.min_multiplicity(payload.len()) * self.recovery_threshold)
                 .unwrap();
 
-        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+        parallelizable_chunks(payload, domain_size * elem_bytes_len)
             .map(|chunk| {
-                Self::polynomial_internal(bytes_to_field::<_, KzgEval<E>>(chunk), chunk_size)
+                Self::polynomial_internal(bytes_to_field::<_, KzgEval<E>>(chunk), domain_size)
             })
             .collect()
     }
