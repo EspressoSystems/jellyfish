@@ -688,16 +688,49 @@ where
             payload_byte_len, self.num_storage_nodes
         ));
         let multiplicity = self.min_multiplicity(payload.len());
-        let chunk_size = multiplicity * self.recovery_threshold;
-        let code_word_size = multiplicity * self.num_storage_nodes;
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).unwrap();
 
         // evaluate polynomials
         let all_storage_node_evals_timer = start_timer!(|| format!(
             "compute all storage node evals for {} polynomials with {} coefficients",
             polys.len(),
-            _chunk_size
+            multiplicity * self.recovery_threshold
         ));
-        let all_storage_node_evals = self.evaluate_polys(&polys, code_word_size as usize)?;
+        let all_storage_node_evals = {
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+            // this is to avoid `SrsRef` not implementing `Sync` problem,
+            // instead of sending entire `self` cross thread, we only send a ref which is
+            // Sync
+            let multi_open_domain_ref = &self.multi_open_domain;
+
+            let all_poly_evals = parallelizable_slice_iter(&polys)
+                .map(|poly| {
+                    UnivariateKzgPCS::<E>::multi_open_rou_evals(
+                        poly,
+                        code_word_size,
+                        multi_open_domain_ref,
+                    )
+                    .map_err(vid)
+                })
+                .collect::<Result<Vec<_>, VidError>>()?;
+
+            for poly_evals in all_poly_evals {
+                for (storage_node_evals, poly_eval) in all_storage_node_evals
+                    .iter_mut()
+                    .zip(poly_evals.into_iter())
+                {
+                    storage_node_evals.push(poly_eval);
+                }
+            }
+
+            // sanity checks
+            assert_eq!(all_storage_node_evals.len(), code_word_size);
+            for storage_node_evals in all_storage_node_evals.iter() {
+                assert_eq!(storage_node_evals.len(), polys.len());
+            }
+
+            all_storage_node_evals
+        };
         end_timer!(all_storage_node_evals_timer);
 
         // vector commitment to polynomial evaluations
@@ -744,12 +777,39 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares = self.assemble_shares(
-            all_storage_node_evals,
-            aggregate_proofs,
-            all_evals_commit,
-            multiplicity,
-        )?;
+        let shares: Vec<_> = {
+            // compute share data
+            let share_data = all_storage_node_evals
+                .into_iter()
+                .zip(aggregate_proofs)
+                .enumerate()
+                .map(|(i, (eval, proof))| {
+                    let eval_proof = all_evals_commit
+                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
+                        .expect_ok()
+                        .map_err(vid)?
+                        .1;
+                    Ok((eval, proof, eval_proof))
+                })
+                .collect::<Result<Vec<_>, VidError>>()?;
+
+            // split share data into chunks of size multiplicity
+            share_data
+                .into_iter()
+                .chunks(multiplicity as usize)
+                .into_iter()
+                .enumerate()
+                .map(|(index, chunk)| {
+                    let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
+                    Share {
+                        index: index as u32,
+                        evals: evals.into_iter().flatten().collect::<Vec<_>>(),
+                        aggregate_proofs: proofs,
+                        eval_proofs,
+                    }
+                })
+                .collect()
+        };
         end_timer!(assemblage_timer);
         end_timer!(disperse_time);
 
@@ -758,50 +818,6 @@ where
             common,
             commit,
         })
-    }
-
-    fn evaluate_polys(
-        &self,
-        polys: &[DensePolynomial<<E as Pairing>::ScalarField>],
-        code_word_size: usize,
-    ) -> Result<Vec<Vec<<E as Pairing>::ScalarField>>, VidError>
-    where
-        E: Pairing,
-        H: HasherDigest,
-    {
-        let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
-        // this is to avoid `SrsRef` not implementing `Sync` problem,
-        // instead of sending entire `self` cross thread, we only send a ref which is
-        // Sync
-        let multi_open_domain_ref = &self.multi_open_domain;
-
-        let all_poly_evals = parallelizable_slice_iter(polys)
-            .map(|poly| {
-                UnivariateKzgPCS::<E>::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    multi_open_domain_ref,
-                )
-                .map_err(vid)
-            })
-            .collect::<Result<Vec<_>, VidError>>()?;
-
-        for poly_evals in all_poly_evals {
-            for (storage_node_evals, poly_eval) in all_storage_node_evals
-                .iter_mut()
-                .zip(poly_evals.into_iter())
-            {
-                storage_node_evals.push(poly_eval);
-            }
-        }
-
-        // sanity checks
-        assert_eq!(all_storage_node_evals.len(), code_word_size);
-        for storage_node_evals in all_storage_node_evals.iter() {
-            assert_eq!(storage_node_evals.len(), polys.len());
-        }
-
-        Ok(all_storage_node_evals)
     }
 
     fn pseudorandom_scalar(
@@ -969,56 +985,6 @@ where
                 .map_err(vid)?;
         }
         Ok(hasher.finalize().into())
-    }
-
-    /// Assemble shares from evaluations and proofs.
-    ///
-    /// Each share contains (for multiplicity m):
-    /// 1. (m * num_poly) evaluations.
-    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
-    /// 3. m merkle tree membership proofs.
-    fn assemble_shares(
-        &self,
-        all_storage_node_evals: Vec<Vec<<E as Pairing>::ScalarField>>,
-        aggregate_proofs: Vec<UnivariateKzgProof<E>>,
-        all_evals_commit: KzgEvalsMerkleTree<E, H>,
-        multiplicity: u32,
-    ) -> Result<Vec<Share<E, H>>, VidError>
-    where
-        E: Pairing,
-        H: HasherDigest,
-    {
-        // compute share data
-        let share_data = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(i, (eval, proof))| {
-                let eval_proof = all_evals_commit
-                    .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
-                    .expect_ok()
-                    .map_err(vid)?
-                    .1;
-                Ok((eval, proof, eval_proof))
-            })
-            .collect::<Result<Vec<_>, VidError>>()?;
-
-        // split share data into chunks of size multiplicity
-        Ok(share_data
-            .into_iter()
-            .chunks(multiplicity as usize)
-            .into_iter()
-            .enumerate()
-            .map(|(index, chunk)| {
-                let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
-                Share {
-                    index: index as u32,
-                    evals: evals.into_iter().flatten().collect::<Vec<_>>(),
-                    aggregate_proofs: proofs,
-                    eval_proofs,
-                }
-            })
-            .collect())
     }
 }
 
