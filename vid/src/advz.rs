@@ -613,7 +613,6 @@ where
             // TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            // TODO GUS fix this comment
             fft_domain.fft_in_place(&mut coeffs);
 
             elems.append(&mut coeffs);
