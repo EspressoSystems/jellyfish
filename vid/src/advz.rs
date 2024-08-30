@@ -907,7 +907,7 @@ where
         // payload is small: choose the smallest `m` such that `0 < m <
         // multiplicity` and the entire payload fits into `m *
         // recovery_threshold` elements.
-        let m = elems.div_ceil(self.recovery_threshold).max(1);
+        let m = elems.div_ceil(self.recovery_threshold.min(1)).max(1);
 
         // TODO TEMPORARY: enforce power-of-2
         // https://github.com/EspressoSystems/jellyfish/issues/668
