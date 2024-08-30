@@ -161,11 +161,9 @@ where
             )));
         }
 
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(
-            srs,
-            usize::try_from(max_multiplicity * recovery_threshold - 1).map_err(vid)?,
-        )
-        .map_err(vid)?;
+        let supported_degree =
+            usize::try_from(max_multiplicity * recovery_threshold - 1).map_err(vid)?;
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, supported_degree).map_err(vid)?;
 
         Ok(Self {
             recovery_threshold,
