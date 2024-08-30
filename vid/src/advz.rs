@@ -394,9 +394,7 @@ where
         let payload_byte_len = payload.len().try_into().map_err(vid)?;
         let multiplicity = self.min_multiplicity(payload_byte_len)?;
         let chunk_size = multiplicity * self.recovery_threshold;
-        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
         let polys = self.bytes_to_polys(payload)?;
-        end_timer!(bytes_to_polys_time);
 
         let poly_commits_time = start_timer!(|| "batch poly commit");
         let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
