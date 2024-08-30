@@ -1,5 +1,4 @@
 use super::{VidError::Argument, *};
-use ark_bls12_381::Bls12_381;
 use ark_bn254::Bn254;
 use ark_std::{
     rand::{CryptoRng, RngCore},
@@ -136,7 +135,7 @@ fn sad_path_verify_share_corrupt_commit() {
     // 1 corrupt commit, poly_commit
     let common_1_poly_corruption = {
         let mut corrupted = common.clone();
-        corrupted.poly_commits[0] = <Bls12_381 as Pairing>::G1Affine::zero().into();
+        corrupted.poly_commits[0] = <Bn254 as Pairing>::G1Affine::zero().into();
         corrupted
     };
     assert_arg_err(
@@ -252,7 +251,7 @@ fn verify_share_with_multiplicity() {
         max_multiplicity: 4,
         payload_len: 4000,
     };
-    let (mut advz, payload) = advz_init_with::<Bls12_381>(advz_params);
+    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
 
     let disperse = advz.disperse(payload).unwrap();
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
@@ -271,7 +270,7 @@ fn sad_path_verify_share_with_multiplicity() {
         max_multiplicity: 32, // payload fitting into a single polynomial
         payload_len: 8200,
     };
-    let (mut advz, payload) = advz_init_with::<Bls12_381>(advz_params);
+    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
 
     let disperse = advz.disperse(payload).unwrap();
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
@@ -370,7 +369,7 @@ fn max_multiplicity() {
     let max_multiplicity = 1 << 5; // intentionally large so as to fit many payload sizes into a single polynomial
 
     let payload_byte_lens = [0, 1, 100, 10_000];
-    type E = Bls12_381;
+    type E = Bn254;
 
     // more items as a function of the above
     let (mut advz, payload_bytes) = advz_init_with::<E>(AdvzParams {
@@ -463,7 +462,7 @@ struct AdvzParams {
 /// Returns the following tuple:
 /// 1. An initialized [`Advz`] instance.
 /// 2. A `Vec<u8>` filled with random bytes.
-pub(super) fn advz_init() -> (Advz<Bls12_381, Sha256>, Vec<u8>) {
+pub(super) fn advz_init() -> (Advz<Bn254, Sha256>, Vec<u8>) {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
