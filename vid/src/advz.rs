@@ -615,7 +615,7 @@ where
 
             elems.append(&mut coeffs);
         }
-        assert_eq!(elems.len(), elems_capacity); // 4 vs 2
+        assert_eq!(elems.len(), elems_capacity);
 
         let mut payload: Vec<_> = field_to_bytes(elems).collect();
         payload.truncate(common.payload_byte_len.try_into().map_err(vid)?);
