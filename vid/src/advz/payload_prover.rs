@@ -81,16 +81,18 @@ where
         check_range_nonempty_and_in_bounds(payload.len(), &range)?;
 
         // index conversion
+        let multiplicity = self.min_multiplicity(payload.len())?;
         let range_elem = self.range_byte_to_elem(&range);
-        let range_poly = self.range_elem_to_poly(&range_elem);
+        let range_poly = self.range_elem_to_poly(&range_elem, multiplicity);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
-        let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
-        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
+        let range_poly_byte =
+            self.range_poly_to_byte_clamped(&range_poly, payload.len(), multiplicity);
+        let offset_elem =
+            self.offset_poly_to_elem(range_poly.start, range_elem.start, multiplicity);
         let final_points_range_end =
-            self.final_poly_points_range_end(range_elem.len(), offset_elem);
+            self.final_poly_points_range_end(range_elem.len(), offset_elem, multiplicity);
 
         // prepare list of input points
-        let multiplicity = self.min_multiplicity(payload.len())?;
         let points: Vec<_> = Self::eval_domain(
             usize::try_from(self.recovery_threshold * multiplicity).map_err(vid)?,
         )?
@@ -100,7 +102,7 @@ where
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
         for (i, evals_iter) in elems_iter
-            .chunks(self.recovery_threshold as usize)
+            .chunks((self.recovery_threshold * multiplicity) as usize)
             .into_iter()
             .enumerate()
         {
@@ -159,10 +161,14 @@ where
 
         // index conversion
         let range_elem = self.range_byte_to_elem(&stmt.range);
-        let range_poly = self.range_elem_to_poly(&range_elem);
-        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
-        let final_points_range_end =
-            self.final_poly_points_range_end(range_elem.len(), offset_elem);
+        let range_poly = self.range_elem_to_poly(&range_elem, stmt.common.multiplicity);
+        let offset_elem =
+            self.offset_poly_to_elem(range_poly.start, range_elem.start, stmt.common.multiplicity);
+        let final_points_range_end = self.final_poly_points_range_end(
+            range_elem.len(),
+            offset_elem,
+            stmt.common.multiplicity,
+        );
 
         // prepare list of input points
         let points: Vec<_> = Self::eval_domain(
@@ -228,11 +234,14 @@ where
         check_range_nonempty_and_in_bounds(payload.len(), &range)?;
 
         // index conversion
+        let multiplicity = self.min_multiplicity(payload.len())?;
         let range_elem = self.range_byte_to_elem(&range);
-        let range_poly = self.range_elem_to_poly(&range_elem);
+        let range_poly = self.range_elem_to_poly(&range_elem, multiplicity);
         let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload.len());
-        let range_poly_byte = self.range_poly_to_byte_clamped(&range_poly, payload.len());
-        let offset_elem = self.offset_poly_to_elem(range_poly.start, range_elem.start);
+        let range_poly_byte =
+            self.range_poly_to_byte_clamped(&range_poly, payload.len(), multiplicity);
+        let offset_elem =
+            self.offset_poly_to_elem(range_poly.start, range_elem.start, multiplicity);
 
         // compute the prefix and suffix elems
         let mut elems_iter = bytes_to_field::<_, KzgEval<E>>(payload[range_poly_byte].iter());
@@ -255,7 +264,7 @@ where
         Self::check_stmt_consistency(&stmt)?;
 
         // index conversion
-        let range_poly = self.range_byte_to_poly(&stmt.range);
+        let range_poly = self.range_byte_to_poly(&stmt.range, stmt.common.multiplicity);
 
         // rebuild the needed payload elements from statement and proof
         let elems_iter = proof
@@ -273,7 +282,7 @@ where
         // rebuild the poly commits, check against `common`
         for (commit_index, evals_iter) in range_poly.into_iter().zip(
             elems_iter
-                .chunks(self.recovery_threshold as usize)
+                .chunks((self.recovery_threshold * stmt.common.multiplicity) as usize)
                 .into_iter(),
         ) {
             let poly = Self::interpolate_polynomial(
@@ -307,34 +316,49 @@ where
             ..result
         }
     }
-    fn range_elem_to_poly(&self, range: &Range<usize>) -> Range<usize> {
-        range_coarsen(range, self.recovery_threshold as usize)
+    fn range_elem_to_poly(&self, range: &Range<usize>, multiplicity: u32) -> Range<usize> {
+        range_coarsen(range, (self.recovery_threshold * multiplicity) as usize)
     }
-    fn range_byte_to_poly(&self, range: &Range<usize>) -> Range<usize> {
+    fn range_byte_to_poly(&self, range: &Range<usize>, multiplicity: u32) -> Range<usize> {
         range_coarsen(
             range,
-            self.recovery_threshold as usize * elem_byte_capacity::<KzgEval<E>>(),
+            (self.recovery_threshold * multiplicity) as usize * elem_byte_capacity::<KzgEval<E>>(),
         )
     }
-    fn range_poly_to_byte_clamped(&self, range: &Range<usize>, len: usize) -> Range<usize> {
+    fn range_poly_to_byte_clamped(
+        &self,
+        range: &Range<usize>,
+        len: usize,
+        multiplicity: u32,
+    ) -> Range<usize> {
         let result = range_refine(
             range,
-            self.recovery_threshold as usize * elem_byte_capacity::<KzgEval<E>>(),
+            (self.recovery_threshold * multiplicity) as usize * elem_byte_capacity::<KzgEval<E>>(),
         );
         Range {
             end: ark_std::cmp::min(result.end, len),
             ..result
         }
     }
-    fn offset_poly_to_elem(&self, range_poly_start: usize, range_elem_start: usize) -> usize {
+    fn offset_poly_to_elem(
+        &self,
+        range_poly_start: usize,
+        range_elem_start: usize,
+        multiplicity: u32,
+    ) -> usize {
         let start_poly_byte = index_refine(
             range_poly_start,
-            self.recovery_threshold as usize * elem_byte_capacity::<KzgEval<E>>(),
+            (self.recovery_threshold * multiplicity) as usize * elem_byte_capacity::<KzgEval<E>>(),
         );
         range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::<KzgEval<E>>())
     }
-    fn final_poly_points_range_end(&self, range_elem_len: usize, offset_elem: usize) -> usize {
-        (range_elem_len + offset_elem - 1) % self.recovery_threshold as usize + 1
+    fn final_poly_points_range_end(
+        &self,
+        range_elem_len: usize,
+        offset_elem: usize,
+        multiplicity: u32,
+    ) -> usize {
+        (range_elem_len + offset_elem - 1) % (self.recovery_threshold * multiplicity) as usize + 1
     }
 
     fn check_stmt_consistency(stmt: &Statement<Self>) -> VidResult<()> {
