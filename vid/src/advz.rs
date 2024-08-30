@@ -194,7 +194,7 @@ where
     /// # Errors
     /// Return [`VidError::Argument`] if
     /// - `num_storage_nodes < recovery_threshold`
-    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     pub fn new(
         num_storage_nodes: u32,
         recovery_threshold: u32,
@@ -212,7 +212,7 @@ where
     ///
     /// # Errors
     /// In addition to [`Advz::new`], return [`VidError::Argument`] if
-    /// - TEMPORARY `max_multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `max_multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     pub fn with_multiplicity(
         num_storage_nodes: u32,
         recovery_threshold: u32,
