@@ -715,7 +715,6 @@ where
             KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
-        let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
         let common = Common {
             poly_commits,
             all_evals_digest: all_evals_commit.commitment().digest(),
@@ -723,7 +722,6 @@ where
             num_storage_nodes: self.num_storage_nodes,
             multiplicity,
         };
-        end_timer!(common_timer);
 
         let commit = Self::derive_commit(
             &common.poly_commits,
