@@ -93,11 +93,14 @@ where
             self.final_poly_points_range_end(range_elem.len(), offset_elem, multiplicity);
 
         // prepare list of input points
+        //
+        // perf: if payload is small enough to fit into a single polynomial then
+        // we don't need all the points in this domain.
         let points: Vec<_> = Self::eval_domain(
             usize::try_from(self.recovery_threshold * multiplicity).map_err(vid)?,
         )?
         .elements()
-        .collect(); // perf: we might not need all these points
+        .collect();
 
         let elems_iter = bytes_to_field::<_, KzgEval<E>>(&payload[range_poly_byte]);
         let mut proofs = Vec::with_capacity(range_poly.len() * points.len());
@@ -171,11 +174,14 @@ where
         );
 
         // prepare list of input points
+        //
+        // perf: if payload is small enough to fit into a single polynomial then
+        // we don't need all the points in this domain.
         let points: Vec<_> = Self::eval_domain(
             usize::try_from(self.recovery_threshold * stmt.common.multiplicity).map_err(vid)?,
         )?
         .elements()
-        .collect(); // perf: we might not need all these points
+        .collect();
 
         // verify proof
         let mut cur_proof_index = 0;
