@@ -293,7 +293,7 @@ where
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
-    // aggretate_proofs.len() equals multiplicity
+    // aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
