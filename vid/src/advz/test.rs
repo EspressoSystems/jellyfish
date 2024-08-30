@@ -435,8 +435,8 @@ fn max_multiplicity() {
         }
 
         // sanity: recover payload
-        // let bytes_recovered = advz.recover_payload(&shares, &common).unwrap();
-        // assert_eq!(bytes_recovered, payload);
+        let bytes_recovered = advz.recover_payload(&shares, &common).unwrap();
+        assert_eq!(bytes_recovered, payload);
 
         // sanity: verify shares
         for share in shares {
