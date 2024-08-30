@@ -415,17 +415,24 @@ mod tests {
         H: HasherDigest,
     {
         // play with these items
-        let (recovery_threshold, num_storage_nodes) = (4, 6);
+        let (recovery_threshold, num_storage_nodes, max_multiplicity) = (4, 6, 1);
         let num_polys = 3;
         let num_random_cases = 20;
 
         // more items as a function of the above
-        let payload_elems_len = num_polys * recovery_threshold as usize;
+        let poly_elems_len = recovery_threshold as usize * max_multiplicity as usize;
+        let payload_elems_len = num_polys * poly_elems_len;
+        let poly_bytes_len = poly_elems_len * elem_byte_capacity::<E::ScalarField>();
         let payload_bytes_base_len = payload_elems_len * elem_byte_capacity::<E::ScalarField>();
-        let poly_bytes_len = recovery_threshold as usize * elem_byte_capacity::<E::ScalarField>();
         let mut rng = jf_utils::test_rng();
         let srs = init_srs(payload_elems_len, &mut rng);
-        let mut advz = Advz::<E, H>::new(num_storage_nodes, recovery_threshold, srs).unwrap();
+        let mut advz = Advz::<E, H>::with_multiplicity(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
+        .unwrap();
 
         // TEST: different payload byte lengths
         let payload_byte_len_noise_cases = vec![0, poly_bytes_len / 2, poly_bytes_len - 1];
@@ -456,9 +463,15 @@ mod tests {
         };
         let all_cases = [(edge_cases, "edge"), (random_cases, "rand")];
 
+        // at least one test case should have nontrivial multiplicity
+        let mut nontrivial_multiplicity = false;
+
         for payload_len_case in payload_len_cases {
             let payload = init_random_payload(payload_len_case, &mut rng);
             let d = advz.disperse(&payload).unwrap();
+            if d.common.multiplicity > 1 {
+                nontrivial_multiplicity = true;
+            }
             println!("payload byte len case: {}", payload.len());
 
             for cases in all_cases.iter() {
@@ -524,6 +537,12 @@ mod tests {
                 }
             }
         }
+
+        // assert!(
+        //     nontrivial_multiplicity,
+        //     "at least one payload size should use multiplicity > 1"
+        // );
+        println!("nontrivial multiplicity? {nontrivial_multiplicity}");
 
         fn make_edge_cases(min: usize, max: usize) -> Vec<Range<usize>> {
             vec![
