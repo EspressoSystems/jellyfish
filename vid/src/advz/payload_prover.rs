@@ -415,7 +415,7 @@ mod tests {
         H: HasherDigest,
     {
         // play with these items
-        let (recovery_threshold, num_storage_nodes, max_multiplicity) = (4, 6, 1);
+        let (recovery_threshold, num_storage_nodes, max_multiplicity) = (4, 6, 2);
         let num_polys = 3;
         let num_random_cases = 20;
 
@@ -538,11 +538,10 @@ mod tests {
             }
         }
 
-        // assert!(
-        //     nontrivial_multiplicity,
-        //     "at least one payload size should use multiplicity > 1"
-        // );
-        println!("nontrivial multiplicity? {nontrivial_multiplicity}");
+        assert!(
+            nontrivial_multiplicity,
+            "at least one payload size should use multiplicity > 1"
+        );
 
         fn make_edge_cases(min: usize, max: usize) -> Vec<Range<usize>> {
             vec![
