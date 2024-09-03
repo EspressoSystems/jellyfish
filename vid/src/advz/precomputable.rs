@@ -26,6 +26,7 @@ impl<E, H, T> Precomputable for AdvzInternal<E, H, T>
 where
     E: Pairing,
     H: HasherDigest,
+    T: Sync,
     AdvzInternal<E, H, T>: MaybeGPU<E>,
 {
     type PrecomputeData = PrecomputeData<E>;
@@ -38,7 +39,8 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let polys = self.bytes_to_polys(payload);
+        let multiplicity = self.min_multiplicity(payload.len());
+        let polys = self.bytes_to_polys(payload)?;
         let poly_commits: Vec<Commitment<E>> =
             UnivariateKzgPCS::batch_commit(&self.ck, &polys).map_err(vid)?;
         Ok((
@@ -56,88 +58,10 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let payload_byte_len = payload.len().try_into().map_err(vid)?;
-        let disperse_time = start_timer!(|| ark_std::format!(
-            "(PRECOMPUTE): VID disperse {} payload bytes to {} nodes",
-            payload_byte_len,
-            self.num_storage_nodes
-        ));
-        let _chunk_size = self.multiplicity * self.recovery_threshold;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
+        let polys = self.bytes_to_polys(payload)?;
+        let poly_commits = data.poly_commits.clone();
 
-        // partition payload into polynomial coefficients
-        // and count `elems_len` for later
-        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload);
-        end_timer!(bytes_to_polys_time);
-
-        // evaluate polynomials
-        let all_storage_node_evals_timer = start_timer!(|| ark_std::format!(
-            "compute all storage node evals for {} polynomials with {} coefficients",
-            polys.len(),
-            _chunk_size
-        ));
-        let all_storage_node_evals = self.evaluate_polys(&polys)?;
-        end_timer!(all_storage_node_evals_timer);
-
-        // vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
-        let all_evals_commit_timer =
-            start_timer!(|| "compute merkle root of all storage node evals");
-        let all_evals_commit =
-            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
-        end_timer!(all_evals_commit_timer);
-
-        let common_timer = start_timer!(|| ark_std::format!(
-            "(PRECOMPUTE): compute {} KZG commitments",
-            polys.len()
-        ));
-        let common = Common {
-            poly_commits: data.poly_commits.clone(),
-            all_evals_digest: all_evals_commit.commitment().digest(),
-            payload_byte_len,
-            num_storage_nodes: self.num_storage_nodes,
-            multiplicity: self.multiplicity,
-        };
-        end_timer!(common_timer);
-
-        let commit = Self::derive_commit(
-            &common.poly_commits,
-            payload_byte_len,
-            self.num_storage_nodes,
-        )?;
-        let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
-
-        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
-        // evaluation of the polynomial whose coefficients are polynomials and whose
-        // input point is the pseudorandom scalar.
-        let aggregate_poly =
-            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-
-        let agg_proofs_timer = start_timer!(|| ark_std::format!(
-            "compute aggregate proofs for {} storage nodes",
-            self.num_storage_nodes
-        ));
-        let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
-            &self.ck,
-            &aggregate_poly,
-            code_word_size as usize,
-            &self.multi_open_domain,
-        )
-        .map_err(vid)?;
-        end_timer!(agg_proofs_timer);
-
-        let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares =
-            self.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)?;
-        end_timer!(assemblage_timer);
-        end_timer!(disperse_time);
-
-        Ok(VidDisperse {
-            shares,
-            common,
-            commit,
-        })
+        self.disperse_with_polys_and_commits(payload, polys, poly_commits)
     }
 }
 
@@ -166,7 +90,7 @@ where
 mod tests {
     use crate::{
         advz::{
-            tests::{advz_init, init_random_payload, init_srs},
+            test::{advz_init, init_random_payload, init_srs},
             Advz,
         },
         precomputable::Precomputable,

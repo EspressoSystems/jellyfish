@@ -8,28 +8,32 @@ use jf_vid::{VidError, VidResult, VidScheme};
 
 /// Correctness test generic over anything that impls [`VidScheme`]
 ///
-/// `pub` visibility, but it's not part of this crate's public API
-/// because it's in an integration test.
+/// TODO this test should not have a `max_multiplicities` arg. It is intended to
+/// be generic over the [`VidScheme`] and a generic VID scheme does not have a
+/// multiplicity arg.
+///
+/// `pub` visibility, but it's not part of this crate's public
+/// API because it's in an integration test.
 /// <https://doc.rust-lang.org/book/ch11-03-test-organization.html#submodules-in-integration-tests>
 pub fn round_trip<V, R>(
     vid_factory: impl Fn(u32, u32, u32) -> V,
     vid_sizes: &[(u32, u32)],
-    multiplicities: &[u32],
+    max_multiplicities: &[u32],
     payload_byte_lens: &[u32],
     rng: &mut R,
 ) where
     V: VidScheme,
     R: RngCore + CryptoRng,
 {
-    for (&mult, &(recovery_threshold, num_storage_nodes)) in
-        zip(multiplicities.iter().cycle(), vid_sizes)
+    for (&max_multiplicity, &(recovery_threshold, num_storage_nodes)) in
+        zip(max_multiplicities.iter().cycle(), vid_sizes)
     {
-        let mut vid = vid_factory(recovery_threshold, num_storage_nodes, mult);
+        let mut vid = vid_factory(recovery_threshold, num_storage_nodes, max_multiplicity);
 
         for &len in payload_byte_lens {
             println!(
-                "m: {} n: {} mult: {} byte_len: {}",
-                recovery_threshold, num_storage_nodes, mult, len
+                "m: {} n: {} byte_len: {} max_mult: {}",
+                recovery_threshold, num_storage_nodes, len, max_multiplicity
             );
 
             let bytes_random = {
@@ -43,7 +47,7 @@ pub fn round_trip<V, R>(
             assert_eq!(shares.len(), num_storage_nodes as usize);
             assert_eq!(commit, vid.commit_only(&bytes_random).unwrap());
             assert_eq!(len, V::get_payload_byte_len(&common));
-            assert_eq!(mult, V::get_multiplicity(&common));
+            assert!(V::get_multiplicity(&common) <= max_multiplicity);
             assert_eq!(num_storage_nodes, V::get_num_storage_nodes(&common));
 
             for share in shares.iter() {

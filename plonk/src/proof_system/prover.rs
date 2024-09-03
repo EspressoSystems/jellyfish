@@ -68,8 +68,10 @@ impl<E: Pairing> Prover<E> {
     }
 
     /// Round 1:
+    ///
     /// 1. Compute and commit wire witness polynomials.
     /// 2. Compute public input polynomial.
+    ///
     /// Return the wire witness polynomials and their commitments,
     /// also return the public input polynomial.
     pub(crate) fn run_1st_round<C: Arithmetization<E::ScalarField>, R: CryptoRng + RngCore>(
