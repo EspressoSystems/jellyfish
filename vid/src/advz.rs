@@ -290,6 +290,7 @@ where
     index: u32,
 
     #[serde(with = "canonical")]
+    // evals.len() equals multiplicity * num_polys
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
@@ -297,8 +298,41 @@ where
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
+    // eval_proofs.len() equals multiplicity
+    // TODO put all evals into a single merkle proof
+    // https://github.com/EspressoSystems/jellyfish/issues/671
     eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
 }
+
+// impl<E, H> Share<E, H>
+// where
+//     E: Pairing,
+//     H: HasherDigest,
+// {
+//     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
+//         self.eval_proofs
+//             .iter()
+//             .map(|eval_proof| {
+//                 // `eval_proof.proof` is a `Vec<MerkleNode>` with length >= 1
+//                 // whose first item always has variant `Leaf`. See
+//                 // `MerkleProof::verify_membership_proof`.
+//                 let merkle_node = eval_proof.proof.get(0).ok_or_else(|| {
+//                     VidError::Internal(anyhow::anyhow!(
+//                         "empty
+// merkle proof"
+//                     ))
+//                 })?;
+//                 let MerkleNode::Leaf { elem, .. } = merkle_node else {
+//                     return Err(VidError::Internal(anyhow::anyhow!(
+//                         "expect
+// MerkleNode::Leaf variant"
+//                     )));
+//                 };
+//                 Ok(elem.clone())
+//             })
+//             .collect()
+//     }
+// }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
@@ -689,6 +723,11 @@ where
                 })
                 .collect::<Result<Vec<_>, VidError>>()?;
 
+            // distribute evals from each poly among the storage nodes
+            //
+            // TODO perf: runtime is O(num_polys * payload_size).
+            // num_polys is O(payload_size / multiplicity)
+            // so this is basically quadratic in payload size!
             for poly_evals in all_poly_evals {
                 for (storage_node_evals, poly_eval) in all_storage_node_evals
                     .iter_mut()
