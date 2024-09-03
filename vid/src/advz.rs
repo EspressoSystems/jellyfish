@@ -35,6 +35,7 @@ use digest::crypto_common::Output;
 use itertools::Itertools;
 use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
+    prelude::MerkleNode,
     MerkleCommitment, MerkleTreeScheme,
 };
 #[cfg(feature = "gpu-vid")]
@@ -304,35 +305,36 @@ where
     eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
 }
 
-// impl<E, H> Share<E, H>
-// where
-//     E: Pairing,
-//     H: HasherDigest,
-// {
-//     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
-//         self.eval_proofs
-//             .iter()
-//             .map(|eval_proof| {
-//                 // `eval_proof.proof` is a `Vec<MerkleNode>` with length >= 1
-//                 // whose first item always has variant `Leaf`. See
-//                 // `MerkleProof::verify_membership_proof`.
-//                 let merkle_node = eval_proof.proof.get(0).ok_or_else(|| {
-//                     VidError::Internal(anyhow::anyhow!(
-//                         "empty
-// merkle proof"
-//                     ))
-//                 })?;
-//                 let MerkleNode::Leaf { elem, .. } = merkle_node else {
-//                     return Err(VidError::Internal(anyhow::anyhow!(
-//                         "expect
-// MerkleNode::Leaf variant"
-//                     )));
-//                 };
-//                 Ok(elem.clone())
-//             })
-//             .collect()
-//     }
-// }
+impl<E, H> Share<E, H>
+where
+    E: Pairing,
+    H: HasherDigest,
+{
+    fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
+        let result: Vec<_> = self
+            .eval_proofs
+            .iter()
+            .map(|eval_proof| {
+                // `eval_proof.proof` is a `Vec<MerkleNode>` with length >= 1
+                // whose first item always has variant `Leaf`. See
+                // `MerkleProof::verify_membership_proof`.
+                let merkle_node = eval_proof
+                    .proof
+                    .get(0)
+                    .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?;
+                let MerkleNode::Leaf { elem, .. } = merkle_node else {
+                    return Err(VidError::Internal(anyhow::anyhow!(
+                        "expect MerkleNode::Leaf variant"
+                    )));
+                };
+                Ok(elem.clone())
+            })
+            .flatten_ok()
+            .collect::<VidResult<Vec<_>>>()?;
+        assert_eq!(result, self.evals);
+        Ok(result)
+    }
+}
 
 /// The [`VidScheme::Common`] type for [`Advz`].
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative, Deserialize, Serialize)]
@@ -469,10 +471,11 @@ where
                 common.multiplicity, multiplicity
             )));
         }
-        if share.evals.len() / multiplicity as usize != common.poly_commits.len() {
+        let evals = share.evals()?;
+        if evals.len() / multiplicity as usize != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}",
-                share.evals.len(), multiplicity,
+                evals.len(), multiplicity,
                 common.poly_commits.len()
             )));
         }
@@ -538,7 +541,7 @@ where
                         VidError::Internal(anyhow::anyhow!(
                             "share evals range {:?} out of bounds for length {}",
                             range,
-                            share.evals.len()
+                            evals.len()
                         ))
                     })?
                     .iter()
@@ -711,7 +714,6 @@ where
             multiplicity * self.recovery_threshold
         ));
         let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
             let all_poly_evals = parallelizable_slice_iter(&polys)
                 .map(|poly| {
                     UnivariateKzgPCS::<E>::multi_open_rou_evals(
@@ -728,6 +730,7 @@ where
             // TODO perf: runtime is O(num_polys * payload_size).
             // num_polys is O(payload_size / multiplicity)
             // so this is basically quadratic in payload size!
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
             for poly_evals in all_poly_evals {
                 for (storage_node_evals, poly_eval) in all_storage_node_evals
                     .iter_mut()
