@@ -156,83 +156,6 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -274,7 +197,8 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
+        <span class="kw">let </span>multiplicity = <span class="self">self</span>.min_multiplicity(payload.len());
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload)<span class="question-mark">?</span>;
         <span class="kw">let </span>poly_commits: Vec&lt;Commitment&lt;E&gt;&gt; =
             UnivariateKzgPCS::batch_commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>polys).map_err(vid)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>((
@@ -292,88 +216,10 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>payload_byte_len = payload.len().try_into().map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>disperse_time = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
-            <span class="string">"(PRECOMPUTE): VID disperse {} payload bytes to {} nodes"</span>,
-            payload_byte_len,
-            <span class="self">self</span>.num_storage_nodes
-        ));
-        <span class="kw">let </span>_chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.recovery_threshold;
-        <span class="kw">let </span>code_word_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.num_storage_nodes;
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload)<span class="question-mark">?</span>;
+        <span class="kw">let </span>poly_commits = data.poly_commits.clone();
 
-        <span class="comment">// partition payload into polynomial coefficients
-        // and count `elems_len` for later
-        </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
-        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
-        <span class="macro">end_timer!</span>(bytes_to_polys_time);
-
-        <span class="comment">// evaluate polynomials
-        </span><span class="kw">let </span>all_storage_node_evals_timer = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
-            <span class="string">"compute all storage node evals for {} polynomials with {} coefficients"</span>,
-            polys.len(),
-            _chunk_size
-        ));
-        <span class="kw">let </span>all_storage_node_evals = <span class="self">self</span>.evaluate_polys(<span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(all_storage_node_evals_timer);
-
-        <span class="comment">// vector commitment to polynomial evaluations
-        // TODO why do I need to compute the height of the merkle tree?
-        </span><span class="kw">let </span>all_evals_commit_timer =
-            <span class="macro">start_timer!</span>(|| <span class="string">"compute merkle root of all storage node evals"</span>);
-        <span class="kw">let </span>all_evals_commit =
-            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(all_evals_commit_timer);
-
-        <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
-            <span class="string">"(PRECOMPUTE): compute {} KZG commitments"</span>,
-            polys.len()
-        ));
-        <span class="kw">let </span>common = Common {
-            poly_commits: data.poly_commits.clone(),
-            all_evals_digest: all_evals_commit.commitment().digest(),
-            payload_byte_len,
-            num_storage_nodes: <span class="self">self</span>.num_storage_nodes,
-            multiplicity: <span class="self">self</span>.multiplicity,
-        };
-        <span class="macro">end_timer!</span>(common_timer);
-
-        <span class="kw">let </span>commit = <span class="self">Self</span>::derive_commit(
-            <span class="kw-2">&amp;</span>common.poly_commits,
-            payload_byte_len,
-            <span class="self">self</span>.num_storage_nodes,
-        )<span class="question-mark">?</span>;
-        <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)<span class="question-mark">?</span>;
-
-        <span class="comment">// Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
-        // evaluation of the polynomial whose coefficients are polynomials and whose
-        // input point is the pseudorandom scalar.
-        </span><span class="kw">let </span>aggregate_poly =
-            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-
-        <span class="kw">let </span>agg_proofs_timer = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
-            <span class="string">"compute aggregate proofs for {} storage nodes"</span>,
-            <span class="self">self</span>.num_storage_nodes
-        ));
-        <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
-            <span class="kw-2">&amp;</span>aggregate_poly,
-            code_word_size <span class="kw">as </span>usize,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
-        )
-        .map_err(vid)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(agg_proofs_timer);
-
-        <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">"assemble shares for dispersal"</span>);
-        <span class="kw">let </span>shares =
-            <span class="self">self</span>.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(assemblage_timer);
-        <span class="macro">end_timer!</span>(disperse_time);
-
-        <span class="prelude-val">Ok</span>(VidDisperse {
-            shares,
-            common,
-            commit,
-        })
+        <span class="self">self</span>.disperse_with_polys_and_commits(payload, polys, poly_commits)
     }
 }
 

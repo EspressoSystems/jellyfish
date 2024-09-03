@@ -1015,6 +1015,30 @@
 <a href="#1015" id="1015">1015</a>
 <a href="#1016" id="1016">1016</a>
 <a href="#1017" id="1017">1017</a>
+<a href="#1018" id="1018">1018</a>
+<a href="#1019" id="1019">1019</a>
+<a href="#1020" id="1020">1020</a>
+<a href="#1021" id="1021">1021</a>
+<a href="#1022" id="1022">1022</a>
+<a href="#1023" id="1023">1023</a>
+<a href="#1024" id="1024">1024</a>
+<a href="#1025" id="1025">1025</a>
+<a href="#1026" id="1026">1026</a>
+<a href="#1027" id="1027">1027</a>
+<a href="#1028" id="1028">1028</a>
+<a href="#1029" id="1029">1029</a>
+<a href="#1030" id="1030">1030</a>
+<a href="#1031" id="1031">1031</a>
+<a href="#1032" id="1032">1032</a>
+<a href="#1033" id="1033">1033</a>
+<a href="#1034" id="1034">1034</a>
+<a href="#1035" id="1035">1035</a>
+<a href="#1036" id="1036">1036</a>
+<a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1100,15 +1124,9 @@
 {
     recovery_threshold: u32,
     num_storage_nodes: u32,
-    multiplicity: u32,
+    max_multiplicity: u32,
     ck: KzgProverParam&lt;E&gt;,
     vk: KzgVerifierParam&lt;E&gt;,
-    multi_open_domain: Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
-
-    <span class="comment">// TODO might be able to eliminate this field and instead use
-    // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
-    // but that method consumes `other` and its doc is unclear.
-    </span>eval_domain: Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
 
     <span class="comment">// tuple of
     // - reference to the SRS/ProverParam loaded to GPU
@@ -1148,15 +1166,20 @@
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="comment">// TODO intelligent choice of multiplicity
         // https://github.com/EspressoSystems/jellyfish/issues/534
-        </span><span class="kw">let </span>multiplicity = <span class="number">1</span>;
+        </span><span class="kw">let </span>max_multiplicity = <span class="number">1</span>;
 
-        <span class="self">Self</span>::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+        <span class="self">Self</span>::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>with_multiplicity_internal(
         num_storage_nodes: u32,  <span class="comment">// n (code rate: r = k/n)
         </span>recovery_threshold: u32, <span class="comment">// k
-        </span>multiplicity: u32,       <span class="comment">// batch m chunks, keep the rate r = (m*k)/(m*n)
+        </span>max_multiplicity: u32,   <span class="comment">// batch m chunks, keep the rate r = (m*k)/(m*n)
         </span>srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">if </span>num_storage_nodes &lt; recovery_threshold {
@@ -1166,49 +1189,29 @@
             )));
         }
 
-        <span class="kw">if </span>!multiplicity.is_power_of_two() {
+        <span class="comment">// TODO TEMPORARY: enforce power-of-2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        </span><span class="kw">if </span>!recovery_threshold.is_power_of_two() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"multiplicity {multiplicity} should be a power of two"
+                <span class="string">"recovery_threshold {recovery_threshold} should be a power of two"
+            </span>)));
+        }
+        <span class="kw">if </span>!max_multiplicity.is_power_of_two() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
+                <span class="string">"max_multiplicity {max_multiplicity} should be a power of two"
             </span>)));
         }
 
-        <span class="comment">// erasure code params
-        </span><span class="kw">let </span>chunk_size = multiplicity * recovery_threshold; <span class="comment">// message length m
-        </span><span class="kw">let </span>code_word_size = multiplicity * num_storage_nodes; <span class="comment">// code word length n
-        </span><span class="kw">let </span>poly_degree = chunk_size - <span class="number">1</span>;
-
-        <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree <span class="kw">as </span>usize).map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>multi_open_domain = UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(
-            poly_degree <span class="kw">as </span>usize,
-            code_word_size <span class="kw">as </span>usize,
-        )
-        .map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>eval_domain = Radix2EvaluationDomain::new(chunk_size <span class="kw">as </span>usize).ok_or_else(|| {
-            VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
-                <span class="string">"fail to construct domain of size {}"</span>,
-                chunk_size
-            ))
-        })<span class="question-mark">?</span>;
-
-        <span class="comment">// TODO TEMPORARY: enforce power-of-2 chunk size
-        // Remove this restriction after we get KZG in eval form
-        // https://github.com/EspressoSystems/jellyfish/issues/339
-        </span><span class="kw">if </span>chunk_size <span class="kw">as </span>usize != eval_domain.size() {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"recovery_threshold {} currently unsupported, round to {} instead"</span>,
-                chunk_size,
-                eval_domain.size()
-            )));
-        }
+        <span class="kw">let </span>supported_degree =
+            usize::try_from(max_multiplicity * recovery_threshold - <span class="number">1</span>).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, supported_degree).map_err(vid)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             recovery_threshold,
             num_storage_nodes,
-            multiplicity,
+            max_multiplicity,
             ck,
             vk,
-            multi_open_domain,
-            eval_domain,
             srs_on_gpu_and_cuda_stream: <span class="prelude-val">None</span>,
             _pd: Default::default(),
         })
@@ -1232,7 +1235,7 @@
     /// # Errors
     /// Return [`VidError::Argument`] if
     /// - `num_storage_nodes &lt; recovery_threshold`
-    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     </span><span class="kw">pub fn </span>new(
         num_storage_nodes: u32,
         recovery_threshold: u32,
@@ -1241,21 +1244,28 @@
         <span class="self">Self</span>::new_internal(num_storage_nodes, recovery_threshold, srs)
     }
 
-    <span class="doccomment">/// Like [`Advz::new`] except with a `multiplicity` arg.
+    <span class="doccomment">/// Like [`Advz::new`] except with a `max_multiplicity` arg.
     ///
-    /// `multiplicity` is an implementation-specific optimization arg.
-    /// Each storage node gets `multiplicity` evaluations per polynomial.
+    /// `max_multiplicity` is an implementation-specific optimization arg.
+    /// Each storage node gets up to `max_multiplicity` evaluations per
+    /// polynomial. The actual multiplicity used will be the smallest value m
+    /// such that payload can fit (payload_len &lt;= m * recovery_threshold).
     ///
     /// # Errors
     /// In addition to [`Advz::new`], return [`VidError::Argument`] if
-    /// - TEMPORARY `multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `max_multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     </span><span class="kw">pub fn </span>with_multiplicity(
         num_storage_nodes: u32,
         recovery_threshold: u32,
-        multiplicity: u32,
+        max_multiplicity: u32,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
-        <span class="self">Self</span>::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+        <span class="self">Self</span>::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
     }
 }
 
@@ -1279,13 +1289,13 @@
     </span><span class="kw">pub fn </span>with_multiplicity(
         num_storage_nodes: u32,
         recovery_threshold: u32,
-        multiplicity: u32,
+        max_multiplicity: u32,
         srs: <span class="kw">impl </span>Borrow&lt;KzgSrs&lt;E&gt;&gt;,
     ) -&gt; VidResult&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>advz = <span class="self">Self</span>::with_multiplicity_internal(
             num_storage_nodes,
             recovery_threshold,
-            multiplicity,
+            max_multiplicity,
             srs,
         )<span class="question-mark">?</span>;
         advz.init_gpu_srs()<span class="question-mark">?</span>;
@@ -1298,7 +1308,7 @@
             <span class="self">self</span>.ck.powers_of_g.len() - <span class="number">1</span>,
         )
         .map_err(vid)<span class="question-mark">?</span>;
-        <span class="self">self</span>.srs_on_gpu_and_cuda_stream = <span class="prelude-val">Some</span>((srs_on_gpu, warmup_new_stream().unwrap()));
+        <span class="self">self</span>.srs_on_gpu_and_cuda_stream = <span class="prelude-val">Some</span>((srs_on_gpu, warmup_new_stream().map_err(vid)<span class="question-mark">?</span>));
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1324,7 +1334,7 @@
     </span>evals: Vec&lt;KzgEval&lt;E&gt;&gt;,
 
     <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
-    </span><span class="comment">// aggretate_proofs.len() equals self.multiplicity
+    </span><span class="comment">// aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     </span>aggregate_proofs: Vec&lt;KzgProof&lt;E&gt;&gt;,
 
@@ -1393,12 +1403,10 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;E::ScalarField&gt;],
     ) -&gt; VidResult&lt;Vec&lt;KzgCommit&lt;E&gt;&gt;&gt; {
-        <span class="comment">// let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
-        // let stream = &amp;self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
-        </span><span class="kw">if </span>polys.is_empty() {
+        <span class="kw">if </span>polys.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[]);
         }
-        <span class="kw">let </span>(srs_on_gpu, stream) = <span class="self">self</span>.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); <span class="comment">// safe by construction
+        <span class="kw">let </span>(srs_on_gpu, stream) = <span class="self">self</span>.srs_on_gpu_and_cuda_stream.as_mut().map_err(vid)<span class="question-mark">?</span>; <span class="comment">// safe by construction
         </span>&lt;UnivariateKzgPCS&lt;E&gt; <span class="kw">as </span>GPUCommittable&lt;E&gt;&gt;::gpu_batch_commit_with_loaded_prover_param(
             srs_on_gpu, polys, stream,
         )
@@ -1424,9 +1432,10 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
-        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
-        <span class="macro">end_timer!</span>(bytes_to_polys_time);
+        <span class="kw">let </span>payload_byte_len = payload.len().try_into().map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>multiplicity = <span class="self">self</span>.min_multiplicity(payload_byte_len)<span class="question-mark">?</span>;
+        <span class="kw">let </span>chunk_size = multiplicity * <span class="self">self</span>.recovery_threshold;
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>poly_commits_time = <span class="macro">start_timer!</span>(|| <span class="string">"batch poly commit"</span>);
         <span class="kw">let </span>poly_commits = &lt;<span class="self">Self </span><span class="kw">as </span>MaybeGPU&lt;E&gt;&gt;::kzg_batch_commit(<span class="self">self</span>, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
@@ -1440,82 +1449,10 @@
         </span>B: AsRef&lt;[u8]&gt;,
     {
         <span class="kw">let </span>payload = payload.as_ref();
-        <span class="kw">let </span>payload_byte_len = payload.len().try_into().map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">let </span>disperse_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">"VID disperse {} payload bytes to {} nodes"</span>,
-            payload_byte_len, <span class="self">self</span>.num_storage_nodes
-        ));
-        <span class="kw">let </span>_chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.recovery_threshold;
-        <span class="kw">let </span>code_word_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.num_storage_nodes;
+        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload)<span class="question-mark">?</span>;
+        <span class="kw">let </span>poly_commits = &lt;<span class="self">Self </span><span class="kw">as </span>MaybeGPU&lt;E&gt;&gt;::kzg_batch_commit(<span class="self">self</span>, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
 
-        <span class="comment">// partition payload into polynomial coefficients
-        </span><span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
-        <span class="kw">let </span>polys = <span class="self">self</span>.bytes_to_polys(payload);
-        <span class="macro">end_timer!</span>(bytes_to_polys_time);
-
-        <span class="comment">// evaluate polynomials
-        </span><span class="kw">let </span>all_storage_node_evals_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">"compute all storage node evals for {} polynomials with {} coefficients"</span>,
-            polys.len(),
-            _chunk_size
-        ));
-        <span class="kw">let </span>all_storage_node_evals = <span class="self">self</span>.evaluate_polys(<span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(all_storage_node_evals_timer);
-
-        <span class="comment">// vector commitment to polynomial evaluations
-        </span><span class="kw">let </span>all_evals_commit_timer =
-            <span class="macro">start_timer!</span>(|| <span class="string">"compute merkle root of all storage node evals"</span>);
-        <span class="kw">let </span>all_evals_commit =
-            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(all_evals_commit_timer);
-
-        <span class="kw">let </span>common_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(<span class="string">"compute {} KZG commitments"</span>, polys.len()));
-        <span class="kw">let </span>common = Common {
-            poly_commits: &lt;<span class="self">Self </span><span class="kw">as </span>MaybeGPU&lt;E&gt;&gt;::kzg_batch_commit(<span class="self">self</span>, <span class="kw-2">&amp;</span>polys)<span class="question-mark">?</span>,
-            all_evals_digest: all_evals_commit.commitment().digest(),
-            payload_byte_len,
-            num_storage_nodes: <span class="self">self</span>.num_storage_nodes,
-            multiplicity: <span class="self">self</span>.multiplicity,
-        };
-        <span class="macro">end_timer!</span>(common_timer);
-
-        <span class="kw">let </span>commit = <span class="self">Self</span>::derive_commit(
-            <span class="kw-2">&amp;</span>common.poly_commits,
-            payload_byte_len,
-            <span class="self">self</span>.num_storage_nodes,
-        )<span class="question-mark">?</span>;
-        <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)<span class="question-mark">?</span>;
-
-        <span class="comment">// Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
-        // evaluation of the polynomial whose coefficients are polynomials and whose
-        // input point is the pseudorandom scalar.
-        </span><span class="kw">let </span>aggregate_poly =
-            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-
-        <span class="kw">let </span>agg_proofs_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
-            <span class="string">"compute aggregate proofs for {} storage nodes"</span>,
-            <span class="self">self</span>.num_storage_nodes
-        ));
-        <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
-            <span class="kw-2">&amp;</span>aggregate_poly,
-            code_word_size <span class="kw">as </span>usize,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
-        )
-        .map_err(vid)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(agg_proofs_timer);
-
-        <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">"assemble shares for dispersal"</span>);
-        <span class="kw">let </span>shares =
-            <span class="self">self</span>.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)<span class="question-mark">?</span>;
-        <span class="macro">end_timer!</span>(assemblage_timer);
-        <span class="macro">end_timer!</span>(disperse_time);
-
-        <span class="prelude-val">Ok</span>(VidDisperse {
-            shares,
-            common,
-            commit,
-        })
+        <span class="self">self</span>.disperse_with_polys_and_commits(payload, polys, poly_commits)
     }
 
     <span class="kw">fn </span>verify_share(
@@ -1531,21 +1468,22 @@
                 common.num_storage_nodes, <span class="self">self</span>.num_storage_nodes
             )));
         }
-        <span class="kw">if </span>common.multiplicity != <span class="self">self</span>.multiplicity {
+        <span class="kw">let </span>multiplicity =
+            <span class="self">self</span>.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+        <span class="kw">if </span>common.multiplicity != multiplicity {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
-                <span class="string">"common multiplicity {} differs from self {}"</span>,
-                common.multiplicity, <span class="self">self</span>.multiplicity
+                <span class="string">"common multiplicity {} differs from derived min {}"</span>,
+                common.multiplicity, multiplicity
             )));
         }
-        <span class="kw">let </span>multiplicity: usize = common.multiplicity.try_into().map_err(vid)<span class="question-mark">?</span>;
-        <span class="kw">if </span>share.evals.len() / multiplicity != common.poly_commits.len() {
+        <span class="kw">if </span>share.evals.len() / multiplicity <span class="kw">as </span>usize != common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}"</span>,
                 share.evals.len(), multiplicity,
                 common.poly_commits.len()
             )));
         }
-        <span class="kw">if </span>share.eval_proofs.len() != multiplicity {
+        <span class="kw">if </span>share.eval_proofs.len() != multiplicity <span class="kw">as </span>usize {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"number of eval_proofs {} differs from common multiplicity {}"</span>,
                 share.eval_proofs.len(),
@@ -1560,10 +1498,10 @@
         </span>}
 
         <span class="comment">// verify eval proofs
-        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.multiplicity {
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..multiplicity {
             <span class="kw">if </span>KzgEvalsMerkleTree::&lt;E, H&gt;::verify(
                 common.all_evals_digest,
-                <span class="kw-2">&amp;</span>KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from((share.index * <span class="self">self</span>.multiplicity) + i),
+                <span class="kw-2">&amp;</span>KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from((share.index * multiplicity) + i),
                 <span class="kw-2">&amp;</span>share.eval_proofs[i <span class="kw">as </span>usize],
             )
             .map_err(vid)<span class="question-mark">?
@@ -1594,8 +1532,9 @@
         //
         // some boilerplate needed to accommodate builds without `parallel`
         // feature.
-        </span><span class="kw">let </span>multiplicities = Vec::from_iter((<span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize));
+        </span><span class="kw">let </span>multiplicities = Vec::from_iter((<span class="number">0</span>..multiplicity <span class="kw">as </span>usize));
         <span class="kw">let </span>polys_len = common.poly_commits.len();
+        <span class="kw">let </span>multi_open_domain = <span class="self">self</span>.multi_open_domain(multiplicity)<span class="question-mark">?</span>;
         <span class="kw">let </span>verification_iter = parallelizable_slice_iter(<span class="kw-2">&amp;</span>multiplicities).map(|i| {
             <span class="kw">let </span>range = i * polys_len..(i + <span class="number">1</span>) * polys_len;
             <span class="kw">let </span>aggregate_eval = polynomial_eval(
@@ -1616,9 +1555,7 @@
             <span class="prelude-val">Ok</span>(UnivariateKzgPCS::verify(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.vk,
                 <span class="kw-2">&amp;</span>aggregate_poly_commit,
-                <span class="kw-2">&amp;</span><span class="self">self
-                    </span>.multi_open_domain
-                    .element((share.index <span class="kw">as </span>usize * multiplicity) + i),
+                <span class="kw-2">&amp;</span>multi_open_domain.element((share.index * multiplicity) <span class="kw">as </span>usize + i),
                 <span class="kw-2">&amp;</span>aggregate_eval,
                 <span class="kw-2">&amp;</span>share.aggregate_proofs[<span class="kw-2">*</span>i],
             )
@@ -1642,7 +1579,8 @@
     }
 
     <span class="kw">fn </span>recover_payload(<span class="kw-2">&amp;</span><span class="self">self</span>, shares: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Share], common: <span class="kw-2">&amp;</span><span class="self">Self</span>::Common) -&gt; VidResult&lt;Vec&lt;u8&gt;&gt; {
-        <span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize {
+        <span class="comment">// check args
+        </span><span class="kw">if </span>shares.len() &lt; <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"not enough shares {}, expected at least {}"</span>,
                 shares.len(),
@@ -1656,7 +1594,7 @@
             )));
         }
 
-        <span class="comment">// all shares must have equal evals len
+        <span class="comment">// check args: all shares must have equal evals len
         </span><span class="kw">let </span>num_evals = shares
             .first()
             .ok_or_else(|| VidError::Argument(<span class="string">"shares is empty"</span>.into()))<span class="question-mark">?
@@ -1675,26 +1613,29 @@
                 share.evals.len()
             )));
         }
-        <span class="kw">if </span>num_evals != <span class="self">self</span>.multiplicity <span class="kw">as </span>usize * common.poly_commits.len() {
+        <span class="kw">if </span>num_evals != common.multiplicity <span class="kw">as </span>usize * common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"num_evals should be (multiplicity * poly_commits): {} but is instead: {}"</span>,
-                <span class="self">self</span>.multiplicity <span class="kw">as </span>usize * common.poly_commits.len(),
+                common.multiplicity <span class="kw">as </span>usize * common.poly_commits.len(),
                 num_evals,
             )));
         }
-        <span class="kw">let </span>chunk_size = <span class="self">self</span>.multiplicity * <span class="self">self</span>.recovery_threshold;
-        <span class="kw">let </span>num_polys = num_evals / <span class="self">self</span>.multiplicity <span class="kw">as </span>usize;
 
-        <span class="kw">let </span>elems_capacity = num_polys * chunk_size <span class="kw">as </span>usize;
+        <span class="comment">// convenience quantities
+        </span><span class="kw">let </span>chunk_size =
+            usize::try_from(common.multiplicity * <span class="self">self</span>.recovery_threshold).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>num_polys = common.poly_commits.len();
+        <span class="kw">let </span>elems_capacity = num_polys * chunk_size;
+        <span class="kw">let </span>fft_domain = <span class="self">Self</span>::eval_domain(chunk_size)<span class="question-mark">?</span>;
+
         <span class="kw">let </span><span class="kw-2">mut </span>elems = Vec::with_capacity(elems_capacity);
-
         <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_evals);
         <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..num_polys {
             <span class="kw">for </span>share <span class="kw">in </span>shares {
                 <span class="comment">// extract all evaluations for polynomial p from the share
-                </span><span class="kw">for </span>m <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.multiplicity <span class="kw">as </span>usize {
+                </span><span class="kw">for </span>m <span class="kw">in </span><span class="number">0</span>..common.multiplicity <span class="kw">as </span>usize {
                     evals.push((
-                        (share.index * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize + m,
+                        (share.index * common.multiplicity) <span class="kw">as </span>usize + m,
                         share.evals[(m * num_polys) + p],
                     ))
                 }
@@ -1702,14 +1643,14 @@
             <span class="kw">let </span><span class="kw-2">mut </span>coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(<span class="kw-2">&amp;mut </span>evals),
                 chunk_size <span class="kw">as </span>usize,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain(common.multiplicity)<span class="question-mark">?</span>,
             )
             .map_err(vid)<span class="question-mark">?</span>;
 
             <span class="comment">// TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            </span><span class="self">self</span>.eval_domain.fft_in_place(<span class="kw-2">&amp;mut </span>coeffs);
+            </span>fft_domain.fft_in_place(<span class="kw-2">&amp;mut </span>coeffs);
 
             elems.append(<span class="kw-2">&amp;mut </span>coeffs);
         }
@@ -1755,48 +1696,142 @@
     SrsRef: Sync,
     AdvzInternal&lt;E, H, SrsRef&gt;: MaybeGPU&lt;E&gt;,
 {
-    <span class="kw">fn </span>evaluate_polys(
+    <span class="kw">fn </span>disperse_with_polys_and_commits(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        polys: <span class="kw-2">&amp;</span>[DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;, VidError&gt;
-    <span class="kw">where
-        </span>E: Pairing,
-        H: HasherDigest,
-    {
-        <span class="kw">let </span>code_word_size = (<span class="self">self</span>.num_storage_nodes * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
-        <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
-        <span class="comment">// this is to avoid `SrsRef` not implementing `Sync` problem,
-        // instead of sending entire `self` cross thread, we only send a ref which is
-        // Sync
-        </span><span class="kw">let </span>multi_open_domain_ref = <span class="kw-2">&amp;</span><span class="self">self</span>.multi_open_domain;
+        payload: <span class="kw-2">&amp;</span>[u8],
+        polys: Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;,
+        poly_commits: Vec&lt;KzgCommit&lt;E&gt;&gt;,
+    ) -&gt; VidResult&lt;VidDisperse&lt;<span class="self">Self</span>&gt;&gt; {
+        <span class="kw">let </span>payload_byte_len = payload.len().try_into().map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>disperse_time = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
+            <span class="string">"VID disperse {} payload bytes to {} nodes"</span>,
+            payload_byte_len, <span class="self">self</span>.num_storage_nodes
+        ));
+        <span class="kw">let </span>multiplicity = <span class="self">self</span>.min_multiplicity(payload.len())<span class="question-mark">?</span>;
+        <span class="kw">let </span>code_word_size = usize::try_from(multiplicity * <span class="self">self</span>.num_storage_nodes).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>multi_open_domain = <span class="self">self</span>.multi_open_domain(multiplicity)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>all_poly_evals = parallelizable_slice_iter(polys)
-            .map(|poly| {
-                UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    multi_open_domain_ref,
-                )
-                .map_err(vid)
-            })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
+        <span class="comment">// evaluate polynomials
+        </span><span class="kw">let </span>all_storage_node_evals_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
+            <span class="string">"compute all storage node evals for {} polynomials with {} coefficients"</span>,
+            polys.len(),
+            multiplicity * <span class="self">self</span>.recovery_threshold
+        ));
+        <span class="kw">let </span>all_storage_node_evals = {
+            <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
+            <span class="kw">let </span>all_poly_evals = parallelizable_slice_iter(<span class="kw-2">&amp;</span>polys)
+                .map(|poly| {
+                    UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
+                        poly,
+                        code_word_size,
+                        <span class="kw-2">&amp;</span>multi_open_domain,
+                    )
+                    .map_err(vid)
+                })
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>poly_evals <span class="kw">in </span>all_poly_evals {
-            <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in </span>all_storage_node_evals
-                .iter_mut()
-                .zip(poly_evals.into_iter())
-            {
-                storage_node_evals.push(poly_eval);
+            <span class="kw">for </span>poly_evals <span class="kw">in </span>all_poly_evals {
+                <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in </span>all_storage_node_evals
+                    .iter_mut()
+                    .zip(poly_evals.into_iter())
+                {
+                    storage_node_evals.push(poly_eval);
+                }
             }
-        }
 
-        <span class="comment">// sanity checks
-        </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
-        <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
-            <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
-        }
+            <span class="comment">// sanity checks
+            </span><span class="macro">assert_eq!</span>(all_storage_node_evals.len(), code_word_size);
+            <span class="kw">for </span>storage_node_evals <span class="kw">in </span>all_storage_node_evals.iter() {
+                <span class="macro">assert_eq!</span>(storage_node_evals.len(), polys.len());
+            }
 
-        <span class="prelude-val">Ok</span>(all_storage_node_evals)
+            all_storage_node_evals
+        };
+        <span class="macro">end_timer!</span>(all_storage_node_evals_timer);
+
+        <span class="comment">// vector commitment to polynomial evaluations
+        </span><span class="kw">let </span>all_evals_commit_timer =
+            <span class="macro">start_timer!</span>(|| <span class="string">"compute merkle root of all storage node evals"</span>);
+        <span class="kw">let </span>all_evals_commit =
+            KzgEvalsMerkleTree::&lt;E, H&gt;::from_elems(<span class="prelude-val">None</span>, <span class="kw-2">&amp;</span>all_storage_node_evals).map_err(vid)<span class="question-mark">?</span>;
+        <span class="macro">end_timer!</span>(all_evals_commit_timer);
+
+        <span class="kw">let </span>common = Common {
+            poly_commits,
+            all_evals_digest: all_evals_commit.commitment().digest(),
+            payload_byte_len,
+            num_storage_nodes: <span class="self">self</span>.num_storage_nodes,
+            multiplicity,
+        };
+
+        <span class="kw">let </span>commit = <span class="self">Self</span>::derive_commit(
+            <span class="kw-2">&amp;</span>common.poly_commits,
+            payload_byte_len,
+            <span class="self">self</span>.num_storage_nodes,
+        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>pseudorandom_scalar = <span class="self">Self</span>::pseudorandom_scalar(<span class="kw-2">&amp;</span>common, <span class="kw-2">&amp;</span>commit)<span class="question-mark">?</span>;
+
+        <span class="comment">// Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
+        // evaluation of the polynomial whose coefficients are polynomials and whose
+        // input point is the pseudorandom scalar.
+        </span><span class="kw">let </span>aggregate_poly =
+            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
+
+        <span class="kw">let </span>agg_proofs_timer = <span class="macro">start_timer!</span>(|| <span class="macro">format!</span>(
+            <span class="string">"compute aggregate proofs for {} storage nodes"</span>,
+            <span class="self">self</span>.num_storage_nodes
+        ));
+        <span class="kw">let </span>aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.ck,
+            <span class="kw-2">&amp;</span>aggregate_poly,
+            code_word_size <span class="kw">as </span>usize,
+            <span class="kw-2">&amp;</span>multi_open_domain,
+        )
+        .map_err(vid)<span class="question-mark">?</span>;
+        <span class="macro">end_timer!</span>(agg_proofs_timer);
+
+        <span class="kw">let </span>assemblage_timer = <span class="macro">start_timer!</span>(|| <span class="string">"assemble shares for dispersal"</span>);
+        <span class="kw">let </span>shares: Vec&lt;<span class="kw">_</span>&gt; = {
+            <span class="comment">// compute share data
+            </span><span class="kw">let </span>share_data = all_storage_node_evals
+                .into_iter()
+                .zip(aggregate_proofs)
+                .enumerate()
+                .map(|(i, (eval, proof))| {
+                    <span class="kw">let </span>eval_proof = all_evals_commit
+                        .lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(i <span class="kw">as </span>u64))
+                        .expect_ok()
+                        .map_err(vid)<span class="question-mark">?
+                        </span>.<span class="number">1</span>;
+                    <span class="prelude-val">Ok</span>((eval, proof, eval_proof))
+                })
+                .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
+
+            <span class="comment">// split share data into chunks of size multiplicity
+            </span>share_data
+                .into_iter()
+                .chunks(multiplicity <span class="kw">as </span>usize)
+                .into_iter()
+                .enumerate()
+                .map(|(index, chunk)| {
+                    <span class="kw">let </span>(evals, proofs, eval_proofs): (Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>, <span class="kw">_</span>) = chunk.multiunzip();
+                    Share {
+                        index: index <span class="kw">as </span>u32,
+                        evals: evals.into_iter().flatten().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
+                        aggregate_proofs: proofs,
+                        eval_proofs,
+                    }
+                })
+                .collect()
+        };
+        <span class="macro">end_timer!</span>(assemblage_timer);
+        <span class="macro">end_timer!</span>(disperse_time);
+
+        <span class="prelude-val">Ok</span>(VidDisperse {
+            shares,
+            common,
+            commit,
+        })
     }
 
     <span class="kw">fn </span>pseudorandom_scalar(
@@ -1826,33 +1861,46 @@
         </span><span class="prelude-val">Ok</span>(PrimeField::from_le_bytes_mod_order(<span class="kw-2">&amp;</span>hasher.finalize()))
     }
 
-    <span class="kw">fn </span>bytes_to_polys(<span class="kw-2">&amp;</span><span class="self">self</span>, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;
+    <span class="doccomment">/// Partition payload into polynomial coefficients
+    </span><span class="kw">fn </span>bytes_to_polys(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        payload: <span class="kw-2">&amp;</span>[u8],
+    ) -&gt; VidResult&lt;Vec&lt;DensePolynomial&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;&gt;
     <span class="kw">where
         </span>E: Pairing,
     {
-        <span class="kw">let </span>chunk_size = (<span class="self">self</span>.recovery_threshold * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize;
         <span class="kw">let </span>elem_bytes_len = bytes_to_field::elem_byte_capacity::&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;();
-        <span class="kw">let </span>eval_domain_ref = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
+        <span class="kw">let </span>domain_size =
+            usize::try_from(<span class="self">self</span>.min_multiplicity(payload.len())<span class="question-mark">? </span>* <span class="self">self</span>.recovery_threshold)
+                .map_err(vid)<span class="question-mark">?</span>;
 
-        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+        <span class="kw">let </span>bytes_to_polys_time = <span class="macro">start_timer!</span>(|| <span class="string">"encode payload bytes into polynomials"</span>);
+        <span class="kw">let </span>result = parallelizable_chunks(payload, domain_size * elem_bytes_len)
             .map(|chunk| {
-                <span class="self">Self</span>::polynomial_internal(
-                    eval_domain_ref,
-                    chunk_size,
-                    bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(chunk),
-                )
+                <span class="self">Self</span>::interpolate_polynomial(bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(chunk), domain_size)
             })
-            .collect()
+            .collect::&lt;VidResult&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;();
+        <span class="macro">end_timer!</span>(bytes_to_polys_time);
+        result
     }
 
-    <span class="comment">// This is an associated function, not a method, doesn't take in `self`, thus
-    // more friendly to cross-thread `Sync`, especially when on of the generic
-    // param of `Self` didn't implement `Sync`
-    </span><span class="kw">fn </span>polynomial_internal&lt;I&gt;(
-        domain_ref: <span class="kw-2">&amp;</span>Radix2EvaluationDomain&lt;KzgPoint&lt;E&gt;&gt;,
-        chunk_size: usize,
-        coeffs: I,
-    ) -&gt; KzgPolynomial&lt;E&gt;
+    <span class="doccomment">/// Consume `evals` and return a polynomial that interpolates `evals` on a
+    /// evaluation domain of size `domain_size`.
+    ///
+    /// Return an error if the length of `evals` exceeds `domain_size`.
+    ///
+    /// The degree-plus-1 of the returned polynomial is always a power of two
+    /// because:
+    ///
+    /// - We use FFT to interpolate, so `domain_size` is rounded up to the next
+    ///   power of two.
+    /// - [`KzgPolynomial`] implementation is stored in coefficient form.
+    ///
+    /// See https://github.com/EspressoSystems/jellyfish/issues/339
+    ///
+    /// Why is this method an associated function of `Self`? Because we want to
+    /// use a generic parameter of `Self`.
+    </span><span class="kw">fn </span>interpolate_polynomial&lt;I&gt;(evals: I, domain_size: usize) -&gt; VidResult&lt;KzgPolynomial&lt;E&gt;&gt;
     <span class="kw">where
         </span>I: Iterator,
         I::Item: Borrow&lt;KzgEval&lt;E&gt;&gt;,
@@ -1860,31 +1908,60 @@
         <span class="comment">// TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        </span><span class="kw">let </span><span class="kw-2">mut </span>coeffs_vec: Vec&lt;<span class="kw">_</span>&gt; = coeffs.map(|c| <span class="kw-2">*</span>c.borrow()).collect();
-        <span class="kw">let </span>pre_fft_len = coeffs_vec.len();
-        EvaluationDomain::ifft_in_place(domain_ref, <span class="kw-2">&amp;mut </span>coeffs_vec);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>evals_vec: Vec&lt;<span class="kw">_</span>&gt; = evals.map(|c| <span class="kw-2">*</span>c.borrow()).collect();
+        <span class="kw">let </span>pre_fft_len = evals_vec.len();
+        <span class="kw">if </span>pre_fft_len &gt; domain_size {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
+                <span class="string">"number of evals {} exceeds domain_size {}"</span>,
+                pre_fft_len,
+                domain_size
+            )));
+        }
+        <span class="kw">let </span>domain = <span class="self">Self</span>::eval_domain(domain_size)<span class="question-mark">?</span>;
 
-        <span class="comment">// sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.recovery_threshold * self.multiplicity
-        // then we were not given the correct number of coeffs. In that case
-        // coeffs.len() could be anything, so there's nothing to sanity check.
-        </span><span class="kw">if </span>pre_fft_len == chunk_size {
-            <span class="macro">assert_eq!</span>(coeffs_vec.len(), pre_fft_len);
+        domain.ifft_in_place(<span class="kw-2">&amp;mut </span>evals_vec);
+
+        <span class="comment">// sanity: the fft did not resize evals. If pre_fft_len &lt; domain_size
+        // then we were given too few evals, in which case there's nothing to
+        // sanity check.
+        </span><span class="kw">if </span>pre_fft_len == domain_size &amp;&amp; pre_fft_len != evals_vec.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
+                <span class="string">"unexpected output resize from {pre_fft_len} to {}"</span>,
+                evals_vec.len()
+            )));
         }
 
-        DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+        <span class="prelude-val">Ok</span>(DenseUVPolynomial::from_coefficients_vec(evals_vec))
     }
 
-    <span class="kw">fn </span>polynomial&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, coeffs: I) -&gt; KzgPolynomial&lt;E&gt;
-    <span class="kw">where
-        </span>I: Iterator,
-        I::Item: Borrow&lt;KzgEval&lt;E&gt;&gt;,
-    {
-        <span class="self">Self</span>::polynomial_internal(
-            <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain,
-            (<span class="self">self</span>.recovery_threshold * <span class="self">self</span>.multiplicity) <span class="kw">as </span>usize,
-            coeffs,
-        )
+    <span class="kw">fn </span>min_multiplicity(<span class="kw-2">&amp;</span><span class="self">self</span>, payload_byte_len: usize) -&gt; VidResult&lt;u32&gt; {
+        <span class="kw">let </span>elem_bytes_len = bytes_to_field::elem_byte_capacity::&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;();
+        <span class="kw">let </span>elems: u32 = payload_byte_len
+            .div_ceil(elem_bytes_len)
+            .try_into()
+            .map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">if </span><span class="self">self</span>.recovery_threshold * <span class="self">self</span>.max_multiplicity &lt; elems {
+            <span class="comment">// payload is large. no change in multiplicity needed.
+            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="self">self</span>.max_multiplicity);
+        }
+
+        <span class="comment">// payload is small: choose the smallest `m` such that `0 &lt; m &lt;
+        // multiplicity` and the entire payload fits into `m *
+        // recovery_threshold` elements.
+        </span><span class="kw">let </span>m = elems.div_ceil(<span class="self">self</span>.recovery_threshold.max(<span class="number">1</span>)).max(<span class="number">1</span>);
+
+        <span class="comment">// TODO TEMPORARY: enforce power-of-2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        //
+        // Round up to the nearest power of 2.
+        //
+        // After the above issue is fixed: delete the following code and return
+        // `m` from above.
+        </span><span class="kw">if </span>m &lt;= <span class="number">1 </span>{
+            <span class="prelude-val">Ok</span>(<span class="number">1</span>)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(<span class="number">1 </span>&lt;&lt; ((m - <span class="number">1</span>).ilog2() + <span class="number">1</span>))
+        }
     }
 
     <span class="doccomment">/// Derive a commitment from whatever data is needed.
@@ -1920,53 +1997,24 @@
         <span class="prelude-val">Ok</span>(hasher.finalize().into())
     }
 
-    <span class="doccomment">/// Assemble shares from evaluations and proofs.
-    ///
-    /// Each share contains (for multiplicity m):
-    /// 1. (m * num_poly) evaluations.
-    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
-    /// 3. m merkle tree membership proofs.
-    </span><span class="kw">fn </span>assemble_shares(
+    <span class="kw">fn </span>multi_open_domain(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        all_storage_node_evals: Vec&lt;Vec&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt;,
-        aggregate_proofs: Vec&lt;UnivariateKzgProof&lt;E&gt;&gt;,
-        all_evals_commit: KzgEvalsMerkleTree&lt;E, H&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Share&lt;E, H&gt;&gt;, VidError&gt;
-    <span class="kw">where
-        </span>E: Pairing,
-        H: HasherDigest,
-    {
-        <span class="comment">// compute share data
-        </span><span class="kw">let </span>share_data = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(i, (eval, proof))| {
-                <span class="kw">let </span>eval_proof = all_evals_commit
-                    .lookup(KzgEvalsMerkleTreeIndex::&lt;E, H&gt;::from(i <span class="kw">as </span>u64))
-                    .expect_ok()
-                    .map_err(vid)<span class="question-mark">?
-                    </span>.<span class="number">1</span>;
-                <span class="prelude-val">Ok</span>((eval, proof, eval_proof))
-            })
-            .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
+        multiplicity: u32,
+    ) -&gt; VidResult&lt;Radix2EvaluationDomain&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt; {
+        <span class="kw">let </span>chunk_size = usize::try_from(multiplicity * <span class="self">self</span>.recovery_threshold).map_err(vid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>code_word_size = usize::try_from(multiplicity * <span class="self">self</span>.num_storage_nodes).map_err(vid)<span class="question-mark">?</span>;
+        UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_eval_domain(chunk_size - <span class="number">1</span>, code_word_size)
+            .map_err(vid)
+    }
 
-        <span class="comment">// split share data into chunks of size multiplicity
-        </span><span class="prelude-val">Ok</span>(share_data
-            .into_iter()
-            .chunks(<span class="self">self</span>.multiplicity <span class="kw">as </span>usize)
-            .into_iter()
-            .enumerate()
-            .map(|(index, chunk)| {
-                <span class="kw">let </span>(evals, proofs, eval_proofs): (Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>, <span class="kw">_</span>) = chunk.multiunzip();
-                Share {
-                    index: index <span class="kw">as </span>u32,
-                    evals: evals.into_iter().flatten().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
-                    aggregate_proofs: proofs,
-                    eval_proofs,
-                }
-            })
-            .collect())
+    <span class="kw">fn </span>eval_domain(
+        domain_size: usize,
+    ) -&gt; VidResult&lt;Radix2EvaluationDomain&lt;&lt;E <span class="kw">as </span>Pairing&gt;::ScalarField&gt;&gt; {
+        Radix2EvaluationDomain::&lt;KzgPoint&lt;E&gt;&gt;::new(domain_size).ok_or_else(|| {
+            VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
+                <span class="string">"fail to construct domain of size {domain_size}"
+            </span>))
+        })
     }
 }
 

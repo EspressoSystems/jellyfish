@@ -568,6 +568,66 @@
 <a href="#568" id="568">568</a>
 <a href="#569" id="569">569</a>
 <a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2023 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -595,7 +655,7 @@
 };
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>ark_ec::pairing::Pairing;
-<span class="kw">use </span>ark_poly::EvaluationDomain;
+<span class="kw">use </span>ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 <span class="kw">use </span>ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 <span class="kw">use </span>ark_std::{format, ops::Range};
 <span class="kw">use </span>itertools::Itertools;
@@ -651,26 +711,38 @@
         check_range_nonempty_and_in_bounds(payload.len(), <span class="kw-2">&amp;</span>range)<span class="question-mark">?</span>;
 
         <span class="comment">// index conversion
-        </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
-        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
+        </span><span class="kw">let </span>multiplicity = <span class="self">self</span>.min_multiplicity(payload.len())<span class="question-mark">?</span>;
+        <span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
+        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem, multiplicity);
         <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
-        <span class="kw">let </span>range_poly_byte = <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len());
-        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
+        <span class="kw">let </span>range_poly_byte =
+            <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len(), multiplicity);
+        <span class="kw">let </span>offset_elem =
+            <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start, multiplicity);
         <span class="kw">let </span>final_points_range_end =
-            <span class="self">self</span>.final_poly_points_range_end(range_elem.len(), offset_elem);
+            <span class="self">self</span>.final_poly_points_range_end(range_elem.len(), offset_elem, multiplicity);
 
         <span class="comment">// prepare list of input points
-        // perf: we might not need all these points
-        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.eval_domain.elements().collect();
+        //
+        // perf: if payload is small enough to fit into a single polynomial then
+        // we don't need all the points in this domain.
+        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">Self</span>::eval_domain(
+            usize::try_from(<span class="self">self</span>.recovery_threshold * multiplicity).map_err(vid)<span class="question-mark">?</span>,
+        )<span class="question-mark">?
+        </span>.elements()
+        .collect();
 
         <span class="kw">let </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(<span class="kw-2">&amp;</span>payload[range_poly_byte]);
         <span class="kw">let </span><span class="kw-2">mut </span>proofs = Vec::with_capacity(range_poly.len() * points.len());
         <span class="kw">for </span>(i, evals_iter) <span class="kw">in </span>elems_iter
-            .chunks(<span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
+            .chunks((<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize)
             .into_iter()
             .enumerate()
         {
-            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
+            <span class="kw">let </span>poly = <span class="self">Self</span>::interpolate_polynomial(
+                evals_iter,
+                (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize,
+            )<span class="question-mark">?</span>;
             <span class="kw">let </span>points_range = Range {
                 <span class="comment">// first polynomial? skip to the start of the proof range
                 </span>start: <span class="kw">if </span>i == <span class="number">0 </span>{ offset_elem } <span class="kw">else </span>{ <span class="number">0 </span>},
@@ -722,14 +794,24 @@
 
         <span class="comment">// index conversion
         </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>stmt.range);
-        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
-        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
-        <span class="kw">let </span>final_points_range_end =
-            <span class="self">self</span>.final_poly_points_range_end(range_elem.len(), offset_elem);
+        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem, stmt.common.multiplicity);
+        <span class="kw">let </span>offset_elem =
+            <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start, stmt.common.multiplicity);
+        <span class="kw">let </span>final_points_range_end = <span class="self">self</span>.final_poly_points_range_end(
+            range_elem.len(),
+            offset_elem,
+            stmt.common.multiplicity,
+        );
 
         <span class="comment">// prepare list of input points
-        // perf: we might not need all these points
-        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">self</span>.eval_domain.elements().collect();
+        //
+        // perf: if payload is small enough to fit into a single polynomial then
+        // we don't need all the points in this domain.
+        </span><span class="kw">let </span>points: Vec&lt;<span class="kw">_</span>&gt; = <span class="self">Self</span>::eval_domain(
+            usize::try_from(<span class="self">self</span>.recovery_threshold * stmt.common.multiplicity).map_err(vid)<span class="question-mark">?</span>,
+        )<span class="question-mark">?
+        </span>.elements()
+        .collect();
 
         <span class="comment">// verify proof
         </span><span class="kw">let </span><span class="kw-2">mut </span>cur_proof_index = <span class="number">0</span>;
@@ -788,11 +870,14 @@
         check_range_nonempty_and_in_bounds(payload.len(), <span class="kw-2">&amp;</span>range)<span class="question-mark">?</span>;
 
         <span class="comment">// index conversion
-        </span><span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
-        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem);
+        </span><span class="kw">let </span>multiplicity = <span class="self">self</span>.min_multiplicity(payload.len())<span class="question-mark">?</span>;
+        <span class="kw">let </span>range_elem = <span class="self">self</span>.range_byte_to_elem(<span class="kw-2">&amp;</span>range);
+        <span class="kw">let </span>range_poly = <span class="self">self</span>.range_elem_to_poly(<span class="kw-2">&amp;</span>range_elem, multiplicity);
         <span class="kw">let </span>range_elem_byte = <span class="self">self</span>.range_elem_to_byte_clamped(<span class="kw-2">&amp;</span>range_elem, payload.len());
-        <span class="kw">let </span>range_poly_byte = <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len());
-        <span class="kw">let </span>offset_elem = <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start);
+        <span class="kw">let </span>range_poly_byte =
+            <span class="self">self</span>.range_poly_to_byte_clamped(<span class="kw-2">&amp;</span>range_poly, payload.len(), multiplicity);
+        <span class="kw">let </span>offset_elem =
+            <span class="self">self</span>.offset_poly_to_elem(range_poly.start, range_elem.start, multiplicity);
 
         <span class="comment">// compute the prefix and suffix elems
         </span><span class="kw">let </span><span class="kw-2">mut </span>elems_iter = bytes_to_field::&lt;<span class="kw">_</span>, KzgEval&lt;E&gt;&gt;(payload[range_poly_byte].iter());
@@ -815,7 +900,7 @@
         <span class="self">Self</span>::check_stmt_consistency(<span class="kw-2">&amp;</span>stmt)<span class="question-mark">?</span>;
 
         <span class="comment">// index conversion
-        </span><span class="kw">let </span>range_poly = <span class="self">self</span>.range_byte_to_poly(<span class="kw-2">&amp;</span>stmt.range);
+        </span><span class="kw">let </span>range_poly = <span class="self">self</span>.range_byte_to_poly(<span class="kw-2">&amp;</span>stmt.range, stmt.common.multiplicity);
 
         <span class="comment">// rebuild the needed payload elements from statement and proof
         </span><span class="kw">let </span>elems_iter = proof
@@ -830,14 +915,16 @@
                     .chain(proof.suffix_bytes.iter()),
             ))
             .chain(proof.suffix_elems.iter().cloned());
-
         <span class="comment">// rebuild the poly commits, check against `common`
         </span><span class="kw">for </span>(commit_index, evals_iter) <span class="kw">in </span>range_poly.into_iter().zip(
             elems_iter
-                .chunks(<span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
+                .chunks((<span class="self">self</span>.recovery_threshold * stmt.common.multiplicity) <span class="kw">as </span>usize)
                 .into_iter(),
         ) {
-            <span class="kw">let </span>poly = <span class="self">self</span>.polynomial(evals_iter);
+            <span class="kw">let </span>poly = <span class="self">Self</span>::interpolate_polynomial(
+                evals_iter,
+                (stmt.common.multiplicity * <span class="self">self</span>.recovery_threshold) <span class="kw">as </span>usize,
+            )<span class="question-mark">?</span>;
             <span class="kw">let </span>poly_commit = UnivariateKzgPCS::commit(<span class="kw-2">&amp;</span><span class="self">self</span>.ck, <span class="kw-2">&amp;</span>poly).map_err(vid)<span class="question-mark">?</span>;
             <span class="kw">if </span>poly_commit != stmt.common.poly_commits[commit_index] {
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Err</span>(()));
@@ -865,34 +952,49 @@
             ..result
         }
     }
-    <span class="kw">fn </span>range_elem_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
-        range_coarsen(range, <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize)
+    <span class="kw">fn </span>range_elem_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, multiplicity: u32) -&gt; Range&lt;usize&gt; {
+        range_coarsen(range, (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize)
     }
-    <span class="kw">fn </span>range_byte_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;) -&gt; Range&lt;usize&gt; {
+    <span class="kw">fn </span>range_byte_to_poly(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, multiplicity: u32) -&gt; Range&lt;usize&gt; {
         range_coarsen(
             range,
-            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         )
     }
-    <span class="kw">fn </span>range_poly_to_byte_clamped(<span class="kw-2">&amp;</span><span class="self">self</span>, range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;, len: usize) -&gt; Range&lt;usize&gt; {
+    <span class="kw">fn </span>range_poly_to_byte_clamped(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range: <span class="kw-2">&amp;</span>Range&lt;usize&gt;,
+        len: usize,
+        multiplicity: u32,
+    ) -&gt; Range&lt;usize&gt; {
         <span class="kw">let </span>result = range_refine(
             range,
-            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         );
         Range {
             end: ark_std::cmp::min(result.end, len),
             ..result
         }
     }
-    <span class="kw">fn </span>offset_poly_to_elem(<span class="kw-2">&amp;</span><span class="self">self</span>, range_poly_start: usize, range_elem_start: usize) -&gt; usize {
+    <span class="kw">fn </span>offset_poly_to_elem(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range_poly_start: usize,
+        range_elem_start: usize,
+        multiplicity: u32,
+    ) -&gt; usize {
         <span class="kw">let </span>start_poly_byte = index_refine(
             range_poly_start,
-            <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
+            (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize * elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;(),
         );
         range_elem_start - index_coarsen(start_poly_byte, elem_byte_capacity::&lt;KzgEval&lt;E&gt;&gt;())
     }
-    <span class="kw">fn </span>final_poly_points_range_end(<span class="kw-2">&amp;</span><span class="self">self</span>, range_elem_len: usize, offset_elem: usize) -&gt; usize {
-        (range_elem_len + offset_elem - <span class="number">1</span>) % <span class="self">self</span>.recovery_threshold <span class="kw">as </span>usize + <span class="number">1
+    <span class="kw">fn </span>final_poly_points_range_end(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        range_elem_len: usize,
+        offset_elem: usize,
+        multiplicity: u32,
+    ) -&gt; usize {
+        (range_elem_len + offset_elem - <span class="number">1</span>) % (<span class="self">self</span>.recovery_threshold * multiplicity) <span class="kw">as </span>usize + <span class="number">1
     </span>}
 
     <span class="kw">fn </span>check_stmt_consistency(stmt: <span class="kw-2">&amp;</span>Statement&lt;<span class="self">Self</span>&gt;) -&gt; VidResult&lt;()&gt; {
@@ -973,17 +1075,24 @@
         H: HasherDigest,
     {
         <span class="comment">// play with these items
-        </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes) = (<span class="number">4</span>, <span class="number">6</span>);
+        </span><span class="kw">let </span>(recovery_threshold, num_storage_nodes, max_multiplicity) = (<span class="number">4</span>, <span class="number">6</span>, <span class="number">2</span>);
         <span class="kw">let </span>num_polys = <span class="number">3</span>;
         <span class="kw">let </span>num_random_cases = <span class="number">20</span>;
 
         <span class="comment">// more items as a function of the above
-        </span><span class="kw">let </span>payload_elems_len = num_polys * recovery_threshold <span class="kw">as </span>usize;
+        </span><span class="kw">let </span>poly_elems_len = recovery_threshold <span class="kw">as </span>usize * max_multiplicity <span class="kw">as </span>usize;
+        <span class="kw">let </span>payload_elems_len = num_polys * poly_elems_len;
+        <span class="kw">let </span>poly_bytes_len = poly_elems_len * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span>payload_bytes_base_len = payload_elems_len * elem_byte_capacity::&lt;E::ScalarField&gt;();
-        <span class="kw">let </span>poly_bytes_len = recovery_threshold <span class="kw">as </span>usize * elem_byte_capacity::&lt;E::ScalarField&gt;();
         <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
         <span class="kw">let </span>srs = init_srs(payload_elems_len, <span class="kw-2">&amp;mut </span>rng);
-        <span class="kw">let </span><span class="kw-2">mut </span>advz = Advz::&lt;E, H&gt;::new(num_storage_nodes, recovery_threshold, srs).unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>advz = Advz::&lt;E, H&gt;::with_multiplicity(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
+        .unwrap();
 
         <span class="comment">// TEST: different payload byte lengths
         </span><span class="kw">let </span>payload_byte_len_noise_cases = <span class="macro">vec!</span>[<span class="number">0</span>, poly_bytes_len / <span class="number">2</span>, poly_bytes_len - <span class="number">1</span>];
@@ -1014,9 +1123,15 @@
         };
         <span class="kw">let </span>all_cases = [(edge_cases, <span class="string">"edge"</span>), (random_cases, <span class="string">"rand"</span>)];
 
+        <span class="comment">// at least one test case should have nontrivial multiplicity
+        </span><span class="kw">let </span><span class="kw-2">mut </span>nontrivial_multiplicity = <span class="bool-val">false</span>;
+
         <span class="kw">for </span>payload_len_case <span class="kw">in </span>payload_len_cases {
             <span class="kw">let </span>payload = init_random_payload(payload_len_case, <span class="kw-2">&amp;mut </span>rng);
             <span class="kw">let </span>d = advz.disperse(<span class="kw-2">&amp;</span>payload).unwrap();
+            <span class="kw">if </span>d.common.multiplicity &gt; <span class="number">1 </span>{
+                nontrivial_multiplicity = <span class="bool-val">true</span>;
+            }
             <span class="macro">println!</span>(<span class="string">"payload byte len case: {}"</span>, payload.len());
 
             <span class="kw">for </span>cases <span class="kw">in </span>all_cases.iter() {
@@ -1082,6 +1197,11 @@
                 </span>}
             }
         }
+
+        <span class="macro">assert!</span>(
+            nontrivial_multiplicity,
+            <span class="string">"at least one payload size should use multiplicity &gt; 1"
+        </span>);
 
         <span class="kw">fn </span>make_edge_cases(min: usize, max: usize) -&gt; Vec&lt;Range&lt;usize&gt;&gt; {
             <span class="macro">vec!</span>[
