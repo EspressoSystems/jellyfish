@@ -336,6 +336,29 @@ where
         };
         Ok(elem)
     }
+
+    /// Copy-pasted from [`Share::extract_leaf`] except with mutable return
+    /// value.
+    ///
+    /// TODO How to write this function without copy-pasting code??
+    #[cfg(test)]
+    fn extract_leaf_mut(
+        proof: &mut KzgEvalsMerkleTreeProof<E, H>,
+    ) -> VidResult<&mut Vec<KzgEval<E>>> {
+        // `eval_proof.proof` is a`Vec<MerkleNode>` with length >= 1
+        // whose first item always has variant `Leaf`. See
+        // `MerkleProof::verify_membership_proof`.
+        let merkle_node = proof
+            .proof
+            .get_mut(0)
+            .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?;
+        let MerkleNode::Leaf { elem, .. } = merkle_node else {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "expect MerkleNode::Leaf variant"
+            )));
+        };
+        Ok(elem)
+    }
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
