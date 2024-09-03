@@ -83,15 +83,9 @@ where
 {
     recovery_threshold: u32,
     num_storage_nodes: u32,
-    multiplicity: u32,
+    max_multiplicity: u32,
     ck: KzgProverParam<E>,
     vk: KzgVerifierParam<E>,
-    multi_open_domain: Radix2EvaluationDomain<KzgPoint<E>>,
-
-    // TODO might be able to eliminate this field and instead use
-    // `EvaluationDomain::reindex_by_subdomain()` on `multi_open_domain`
-    // but that method consumes `other` and its doc is unclear.
-    eval_domain: Radix2EvaluationDomain<KzgPoint<E>>,
 
     // tuple of
     // - reference to the SRS/ProverParam loaded to GPU
@@ -131,15 +125,20 @@ where
     ) -> VidResult<Self> {
         // TODO intelligent choice of multiplicity
         // https://github.com/EspressoSystems/jellyfish/issues/534
-        let multiplicity = 1;
+        let max_multiplicity = 1;
 
-        Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+        Self::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
     }
 
     pub(crate) fn with_multiplicity_internal(
         num_storage_nodes: u32,  // n (code rate: r = k/n)
         recovery_threshold: u32, // k
-        multiplicity: u32,       // batch m chunks, keep the rate r = (m*k)/(m*n)
+        max_multiplicity: u32,   // batch m chunks, keep the rate r = (m*k)/(m*n)
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         if num_storage_nodes < recovery_threshold {
@@ -149,49 +148,29 @@ where
             )));
         }
 
-        if !multiplicity.is_power_of_two() {
+        // TODO TEMPORARY: enforce power-of-2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        if !recovery_threshold.is_power_of_two() {
             return Err(VidError::Argument(format!(
-                "multiplicity {multiplicity} should be a power of two"
+                "recovery_threshold {recovery_threshold} should be a power of two"
+            )));
+        }
+        if !max_multiplicity.is_power_of_two() {
+            return Err(VidError::Argument(format!(
+                "max_multiplicity {max_multiplicity} should be a power of two"
             )));
         }
 
-        // erasure code params
-        let chunk_size = multiplicity * recovery_threshold; // message length m
-        let code_word_size = multiplicity * num_storage_nodes; // code word length n
-        let poly_degree = chunk_size - 1;
-
-        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, poly_degree as usize).map_err(vid)?;
-        let multi_open_domain = UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(
-            poly_degree as usize,
-            code_word_size as usize,
-        )
-        .map_err(vid)?;
-        let eval_domain = Radix2EvaluationDomain::new(chunk_size as usize).ok_or_else(|| {
-            VidError::Internal(anyhow::anyhow!(
-                "fail to construct domain of size {}",
-                chunk_size
-            ))
-        })?;
-
-        // TODO TEMPORARY: enforce power-of-2 chunk size
-        // Remove this restriction after we get KZG in eval form
-        // https://github.com/EspressoSystems/jellyfish/issues/339
-        if chunk_size as usize != eval_domain.size() {
-            return Err(VidError::Argument(format!(
-                "recovery_threshold {} currently unsupported, round to {} instead",
-                chunk_size,
-                eval_domain.size()
-            )));
-        }
+        let supported_degree =
+            usize::try_from(max_multiplicity * recovery_threshold - 1).map_err(vid)?;
+        let (ck, vk) = UnivariateKzgPCS::trim_fft_size(srs, supported_degree).map_err(vid)?;
 
         Ok(Self {
             recovery_threshold,
             num_storage_nodes,
-            multiplicity,
+            max_multiplicity,
             ck,
             vk,
-            multi_open_domain,
-            eval_domain,
             srs_on_gpu_and_cuda_stream: None,
             _pd: Default::default(),
         })
@@ -215,7 +194,7 @@ where
     /// # Errors
     /// Return [`VidError::Argument`] if
     /// - `num_storage_nodes < recovery_threshold`
-    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `recovery_threshold` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     pub fn new(
         num_storage_nodes: u32,
         recovery_threshold: u32,
@@ -224,21 +203,28 @@ where
         Self::new_internal(num_storage_nodes, recovery_threshold, srs)
     }
 
-    /// Like [`Advz::new`] except with a `multiplicity` arg.
+    /// Like [`Advz::new`] except with a `max_multiplicity` arg.
     ///
-    /// `multiplicity` is an implementation-specific optimization arg.
-    /// Each storage node gets `multiplicity` evaluations per polynomial.
+    /// `max_multiplicity` is an implementation-specific optimization arg.
+    /// Each storage node gets up to `max_multiplicity` evaluations per
+    /// polynomial. The actual multiplicity used will be the smallest value m
+    /// such that payload can fit (payload_len <= m * recovery_threshold).
     ///
     /// # Errors
     /// In addition to [`Advz::new`], return [`VidError::Argument`] if
-    /// - TEMPORARY `multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/339)
+    /// - TEMPORARY `max_multiplicity` is not a power of two [github issue](https://github.com/EspressoSystems/jellyfish/issues/668)
     pub fn with_multiplicity(
         num_storage_nodes: u32,
         recovery_threshold: u32,
-        multiplicity: u32,
+        max_multiplicity: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
-        Self::with_multiplicity_internal(num_storage_nodes, recovery_threshold, multiplicity, srs)
+        Self::with_multiplicity_internal(
+            num_storage_nodes,
+            recovery_threshold,
+            max_multiplicity,
+            srs,
+        )
     }
 }
 
@@ -262,13 +248,13 @@ where
     pub fn with_multiplicity(
         num_storage_nodes: u32,
         recovery_threshold: u32,
-        multiplicity: u32,
+        max_multiplicity: u32,
         srs: impl Borrow<KzgSrs<E>>,
     ) -> VidResult<Self> {
         let mut advz = Self::with_multiplicity_internal(
             num_storage_nodes,
             recovery_threshold,
-            multiplicity,
+            max_multiplicity,
             srs,
         )?;
         advz.init_gpu_srs()?;
@@ -281,7 +267,7 @@ where
             self.ck.powers_of_g.len() - 1,
         )
         .map_err(vid)?;
-        self.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().unwrap()));
+        self.srs_on_gpu_and_cuda_stream = Some((srs_on_gpu, warmup_new_stream().map_err(vid)?));
         Ok(())
     }
 }
@@ -307,7 +293,7 @@ where
     evals: Vec<KzgEval<E>>,
 
     #[serde(with = "canonical")]
-    // aggretate_proofs.len() equals self.multiplicity
+    // aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
@@ -376,12 +362,10 @@ where
         &mut self,
         polys: &[DensePolynomial<E::ScalarField>],
     ) -> VidResult<Vec<KzgCommit<E>>> {
-        // let mut srs_on_gpu = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap().0;
-        // let stream = &self.srs_on_gpu_and_cuda_stream.as_ref().unwrap().1;
         if polys.is_empty() {
             return Ok(vec![]);
         }
-        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().unwrap(); // safe by construction
+        let (srs_on_gpu, stream) = self.srs_on_gpu_and_cuda_stream.as_mut().map_err(vid)?; // safe by construction
         <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_batch_commit_with_loaded_prover_param(
             srs_on_gpu, polys, stream,
         )
@@ -407,9 +391,10 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload);
-        end_timer!(bytes_to_polys_time);
+        let payload_byte_len = payload.len().try_into().map_err(vid)?;
+        let multiplicity = self.min_multiplicity(payload_byte_len)?;
+        let chunk_size = multiplicity * self.recovery_threshold;
+        let polys = self.bytes_to_polys(payload)?;
 
         let poly_commits_time = start_timer!(|| "batch poly commit");
         let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
@@ -423,82 +408,10 @@ where
         B: AsRef<[u8]>,
     {
         let payload = payload.as_ref();
-        let payload_byte_len = payload.len().try_into().map_err(vid)?;
-        let disperse_time = start_timer!(|| format!(
-            "VID disperse {} payload bytes to {} nodes",
-            payload_byte_len, self.num_storage_nodes
-        ));
-        let _chunk_size = self.multiplicity * self.recovery_threshold;
-        let code_word_size = self.multiplicity * self.num_storage_nodes;
+        let polys = self.bytes_to_polys(payload)?;
+        let poly_commits = <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?;
 
-        // partition payload into polynomial coefficients
-        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
-        let polys = self.bytes_to_polys(payload);
-        end_timer!(bytes_to_polys_time);
-
-        // evaluate polynomials
-        let all_storage_node_evals_timer = start_timer!(|| format!(
-            "compute all storage node evals for {} polynomials with {} coefficients",
-            polys.len(),
-            _chunk_size
-        ));
-        let all_storage_node_evals = self.evaluate_polys(&polys)?;
-        end_timer!(all_storage_node_evals_timer);
-
-        // vector commitment to polynomial evaluations
-        let all_evals_commit_timer =
-            start_timer!(|| "compute merkle root of all storage node evals");
-        let all_evals_commit =
-            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
-        end_timer!(all_evals_commit_timer);
-
-        let common_timer = start_timer!(|| format!("compute {} KZG commitments", polys.len()));
-        let common = Common {
-            poly_commits: <Self as MaybeGPU<E>>::kzg_batch_commit(self, &polys)?,
-            all_evals_digest: all_evals_commit.commitment().digest(),
-            payload_byte_len,
-            num_storage_nodes: self.num_storage_nodes,
-            multiplicity: self.multiplicity,
-        };
-        end_timer!(common_timer);
-
-        let commit = Self::derive_commit(
-            &common.poly_commits,
-            payload_byte_len,
-            self.num_storage_nodes,
-        )?;
-        let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
-
-        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
-        // evaluation of the polynomial whose coefficients are polynomials and whose
-        // input point is the pseudorandom scalar.
-        let aggregate_poly =
-            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
-
-        let agg_proofs_timer = start_timer!(|| format!(
-            "compute aggregate proofs for {} storage nodes",
-            self.num_storage_nodes
-        ));
-        let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
-            &self.ck,
-            &aggregate_poly,
-            code_word_size as usize,
-            &self.multi_open_domain,
-        )
-        .map_err(vid)?;
-        end_timer!(agg_proofs_timer);
-
-        let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares =
-            self.assemble_shares(all_storage_node_evals, aggregate_proofs, all_evals_commit)?;
-        end_timer!(assemblage_timer);
-        end_timer!(disperse_time);
-
-        Ok(VidDisperse {
-            shares,
-            common,
-            commit,
-        })
+        self.disperse_with_polys_and_commits(payload, polys, poly_commits)
     }
 
     fn verify_share(
@@ -514,21 +427,22 @@ where
                 common.num_storage_nodes, self.num_storage_nodes
             )));
         }
-        if common.multiplicity != self.multiplicity {
+        let multiplicity =
+            self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?)?;
+        if common.multiplicity != multiplicity {
             return Err(VidError::Argument(format!(
-                "common multiplicity {} differs from self {}",
-                common.multiplicity, self.multiplicity
+                "common multiplicity {} differs from derived min {}",
+                common.multiplicity, multiplicity
             )));
         }
-        let multiplicity: usize = common.multiplicity.try_into().map_err(vid)?;
-        if share.evals.len() / multiplicity != common.poly_commits.len() {
+        if share.evals.len() / multiplicity as usize != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}",
                 share.evals.len(), multiplicity,
                 common.poly_commits.len()
             )));
         }
-        if share.eval_proofs.len() != multiplicity {
+        if share.eval_proofs.len() != multiplicity as usize {
             return Err(VidError::Argument(format!(
                 "number of eval_proofs {} differs from common multiplicity {}",
                 share.eval_proofs.len(),
@@ -543,10 +457,10 @@ where
         }
 
         // verify eval proofs
-        for i in 0..self.multiplicity {
+        for i in 0..multiplicity {
             if KzgEvalsMerkleTree::<E, H>::verify(
                 common.all_evals_digest,
-                &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * self.multiplicity) + i),
+                &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * multiplicity) + i),
                 &share.eval_proofs[i as usize],
             )
             .map_err(vid)?
@@ -577,8 +491,9 @@ where
         //
         // some boilerplate needed to accommodate builds without `parallel`
         // feature.
-        let multiplicities = Vec::from_iter((0..self.multiplicity as usize));
+        let multiplicities = Vec::from_iter((0..multiplicity as usize));
         let polys_len = common.poly_commits.len();
+        let multi_open_domain = self.multi_open_domain(multiplicity)?;
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
@@ -599,9 +514,7 @@ where
             Ok(UnivariateKzgPCS::verify(
                 &self.vk,
                 &aggregate_poly_commit,
-                &self
-                    .multi_open_domain
-                    .element((share.index as usize * multiplicity) + i),
+                &multi_open_domain.element((share.index * multiplicity) as usize + i),
                 &aggregate_eval,
                 &share.aggregate_proofs[*i],
             )
@@ -625,6 +538,7 @@ where
     }
 
     fn recover_payload(&self, shares: &[Self::Share], common: &Self::Common) -> VidResult<Vec<u8>> {
+        // check args
         if shares.len() < self.recovery_threshold as usize {
             return Err(VidError::Argument(format!(
                 "not enough shares {}, expected at least {}",
@@ -639,7 +553,7 @@ where
             )));
         }
 
-        // all shares must have equal evals len
+        // check args: all shares must have equal evals len
         let num_evals = shares
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
@@ -658,26 +572,29 @@ where
                 share.evals.len()
             )));
         }
-        if num_evals != self.multiplicity as usize * common.poly_commits.len() {
+        if num_evals != common.multiplicity as usize * common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "num_evals should be (multiplicity * poly_commits): {} but is instead: {}",
-                self.multiplicity as usize * common.poly_commits.len(),
+                common.multiplicity as usize * common.poly_commits.len(),
                 num_evals,
             )));
         }
-        let chunk_size = self.multiplicity * self.recovery_threshold;
-        let num_polys = num_evals / self.multiplicity as usize;
 
-        let elems_capacity = num_polys * chunk_size as usize;
+        // convenience quantities
+        let chunk_size =
+            usize::try_from(common.multiplicity * self.recovery_threshold).map_err(vid)?;
+        let num_polys = common.poly_commits.len();
+        let elems_capacity = num_polys * chunk_size;
+        let fft_domain = Self::eval_domain(chunk_size)?;
+
         let mut elems = Vec::with_capacity(elems_capacity);
-
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
             for share in shares {
                 // extract all evaluations for polynomial p from the share
-                for m in 0..self.multiplicity as usize {
+                for m in 0..common.multiplicity as usize {
                     evals.push((
-                        (share.index * self.multiplicity) as usize + m,
+                        (share.index * common.multiplicity) as usize + m,
                         share.evals[(m * num_polys) + p],
                     ))
                 }
@@ -685,14 +602,14 @@ where
             let mut coeffs = reed_solomon_erasure_decode_rou(
                 mem::take(&mut evals),
                 chunk_size as usize,
-                &self.multi_open_domain,
+                &self.multi_open_domain(common.multiplicity)?,
             )
             .map_err(vid)?;
 
             // TODO TEMPORARY: use FFT to encode polynomials in eval form
             // Remove these FFTs after we get KZG in eval form
             // https://github.com/EspressoSystems/jellyfish/issues/339
-            self.eval_domain.fft_in_place(&mut coeffs);
+            fft_domain.fft_in_place(&mut coeffs);
 
             elems.append(&mut coeffs);
         }
@@ -738,48 +655,142 @@ where
     SrsRef: Sync,
     AdvzInternal<E, H, SrsRef>: MaybeGPU<E>,
 {
-    fn evaluate_polys(
+    fn disperse_with_polys_and_commits(
         &self,
-        polys: &[DensePolynomial<<E as Pairing>::ScalarField>],
-    ) -> Result<Vec<Vec<<E as Pairing>::ScalarField>>, VidError>
-    where
-        E: Pairing,
-        H: HasherDigest,
-    {
-        let code_word_size = (self.num_storage_nodes * self.multiplicity) as usize;
-        let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
-        // this is to avoid `SrsRef` not implementing `Sync` problem,
-        // instead of sending entire `self` cross thread, we only send a ref which is
-        // Sync
-        let multi_open_domain_ref = &self.multi_open_domain;
+        payload: &[u8],
+        polys: Vec<DensePolynomial<<E as Pairing>::ScalarField>>,
+        poly_commits: Vec<KzgCommit<E>>,
+    ) -> VidResult<VidDisperse<Self>> {
+        let payload_byte_len = payload.len().try_into().map_err(vid)?;
+        let disperse_time = start_timer!(|| format!(
+            "VID disperse {} payload bytes to {} nodes",
+            payload_byte_len, self.num_storage_nodes
+        ));
+        let multiplicity = self.min_multiplicity(payload.len())?;
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
+        let multi_open_domain = self.multi_open_domain(multiplicity)?;
 
-        let all_poly_evals = parallelizable_slice_iter(polys)
-            .map(|poly| {
-                UnivariateKzgPCS::<E>::multi_open_rou_evals(
-                    poly,
-                    code_word_size,
-                    multi_open_domain_ref,
-                )
-                .map_err(vid)
-            })
-            .collect::<Result<Vec<_>, VidError>>()?;
+        // evaluate polynomials
+        let all_storage_node_evals_timer = start_timer!(|| format!(
+            "compute all storage node evals for {} polynomials with {} coefficients",
+            polys.len(),
+            multiplicity * self.recovery_threshold
+        ));
+        let all_storage_node_evals = {
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+            let all_poly_evals = parallelizable_slice_iter(&polys)
+                .map(|poly| {
+                    UnivariateKzgPCS::<E>::multi_open_rou_evals(
+                        poly,
+                        code_word_size,
+                        &multi_open_domain,
+                    )
+                    .map_err(vid)
+                })
+                .collect::<Result<Vec<_>, VidError>>()?;
 
-        for poly_evals in all_poly_evals {
-            for (storage_node_evals, poly_eval) in all_storage_node_evals
-                .iter_mut()
-                .zip(poly_evals.into_iter())
-            {
-                storage_node_evals.push(poly_eval);
+            for poly_evals in all_poly_evals {
+                for (storage_node_evals, poly_eval) in all_storage_node_evals
+                    .iter_mut()
+                    .zip(poly_evals.into_iter())
+                {
+                    storage_node_evals.push(poly_eval);
+                }
             }
-        }
 
-        // sanity checks
-        assert_eq!(all_storage_node_evals.len(), code_word_size);
-        for storage_node_evals in all_storage_node_evals.iter() {
-            assert_eq!(storage_node_evals.len(), polys.len());
-        }
+            // sanity checks
+            assert_eq!(all_storage_node_evals.len(), code_word_size);
+            for storage_node_evals in all_storage_node_evals.iter() {
+                assert_eq!(storage_node_evals.len(), polys.len());
+            }
 
-        Ok(all_storage_node_evals)
+            all_storage_node_evals
+        };
+        end_timer!(all_storage_node_evals_timer);
+
+        // vector commitment to polynomial evaluations
+        let all_evals_commit_timer =
+            start_timer!(|| "compute merkle root of all storage node evals");
+        let all_evals_commit =
+            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
+        end_timer!(all_evals_commit_timer);
+
+        let common = Common {
+            poly_commits,
+            all_evals_digest: all_evals_commit.commitment().digest(),
+            payload_byte_len,
+            num_storage_nodes: self.num_storage_nodes,
+            multiplicity,
+        };
+
+        let commit = Self::derive_commit(
+            &common.poly_commits,
+            payload_byte_len,
+            self.num_storage_nodes,
+        )?;
+        let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
+
+        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
+        // evaluation of the polynomial whose coefficients are polynomials and whose
+        // input point is the pseudorandom scalar.
+        let aggregate_poly =
+            polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
+
+        let agg_proofs_timer = start_timer!(|| format!(
+            "compute aggregate proofs for {} storage nodes",
+            self.num_storage_nodes
+        ));
+        let aggregate_proofs = UnivariateKzgPCS::multi_open_rou_proofs(
+            &self.ck,
+            &aggregate_poly,
+            code_word_size as usize,
+            &multi_open_domain,
+        )
+        .map_err(vid)?;
+        end_timer!(agg_proofs_timer);
+
+        let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
+        let shares: Vec<_> = {
+            // compute share data
+            let share_data = all_storage_node_evals
+                .into_iter()
+                .zip(aggregate_proofs)
+                .enumerate()
+                .map(|(i, (eval, proof))| {
+                    let eval_proof = all_evals_commit
+                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
+                        .expect_ok()
+                        .map_err(vid)?
+                        .1;
+                    Ok((eval, proof, eval_proof))
+                })
+                .collect::<Result<Vec<_>, VidError>>()?;
+
+            // split share data into chunks of size multiplicity
+            share_data
+                .into_iter()
+                .chunks(multiplicity as usize)
+                .into_iter()
+                .enumerate()
+                .map(|(index, chunk)| {
+                    let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
+                    Share {
+                        index: index as u32,
+                        evals: evals.into_iter().flatten().collect::<Vec<_>>(),
+                        aggregate_proofs: proofs,
+                        eval_proofs,
+                    }
+                })
+                .collect()
+        };
+        end_timer!(assemblage_timer);
+        end_timer!(disperse_time);
+
+        Ok(VidDisperse {
+            shares,
+            common,
+            commit,
+        })
     }
 
     fn pseudorandom_scalar(
@@ -809,33 +820,46 @@ where
         Ok(PrimeField::from_le_bytes_mod_order(&hasher.finalize()))
     }
 
-    fn bytes_to_polys(&self, payload: &[u8]) -> Vec<DensePolynomial<<E as Pairing>::ScalarField>>
+    /// Partition payload into polynomial coefficients
+    fn bytes_to_polys(
+        &self,
+        payload: &[u8],
+    ) -> VidResult<Vec<DensePolynomial<<E as Pairing>::ScalarField>>>
     where
         E: Pairing,
     {
-        let chunk_size = (self.recovery_threshold * self.multiplicity) as usize;
         let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
-        let eval_domain_ref = &self.eval_domain;
+        let domain_size =
+            usize::try_from(self.min_multiplicity(payload.len())? * self.recovery_threshold)
+                .map_err(vid)?;
 
-        parallelizable_chunks(payload, chunk_size * elem_bytes_len)
+        let bytes_to_polys_time = start_timer!(|| "encode payload bytes into polynomials");
+        let result = parallelizable_chunks(payload, domain_size * elem_bytes_len)
             .map(|chunk| {
-                Self::polynomial_internal(
-                    eval_domain_ref,
-                    chunk_size,
-                    bytes_to_field::<_, KzgEval<E>>(chunk),
-                )
+                Self::interpolate_polynomial(bytes_to_field::<_, KzgEval<E>>(chunk), domain_size)
             })
-            .collect()
+            .collect::<VidResult<Vec<_>>>();
+        end_timer!(bytes_to_polys_time);
+        result
     }
 
-    // This is an associated function, not a method, doesn't take in `self`, thus
-    // more friendly to cross-thread `Sync`, especially when on of the generic
-    // param of `Self` didn't implement `Sync`
-    fn polynomial_internal<I>(
-        domain_ref: &Radix2EvaluationDomain<KzgPoint<E>>,
-        chunk_size: usize,
-        coeffs: I,
-    ) -> KzgPolynomial<E>
+    /// Consume `evals` and return a polynomial that interpolates `evals` on a
+    /// evaluation domain of size `domain_size`.
+    ///
+    /// Return an error if the length of `evals` exceeds `domain_size`.
+    ///
+    /// The degree-plus-1 of the returned polynomial is always a power of two
+    /// because:
+    ///
+    /// - We use FFT to interpolate, so `domain_size` is rounded up to the next
+    ///   power of two.
+    /// - [`KzgPolynomial`] implementation is stored in coefficient form.
+    ///
+    /// See https://github.com/EspressoSystems/jellyfish/issues/339
+    ///
+    /// Why is this method an associated function of `Self`? Because we want to
+    /// use a generic parameter of `Self`.
+    fn interpolate_polynomial<I>(evals: I, domain_size: usize) -> VidResult<KzgPolynomial<E>>
     where
         I: Iterator,
         I::Item: Borrow<KzgEval<E>>,
@@ -843,31 +867,60 @@ where
         // TODO TEMPORARY: use FFT to encode polynomials in eval form
         // Remove these FFTs after we get KZG in eval form
         // https://github.com/EspressoSystems/jellyfish/issues/339
-        let mut coeffs_vec: Vec<_> = coeffs.map(|c| *c.borrow()).collect();
-        let pre_fft_len = coeffs_vec.len();
-        EvaluationDomain::ifft_in_place(domain_ref, &mut coeffs_vec);
+        let mut evals_vec: Vec<_> = evals.map(|c| *c.borrow()).collect();
+        let pre_fft_len = evals_vec.len();
+        if pre_fft_len > domain_size {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "number of evals {} exceeds domain_size {}",
+                pre_fft_len,
+                domain_size
+            )));
+        }
+        let domain = Self::eval_domain(domain_size)?;
 
-        // sanity check: the fft did not resize coeffs.
-        // If pre_fft_len != self.recovery_threshold * self.multiplicity
-        // then we were not given the correct number of coeffs. In that case
-        // coeffs.len() could be anything, so there's nothing to sanity check.
-        if pre_fft_len == chunk_size {
-            assert_eq!(coeffs_vec.len(), pre_fft_len);
+        domain.ifft_in_place(&mut evals_vec);
+
+        // sanity: the fft did not resize evals. If pre_fft_len < domain_size
+        // then we were given too few evals, in which case there's nothing to
+        // sanity check.
+        if pre_fft_len == domain_size && pre_fft_len != evals_vec.len() {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "unexpected output resize from {pre_fft_len} to {}",
+                evals_vec.len()
+            )));
         }
 
-        DenseUVPolynomial::from_coefficients_vec(coeffs_vec)
+        Ok(DenseUVPolynomial::from_coefficients_vec(evals_vec))
     }
 
-    fn polynomial<I>(&self, coeffs: I) -> KzgPolynomial<E>
-    where
-        I: Iterator,
-        I::Item: Borrow<KzgEval<E>>,
-    {
-        Self::polynomial_internal(
-            &self.eval_domain,
-            (self.recovery_threshold * self.multiplicity) as usize,
-            coeffs,
-        )
+    fn min_multiplicity(&self, payload_byte_len: usize) -> VidResult<u32> {
+        let elem_bytes_len = bytes_to_field::elem_byte_capacity::<<E as Pairing>::ScalarField>();
+        let elems: u32 = payload_byte_len
+            .div_ceil(elem_bytes_len)
+            .try_into()
+            .map_err(vid)?;
+        if self.recovery_threshold * self.max_multiplicity < elems {
+            // payload is large. no change in multiplicity needed.
+            return Ok(self.max_multiplicity);
+        }
+
+        // payload is small: choose the smallest `m` such that `0 < m <
+        // multiplicity` and the entire payload fits into `m *
+        // recovery_threshold` elements.
+        let m = elems.div_ceil(self.recovery_threshold.max(1)).max(1);
+
+        // TODO TEMPORARY: enforce power-of-2
+        // https://github.com/EspressoSystems/jellyfish/issues/668
+        //
+        // Round up to the nearest power of 2.
+        //
+        // After the above issue is fixed: delete the following code and return
+        // `m` from above.
+        if m <= 1 {
+            Ok(1)
+        } else {
+            Ok(1 << ((m - 1).ilog2() + 1))
+        }
     }
 
     /// Derive a commitment from whatever data is needed.
@@ -903,53 +956,24 @@ where
         Ok(hasher.finalize().into())
     }
 
-    /// Assemble shares from evaluations and proofs.
-    ///
-    /// Each share contains (for multiplicity m):
-    /// 1. (m * num_poly) evaluations.
-    /// 2. a collection of m KZG proofs. TODO KZG aggregation https://github.com/EspressoSystems/jellyfish/issues/356
-    /// 3. m merkle tree membership proofs.
-    fn assemble_shares(
+    fn multi_open_domain(
         &self,
-        all_storage_node_evals: Vec<Vec<<E as Pairing>::ScalarField>>,
-        aggregate_proofs: Vec<UnivariateKzgProof<E>>,
-        all_evals_commit: KzgEvalsMerkleTree<E, H>,
-    ) -> Result<Vec<Share<E, H>>, VidError>
-    where
-        E: Pairing,
-        H: HasherDigest,
-    {
-        // compute share data
-        let share_data = all_storage_node_evals
-            .into_iter()
-            .zip(aggregate_proofs)
-            .enumerate()
-            .map(|(i, (eval, proof))| {
-                let eval_proof = all_evals_commit
-                    .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
-                    .expect_ok()
-                    .map_err(vid)?
-                    .1;
-                Ok((eval, proof, eval_proof))
-            })
-            .collect::<Result<Vec<_>, VidError>>()?;
+        multiplicity: u32,
+    ) -> VidResult<Radix2EvaluationDomain<<E as Pairing>::ScalarField>> {
+        let chunk_size = usize::try_from(multiplicity * self.recovery_threshold).map_err(vid)?;
+        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
+        UnivariateKzgPCS::<E>::multi_open_rou_eval_domain(chunk_size - 1, code_word_size)
+            .map_err(vid)
+    }
 
-        // split share data into chunks of size multiplicity
-        Ok(share_data
-            .into_iter()
-            .chunks(self.multiplicity as usize)
-            .into_iter()
-            .enumerate()
-            .map(|(index, chunk)| {
-                let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
-                Share {
-                    index: index as u32,
-                    evals: evals.into_iter().flatten().collect::<Vec<_>>(),
-                    aggregate_proofs: proofs,
-                    eval_proofs,
-                }
-            })
-            .collect())
+    fn eval_domain(
+        domain_size: usize,
+    ) -> VidResult<Radix2EvaluationDomain<<E as Pairing>::ScalarField>> {
+        Radix2EvaluationDomain::<KzgPoint<E>>::new(domain_size).ok_or_else(|| {
+            VidError::Internal(anyhow::anyhow!(
+                "fail to construct domain of size {domain_size}"
+            ))
+        })
     }
 }
 
