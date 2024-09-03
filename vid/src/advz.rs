@@ -35,7 +35,7 @@ use digest::crypto_common::Output;
 use itertools::Itertools;
 use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
-    prelude::MerkleNode,
+    prelude::{MerkleNode, MerkleProof},
     MerkleCommitment, MerkleTreeScheme,
 };
 #[cfg(feature = "gpu-vid")]
@@ -291,10 +291,6 @@ where
     index: u32,
 
     #[serde(with = "canonical")]
-    // evals.len() equals multiplicity * num_polys
-    evals: Vec<KzgEval<E>>,
-
-    #[serde(with = "canonical")]
     // aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
@@ -310,9 +306,15 @@ where
     E: Pairing,
     H: HasherDigest,
 {
+    /// Return a [`Vec`] of payload data for this share.
+    ///
+    /// These data are extracted from [`MerkleProof`] structs. The returned
+    /// [`Vec`] has length `multiplicity * num_polys`s
+    ///
+    /// TODO store these data in a new field `Share::evals` after fixing
+    /// https://github.com/EspressoSystems/jellyfish/issues/658
     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
-        let result: Vec<_> = self
-            .eval_proofs
+        self.eval_proofs
             .iter()
             .map(|eval_proof| {
                 // `eval_proof.proof` is a `Vec<MerkleNode>` with length >= 1
@@ -330,10 +332,24 @@ where
                 Ok(elem.clone())
             })
             .flatten_ok()
-            .collect::<VidResult<Vec<_>>>()?;
-        assert_eq!(result, self.evals);
-        Ok(result)
+            .collect()
     }
+
+    // fn extract_leaf(proof: &KzgEvalsMerkleTreeProof<E, H>) ->
+    // VidResult<&Vec<KzgEval<E>>> {     // `eval_proof.proof` is a
+    // `Vec<MerkleNode>` with length >= 1     // whose first item always has
+    // variant `Leaf`. See     // `MerkleProof::verify_membership_proof`.
+    //     let merkle_node = proof
+    //         .proof
+    //         .get(0)
+    //         .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle
+    // proof")))?;     let MerkleNode::Leaf { elem, .. } = merkle_node else {
+    //         return Err(VidError::Internal(anyhow::anyhow!(
+    //             "expect MerkleNode::Leaf variant"
+    //         )));
+    //     };
+    //     Ok(elem)
+    // }
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
@@ -535,7 +551,7 @@ where
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
                 share
-                    .evals
+                    .evals()?
                     .get(range.clone())
                     .ok_or_else(|| {
                         VidError::Internal(anyhow::anyhow!(
@@ -590,23 +606,27 @@ where
             )));
         }
 
+        let shares_evals = shares
+            .iter()
+            .map(|share| share.evals())
+            .collect::<VidResult<Vec<_>>>()?;
+
         // check args: all shares must have equal evals len
-        let num_evals = shares
+        let num_evals = shares_evals
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
-            .evals
             .len();
-        if let Some((index, share)) = shares
+        if let Some((index, share_evals)) = shares_evals
             .iter()
             .enumerate()
-            .find(|(_, s)| s.evals.len() != num_evals)
+            .find(|(_, evals)| evals.len() != num_evals)
         {
             return Err(VidError::Argument(format!(
                 "shares do not have equal evals lengths: share {} len {}, share {} len {}",
                 0,
                 num_evals,
                 index,
-                share.evals.len()
+                share_evals.len()
             )));
         }
         if num_evals != common.multiplicity as usize * common.poly_commits.len() {
@@ -627,12 +647,12 @@ where
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
-            for share in shares {
+            for (share, share_evals) in shares.iter().zip(shares_evals.iter()) {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..common.multiplicity as usize {
                     evals.push((
                         (share.index * common.multiplicity) as usize + m,
-                        share.evals[(m * num_polys) + p],
+                        share_evals[(m * num_polys) + p],
                     ))
                 }
             }
@@ -818,7 +838,6 @@ where
                     let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
                     Share {
                         index: index as u32,
-                        evals: evals.into_iter().flatten().collect::<Vec<_>>(),
                         aggregate_proofs: proofs,
                         eval_proofs,
                     }
