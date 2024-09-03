@@ -559,8 +559,7 @@ where
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
-                share
-                    .evals()?
+                evals
                     .get(range.clone())
                     .ok_or_else(|| {
                         VidError::Internal(anyhow::anyhow!(
