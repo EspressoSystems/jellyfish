@@ -316,40 +316,26 @@ where
     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
         self.eval_proofs
             .iter()
-            .map(|eval_proof| {
-                // `eval_proof.proof` is a `Vec<MerkleNode>` with length >= 1
-                // whose first item always has variant `Leaf`. See
-                // `MerkleProof::verify_membership_proof`.
-                let merkle_node = eval_proof
-                    .proof
-                    .get(0)
-                    .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?;
-                let MerkleNode::Leaf { elem, .. } = merkle_node else {
-                    return Err(VidError::Internal(anyhow::anyhow!(
-                        "expect MerkleNode::Leaf variant"
-                    )));
-                };
-                Ok(elem.clone())
-            })
+            .map(|eval_proof| Self::extract_leaf(&eval_proof).cloned())
             .flatten_ok()
             .collect()
     }
 
-    // fn extract_leaf(proof: &KzgEvalsMerkleTreeProof<E, H>) ->
-    // VidResult<&Vec<KzgEval<E>>> {     // `eval_proof.proof` is a
-    // `Vec<MerkleNode>` with length >= 1     // whose first item always has
-    // variant `Leaf`. See     // `MerkleProof::verify_membership_proof`.
-    //     let merkle_node = proof
-    //         .proof
-    //         .get(0)
-    //         .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle
-    // proof")))?;     let MerkleNode::Leaf { elem, .. } = merkle_node else {
-    //         return Err(VidError::Internal(anyhow::anyhow!(
-    //             "expect MerkleNode::Leaf variant"
-    //         )));
-    //     };
-    //     Ok(elem)
-    // }
+    fn extract_leaf(proof: &KzgEvalsMerkleTreeProof<E, H>) -> VidResult<&Vec<KzgEval<E>>> {
+        // `eval_proof.proof` is a`Vec<MerkleNode>` with length >= 1
+        // whose first item always has variant `Leaf`. See
+        // `MerkleProof::verify_membership_proof`.
+        let merkle_node = proof
+            .proof
+            .get(0)
+            .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?;
+        let MerkleNode::Leaf { elem, .. } = merkle_node else {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "expect MerkleNode::Leaf variant"
+            )));
+        };
+        Ok(elem)
+    }
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
