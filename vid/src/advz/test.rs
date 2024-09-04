@@ -451,6 +451,31 @@ fn max_multiplicity() {
     assert!(found_small_payload, "missing test for small payload");
 }
 
+impl<E, H> Share<E, H>
+where
+    E: Pairing,
+    H: HasherDigest,
+{
+    /// Like [`MerkleProof::elem`] except the returned reference is mutable.
+    fn extract_leaf_mut(
+        proof: &mut KzgEvalsMerkleTreeProof<E, H>,
+    ) -> VidResult<&mut Vec<KzgEval<E>>> {
+        // `eval_proof.proof` is a`Vec<MerkleNode>` with length >= 1
+        // whose first item always has variant `Leaf`. See
+        // `MerkleProof::verify_membership_proof`.
+        let merkle_node = proof
+            .proof
+            .get_mut(0)
+            .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?;
+        let MerkleNode::Leaf { elem, .. } = merkle_node else {
+            return Err(VidError::Internal(anyhow::anyhow!(
+                "expect MerkleNode::Leaf variant"
+            )));
+        };
+        Ok(elem)
+    }
+}
+
 struct AdvzParams {
     recovery_threshold: u32,
     num_storage_nodes: u32,
