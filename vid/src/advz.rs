@@ -721,9 +721,7 @@ where
 
             // distribute evals from each poly among the storage nodes
             //
-            // TODO perf: runtime is O(num_polys * payload_size).
-            // num_polys is O(payload_size / multiplicity)
-            // so this is basically quadratic in payload size!
+            // perf warning: runtime is quadratic in payload_size
             let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
             for poly_evals in all_poly_evals {
                 for (storage_node_evals, poly_eval) in all_storage_node_evals
