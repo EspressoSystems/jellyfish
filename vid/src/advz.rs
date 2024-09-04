@@ -316,7 +316,12 @@ where
     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
         self.eval_proofs
             .iter()
-            .map(|eval_proof| Self::extract_leaf(&eval_proof).cloned())
+            .map(|eval_proof| {
+                eval_proof
+                    .elem()
+                    .cloned()
+                    .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))
+            })
             .flatten_ok()
             .collect()
     }
