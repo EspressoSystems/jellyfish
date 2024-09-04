@@ -1039,6 +1039,39 @@
 <a href="#1039" id="1039">1039</a>
 <a href="#1040" id="1040">1040</a>
 <a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
+<a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -1076,6 +1109,7 @@
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
+    prelude::{MerkleNode, MerkleProof},
     MerkleCommitment, MerkleTreeScheme,
 };
 <span class="attr">#[cfg(feature = <span class="string">"gpu-vid"</span>)]
@@ -1331,14 +1365,40 @@
     index: u32,
 
     <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
-    </span>evals: Vec&lt;KzgEval&lt;E&gt;&gt;,
-
-    <span class="attr">#[serde(with = <span class="string">"canonical"</span>)]
     </span><span class="comment">// aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     </span>aggregate_proofs: Vec&lt;KzgProof&lt;E&gt;&gt;,
 
-    eval_proofs: Vec&lt;KzgEvalsMerkleTreeProof&lt;E, H&gt;&gt;,
+    <span class="comment">// eval_proofs.len() equals multiplicity
+    // TODO put all evals into a single merkle proof
+    // https://github.com/EspressoSystems/jellyfish/issues/671
+    </span>eval_proofs: Vec&lt;KzgEvalsMerkleTreeProof&lt;E, H&gt;&gt;,
+}
+
+<span class="kw">impl</span>&lt;E, H&gt; Share&lt;E, H&gt;
+<span class="kw">where
+    </span>E: Pairing,
+    H: HasherDigest,
+{
+    <span class="doccomment">/// Return a [`Vec`] of payload data for this share.
+    ///
+    /// These data are extracted from [`MerkleProof`] structs. The returned
+    /// [`Vec`] has length `multiplicity * num_polys`s
+    ///
+    /// TODO store these data in a new field `Share::evals` after fixing
+    /// https://github.com/EspressoSystems/jellyfish/issues/658
+    </span><span class="kw">fn </span>evals(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VidResult&lt;Vec&lt;KzgEval&lt;E&gt;&gt;&gt; {
+        <span class="self">self</span>.eval_proofs
+            .iter()
+            .map(|eval_proof| {
+                eval_proof
+                    .elem()
+                    .cloned()
+                    .ok_or_else(|| VidError::Internal(<span class="macro">anyhow::anyhow!</span>(<span class="string">"empty merkle proof"</span>)))
+            })
+            .flatten_ok()
+            .collect()
+    }
 }
 
 <span class="doccomment">/// The [`VidScheme::Common`] type for [`Advz`].
@@ -1476,10 +1536,11 @@
                 common.multiplicity, multiplicity
             )));
         }
-        <span class="kw">if </span>share.evals.len() / multiplicity <span class="kw">as </span>usize != common.poly_commits.len() {
+        <span class="kw">let </span>evals = share.evals()<span class="question-mark">?</span>;
+        <span class="kw">if </span>evals.len() / multiplicity <span class="kw">as </span>usize != common.poly_commits.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}"</span>,
-                share.evals.len(), multiplicity,
+                evals.len(), multiplicity,
                 common.poly_commits.len()
             )));
         }
@@ -1538,14 +1599,13 @@
         <span class="kw">let </span>verification_iter = parallelizable_slice_iter(<span class="kw-2">&amp;</span>multiplicities).map(|i| {
             <span class="kw">let </span>range = i * polys_len..(i + <span class="number">1</span>) * polys_len;
             <span class="kw">let </span>aggregate_eval = polynomial_eval(
-                share
-                    .evals
+                evals
                     .get(range.clone())
                     .ok_or_else(|| {
                         VidError::Internal(<span class="macro">anyhow::anyhow!</span>(
                             <span class="string">"share evals range {:?} out of bounds for length {}"</span>,
                             range,
-                            share.evals.len()
+                            evals.len()
                         ))
                     })<span class="question-mark">?
                     </span>.iter()
@@ -1594,23 +1654,27 @@
             )));
         }
 
+        <span class="kw">let </span>shares_evals = shares
+            .iter()
+            .map(|share| share.evals())
+            .collect::&lt;VidResult&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;&gt;()<span class="question-mark">?</span>;
+
         <span class="comment">// check args: all shares must have equal evals len
-        </span><span class="kw">let </span>num_evals = shares
+        </span><span class="kw">let </span>num_evals = shares_evals
             .first()
             .ok_or_else(|| VidError::Argument(<span class="string">"shares is empty"</span>.into()))<span class="question-mark">?
-            </span>.evals
-            .len();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>((index, share)) = shares
+            </span>.len();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((index, share_evals)) = shares_evals
             .iter()
             .enumerate()
-            .find(|(<span class="kw">_</span>, s)| s.evals.len() != num_evals)
+            .find(|(<span class="kw">_</span>, evals)| evals.len() != num_evals)
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(VidError::Argument(<span class="macro">format!</span>(
                 <span class="string">"shares do not have equal evals lengths: share {} len {}, share {} len {}"</span>,
                 <span class="number">0</span>,
                 num_evals,
                 index,
-                share.evals.len()
+                share_evals.len()
             )));
         }
         <span class="kw">if </span>num_evals != common.multiplicity <span class="kw">as </span>usize * common.poly_commits.len() {
@@ -1631,12 +1695,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>elems = Vec::with_capacity(elems_capacity);
         <span class="kw">let </span><span class="kw-2">mut </span>evals = Vec::with_capacity(num_evals);
         <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..num_polys {
-            <span class="kw">for </span>share <span class="kw">in </span>shares {
+            <span class="kw">for </span>(share, share_evals) <span class="kw">in </span>shares.iter().zip(shares_evals.iter()) {
                 <span class="comment">// extract all evaluations for polynomial p from the share
                 </span><span class="kw">for </span>m <span class="kw">in </span><span class="number">0</span>..common.multiplicity <span class="kw">as </span>usize {
                     evals.push((
                         (share.index * common.multiplicity) <span class="kw">as </span>usize + m,
-                        share.evals[(m * num_polys) + p],
+                        share_evals[(m * num_polys) + p],
                     ))
                 }
             }
@@ -1718,7 +1782,6 @@
             multiplicity * <span class="self">self</span>.recovery_threshold
         ));
         <span class="kw">let </span>all_storage_node_evals = {
-            <span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
             <span class="kw">let </span>all_poly_evals = parallelizable_slice_iter(<span class="kw-2">&amp;</span>polys)
                 .map(|poly| {
                     UnivariateKzgPCS::&lt;E&gt;::multi_open_rou_evals(
@@ -1730,6 +1793,10 @@
                 })
                 .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, VidError&gt;&gt;()<span class="question-mark">?</span>;
 
+            <span class="comment">// distribute evals from each poly among the storage nodes
+            //
+            // perf warning: runtime is quadratic in payload_size
+            </span><span class="kw">let </span><span class="kw-2">mut </span>all_storage_node_evals = <span class="macro">vec!</span>[Vec::with_capacity(polys.len()); code_word_size];
             <span class="kw">for </span>poly_evals <span class="kw">in </span>all_poly_evals {
                 <span class="kw">for </span>(storage_node_evals, poly_eval) <span class="kw">in </span>all_storage_node_evals
                     .iter_mut()
@@ -1817,7 +1884,6 @@
                     <span class="kw">let </span>(evals, proofs, eval_proofs): (Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>, <span class="kw">_</span>) = chunk.multiunzip();
                     Share {
                         index: index <span class="kw">as </span>u32,
-                        evals: evals.into_iter().flatten().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
                         aggregate_proofs: proofs,
                         eval_proofs,
                     }
