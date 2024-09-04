@@ -255,7 +255,7 @@ where
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
         if circuits.iter().any(|c| C::support_lookup(c)) {
-            challenges.tau = Some(transcript.get_and_append_challenge::<E>(b"tau")?);
+            challenges.tau = Some(transcript.get_challenge::<E>(b"tau")?);
         } else {
             challenges.tau = None;
         }
@@ -284,8 +284,8 @@ where
         }
 
         // Round 2
-        challenges.beta = transcript.get_and_append_challenge::<E>(b"beta")?;
-        challenges.gamma = transcript.get_and_append_challenge::<E>(b"gamma")?;
+        challenges.beta = transcript.get_challenge::<E>(b"beta")?;
+        challenges.gamma = transcript.get_challenge::<E>(b"gamma")?;
         let mut prod_perm_poly_comms_vec = vec![];
         for i in 0..circuits.len() {
             let (prod_perm_poly_comm, prod_perm_poly) =
@@ -318,7 +318,7 @@ where
         }
 
         // Round 3
-        challenges.alpha = transcript.get_and_append_challenge::<E>(b"alpha")?;
+        challenges.alpha = transcript.get_challenge::<E>(b"alpha")?;
         let (split_quot_poly_comms, split_quot_polys) = prover.run_3rd_round(
             prng,
             &prove_keys[0].commit_key,
@@ -330,7 +330,7 @@ where
         transcript.append_commitments(b"quot_poly_comms", &split_quot_poly_comms)?;
 
         // Round 4
-        challenges.zeta = transcript.get_and_append_challenge::<E>(b"zeta")?;
+        challenges.zeta = transcript.get_challenge::<E>(b"zeta")?;
         let mut poly_evals_vec = vec![];
         for i in 0..circuits.len() {
             let poly_evals = prover.compute_evaluations(
@@ -389,7 +389,7 @@ where
         }
 
         // Round 5
-        challenges.v = transcript.get_and_append_challenge::<E>(b"v")?;
+        challenges.v = transcript.get_challenge::<E>(b"v")?;
         let (opening_proof, shifted_opening_proof) = prover.compute_opening_proofs(
             &prove_keys[0].commit_key,
             prove_keys,

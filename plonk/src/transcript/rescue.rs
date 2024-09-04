@@ -33,7 +33,7 @@ use jf_utils::{bytes_to_field_elements, field_switching, fq_to_fr_with_mask};
 ///
 /// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
 /// 2. challenge = state\[0\]
-/// 3. transcript = vec!\[challenge\]
+/// 3. transcript = vec!\[\]
 pub struct RescueTranscript<F>
 where
     F: RescueParameter,
@@ -123,9 +123,7 @@ where
         Ok(())
     }
 
-    /// Append a challenge to the transcript. `_label` is omitted for
-    /// efficiency.
-    fn append_challenge<E>(
+    fn append_field_elem<E>(
         &mut self,
         _label: &'static [u8],
         challenge: &E::ScalarField,
@@ -165,12 +163,8 @@ where
     }
 
     /// Generate the challenge for the current transcript,
-    /// and then append it to the transcript. `_label` is omitted for
-    /// efficiency.
-    fn get_and_append_challenge<E>(
-        &mut self,
-        _label: &'static [u8],
-    ) -> Result<E::ScalarField, PlonkError>
+    /// `_label` is omitted for efficiency.
+    fn get_challenge<E>(&mut self, _label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
     where
         E: Pairing<BaseField = F>,
     {
@@ -183,7 +177,6 @@ where
         let challenge = fq_to_fr_with_mask::<F, E::ScalarField>(&tmp[0]);
         self.state.copy_from_slice(&tmp);
         self.transcript = Vec::new();
-        self.transcript.push(field_switching(&challenge));
 
         Ok(challenge)
     }
