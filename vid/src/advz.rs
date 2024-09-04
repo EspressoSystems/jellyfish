@@ -698,7 +698,9 @@ where
             payload_byte_len, self.num_storage_nodes
         ));
         let multiplicity = self.min_multiplicity(payload.len())?;
-        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
+        let multiplicity_usize = usize::try_from(multiplicity).map_err(vid)?;
+        let num_storage_nodes_usize = usize::try_from(self.num_storage_nodes).map_err(vid)?;
+        let code_word_size = num_storage_nodes_usize * multiplicity_usize;
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
 
         // evaluate polynomials
@@ -715,27 +717,41 @@ where
                         code_word_size,
                         &multi_open_domain,
                     )
+                    .map(|poly_evals| {
+                        assert_eq!(poly_evals.len(), code_word_size); // sanity
+                        poly_evals
+                    })
                     .map_err(vid)
                 })
                 .collect::<Result<Vec<_>, VidError>>()?;
+            assert_eq!(all_poly_evals.len(), polys.len()); // sanity
 
-            // distribute evals from each poly among the storage nodes
+            // Populate a Vec of polynomial evaluations for all storage nodes:
             //
-            // perf warning: runtime is quadratic in payload_size
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+            // The `i`th item is a Vec of `polys.len() * multiplicity`
+            // polynomial evaluations.
+            //
+            // Evaluations for storage node `i` are ordered as follows. Define
+            // - `n`: the number of storage nodes: `self.num_storage_nodes`
+            // - `k`: the number of polynomials minus 1: `polys.len() - 1`
+            // - `m`: `multiplicity - 1`
+            // - `p[j](x)`: the value of the `j`th polynomial evaluated at `x`.
+            //
+            // p[0](i), p[0](i+n), ..., p[0](i+m*n),
+            // ...,
+            // p[k](i), p[k](i+n), ..., p[k](i+m*n),
+            let mut all_storage_node_evals =
+                vec![Vec::with_capacity(polys.len() * multiplicity_usize); num_storage_nodes_usize];
             for poly_evals in all_poly_evals {
-                for (storage_node_evals, poly_eval) in all_storage_node_evals
-                    .iter_mut()
-                    .zip(poly_evals.into_iter())
-                {
-                    storage_node_evals.push(poly_eval);
+                for (i, poly_eval) in poly_evals.into_iter().enumerate() {
+                    all_storage_node_evals[i % num_storage_nodes_usize].push(poly_eval);
                 }
             }
 
             // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_word_size);
+            assert_eq!(all_storage_node_evals.len(), num_storage_nodes_usize);
             for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
+                assert_eq!(storage_node_evals.len(), polys.len() * multiplicity_usize);
             }
 
             all_storage_node_evals
