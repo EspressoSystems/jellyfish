@@ -189,30 +189,6 @@
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -239,6 +215,7 @@
     short_weierstrass::{Affine, SWCurveConfig <span class="kw">as </span>SWParam},
 };
 <span class="kw">use </span>ark_ff::PrimeField;
+<span class="kw">use </span>ark_std::vec::Vec;
 <span class="kw">use </span>jf_pcs::prelude::Commitment;
 <span class="kw">use </span>jf_utils::to_bytes;
 
@@ -266,8 +243,7 @@
         </span>E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
         P: SWParam&lt;BaseField = F&gt;,
     {
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
+        <span class="self">self</span>.append_message(
             <span class="string">b"field size in bits"</span>,
             E::ScalarField::MODULUS_BIT_SIZE.to_le_bytes().as_ref(),
         )<span class="question-mark">?</span>;
@@ -282,36 +258,18 @@
             vk.num_inputs.to_le_bytes().as_ref(),
         )<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>ki <span class="kw">in </span>vk.k.iter() {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-                <span class="self">self</span>,
-                <span class="string">b"wire subsets separators"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(ki)<span class="question-mark">?</span>,
-            )<span class="question-mark">?</span>;
-        }
-        <span class="kw">for </span>selector_com <span class="kw">in </span>vk.selector_comms.iter() {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-                <span class="self">self</span>,
-                <span class="string">b"selector commitments"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(selector_com)<span class="question-mark">?</span>,
-            )<span class="question-mark">?</span>;
-        }
+        <span class="comment">// include [x]_2 G2 point from SRS
+        // all G1 points from SRS are implicit reflected in committed polys
+        </span>&lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
+            <span class="self">self</span>,
+            <span class="string">b"SRS G2 element"</span>,
+            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>vk.open_key.powers_of_h[<span class="number">1</span>])<span class="question-mark">?</span>,
+        )<span class="question-mark">?</span>;
 
-        <span class="kw">for </span>sigma_comms <span class="kw">in </span>vk.sigma_comms.iter() {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-                <span class="self">self</span>,
-                <span class="string">b"sigma commitments"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(sigma_comms)<span class="question-mark">?</span>,
-            )<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">for </span>input <span class="kw">in </span>pub_input.iter() {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-                <span class="self">self</span>,
-                <span class="string">b"public input"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(input)<span class="question-mark">?</span>,
-            )<span class="question-mark">?</span>;
-        }
+        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"wire subsets separators"</span>, <span class="kw-2">&amp;</span>vk.k)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_commitments(<span class="string">b"selector commitments"</span>, <span class="kw-2">&amp;</span>vk.selector_comms)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_commitments(<span class="string">b"sigma commitments"</span>, <span class="kw-2">&amp;</span>vk.sigma_comms)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"public input"</span>, pub_input)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -348,84 +306,78 @@
         &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(comm)<span class="question-mark">?</span>)
     }
 
-    <span class="doccomment">/// Append a challenge to the transcript.
-    </span><span class="kw">fn </span>append_challenge&lt;E&gt;(
+    <span class="doccomment">/// Append a field element to the transcript.
+    </span><span class="kw">fn </span>append_field_elem&lt;E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
-        challenge: <span class="kw-2">&amp;</span>E::ScalarField,
+        field: <span class="kw-2">&amp;</span>E::ScalarField,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
     <span class="kw">where
         </span>E: Pairing&lt;BaseField = F&gt;,
     {
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(challenge)<span class="question-mark">?</span>)
+        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, label, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(field)<span class="question-mark">?</span>)
+    }
+
+    <span class="doccomment">/// Append a list of field elements to the transcript
+    </span><span class="kw">fn </span>append_field_elems&lt;E&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
+        fields: <span class="kw-2">&amp;</span>[E::ScalarField],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt;
+    <span class="kw">where
+        </span>E: Pairing&lt;BaseField = F&gt;,
+    {
+        <span class="kw">for </span>f <span class="kw">in </span>fields {
+            <span class="self">self</span>.append_field_elem::&lt;E&gt;(label, f)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Append a proof evaluation to the transcript.
-    </span><span class="kw">fn </span>append_proof_evaluations&lt;E: Pairing&gt;(
+    </span><span class="kw">fn </span>append_proof_evaluations&lt;E: Pairing&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         evals: <span class="kw-2">&amp;</span>ProofEvaluations&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
-        <span class="kw">for </span>w_eval <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wires_evals {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(<span class="self">self</span>, <span class="string">b"wire_evals"</span>, <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(w_eval)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        }
-        <span class="kw">for </span>sigma_eval <span class="kw">in </span><span class="kw-2">&amp;</span>evals.wire_sigma_evals {
-            &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-                <span class="self">self</span>,
-                <span class="string">b"wire_sigma_evals"</span>,
-                <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(sigma_eval)<span class="question-mark">?</span>,
-            )<span class="question-mark">?</span>;
-        }
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"perm_next_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.perm_next_eval)<span class="question-mark">?</span>,
-        )
+        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"wire_evals"</span>, <span class="kw-2">&amp;</span>evals.wires_evals)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"wire_sigma_evals"</span>, <span class="kw-2">&amp;</span>evals.wire_sigma_evals)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"perm_next_eval"</span>, <span class="kw-2">&amp;</span>evals.perm_next_eval)
     }
 
     <span class="doccomment">/// Append the plookup evaluation to the transcript.
-    </span><span class="kw">fn </span>append_plookup_evaluations&lt;E: Pairing&gt;(
+    </span><span class="kw">fn </span>append_plookup_evaluations&lt;E: Pairing&lt;BaseField = F&gt;&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"lookup_table_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.range_table_eval)<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"h_1_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_1_eval)<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"prod_next_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.prod_next_eval)<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"lookup_table_next_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.range_table_next_eval)<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"h_1_next_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_1_next_eval)<span class="question-mark">?</span>,
-        )<span class="question-mark">?</span>;
-        &lt;<span class="self">Self </span><span class="kw">as </span>PlonkTranscript&lt;F&gt;&gt;::append_message(
-            <span class="self">self</span>,
-            <span class="string">b"h_2_next_eval"</span>,
-            <span class="kw-2">&amp;</span><span class="macro">to_bytes!</span>(<span class="kw-2">&amp;</span>evals.h_2_next_eval)<span class="question-mark">?</span>,
-        )
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"lookup_table_eval"</span>, <span class="kw-2">&amp;</span>evals.range_table_eval)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_1_eval"</span>, <span class="kw-2">&amp;</span>evals.h_1_eval)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"prod_next_eval"</span>, <span class="kw-2">&amp;</span>evals.prod_next_eval)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"lookup_table_next_eval"</span>, <span class="kw-2">&amp;</span>evals.range_table_next_eval)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_1_next_eval"</span>, <span class="kw-2">&amp;</span>evals.h_1_next_eval)<span class="question-mark">?</span>;
+        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_2_next_eval"</span>, <span class="kw-2">&amp;</span>evals.h_2_next_eval)
     }
 
-    <span class="doccomment">/// Generate the challenge for the current transcript,
-    /// and then append it to the transcript.
-    </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
+    <span class="doccomment">/// Generate a single challenge for the current round
+    </span><span class="kw">fn </span>get_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
     <span class="kw">where
         </span>E: Pairing&lt;BaseField = F&gt;;
+
+    <span class="doccomment">/// Generate multiple challenges for the current round
+    /// Implementers should be careful about domain separation for each
+    /// challenge The default implementation assume `self.get_challenge()`
+    /// already implements proper domain separation for each challenge
+    /// generation, thus simply call it multiple times.
+    </span><span class="kw">fn </span>get_n_challenges&lt;E&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        labels: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;E::ScalarField&gt;, PlonkError&gt;
+    <span class="kw">where
+        </span>E: Pairing&lt;BaseField = F&gt;,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>challenges = Vec::new();
+        <span class="kw">for </span>label <span class="kw">in </span>labels {
+            challenges.push(<span class="self">self</span>.get_challenge::&lt;E&gt;(label)<span class="question-mark">?</span>);
+        }
+        <span class="prelude-val">Ok</span>(challenges)
+    }
 }
 </code></pre></div></section></main></body></html>

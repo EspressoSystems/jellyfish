@@ -2017,7 +2017,7 @@
         // Plookup: compute and interpolate the sorted concatenation of the (merged)
         // lookup table and the (merged) witness values
         </span><span class="kw">if </span>circuits.iter().any(|c| C::support_lookup(c)) {
-            challenges.tau = <span class="prelude-val">Some</span>(transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>);
+            challenges.tau = <span class="prelude-val">Some</span>(transcript.get_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>);
         } <span class="kw">else </span>{
             challenges.tau = <span class="prelude-val">None</span>;
         }
@@ -2046,8 +2046,8 @@
         }
 
         <span class="comment">// Round 2
-        </span>challenges.beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
-        challenges.gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
+        </span>challenges.beta = transcript.get_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
+        challenges.gamma = transcript.get_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>prod_perm_poly_comms_vec = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..circuits.len() {
             <span class="kw">let </span>(prod_perm_poly_comm, prod_perm_poly) =
@@ -2080,7 +2080,7 @@
         }
 
         <span class="comment">// Round 3
-        </span>challenges.alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
+        </span>challenges.alpha = transcript.get_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>(split_quot_poly_comms, split_quot_polys) = prover.run_3rd_round(
             prng,
             <span class="kw-2">&amp;</span>prove_keys[<span class="number">0</span>].commit_key,
@@ -2092,7 +2092,7 @@
         transcript.append_commitments(<span class="string">b"quot_poly_comms"</span>, <span class="kw-2">&amp;</span>split_quot_poly_comms)<span class="question-mark">?</span>;
 
         <span class="comment">// Round 4
-        </span>challenges.zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
+        </span>challenges.zeta = transcript.get_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>poly_evals_vec = <span class="macro">vec!</span>[];
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..circuits.len() {
             <span class="kw">let </span>poly_evals = prover.compute_evaluations(
@@ -2151,7 +2151,7 @@
         }
 
         <span class="comment">// Round 5
-        </span>challenges.v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
+        </span>challenges.v = transcript.get_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>(opening_proof, shifted_opening_proof) = prover.compute_opening_proofs(
             <span class="kw-2">&amp;</span>prove_keys[<span class="number">0</span>].commit_key,
             prove_keys,

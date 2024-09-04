@@ -835,25 +835,25 @@
         transcript_var.append_commitments_vars(<span class="string">b"witness_poly_comms"</span>, wires_poly_comms)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">let </span>beta = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"beta"</span>, circuit)<span class="question-mark">?</span>;
-    <span class="kw">let </span>gamma = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"gamma"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>beta = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"beta"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>gamma = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"gamma"</span>, circuit)<span class="question-mark">?</span>;
     <span class="kw">for </span>prod_perm_poly_comm <span class="kw">in </span>batch_proof.prod_perm_poly_comms_vec.iter() {
         transcript_var.append_commitment_var(<span class="string">b"perm_poly_comms"</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">let </span>alpha = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"alpha"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>alpha = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"alpha"</span>, circuit)<span class="question-mark">?</span>;
     transcript_var
         .append_commitments_vars(<span class="string">b"quot_poly_comms"</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
-    <span class="kw">let </span>zeta = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"zeta"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>zeta = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"zeta"</span>, circuit)<span class="question-mark">?</span>;
     <span class="kw">for </span>poly_evals <span class="kw">in </span>batch_proof.poly_evals_vec.iter() {
         transcript_var.append_proof_evaluations_vars(circuit, poly_evals)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">let </span>v = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"v"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>v = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"v"</span>, circuit)<span class="question-mark">?</span>;
     transcript_var.append_commitment_var(<span class="string">b"open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
     transcript_var
         .append_commitment_var(<span class="string">b"shifted_open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
-    <span class="kw">let </span>u = transcript_var.get_and_append_challenge_var::&lt;E&gt;(<span class="string">b"u"</span>, circuit)<span class="question-mark">?</span>;
+    <span class="kw">let </span>u = transcript_var.get_challenge_var::&lt;E&gt;(<span class="string">b"u"</span>, circuit)<span class="question-mark">?</span>;
 
     <span class="comment">// convert challenge vars into FpElemVars
     </span><span class="kw">let </span>challenge_var = ChallengesVar {

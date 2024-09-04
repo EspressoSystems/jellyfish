@@ -1128,9 +1128,9 @@
             // protocol transcript. This approach is more secure as `r` depends not only
             // on the proofs, but also the list of public inputs and verifying keys.
             </span><span class="kw">for </span>pcs_info <span class="kw">in </span>pcs_infos {
-                transcript.append_challenge::&lt;E&gt;(<span class="string">b"u"</span>, <span class="kw-2">&amp;</span>pcs_info.u)<span class="question-mark">?</span>;
+                transcript.append_field_elem::&lt;E&gt;(<span class="string">b"u"</span>, <span class="kw-2">&amp;</span>pcs_info.u)<span class="question-mark">?</span>;
             }
-            transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"r"</span>)<span class="question-mark">?
+            transcript.get_challenge::&lt;E&gt;(<span class="string">b"r"</span>)<span class="question-mark">?
         </span>};
 
         <span class="comment">// Compute A := A0 + r * A1 + ... + r^{m-1} * Am
@@ -1201,7 +1201,7 @@
             transcript.append_commitments(<span class="string">b"witness_poly_comms"</span>, wires_poly_comms)<span class="question-mark">?</span>;
         }
         <span class="kw">let </span>tau = <span class="kw">if </span>verify_keys.iter().any(|vk| vk.plookup_vk.is_some()) {
-            <span class="prelude-val">Some</span>(transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>)
+            <span class="prelude-val">Some</span>(transcript.get_challenge::&lt;E&gt;(<span class="string">b"tau"</span>)<span class="question-mark">?</span>)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
@@ -1212,8 +1212,8 @@
             }
         }
 
-        <span class="kw">let </span>beta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>gamma = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>beta = transcript.get_challenge::&lt;E&gt;(<span class="string">b"beta"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>gamma = transcript.get_challenge::&lt;E&gt;(<span class="string">b"gamma"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>prod_perm_poly_comm <span class="kw">in </span>batch_proof.prod_perm_poly_comms_vec.iter() {
             transcript.append_commitment(<span class="string">b"perm_poly_comms"</span>, prod_perm_poly_comm)<span class="question-mark">?</span>;
         }
@@ -1224,9 +1224,9 @@
             }
         }
 
-        <span class="kw">let </span>alpha = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>alpha = transcript.get_challenge::&lt;E&gt;(<span class="string">b"alpha"</span>)<span class="question-mark">?</span>;
         transcript.append_commitments(<span class="string">b"quot_poly_comms"</span>, <span class="kw-2">&amp;</span>batch_proof.split_quot_poly_comms)<span class="question-mark">?</span>;
-        <span class="kw">let </span>zeta = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>zeta = transcript.get_challenge::&lt;E&gt;(<span class="string">b"zeta"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>poly_evals <span class="kw">in </span>batch_proof.poly_evals_vec.iter() {
             transcript.append_proof_evaluations::&lt;E&gt;(poly_evals)<span class="question-mark">?</span>;
         }
@@ -1236,10 +1236,10 @@
             }
         }
 
-        <span class="kw">let </span>v = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>v = transcript.get_challenge::&lt;E&gt;(<span class="string">b"v"</span>)<span class="question-mark">?</span>;
         transcript.append_commitment(<span class="string">b"open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.opening_proof)<span class="question-mark">?</span>;
         transcript.append_commitment(<span class="string">b"shifted_open_proof"</span>, <span class="kw-2">&amp;</span>batch_proof.shifted_opening_proof)<span class="question-mark">?</span>;
-        <span class="kw">let </span>u = transcript.get_and_append_challenge::&lt;E&gt;(<span class="string">b"u"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>u = transcript.get_challenge::&lt;E&gt;(<span class="string">b"u"</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Challenges {
             tau,
             alpha,

@@ -181,13 +181,6 @@
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -223,7 +216,7 @@
 ///
 /// 1. state: \[F: STATE_SIZE\] = hash(state|transcript)
 /// 2. challenge = state\[0\]
-/// 3. transcript = vec!\[challenge\]
+/// 3. transcript = vec!\[\]
 </span><span class="kw">pub struct </span>RescueTranscript&lt;F&gt;
 <span class="kw">where
     </span>F: RescueParameter,
@@ -313,9 +306,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Append a challenge to the transcript. `_label` is omitted for
-    /// efficiency.
-    </span><span class="kw">fn </span>append_challenge&lt;E&gt;(
+    <span class="kw">fn </span>append_field_elem&lt;E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
         challenge: <span class="kw-2">&amp;</span>E::ScalarField,
@@ -355,12 +346,8 @@
     }
 
     <span class="doccomment">/// Generate the challenge for the current transcript,
-    /// and then append it to the transcript. `_label` is omitted for
-    /// efficiency.
-    </span><span class="kw">fn </span>get_and_append_challenge&lt;E&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        _label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
+    /// `_label` is omitted for efficiency.
+    </span><span class="kw">fn </span>get_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
     <span class="kw">where
         </span>E: Pairing&lt;BaseField = F&gt;,
     {
@@ -373,7 +360,6 @@
         <span class="kw">let </span>challenge = fq_to_fr_with_mask::&lt;F, E::ScalarField&gt;(<span class="kw-2">&amp;</span>tmp[<span class="number">0</span>]);
         <span class="self">self</span>.state.copy_from_slice(<span class="kw-2">&amp;</span>tmp);
         <span class="self">self</span>.transcript = Vec::new();
-        <span class="self">self</span>.transcript.push(field_switching(<span class="kw-2">&amp;</span>challenge));
 
         <span class="prelude-val">Ok</span>(challenge)
     }

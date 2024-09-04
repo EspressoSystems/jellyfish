@@ -402,15 +402,6 @@
 <a href="#402" id="402">402</a>
 <a href="#403" id="403">403</a>
 <a href="#404" id="404">404</a>
-<a href="#405" id="405">405</a>
-<a href="#406" id="406">406</a>
-<a href="#407" id="407">407</a>
-<a href="#408" id="408">408</a>
-<a href="#409" id="409">409</a>
-<a href="#410" id="410">410</a>
-<a href="#411" id="411">411</a>
-<a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -550,16 +541,6 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="comment">// Append a challenge variable to the transcript.
-    // For efficiency purpose, label is not used for rescue FS.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_challenge_var(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        _label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
-        challenge_var: <span class="kw-2">&amp;</span>Variable,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-        <span class="self">self</span>.append_variable(_label, challenge_var)
-    }
-
     <span class="comment">// Append the proof evaluation to the transcript
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>append_proof_evaluations_vars(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -584,7 +565,9 @@
     // For efficiency purpose, label is not used for rescue FS.
     // Note that this function currently only supports bls12-377
     // curve due to its decomposition method.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_and_append_challenge_var&lt;E&gt;(
+    //
+    // `_label` is omitted for efficiency.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_challenge_var&lt;E&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8],
         circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
@@ -606,7 +589,7 @@
         // This algorithm takes in 3 steps
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
-        // 3. transcript = vec![challenge]
+        // 3. transcript = vec![]
         // ==================================
 
         // step 1. state: [F: STATE_SIZE] = hash(state|transcript)
@@ -623,7 +606,6 @@
         // finish and update the states
         </span><span class="self">self</span>.state_var.copy_from_slice(<span class="kw-2">&amp;</span>res_var[<span class="number">0</span>..STATE_SIZE]);
         <span class="self">self</span>.transcript_var = Vec::new();
-        <span class="self">self</span>.append_challenge_var(_label, <span class="kw-2">&amp;</span>challenge_var)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(challenge_var)
     }
@@ -680,10 +662,10 @@
                     .unwrap();
             }
 
-            <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
+            <span class="kw">let </span>challenge = transcript.get_challenge::&lt;E&gt;(label).unwrap();
 
             <span class="kw">let </span>challenge_var = transcript_var
-                .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+                .get_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
                 .unwrap();
 
             <span class="macro">assert_eq!</span>(
@@ -742,10 +724,10 @@
             .append_vk_and_pub_input_vars::&lt;E&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>dummy_vk_var, <span class="kw-2">&amp;</span>[])
             .unwrap();
 
-        <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
+        <span class="kw">let </span>challenge = transcript.get_challenge::&lt;E&gt;(label).unwrap();
 
         <span class="kw">let </span>challenge_var = transcript_var
-            .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+            .get_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
             .unwrap();
 
         <span class="macro">assert_eq!</span>(
@@ -811,10 +793,10 @@
                 .append_vk_and_pub_input_vars::&lt;E&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>vk_var, <span class="kw-2">&amp;</span>input_fp_elem_vars)
                 .unwrap();
 
-            <span class="kw">let </span>challenge = transcript.get_and_append_challenge::&lt;E&gt;(label).unwrap();
+            <span class="kw">let </span>challenge = transcript.get_challenge::&lt;E&gt;(label).unwrap();
 
             <span class="kw">let </span>challenge_var = transcript_var
-                .get_and_append_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
+                .get_challenge_var::&lt;E&gt;(label, <span class="kw-2">&amp;mut </span>circuit)
                 .unwrap();
 
             <span class="macro">assert_eq!</span>(
