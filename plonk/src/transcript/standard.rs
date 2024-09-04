@@ -9,7 +9,6 @@ use super::PlonkTranscript;
 use crate::errors::PlonkError;
 use ark_ec::pairing::Pairing;
 use ark_ff::PrimeField;
-use jf_utils::to_bytes;
 use merlin::Transcript;
 
 /// A wrapper of `merlin::Transcript`.
@@ -28,19 +27,13 @@ impl<F> PlonkTranscript<F> for StandardTranscript {
         Ok(())
     }
 
-    // generate the challenge for the current transcript
-    // and append it to the transcript
-    fn get_and_append_challenge<E>(
-        &mut self,
-        label: &'static [u8],
-    ) -> Result<E::ScalarField, PlonkError>
+    fn get_challenge<E>(&mut self, label: &'static [u8]) -> Result<E::ScalarField, PlonkError>
     where
         E: Pairing,
     {
         let mut buf = [0u8; 64];
         self.0.challenge_bytes(label, &mut buf);
         let challenge = E::ScalarField::from_le_bytes_mod_order(&buf);
-        self.0.append_message(label, &to_bytes!(&challenge)?);
         Ok(challenge)
     }
 }

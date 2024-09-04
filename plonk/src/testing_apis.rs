@@ -12,6 +12,7 @@
 #![allow(missing_docs)]
 
 use crate::{
+    constants::KECCAK256_STATE_SIZE,
     errors::PlonkError,
     lagrange::LagrangeCoeffs,
     proof_system::{
@@ -379,12 +380,12 @@ where
 /// exposing the internal states for testing purposes
 impl SolidityTranscript {
     /// Create a new transcript from specific internal states.
-    pub fn from_internal(transcript: Vec<u8>) -> Self {
-        Self { transcript }
+    pub fn from_internal(state: [u8; KECCAK256_STATE_SIZE], transcript: Vec<u8>) -> Self {
+        Self { state, transcript }
     }
 
     /// Returns the internal states
-    pub fn internal(&self) -> Vec<u8> {
-        self.transcript.clone()
+    pub fn internal(&self) -> ([u8; KECCAK256_STATE_SIZE], Vec<u8>) {
+        (self.state.clone(), self.transcript.clone())
     }
 }

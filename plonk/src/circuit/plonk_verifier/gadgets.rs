@@ -229,25 +229,25 @@ where
         transcript_var.append_commitments_vars(b"witness_poly_comms", wires_poly_comms)?;
     }
 
-    let beta = transcript_var.get_and_append_challenge_var::<E>(b"beta", circuit)?;
-    let gamma = transcript_var.get_and_append_challenge_var::<E>(b"gamma", circuit)?;
+    let beta = transcript_var.get_challenge_var::<E>(b"beta", circuit)?;
+    let gamma = transcript_var.get_challenge_var::<E>(b"gamma", circuit)?;
     for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
         transcript_var.append_commitment_var(b"perm_poly_comms", prod_perm_poly_comm)?;
     }
 
-    let alpha = transcript_var.get_and_append_challenge_var::<E>(b"alpha", circuit)?;
+    let alpha = transcript_var.get_challenge_var::<E>(b"alpha", circuit)?;
     transcript_var
         .append_commitments_vars(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
-    let zeta = transcript_var.get_and_append_challenge_var::<E>(b"zeta", circuit)?;
+    let zeta = transcript_var.get_challenge_var::<E>(b"zeta", circuit)?;
     for poly_evals in batch_proof.poly_evals_vec.iter() {
         transcript_var.append_proof_evaluations_vars(circuit, poly_evals)?;
     }
 
-    let v = transcript_var.get_and_append_challenge_var::<E>(b"v", circuit)?;
+    let v = transcript_var.get_challenge_var::<E>(b"v", circuit)?;
     transcript_var.append_commitment_var(b"open_proof", &batch_proof.opening_proof)?;
     transcript_var
         .append_commitment_var(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
-    let u = transcript_var.get_and_append_challenge_var::<E>(b"u", circuit)?;
+    let u = transcript_var.get_challenge_var::<E>(b"u", circuit)?;
 
     // convert challenge vars into FpElemVars
     let challenge_var = ChallengesVar {
