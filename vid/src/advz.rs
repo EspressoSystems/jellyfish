@@ -35,6 +35,7 @@ use digest::crypto_common::Output;
 use itertools::Itertools;
 use jf_merkle_tree::{
     hasher::{HasherDigest, HasherMerkleTree, HasherNode},
+    prelude::{MerkleNode, MerkleProof},
     MerkleCommitment, MerkleTreeScheme,
 };
 #[cfg(feature = "gpu-vid")]
@@ -290,14 +291,40 @@ where
     index: u32,
 
     #[serde(with = "canonical")]
-    evals: Vec<KzgEval<E>>,
-
-    #[serde(with = "canonical")]
     // aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
+    // eval_proofs.len() equals multiplicity
+    // TODO put all evals into a single merkle proof
+    // https://github.com/EspressoSystems/jellyfish/issues/671
     eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
+}
+
+impl<E, H> Share<E, H>
+where
+    E: Pairing,
+    H: HasherDigest,
+{
+    /// Return a [`Vec`] of payload data for this share.
+    ///
+    /// These data are extracted from [`MerkleProof`] structs. The returned
+    /// [`Vec`] has length `multiplicity * num_polys`s
+    ///
+    /// TODO store these data in a new field `Share::evals` after fixing
+    /// https://github.com/EspressoSystems/jellyfish/issues/658
+    fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
+        self.eval_proofs
+            .iter()
+            .map(|eval_proof| {
+                eval_proof
+                    .elem()
+                    .cloned()
+                    .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))
+            })
+            .flatten_ok()
+            .collect()
+    }
 }
 
 /// The [`VidScheme::Common`] type for [`Advz`].
@@ -435,10 +462,11 @@ where
                 common.multiplicity, multiplicity
             )));
         }
-        if share.evals.len() / multiplicity as usize != common.poly_commits.len() {
+        let evals = share.evals()?;
+        if evals.len() / multiplicity as usize != common.poly_commits.len() {
             return Err(VidError::Argument(format!(
                 "number of share evals / multiplicity {}/{} differs from number of common polynomial commitments {}",
-                share.evals.len(), multiplicity,
+                evals.len(), multiplicity,
                 common.poly_commits.len()
             )));
         }
@@ -497,14 +525,13 @@ where
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
             let range = i * polys_len..(i + 1) * polys_len;
             let aggregate_eval = polynomial_eval(
-                share
-                    .evals
+                evals
                     .get(range.clone())
                     .ok_or_else(|| {
                         VidError::Internal(anyhow::anyhow!(
                             "share evals range {:?} out of bounds for length {}",
                             range,
-                            share.evals.len()
+                            evals.len()
                         ))
                     })?
                     .iter()
@@ -553,23 +580,27 @@ where
             )));
         }
 
+        let shares_evals = shares
+            .iter()
+            .map(|share| share.evals())
+            .collect::<VidResult<Vec<_>>>()?;
+
         // check args: all shares must have equal evals len
-        let num_evals = shares
+        let num_evals = shares_evals
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
-            .evals
             .len();
-        if let Some((index, share)) = shares
+        if let Some((index, share_evals)) = shares_evals
             .iter()
             .enumerate()
-            .find(|(_, s)| s.evals.len() != num_evals)
+            .find(|(_, evals)| evals.len() != num_evals)
         {
             return Err(VidError::Argument(format!(
                 "shares do not have equal evals lengths: share {} len {}, share {} len {}",
                 0,
                 num_evals,
                 index,
-                share.evals.len()
+                share_evals.len()
             )));
         }
         if num_evals != common.multiplicity as usize * common.poly_commits.len() {
@@ -590,12 +621,12 @@ where
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
-            for share in shares {
+            for (share, share_evals) in shares.iter().zip(shares_evals.iter()) {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..common.multiplicity as usize {
                     evals.push((
                         (share.index * common.multiplicity) as usize + m,
-                        share.evals[(m * num_polys) + p],
+                        share_evals[(m * num_polys) + p],
                     ))
                 }
             }
@@ -677,7 +708,6 @@ where
             multiplicity * self.recovery_threshold
         ));
         let all_storage_node_evals = {
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
             let all_poly_evals = parallelizable_slice_iter(&polys)
                 .map(|poly| {
                     UnivariateKzgPCS::<E>::multi_open_rou_evals(
@@ -689,6 +719,10 @@ where
                 })
                 .collect::<Result<Vec<_>, VidError>>()?;
 
+            // distribute evals from each poly among the storage nodes
+            //
+            // perf warning: runtime is quadratic in payload_size
+            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
             for poly_evals in all_poly_evals {
                 for (storage_node_evals, poly_eval) in all_storage_node_evals
                     .iter_mut()
@@ -776,7 +810,6 @@ where
                     let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
                     Share {
                         index: index as u32,
-                        evals: evals.into_iter().flatten().collect::<Vec<_>>(),
                         aggregate_proofs: proofs,
                         eval_proofs,
                     }
