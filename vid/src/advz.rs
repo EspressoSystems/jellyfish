@@ -298,7 +298,7 @@ where
     // eval_proofs.len() equals multiplicity
     // TODO put all evals into a single merkle proof
     // https://github.com/EspressoSystems/jellyfish/issues/671
-    eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
+    evals_proof: Vec<KzgEvalsMerkleTreeProof<E, H>>,
 }
 
 impl<E, H> Share<E, H>
@@ -314,7 +314,7 @@ where
     /// TODO store these data in a new field `Share::evals` after fixing
     /// https://github.com/EspressoSystems/jellyfish/issues/658
     fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
-        self.eval_proofs
+        self.evals_proof
             .iter()
             .map(|eval_proof| {
                 eval_proof
@@ -470,10 +470,10 @@ where
                 common.poly_commits.len()
             )));
         }
-        if share.eval_proofs.len() != multiplicity as usize {
+        if share.evals_proof.len() != multiplicity as usize {
             return Err(VidError::Argument(format!(
                 "number of eval_proofs {} differs from common multiplicity {}",
-                share.eval_proofs.len(),
+                share.evals_proof.len(),
                 multiplicity,
             )));
         }
@@ -489,7 +489,7 @@ where
             if KzgEvalsMerkleTree::<E, H>::verify(
                 common.all_evals_digest,
                 &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * multiplicity) + i),
-                &share.eval_proofs[i as usize],
+                &share.evals_proof[i as usize],
             )
             .map_err(vid)?
             .is_err()
@@ -811,7 +811,7 @@ where
                     Share {
                         index: index as u32,
                         aggregate_proofs: proofs,
-                        eval_proofs,
+                        evals_proof: eval_proofs,
                     }
                 })
                 .collect()

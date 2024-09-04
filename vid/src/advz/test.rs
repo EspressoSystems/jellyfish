@@ -60,7 +60,7 @@ fn sad_path_verify_share_corrupt_share() {
         // missing share eval
         {
             let share_missing_eval = Share {
-                eval_proofs: share.eval_proofs[1..].to_vec(),
+                evals_proof: share.evals_proof[1..].to_vec(),
                 ..share.clone()
             };
             assert_arg_err(
@@ -72,7 +72,7 @@ fn sad_path_verify_share_corrupt_share() {
         // corrupted share eval
         {
             let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.eval_proofs[0]).unwrap()
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof[0]).unwrap()
                 [0]
             .double_in_place();
             advz.verify_share(&share_bad_eval, &common, &commit)
@@ -108,7 +108,7 @@ fn sad_path_verify_share_corrupt_share() {
             // (without also causing a deserialization failure).
             // So we use another share's proof instead.
             let share_bad_evals_proof = Share {
-                eval_proofs: shares[(i + 1) % shares.len()].eval_proofs.clone(),
+                evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
                 ..share.clone()
             };
             advz.verify_share(&share_bad_evals_proof, &common, &commit)
@@ -170,7 +170,7 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     common.poly_commits.pop();
-    shares[0].eval_proofs.pop();
+    shares[0].evals_proof.pop();
 
     // equal nonzero lengths for common, share
     assert_arg_err(
@@ -179,7 +179,7 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     );
 
     common.poly_commits.clear();
-    shares[0].eval_proofs.clear();
+    shares[0].evals_proof.clear();
 
     // zero length for common, share
     assert_arg_err(
@@ -198,7 +198,7 @@ fn sad_path_recover_payload_corrupt_shares() {
         // unequal share eval lengths
         let mut shares_missing_evals = shares.clone();
         for i in 0..shares_missing_evals.len() - 1 {
-            shares_missing_evals[i].eval_proofs.pop();
+            shares_missing_evals[i].evals_proof.pop();
             assert_arg_err(
                 advz.recover_payload(&shares_missing_evals, &common),
                 format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
@@ -206,7 +206,7 @@ fn sad_path_recover_payload_corrupt_shares() {
         }
 
         // 1 eval missing from all shares
-        shares_missing_evals.last_mut().unwrap().eval_proofs.pop();
+        shares_missing_evals.last_mut().unwrap().evals_proof.pop();
         assert_arg_err(
             advz.recover_payload(&shares_missing_evals, &common),
             format!("all shares missing 1 eval should be arg error").as_str(),
@@ -276,7 +276,7 @@ fn sad_path_verify_share_with_multiplicity() {
         {
             let mut share_bad_eval = share.clone();
             Share::<Bn254, Sha256>::extract_leaf_mut(
-                &mut share_bad_eval.eval_proofs[common.multiplicity as usize - 1],
+                &mut share_bad_eval.evals_proof[common.multiplicity as usize - 1],
             )
             .unwrap()[common.poly_commits.len() - 1]
                 .double_in_place();
@@ -291,10 +291,10 @@ fn sad_path_verify_share_with_multiplicity() {
         // last eval proof of the next share.
         {
             let mut share_bad_eval_proofs = share.clone();
-            let next_eval_proof = shares[(i + 1) % shares.len()].eval_proofs
+            let next_eval_proof = shares[(i + 1) % shares.len()].evals_proof
                 [common.multiplicity as usize - 1]
                 .clone();
-            share_bad_eval_proofs.eval_proofs[common.multiplicity as usize - 1] = next_eval_proof;
+            share_bad_eval_proofs.evals_proof[common.multiplicity as usize - 1] = next_eval_proof;
             advz.verify_share(&share_bad_eval_proofs, &common, &commit)
                 .unwrap()
                 .expect_err("bad share evals proof should fail verification");
