@@ -306,14 +306,13 @@ where
     /// Return a [`Vec`] of payload data for this share.
     ///
     /// These data are extracted from [`MerkleProof`] structs. The returned
-    /// [`Vec`] has length `multiplicity * num_polys`s
+    /// [`Vec`] has length `multiplicity * num_polys`
     ///
     /// TODO store these data in a new field `Share::evals` after fixing
     /// https://github.com/EspressoSystems/jellyfish/issues/658
-    fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
+    fn evals(&self) -> VidResult<&Vec<KzgEval<E>>> {
         self.evals_proof
             .elem()
-            .cloned()
             .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))
     }
 }
