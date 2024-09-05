@@ -447,6 +447,7 @@ where
         }
         let multiplicity =
             self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?)?;
+        let multiplicity_usize = usize::try_from(multiplicity).map_err(vid)?;
         if common.multiplicity != multiplicity {
             return Err(VidError::Argument(format!(
                 "common multiplicity {} differs from derived min {}",
@@ -475,6 +476,7 @@ where
         .map_err(vid)?
         .is_err()
         {
+            ark_std::println!("Gus 3");
             return Ok(Err(()));
         }
 
@@ -500,31 +502,21 @@ where
         //
         // some boilerplate needed to accommodate builds without `parallel`
         // feature.
-        let multiplicities = Vec::from_iter((0..multiplicity as usize));
+        let multiplicities = Vec::from_iter((0..multiplicity_usize));
         let polys_len = common.poly_commits.len();
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
-        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
-            let range = i * polys_len..(i + 1) * polys_len;
-            let aggregate_eval = polynomial_eval(
-                evals
-                    .get(range.clone())
-                    .ok_or_else(|| {
-                        VidError::Internal(anyhow::anyhow!(
-                            "share evals range {:?} out of bounds for length {}",
-                            range,
-                            evals.len()
-                        ))
-                    })?
-                    .iter()
-                    .map(FieldMultiplier),
-                pseudorandom_scalar,
-            );
+        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|m| {
+            let evals_iter = evals.iter().skip(*m).step_by(multiplicity_usize);
+            let aggregate_eval =
+                polynomial_eval(evals_iter.map(FieldMultiplier), pseudorandom_scalar);
+            let domain_index = usize::try_from(share.index).map_err(vid)?
+                + m * usize::try_from(self.num_storage_nodes).map_err(vid)?;
             Ok(UnivariateKzgPCS::verify(
                 &self.vk,
                 &aggregate_poly_commit,
-                &multi_open_domain.element((share.index * multiplicity) as usize + i),
+                &multi_open_domain.element(domain_index),
                 &aggregate_eval,
-                &share.aggregate_proofs[*i],
+                &share.aggregate_proofs[*m],
             )
             .map_err(vid)?
             .then_some(())

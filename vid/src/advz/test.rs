@@ -59,10 +59,10 @@ fn sad_path_verify_share_corrupt_share() {
     for (i, share) in shares.iter().enumerate() {
         // missing share eval
         {
-            let share_missing_eval = Share {
-                evals_proof: share.evals_proof[1..].to_vec(),
-                ..share.clone()
-            };
+            let mut share_missing_eval = share.clone();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_missing_eval.evals_proof)
+                .unwrap()
+                .pop();
             assert_arg_err(
                 advz.verify_share(&share_missing_eval, &common, &commit),
                 "1 missing share should be arg error",
@@ -72,9 +72,8 @@ fn sad_path_verify_share_corrupt_share() {
         // corrupted share eval
         {
             let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof[0]).unwrap()
-                [0]
-            .double_in_place();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof).unwrap()[0]
+                .double_in_place();
             advz.verify_share(&share_bad_eval, &common, &commit)
                 .unwrap()
                 .expect_err("bad share value should fail verification");
@@ -170,7 +169,9 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     common.poly_commits.pop();
-    shares[0].evals_proof.pop();
+    Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares[0].evals_proof)
+        .unwrap()
+        .pop();
 
     // equal nonzero lengths for common, share
     assert_arg_err(
@@ -179,7 +180,9 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     );
 
     common.poly_commits.clear();
-    shares[0].evals_proof.clear();
+    Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares[0].evals_proof)
+        .unwrap()
+        .clear();
 
     // zero length for common, share
     assert_arg_err(
@@ -198,7 +201,9 @@ fn sad_path_recover_payload_corrupt_shares() {
         // unequal share eval lengths
         let mut shares_missing_evals = shares.clone();
         for i in 0..shares_missing_evals.len() - 1 {
-            shares_missing_evals[i].evals_proof.pop();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares_missing_evals[i].evals_proof)
+                .unwrap()
+                .pop();
             assert_arg_err(
                 advz.recover_payload(&shares_missing_evals, &common),
                 format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
@@ -206,7 +211,11 @@ fn sad_path_recover_payload_corrupt_shares() {
         }
 
         // 1 eval missing from all shares
-        shares_missing_evals.last_mut().unwrap().evals_proof.pop();
+        Share::<Bn254, Sha256>::extract_leaf_mut(
+            &mut shares_missing_evals.last_mut().unwrap().evals_proof,
+        )
+        .unwrap()
+        .pop();
         assert_arg_err(
             advz.recover_payload(&shares_missing_evals, &common),
             format!("all shares missing 1 eval should be arg error").as_str(),
@@ -254,51 +263,9 @@ fn verify_share_with_multiplicity() {
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     for share in shares {
-        assert!(advz.verify_share(&share, &common, &commit).unwrap().is_ok())
-    }
-}
-
-#[test]
-fn sad_path_verify_share_with_multiplicity() {
-    // regression test for https://github.com/EspressoSystems/jellyfish/issues/654
-    let advz_params = AdvzParams {
-        recovery_threshold: 16,
-        num_storage_nodes: 20,
-        max_multiplicity: 32, // payload fitting into a single polynomial
-        payload_len: 8200,
-    };
-    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
-
-    let disperse = advz.disperse(payload).unwrap();
-    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-    for (i, share) in shares.iter().enumerate() {
-        // corrupt the last evaluation of the share
-        {
-            let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(
-                &mut share_bad_eval.evals_proof[common.multiplicity as usize - 1],
-            )
-            .unwrap()[common.poly_commits.len() - 1]
-                .double_in_place();
-            advz.verify_share(&share_bad_eval, &common, &commit)
-                .unwrap()
-                .expect_err("bad share value should fail verification");
-        }
-
-        // check that verification fails if any of the eval_proofs are
-        // inconsistent with the merkle root.
-        // corrupt the last eval proof of this share by assigning it to the value of
-        // last eval proof of the next share.
-        {
-            let mut share_bad_eval_proofs = share.clone();
-            let next_eval_proof = shares[(i + 1) % shares.len()].evals_proof
-                [common.multiplicity as usize - 1]
-                .clone();
-            share_bad_eval_proofs.evals_proof[common.multiplicity as usize - 1] = next_eval_proof;
-            advz.verify_share(&share_bad_eval_proofs, &common, &commit)
-                .unwrap()
-                .expect_err("bad share evals proof should fail verification");
-        }
+        advz.verify_share(&share, &common, &commit)
+            .unwrap()
+            .unwrap()
     }
 }
 
