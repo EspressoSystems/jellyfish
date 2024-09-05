@@ -476,7 +476,6 @@ where
         .map_err(vid)?
         .is_err()
         {
-            ark_std::println!("Gus 3");
             return Ok(Err(()));
         }
 
@@ -553,17 +552,17 @@ where
             )));
         }
 
-        let shares_evals = shares
+        let all_shares_evals = shares
             .iter()
             .map(|share| share.evals())
             .collect::<VidResult<Vec<_>>>()?;
 
         // check args: all shares must have equal evals len
-        let num_evals = shares_evals
+        let num_evals = all_shares_evals
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
             .len();
-        if let Some((index, share_evals)) = shares_evals
+        if let Some((index, share_evals)) = all_shares_evals
             .iter()
             .enumerate()
             .find(|(_, evals)| evals.len() != num_evals)
@@ -585,8 +584,9 @@ where
         }
 
         // convenience quantities
-        let chunk_size =
-            usize::try_from(common.multiplicity * self.recovery_threshold).map_err(vid)?;
+        let multiplicity = usize::try_from(common.multiplicity).map_err(vid)?;
+        let num_storage_nodes = usize::try_from(self.num_storage_nodes).map_err(vid)?;
+        let chunk_size = multiplicity * usize::try_from(self.recovery_threshold).map_err(vid)?;
         let num_polys = common.poly_commits.len();
         let elems_capacity = num_polys * chunk_size;
         let fft_domain = Self::eval_domain(chunk_size)?;
@@ -594,12 +594,12 @@ where
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
-            for (share, share_evals) in shares.iter().zip(shares_evals.iter()) {
+            for (share, share_evals) in shares.iter().zip(all_shares_evals.iter()) {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..common.multiplicity as usize {
                     evals.push((
-                        (share.index * common.multiplicity) as usize + m,
-                        share_evals[(m * num_polys) + p],
+                        usize::try_from(share.index).map_err(vid)? + m * num_storage_nodes,
+                        share_evals[p * multiplicity + m],
                     ))
                 }
             }
