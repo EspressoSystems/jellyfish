@@ -58,6 +58,12 @@ fn sad_path_verify_share_corrupt_share() {
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     for (i, share) in shares.iter().enumerate() {
+        // happy path: uncorrupted share
+        assert!(common.multiplicity > 1, "multiplicity should be nontrivial");
+        advz.verify_share(&share, &common, &commit)
+            .unwrap()
+            .unwrap();
+
         // missing share eval
         {
             let mut share_missing_eval = share.clone();
@@ -270,26 +276,6 @@ fn sad_path_recover_payload_corrupt_shares() {
             advz.recover_payload(&shares_bad_indices, &common)
                 .expect_err("recover_payload should fail when indices are out of bounds");
         }
-    }
-}
-
-#[test]
-fn verify_share_with_multiplicity() {
-    let advz_params = AdvzParams {
-        recovery_threshold: 16,
-        num_storage_nodes: 20,
-        max_multiplicity: 4,
-        payload_len: 4000,
-    };
-    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
-
-    let disperse = advz.disperse(payload).unwrap();
-    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-
-    for share in shares {
-        advz.verify_share(&share, &common, &commit)
-            .unwrap()
-            .unwrap()
     }
 }
 
