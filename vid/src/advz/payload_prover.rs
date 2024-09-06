@@ -245,9 +245,16 @@ where
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_consistency(&stmt)?;
 
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-start: range_byte_to_poly");
         // index conversion
         let range_poly = self.range_byte_to_poly(&stmt.range);
 
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-end: range_byte_to_poly");
+
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-start: rebuild polynomials");
         // rebuild the needed payload elements from statement and proof
         let elems_iter = proof
             .prefix_elems
@@ -261,19 +268,57 @@ where
                     .chain(proof.suffix_bytes.iter()),
             ))
             .chain(proof.suffix_elems.iter().cloned());
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-end: rebuild polynomials");
 
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-start: rebuild commits");
         // rebuild the poly commits, check against `common`
         for (commit_index, evals_iter) in range_poly.into_iter().zip(
             elems_iter
                 .chunks(self.recovery_threshold as usize)
                 .into_iter(),
         ) {
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-start: construct polynomial {}",
+                commit_index
+            ));
             let poly = self.polynomial(evals_iter);
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-end: construct polynomial {}",
+                commit_index
+            ));
+
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-start: commit polynomial {}",
+                commit_index
+            ));
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-end: commit polynomial {}",
+                commit_index
+            ));
+
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-start: check commit {}",
+                commit_index
+            ));
             if poly_commit != stmt.common.poly_commits[commit_index] {
                 return Ok(Err(()));
             }
+            #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+            ark_std::println!(ark_std::format!(
+                "cycle-tracker-end: check commit {}",
+                commit_index
+            ));
         }
+        #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
+        ark_std::println!("cycle-tracker-end: rebuild commits");
         Ok(Ok(()))
     }
 }
