@@ -478,13 +478,17 @@ where
             return Ok(Err(()));
         }
 
+        // the magic pseudorandom scalar used for aggregation
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
-        // Compute aggregate polynomial [commitment|evaluation]
-        // as a pseudorandom linear combo of [commitments|evaluations]
-        // via evaluation of the polynomial whose coefficients are
-        // [commitments|evaluations] and whose input point is the pseudorandom
-        // scalar.
+        // Compute an aggregate polynomial [commitment|evaluation] as a
+        // pseudorandom linear combo of [commitments|evaluations].
+        // To this end use function `polynomoial_eval` where each "coefficient"
+        // is actually a [commitment|evaluation] and the input point is
+        // `pseudorandom_scalar`.
+        //
+        // - Here: aggregate polynomial commitment in `aggregate_poly_commit`.
+        // - Below: aggregate polynomial evals in `aggregate_eval`.
         let aggregate_poly_commit = KzgCommit::<E>::from(
             polynomial_eval(
                 common
@@ -496,13 +500,12 @@ where
             .into(),
         );
 
-        // verify aggregate proofs
-        //
-        // some boilerplate needed to accommodate builds without `parallel`
-        // feature.
+        // convenience quantities
         let multiplicities = Vec::from_iter((0..multiplicity_usize));
         let polys_len = common.poly_commits.len();
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
+
+        // verify aggregate proofs
         let verification_iter = parallelizable_slice_iter(&multiplicities).map(|m| {
             let evals_iter = evals.iter().skip(*m).step_by(multiplicity_usize);
             let aggregate_eval =
@@ -520,6 +523,8 @@ where
             .then_some(())
             .ok_or(()))
         });
+
+        // Boilerplate needed to accommodate builds without `parallel`feature.
         let abort = |result: &VidResult<Result<(), ()>>| match result {
             Ok(success) => success.is_err(),
             Err(_) => true,
