@@ -69,10 +69,33 @@ fn sad_path_verify_share_corrupt_share() {
             );
         }
 
-        // corrupted share eval
+        // corrupted share eval: domain index < num_storage_nodes
+        //
+        // The first eval (`first_mut` below) always has domain index `i` for `i
+        // < num_storage_nodes`.
         {
             let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof).unwrap()[0]
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof)
+                .unwrap()
+                .first_mut()
+                .unwrap()
+                .double_in_place();
+            advz.verify_share(&share_bad_eval, &common, &commit)
+                .unwrap()
+                .expect_err("bad share value should fail verification");
+        }
+
+        // corrupted share eval: domain index > num_storage_nodes
+        //
+        // The last eval (`last_mut` below) always has domain index `i +
+        // num_storage_nodes * (multiplicity - 1)`, which exceeds
+        // `num_storage_nodes` whenever multiplicity > 1.
+        {
+            let mut share_bad_eval = share.clone();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof)
+                .unwrap()
+                .last_mut()
+                .unwrap()
                 .double_in_place();
             advz.verify_share(&share_bad_eval, &common, &commit)
                 .unwrap()
@@ -459,9 +482,24 @@ pub(super) fn advz_init() -> (Advz<Bn254, Sha256>, Vec<u8>) {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
-        max_multiplicity: 1,
+        max_multiplicity: 4,
         payload_len: 4000,
     };
+
+    assert!(
+        advz_params.max_multiplicity > 1,
+        "multiplicity should be nontrivial"
+    );
+    {
+        let elem_byte_len = bytes_to_field::elem_byte_capacity::<<Bn254 as Pairing>::ScalarField>();
+        let num_payload_elems =
+            u32::try_from(advz_params.payload_len.div_ceil(elem_byte_len)).unwrap();
+        assert!(
+            num_payload_elems > advz_params.max_multiplicity * advz_params.recovery_threshold,
+            "payload size should span multiple polynomials"
+        );
+    }
+
     advz_init_with(advz_params)
 }
 
