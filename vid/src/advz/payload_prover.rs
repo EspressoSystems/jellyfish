@@ -280,42 +280,24 @@ where
                 .into_iter(),
         ) {
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-start: construct polynomial {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-start: construct polynomial {}", commit_index);
             let poly = self.polynomial(evals_iter);
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-end: construct polynomial {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-end: construct polynomial {}", commit_index);
 
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-start: commit polynomial {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-start: commit polynomial {}", commit_index);
             let poly_commit = UnivariateKzgPCS::commit(&self.ck, &poly).map_err(vid)?;
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-end: commit polynomial {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-end: commit polynomial {}", commit_index);
 
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-start: check commit {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-start: check commit {}", commit_index);
             if poly_commit != stmt.common.poly_commits[commit_index] {
                 return Ok(Err(()));
             }
             #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
-            ark_std::println!(ark_std::format!(
-                "cycle-tracker-end: check commit {}",
-                commit_index
-            ));
+            ark_std::println!("cycle-tracker-end: check commit {}", commit_index);
         }
         #[cfg(all(target_os = "zkvm", target_vendor = "succinct"))]
         ark_std::println!("cycle-tracker-end: rebuild commits");
