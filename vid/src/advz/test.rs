@@ -4,6 +4,7 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec,
 };
+use core::ops::AddAssign;
 use jf_pcs::{
     checked_fft_size,
     prelude::{Commitment, UnivariateUniversalParams},
@@ -79,7 +80,7 @@ fn sad_path_verify_share_corrupt_share() {
                 .unwrap()
                 .first_mut()
                 .unwrap()
-                .double_in_place();
+                .add_assign(<Bn254 as Pairing>::ScalarField::ONE);
             advz.verify_share(&share_bad_eval, &common, &commit)
                 .unwrap()
                 .expect_err("bad share value should fail verification");
@@ -96,7 +97,7 @@ fn sad_path_verify_share_corrupt_share() {
                 .unwrap()
                 .last_mut()
                 .unwrap()
-                .double_in_place();
+                .add_assign(<Bn254 as Pairing>::ScalarField::ONE);
             advz.verify_share(&share_bad_eval, &common, &commit)
                 .unwrap()
                 .expect_err("bad share value should fail verification");
