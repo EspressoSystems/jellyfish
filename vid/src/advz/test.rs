@@ -4,6 +4,7 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
     vec,
 };
+use core::ops::AddAssign;
 use jf_pcs::{
     checked_fft_size,
     prelude::{Commitment, UnivariateUniversalParams},
@@ -57,24 +58,52 @@ fn sad_path_verify_share_corrupt_share() {
     let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     for (i, share) in shares.iter().enumerate() {
+        // happy path: uncorrupted share
+        assert!(common.multiplicity > 1, "multiplicity should be nontrivial");
+        advz.verify_share(&share, &common, &commit)
+            .unwrap()
+            .unwrap();
+
         // missing share eval
         {
-            let share_missing_eval = Share {
-                eval_proofs: share.eval_proofs[1..].to_vec(),
-                ..share.clone()
-            };
+            let mut share_missing_eval = share.clone();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_missing_eval.evals_proof)
+                .unwrap()
+                .pop();
             assert_arg_err(
                 advz.verify_share(&share_missing_eval, &common, &commit),
                 "1 missing share should be arg error",
             );
         }
 
-        // corrupted share eval
+        // corrupted share eval: domain index < num_storage_nodes
+        //
+        // The first eval (`first_mut` below) always has domain index `i` for `i
+        // < num_storage_nodes`.
         {
             let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.eval_proofs[0]).unwrap()
-                [0]
-            .double_in_place();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof)
+                .unwrap()
+                .first_mut()
+                .unwrap()
+                .add_assign(<Bn254 as Pairing>::ScalarField::ONE);
+            advz.verify_share(&share_bad_eval, &common, &commit)
+                .unwrap()
+                .expect_err("bad share value should fail verification");
+        }
+
+        // corrupted share eval: domain index > num_storage_nodes
+        //
+        // The last eval (`last_mut` below) always has domain index `i +
+        // num_storage_nodes * (multiplicity - 1)`, which exceeds
+        // `num_storage_nodes` whenever multiplicity > 1.
+        {
+            let mut share_bad_eval = share.clone();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut share_bad_eval.evals_proof)
+                .unwrap()
+                .last_mut()
+                .unwrap()
+                .add_assign(<Bn254 as Pairing>::ScalarField::ONE);
             advz.verify_share(&share_bad_eval, &common, &commit)
                 .unwrap()
                 .expect_err("bad share value should fail verification");
@@ -108,7 +137,7 @@ fn sad_path_verify_share_corrupt_share() {
             // (without also causing a deserialization failure).
             // So we use another share's proof instead.
             let share_bad_evals_proof = Share {
-                eval_proofs: shares[(i + 1) % shares.len()].eval_proofs.clone(),
+                evals_proof: shares[(i + 1) % shares.len()].evals_proof.clone(),
                 ..share.clone()
             };
             advz.verify_share(&share_bad_evals_proof, &common, &commit)
@@ -170,7 +199,9 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     let (mut shares, mut common, commit) = (disperse.shares, disperse.common, disperse.commit);
 
     common.poly_commits.pop();
-    shares[0].eval_proofs.pop();
+    Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares[0].evals_proof)
+        .unwrap()
+        .pop();
 
     // equal nonzero lengths for common, share
     assert_arg_err(
@@ -179,7 +210,9 @@ fn sad_path_verify_share_corrupt_share_and_commit() {
     );
 
     common.poly_commits.clear();
-    shares[0].eval_proofs.clear();
+    Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares[0].evals_proof)
+        .unwrap()
+        .clear();
 
     // zero length for common, share
     assert_arg_err(
@@ -198,7 +231,9 @@ fn sad_path_recover_payload_corrupt_shares() {
         // unequal share eval lengths
         let mut shares_missing_evals = shares.clone();
         for i in 0..shares_missing_evals.len() - 1 {
-            shares_missing_evals[i].eval_proofs.pop();
+            Share::<Bn254, Sha256>::extract_leaf_mut(&mut shares_missing_evals[i].evals_proof)
+                .unwrap()
+                .pop();
             assert_arg_err(
                 advz.recover_payload(&shares_missing_evals, &common),
                 format!("{} shares missing 1 eval should be arg error", i + 1).as_str(),
@@ -206,7 +241,11 @@ fn sad_path_recover_payload_corrupt_shares() {
         }
 
         // 1 eval missing from all shares
-        shares_missing_evals.last_mut().unwrap().eval_proofs.pop();
+        Share::<Bn254, Sha256>::extract_leaf_mut(
+            &mut shares_missing_evals.last_mut().unwrap().evals_proof,
+        )
+        .unwrap()
+        .pop();
         assert_arg_err(
             advz.recover_payload(&shares_missing_evals, &common),
             format!("all shares missing 1 eval should be arg error").as_str(),
@@ -236,68 +275,6 @@ fn sad_path_recover_payload_corrupt_shares() {
             shares_bad_indices[i].index += u32::try_from(multi_open_domain_size).unwrap();
             advz.recover_payload(&shares_bad_indices, &common)
                 .expect_err("recover_payload should fail when indices are out of bounds");
-        }
-    }
-}
-
-#[test]
-fn verify_share_with_multiplicity() {
-    let advz_params = AdvzParams {
-        recovery_threshold: 16,
-        num_storage_nodes: 20,
-        max_multiplicity: 4,
-        payload_len: 4000,
-    };
-    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
-
-    let disperse = advz.disperse(payload).unwrap();
-    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-
-    for share in shares {
-        assert!(advz.verify_share(&share, &common, &commit).unwrap().is_ok())
-    }
-}
-
-#[test]
-fn sad_path_verify_share_with_multiplicity() {
-    // regression test for https://github.com/EspressoSystems/jellyfish/issues/654
-    let advz_params = AdvzParams {
-        recovery_threshold: 16,
-        num_storage_nodes: 20,
-        max_multiplicity: 32, // payload fitting into a single polynomial
-        payload_len: 8200,
-    };
-    let (mut advz, payload) = advz_init_with::<Bn254>(advz_params);
-
-    let disperse = advz.disperse(payload).unwrap();
-    let (shares, common, commit) = (disperse.shares, disperse.common, disperse.commit);
-    for (i, share) in shares.iter().enumerate() {
-        // corrupt the last evaluation of the share
-        {
-            let mut share_bad_eval = share.clone();
-            Share::<Bn254, Sha256>::extract_leaf_mut(
-                &mut share_bad_eval.eval_proofs[common.multiplicity as usize - 1],
-            )
-            .unwrap()[common.poly_commits.len() - 1]
-                .double_in_place();
-            advz.verify_share(&share_bad_eval, &common, &commit)
-                .unwrap()
-                .expect_err("bad share value should fail verification");
-        }
-
-        // check that verification fails if any of the eval_proofs are
-        // inconsistent with the merkle root.
-        // corrupt the last eval proof of this share by assigning it to the value of
-        // last eval proof of the next share.
-        {
-            let mut share_bad_eval_proofs = share.clone();
-            let next_eval_proof = shares[(i + 1) % shares.len()].eval_proofs
-                [common.multiplicity as usize - 1]
-                .clone();
-            share_bad_eval_proofs.eval_proofs[common.multiplicity as usize - 1] = next_eval_proof;
-            advz.verify_share(&share_bad_eval_proofs, &common, &commit)
-                .unwrap()
-                .expect_err("bad share evals proof should fail verification");
         }
     }
 }
@@ -492,9 +469,24 @@ pub(super) fn advz_init() -> (Advz<Bn254, Sha256>, Vec<u8>) {
     let advz_params = AdvzParams {
         recovery_threshold: 16,
         num_storage_nodes: 20,
-        max_multiplicity: 1,
+        max_multiplicity: 4,
         payload_len: 4000,
     };
+
+    assert!(
+        advz_params.max_multiplicity > 1,
+        "multiplicity should be nontrivial"
+    );
+    {
+        let elem_byte_len = bytes_to_field::elem_byte_capacity::<<Bn254 as Pairing>::ScalarField>();
+        let num_payload_elems =
+            u32::try_from(advz_params.payload_len.div_ceil(elem_byte_len)).unwrap();
+        assert!(
+            num_payload_elems > advz_params.max_multiplicity * advz_params.recovery_threshold,
+            "payload size should span multiple polynomials"
+        );
+    }
+
     advz_init_with(advz_params)
 }
 

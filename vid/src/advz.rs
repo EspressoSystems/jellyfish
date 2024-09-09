@@ -295,10 +295,7 @@ where
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
 
-    // eval_proofs.len() equals multiplicity
-    // TODO put all evals into a single merkle proof
-    // https://github.com/EspressoSystems/jellyfish/issues/671
-    eval_proofs: Vec<KzgEvalsMerkleTreeProof<E, H>>,
+    evals_proof: KzgEvalsMerkleTreeProof<E, H>,
 }
 
 impl<E, H> Share<E, H>
@@ -309,21 +306,14 @@ where
     /// Return a [`Vec`] of payload data for this share.
     ///
     /// These data are extracted from [`MerkleProof`] structs. The returned
-    /// [`Vec`] has length `multiplicity * num_polys`s
+    /// [`Vec`] has length `multiplicity * num_polys`
     ///
     /// TODO store these data in a new field `Share::evals` after fixing
     /// https://github.com/EspressoSystems/jellyfish/issues/658
-    fn evals(&self) -> VidResult<Vec<KzgEval<E>>> {
-        self.eval_proofs
-            .iter()
-            .map(|eval_proof| {
-                eval_proof
-                    .elem()
-                    .cloned()
-                    .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))
-            })
-            .flatten_ok()
-            .collect()
+    fn evals(&self) -> VidResult<&Vec<KzgEval<E>>> {
+        self.evals_proof
+            .elem()
+            .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))
     }
 }
 
@@ -456,6 +446,7 @@ where
         }
         let multiplicity =
             self.min_multiplicity(common.payload_byte_len.try_into().map_err(vid)?)?;
+        let multiplicity_usize = usize::try_from(multiplicity).map_err(vid)?;
         if common.multiplicity != multiplicity {
             return Err(VidError::Argument(format!(
                 "common multiplicity {} differs from derived min {}",
@@ -470,40 +461,34 @@ where
                 common.poly_commits.len()
             )));
         }
-        if share.eval_proofs.len() != multiplicity as usize {
-            return Err(VidError::Argument(format!(
-                "number of eval_proofs {} differs from common multiplicity {}",
-                share.eval_proofs.len(),
-                multiplicity,
-            )));
-        }
-
         Self::is_consistent(commit, common)?;
-
         if share.index >= self.num_storage_nodes {
             return Ok(Err(())); // not an arg error
         }
 
-        // verify eval proofs
-        for i in 0..multiplicity {
-            if KzgEvalsMerkleTree::<E, H>::verify(
-                common.all_evals_digest,
-                &KzgEvalsMerkleTreeIndex::<E, H>::from((share.index * multiplicity) + i),
-                &share.eval_proofs[i as usize],
-            )
-            .map_err(vid)?
-            .is_err()
-            {
-                return Ok(Err(()));
-            }
+        // verify eval proof
+        if KzgEvalsMerkleTree::<E, H>::verify(
+            common.all_evals_digest,
+            &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index),
+            &share.evals_proof,
+        )
+        .map_err(vid)?
+        .is_err()
+        {
+            return Ok(Err(()));
         }
+
+        // the magic pseudorandom scalar used for aggregation
         let pseudorandom_scalar = Self::pseudorandom_scalar(common, commit)?;
 
-        // Compute aggregate polynomial [commitment|evaluation]
-        // as a pseudorandom linear combo of [commitments|evaluations]
-        // via evaluation of the polynomial whose coefficients are
-        // [commitments|evaluations] and whose input point is the pseudorandom
-        // scalar.
+        // Compute an aggregate polynomial [commitment|evaluation] as a
+        // pseudorandom linear combo of [commitments|evaluations].
+        // To this end use function `polynomoial_eval` where each "coefficient"
+        // is actually a [commitment|evaluation] and the input point is
+        // `pseudorandom_scalar`.
+        //
+        // - Here: aggregate polynomial commitment in `aggregate_poly_commit`.
+        // - Below: aggregate polynomial evals in `aggregate_eval`.
         let aggregate_poly_commit = KzgCommit::<E>::from(
             polynomial_eval(
                 common
@@ -515,40 +500,31 @@ where
             .into(),
         );
 
-        // verify aggregate proof
-        //
-        // some boilerplate needed to accommodate builds without `parallel`
-        // feature.
-        let multiplicities = Vec::from_iter((0..multiplicity as usize));
+        // convenience quantities
+        let multiplicities = Vec::from_iter((0..multiplicity_usize));
         let polys_len = common.poly_commits.len();
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
-        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|i| {
-            let range = i * polys_len..(i + 1) * polys_len;
-            let aggregate_eval = polynomial_eval(
-                evals
-                    .get(range.clone())
-                    .ok_or_else(|| {
-                        VidError::Internal(anyhow::anyhow!(
-                            "share evals range {:?} out of bounds for length {}",
-                            range,
-                            evals.len()
-                        ))
-                    })?
-                    .iter()
-                    .map(FieldMultiplier),
-                pseudorandom_scalar,
-            );
+
+        // verify aggregate proofs
+        let verification_iter = parallelizable_slice_iter(&multiplicities).map(|m| {
+            let evals_iter = evals.iter().skip(*m).step_by(multiplicity_usize);
+            let aggregate_eval =
+                polynomial_eval(evals_iter.map(FieldMultiplier), pseudorandom_scalar);
+            let domain_index = usize::try_from(share.index).map_err(vid)?
+                + m * usize::try_from(self.num_storage_nodes).map_err(vid)?;
             Ok(UnivariateKzgPCS::verify(
                 &self.vk,
                 &aggregate_poly_commit,
-                &multi_open_domain.element((share.index * multiplicity) as usize + i),
+                &multi_open_domain.element(domain_index),
                 &aggregate_eval,
-                &share.aggregate_proofs[*i],
+                &share.aggregate_proofs[*m],
             )
             .map_err(vid)?
             .then_some(())
             .ok_or(()))
         });
+
+        // Boilerplate needed to accommodate builds without `parallel`feature.
         let abort = |result: &VidResult<Result<(), ()>>| match result {
             Ok(success) => success.is_err(),
             Err(_) => true,
@@ -580,17 +556,17 @@ where
             )));
         }
 
-        let shares_evals = shares
+        let all_shares_evals = shares
             .iter()
             .map(|share| share.evals())
             .collect::<VidResult<Vec<_>>>()?;
 
         // check args: all shares must have equal evals len
-        let num_evals = shares_evals
+        let num_evals = all_shares_evals
             .first()
             .ok_or_else(|| VidError::Argument("shares is empty".into()))?
             .len();
-        if let Some((index, share_evals)) = shares_evals
+        if let Some((index, share_evals)) = all_shares_evals
             .iter()
             .enumerate()
             .find(|(_, evals)| evals.len() != num_evals)
@@ -612,8 +588,9 @@ where
         }
 
         // convenience quantities
-        let chunk_size =
-            usize::try_from(common.multiplicity * self.recovery_threshold).map_err(vid)?;
+        let multiplicity = usize::try_from(common.multiplicity).map_err(vid)?;
+        let num_storage_nodes = usize::try_from(self.num_storage_nodes).map_err(vid)?;
+        let chunk_size = multiplicity * usize::try_from(self.recovery_threshold).map_err(vid)?;
         let num_polys = common.poly_commits.len();
         let elems_capacity = num_polys * chunk_size;
         let fft_domain = Self::eval_domain(chunk_size)?;
@@ -621,12 +598,12 @@ where
         let mut elems = Vec::with_capacity(elems_capacity);
         let mut evals = Vec::with_capacity(num_evals);
         for p in 0..num_polys {
-            for (share, share_evals) in shares.iter().zip(shares_evals.iter()) {
+            for (share, share_evals) in shares.iter().zip(all_shares_evals.iter()) {
                 // extract all evaluations for polynomial p from the share
                 for m in 0..common.multiplicity as usize {
                     evals.push((
-                        (share.index * common.multiplicity) as usize + m,
-                        share_evals[(m * num_polys) + p],
+                        usize::try_from(share.index).map_err(vid)? + m * num_storage_nodes,
+                        share_evals[p * multiplicity + m],
                     ))
                 }
             }
@@ -698,7 +675,9 @@ where
             payload_byte_len, self.num_storage_nodes
         ));
         let multiplicity = self.min_multiplicity(payload.len())?;
-        let code_word_size = usize::try_from(multiplicity * self.num_storage_nodes).map_err(vid)?;
+        let multiplicity_usize = usize::try_from(multiplicity).map_err(vid)?;
+        let num_storage_nodes_usize = usize::try_from(self.num_storage_nodes).map_err(vid)?;
+        let code_word_size = num_storage_nodes_usize * multiplicity_usize;
         let multi_open_domain = self.multi_open_domain(multiplicity)?;
 
         // evaluate polynomials
@@ -715,27 +694,41 @@ where
                         code_word_size,
                         &multi_open_domain,
                     )
+                    .map(|poly_evals| {
+                        assert_eq!(poly_evals.len(), code_word_size); // sanity
+                        poly_evals
+                    })
                     .map_err(vid)
                 })
                 .collect::<Result<Vec<_>, VidError>>()?;
+            assert_eq!(all_poly_evals.len(), polys.len()); // sanity
 
-            // distribute evals from each poly among the storage nodes
+            // Populate a Vec of polynomial evaluations for all storage nodes:
             //
-            // perf warning: runtime is quadratic in payload_size
-            let mut all_storage_node_evals = vec![Vec::with_capacity(polys.len()); code_word_size];
+            // The `i`th item is a Vec of `polys.len() * multiplicity`
+            // polynomial evaluations.
+            //
+            // Evaluations for storage node `i` are ordered as follows. Define
+            // - `n`: the number of storage nodes: `self.num_storage_nodes`
+            // - `k`: the number of polynomials minus 1: `polys.len() - 1`
+            // - `m`: `multiplicity - 1`
+            // - `p[j](x)`: the value of the `j`th polynomial evaluated at `x`.
+            //
+            // p[0](i), p[0](i+n), ..., p[0](i+m*n),
+            // ...,
+            // p[k](i), p[k](i+n), ..., p[k](i+m*n),
+            let mut all_storage_node_evals =
+                vec![Vec::with_capacity(polys.len() * multiplicity_usize); num_storage_nodes_usize];
             for poly_evals in all_poly_evals {
-                for (storage_node_evals, poly_eval) in all_storage_node_evals
-                    .iter_mut()
-                    .zip(poly_evals.into_iter())
-                {
-                    storage_node_evals.push(poly_eval);
+                for (i, poly_eval) in poly_evals.into_iter().enumerate() {
+                    all_storage_node_evals[i % num_storage_nodes_usize].push(poly_eval);
                 }
             }
 
             // sanity checks
-            assert_eq!(all_storage_node_evals.len(), code_word_size);
+            assert_eq!(all_storage_node_evals.len(), num_storage_nodes_usize);
             for storage_node_evals in all_storage_node_evals.iter() {
-                assert_eq!(storage_node_evals.len(), polys.len());
+                assert_eq!(storage_node_evals.len(), polys.len() * multiplicity_usize);
             }
 
             all_storage_node_evals
@@ -746,7 +739,7 @@ where
         let all_evals_commit_timer =
             start_timer!(|| "compute merkle root of all storage node evals");
         let all_evals_commit =
-            KzgEvalsMerkleTree::<E, H>::from_elems(None, &all_storage_node_evals).map_err(vid)?;
+            KzgEvalsMerkleTree::<E, H>::from_elems(None, all_storage_node_evals).map_err(vid)?;
         end_timer!(all_evals_commit_timer);
 
         let common = Common {
@@ -764,9 +757,10 @@ where
         )?;
         let pseudorandom_scalar = Self::pseudorandom_scalar(&common, &commit)?;
 
-        // Compute aggregate polynomial as a pseudorandom linear combo of polynomial via
-        // evaluation of the polynomial whose coefficients are polynomials and whose
-        // input point is the pseudorandom scalar.
+        // Compute the aggregate polynomial as a pseudorandom linear combo of
+        // `polys`. To this end use function `polynomoial_eval` where each
+        // "coefficient" is actually a polynomial from `polys` and the input
+        // point is `pseudorandom_scalar`.
         let aggregate_poly =
             polynomial_eval(polys.iter().map(PolynomialMultiplier), pseudorandom_scalar);
 
@@ -784,38 +778,48 @@ where
         end_timer!(agg_proofs_timer);
 
         let assemblage_timer = start_timer!(|| "assemble shares for dispersal");
-        let shares: Vec<_> = {
-            // compute share data
-            let share_data = all_storage_node_evals
-                .into_iter()
-                .zip(aggregate_proofs)
-                .enumerate()
-                .map(|(i, (eval, proof))| {
-                    let eval_proof = all_evals_commit
+
+        // Populate a Vec of aggregate proofs for all storage nodes:
+        //
+        // The `i`th item is a Vec of `multiplicity` KZG proofs.
+        //
+        // Proofs for storage node `i` are ordered as follows. Define
+        // - `n`: the number of storage nodes: `self.num_storage_nodes`
+        // - `m`: `multiplicity - 1`
+        // - `p(x)`: the value of the aggregate polynomial `p` evaluated at `x`.
+        //
+        // p(i), p(i+n), ..., p(i+m*n)
+        let mut all_storage_node_aggregate_proofs =
+            vec![Vec::with_capacity(multiplicity_usize); num_storage_nodes_usize];
+        for (i, aggregate_proof) in aggregate_proofs.into_iter().enumerate() {
+            all_storage_node_aggregate_proofs[i % num_storage_nodes_usize].push(aggregate_proof);
+        }
+
+        // sanity checks
+        assert_eq!(
+            all_storage_node_aggregate_proofs.len(),
+            num_storage_nodes_usize
+        );
+        for storage_node_aggregate_proof in all_storage_node_aggregate_proofs.iter() {
+            assert_eq!(storage_node_aggregate_proof.len(), multiplicity_usize);
+        }
+
+        let shares = all_storage_node_aggregate_proofs
+            .into_iter()
+            .enumerate()
+            .map(|(i, aggregate_proofs)| {
+                Ok(Share {
+                    index: u32::try_from(i).map_err(vid)?,
+                    aggregate_proofs,
+                    evals_proof: all_evals_commit
                         .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
                         .expect_ok()
                         .map_err(vid)?
-                        .1;
-                    Ok((eval, proof, eval_proof))
+                        .1,
                 })
-                .collect::<Result<Vec<_>, VidError>>()?;
+            })
+            .collect::<VidResult<Vec<_>>>()?;
 
-            // split share data into chunks of size multiplicity
-            share_data
-                .into_iter()
-                .chunks(multiplicity as usize)
-                .into_iter()
-                .enumerate()
-                .map(|(index, chunk)| {
-                    let (evals, proofs, eval_proofs): (Vec<_>, _, _) = chunk.multiunzip();
-                    Share {
-                        index: index as u32,
-                        aggregate_proofs: proofs,
-                        eval_proofs,
-                    }
-                })
-                .collect()
-        };
         end_timer!(assemblage_timer);
         end_timer!(disperse_time);
 
