@@ -1,6 +1,6 @@
 [package]
 name = "jf-vid"
-version = "0.1.0"
+version = "0.2.0"
 description = "Verifiable information dispersal (VID)."
 authors = { workspace = true }
 edition = { workspace = true }
