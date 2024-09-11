@@ -14,13 +14,13 @@ repository = { workspace = true }
 ark-std = { workspace = true }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { workspace = true }
-jf-signature = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = [ "bls" ] }
+jf-signature = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = [ "bls" ] }
 serde = { workspace = true }
 sha2 = { workspace = true }
 zeroize = { version = "1.5", default-features = false }
 
 [dev-dependencies]
-jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 
 [features]
 default = ["parallel"]
