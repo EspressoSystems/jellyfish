@@ -23,7 +23,7 @@ itertools = { workspace = true }
 jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-pcs = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = ["gadgets"] }
+jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = ["gadgets"] }
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
