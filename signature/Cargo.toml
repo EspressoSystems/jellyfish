@@ -24,7 +24,7 @@ displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
+jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 num-bigint = { workspace = true }
