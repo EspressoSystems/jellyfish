@@ -3,7 +3,6 @@ members = ["aead", "commitment", "crhf", "elgamal", "merkle_tree", "pcs", "plonk
 resolver = "2"
 
 [workspace.package]
-version = "0.4.4"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 license = "MIT"
