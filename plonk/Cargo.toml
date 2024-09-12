@@ -20,11 +20,11 @@ dyn-clone = "^1.0"
 espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
-jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-pcs = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = ["gadgets"] }
-jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-pcs = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false, features = ["gadgets"] }
+jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
 rand_chacha = { workspace = true }
