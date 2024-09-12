@@ -15,7 +15,7 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 ## Crates
 
 ### Helper
-- ['jf-utils'](utilities): utilities and helper functions.
+- ['jf-utilities'](utilities): utilities and helper functions.
 
 ### Primitives
 - ['jf-prf'](prf): trait definitions for pesudorandom function (PRF).
