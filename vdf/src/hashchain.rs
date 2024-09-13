@@ -9,6 +9,7 @@ use crate::{VDFError, VDF};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
 use core::marker::PhantomData;
+use serde::{Deserialize, Serialize};
 use sha3::Digest;
 
 /// Glorified bool type
@@ -25,6 +26,8 @@ type VerificationResult = Result<(), ()>;
     PartialOrd,
     CanonicalSerialize,
     CanonicalDeserialize,
+    Serialize,
+    Deserialize,
 )]
 /// Public parameter for MinRoot DF,
 pub struct HashChainParam {
@@ -55,7 +58,7 @@ impl VDF for HashChain {
     ) -> Result<(Self::Output, Self::Proof), VDFError> {
         let mut output = *input;
         for _ in 0..pp.difficulty {
-            output = sha3::Keccak256::digest(&input).into();
+            output = sha3::Keccak256::digest(&output).into();
         }
         Ok((output, output))
     }
