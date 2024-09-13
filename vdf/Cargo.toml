@@ -1,6 +1,6 @@
 [package]
 name = "jf-vdf"
-version = "0.1.0"
+version = "0.1.1"
 description = "Verifiable delay function."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -11,14 +11,15 @@ documentation = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-ark-bls12-381 = { workspace = true }
-ark-bn254 = { workspace = true }
-ark-ec = { workspace = true }
-ark-ff = { workspace = true }
-ark-pallas = "0.4.0"
+ark-bls12-381 = { workspace = true, optional = true }
+ark-bn254 = { workspace = true, optional = true }
+ark-ec = { workspace = true, optional = true }
+ark-ff = { workspace = true, optional = true }
+ark-pallas = { version = "0.4.0", optional = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
+sha3 = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -26,9 +27,15 @@ criterion = "0.5.1"
 [[bench]]
 name = "minroot"
 harness = false
+required-features = ["minroot"]
+
+[[bench]]
+name = "hashchain"
+harness = false
 
 [features]
 default = []
+minroot = ["ark-bls12-381", "ark-bn254", "ark-ec", "ark-ff", "ark-pallas"]
 std = [
     "ark-pallas/std", "ark-bls12-381/std", "ark-bn254/std", "ark-std/std",
     "ark-ff/std", "ark-ec/std",

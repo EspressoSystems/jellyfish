@@ -3,6 +3,7 @@
 
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
+//! DEPRECATED! DO NOT USE UNLESS YOU CLEARLY UNDERSTAND THIS <https://ethresear.ch/t/statement-regarding-the-public-report-on-the-analysis-of-minroot/16670>.
 //! Instantiation of the MinRoot Delay function <https://eprint.iacr.org/2022/1626.pdf>.
 
 use crate::{VDFError, VDF};
@@ -68,6 +69,7 @@ where
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 /// Dummy struct for MinRoot delay function.
 pub struct MinRoot<F: MinRootField> {
     _phantom: PhantomData<F>,

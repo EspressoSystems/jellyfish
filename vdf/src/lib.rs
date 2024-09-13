@@ -25,6 +25,8 @@ use ark_std::{
 };
 use displaydoc::Display;
 
+pub mod hashchain;
+#[cfg(feature = "minroot")]
 pub mod minroot;
 
 /// VDF error type
