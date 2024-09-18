@@ -1,5 +1,5 @@
 [workspace]
-members = ["aead", "commitment", "crhf", "elgamal", "merkle_tree", "pcs", "plonk", "prf", "relation", "rescue", "signature", "utilities", "vdf", "vid", "vrf"]
+members = ["aead", "commitment", "crhf", "elgamal", "merkle_tree", "pcs", "plonk", "prf", "relation", "rescue", "signature", "utilities", "vid", "vrf"]
 resolver = "2"
 
 [workspace.package]
