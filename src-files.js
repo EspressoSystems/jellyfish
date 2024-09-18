@@ -11,7 +11,6 @@ var srcIndex = new Map(JSON.parse('[\
 ["jf_rescue",["",[["rescue_constants",[],["bls12_377_base.rs","bls12_381_base.rs","bn254_base.rs","bw6_761_base.rs","ed_on_bls12_377_base.rs","ed_on_bls12_381_base.rs","ed_on_bn254_base.rs","mod.rs"]]],["commitment.rs","crhf.rs","lib.rs","prf.rs","sponge.rs"]]],\
 ["jf_signature",["",[],["constants.rs","lib.rs"]]],\
 ["jf_utils",["",[],["conversion.rs","lib.rs","macros.rs","multi_pairing.rs","par_utils.rs","reed_solomon_code.rs","serialize.rs"]]],\
-["jf_vdf",["",[],["lib.rs","minroot.rs"]]],\
 ["jf_vid",["",[["advz",[],["bytes_to_field.rs","payload_prover.rs","precomputable.rs"]]],["advz.rs","lib.rs","payload_prover.rs","precomputable.rs"]]],\
 ["jf_vrf",["",[],["blsvrf.rs","lib.rs"]]]\
 ]'));
