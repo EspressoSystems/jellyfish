@@ -1,9 +1,8 @@
 [workspace]
-members = ["aead", "commitment", "crhf", "elgamal", "merkle_tree", "pcs", "plonk", "prf", "relation", "rescue", "signature", "utilities", "vdf", "vid", "vrf"]
+members = ["aead", "commitment", "crhf", "elgamal", "merkle_tree", "pcs", "plonk", "prf", "relation", "rescue", "signature", "utilities", "vid", "vrf"]
 resolver = "2"
 
 [workspace.package]
-version = "0.4.4"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 license = "MIT"
@@ -20,7 +19,7 @@ ark-bw6-761 = { version = "0.4.0", default-features = false }
 ark-ec = { version = "0.4.0", default-features = false }
 ark-ff = { version = "0.4.0", default-features = false, features = [ "asm" ] }
 ark-poly = { version = "0.4.0", default-features = false }
-ark-serialize = { version = "0.4.0", default-features = false }
+ark-serialize = { version = "0.4.0", default-features = false, features = [ "derive" ] }
 ark-std = { version = "0.4.0", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
 digest = { version = "0.10.1", default-features = false, features = [ "alloc" ] }
