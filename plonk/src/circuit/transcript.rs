@@ -137,16 +137,6 @@ where
         Ok(())
     }
 
-    // Append a challenge variable to the transcript.
-    // For efficiency purpose, label is not used for rescue FS.
-    pub(crate) fn append_challenge_var(
-        &mut self,
-        _label: &'static [u8],
-        challenge_var: &Variable,
-    ) -> Result<(), CircuitError> {
-        self.append_variable(_label, challenge_var)
-    }
-
     // Append the proof evaluation to the transcript
     pub(crate) fn append_proof_evaluations_vars(
         &mut self,
@@ -171,7 +161,9 @@ where
     // For efficiency purpose, label is not used for rescue FS.
     // Note that this function currently only supports bls12-377
     // curve due to its decomposition method.
-    pub(crate) fn get_and_append_challenge_var<E>(
+    //
+    // `_label` is omitted for efficiency.
+    pub(crate) fn get_challenge_var<E>(
         &mut self,
         _label: &'static [u8],
         circuit: &mut PlonkCircuit<F>,
@@ -193,7 +185,7 @@ where
         // This algorithm takes in 3 steps
         // 1. state: [F: STATE_SIZE] = hash(state|transcript)
         // 2. challenge = state[0] in Fr
-        // 3. transcript = vec![challenge]
+        // 3. transcript = vec![]
         // ==================================
 
         // step 1. state: [F: STATE_SIZE] = hash(state|transcript)
@@ -210,7 +202,6 @@ where
         // finish and update the states
         self.state_var.copy_from_slice(&res_var[0..STATE_SIZE]);
         self.transcript_var = Vec::new();
-        self.append_challenge_var(_label, &challenge_var)?;
 
         Ok(challenge_var)
     }
@@ -267,10 +258,10 @@ mod tests {
                     .unwrap();
             }
 
-            let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
+            let challenge = transcript.get_challenge::<E>(label).unwrap();
 
             let challenge_var = transcript_var
-                .get_and_append_challenge_var::<E>(label, &mut circuit)
+                .get_challenge_var::<E>(label, &mut circuit)
                 .unwrap();
 
             assert_eq!(
@@ -329,10 +320,10 @@ mod tests {
             .append_vk_and_pub_input_vars::<E>(&mut circuit, &dummy_vk_var, &[])
             .unwrap();
 
-        let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
+        let challenge = transcript.get_challenge::<E>(label).unwrap();
 
         let challenge_var = transcript_var
-            .get_and_append_challenge_var::<E>(label, &mut circuit)
+            .get_challenge_var::<E>(label, &mut circuit)
             .unwrap();
 
         assert_eq!(
@@ -398,10 +389,10 @@ mod tests {
                 .append_vk_and_pub_input_vars::<E>(&mut circuit, &vk_var, &input_fp_elem_vars)
                 .unwrap();
 
-            let challenge = transcript.get_and_append_challenge::<E>(label).unwrap();
+            let challenge = transcript.get_challenge::<E>(label).unwrap();
 
             let challenge_var = transcript_var
-                .get_and_append_challenge_var::<E>(label, &mut circuit)
+                .get_challenge_var::<E>(label, &mut circuit)
                 .unwrap();
 
             assert_eq!(

@@ -10,7 +10,6 @@ cargo +nightly test --release -p jf-merkle-tree --features gadgets -- -Zunstable
 cargo +nightly test --release -p jf-pcs --features test-srs -- -Zunstable-options --report-time
 cargo +nightly test --release -p jf-rescue --features gadgets -- -Zunstable-options --report-time
 cargo +nightly test --release -p jf-signature --features "bls, schnorr, gadgets" -- -Zunstable-options --report-time
-cargo +nightly test --release -p jf-vdf -- -Zunstable-options --report-time
 cargo +nightly test --release -p jf-vid --features test-srs -- -Zunstable-options --report-time
 cargo +nightly test --release -p jf-aead -- -Zunstable-options --report-time
 cargo +nightly test --release -p jf-elgamal --features gadgets -- -Zunstable-options --report-time

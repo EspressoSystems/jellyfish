@@ -25,11 +25,11 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 itertools = { workspace = true }
-jf-commitment = { path = "../commitment", default-features = false }
-jf-crhf = { path = "../crhf", default-features = false }
-jf-prf = { path = "../prf", default-features = false }
-jf-relation = { path = "../relation", optional = true, default-features = false }
-jf-utils = { path = "../utilities", default-features = false }
+jf-commitment = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-prf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
+jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 
 [dev-dependencies]
 ark-ed-on-bls12-381-bandersnatch = "0.4.0"

@@ -23,9 +23,9 @@ digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 itertools = { workspace = true, features = ["use_alloc"] }
-jf-relation = { path = "../relation", optional = true, default-features = false }
-jf-rescue = { path = "../rescue", default-features = false }
-jf-utils = { path = "../utilities", default-features = false }
+jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
+jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
 serde = { workspace = true }

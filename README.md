@@ -28,7 +28,6 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 - ['jf-aead'](aead): authenticated encryption with associated data (AEAD) implementation.
 - ['jf-merkle-tree'](merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
 - ['jf-pcs'](pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
-- ['jf-vdf'](vdf): verifiable delay function (VDF) trait definitions and (non-verifiable) MinRoot implementation.
 - ['jf-vid'](vid): verifiable information dispersal (VID) trait definition and implementation.
 
 ### Plonk
