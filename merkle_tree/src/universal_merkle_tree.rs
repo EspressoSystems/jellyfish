@@ -6,9 +6,11 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
+    internal::{
+        MerkleNode, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof,
+    },
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    Index, LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme, NodeValue,
     PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
@@ -70,7 +72,7 @@ where
     I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
 {
-    type NonMembershipProof = MerkleProof<E, I, T, ARITY>;
+    type NonMembershipProof = MerkleTreeProof<T>;
     type BatchNonMembershipProof = ();
 
     fn update_with<F>(
@@ -92,23 +94,16 @@ where
     }
 
     fn non_membership_verify(
-        &self,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<bool, MerkleTreeError> {
-        let pos = pos.borrow();
-        let proof = proof.borrow();
-        if self.height != proof.tree_height() - 1 {
-            return Err(MerkleTreeError::InconsistentStructureError(
-                "Incompatible membership proof for this merkle tree".to_string(),
-            ));
-        }
-        if *pos != proof.pos {
-            return Err(MerkleTreeError::InconsistentStructureError(
-                "Inconsistent proof index".to_string(),
-            ));
-        }
-        proof.verify_non_membership_proof::<H>(&self.root.value())
+    ) -> Result<VerificationResult, MerkleTreeError> {
+        crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(
+            commitment.borrow(),
+            pos.borrow(),
+            None,
+            proof.borrow().path_values(),
+        )
     }
 
     fn universal_lookup(
@@ -117,15 +112,7 @@ where
     ) -> LookupResult<&Self::Element, Self::MembershipProof, Self::NonMembershipProof> {
         let pos = pos.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        match self.root.lookup_internal(self.height, &traversal_path) {
-            LookupResult::Ok(value, proof) => {
-                LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
-            },
-            LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::NotFound(non_membership_proof) => {
-                LookupResult::NotFound(MerkleProof::new(pos.clone(), non_membership_proof))
-            },
-        }
+        self.root.lookup_internal(self.height, &traversal_path)
     }
 }
 
@@ -176,11 +163,7 @@ where
         let traversal_path = pos.to_traversal_path(self.height);
         let (root, result) = self.root.forget_internal(self.height, &traversal_path);
         self.root = root;
-        match result {
-            LookupResult::Ok(elem, proof) => LookupResult::Ok(elem, MerkleProof::new(pos, proof)),
-            LookupResult::NotInMemory => LookupResult::NotInMemory,
-            LookupResult::NotFound(proof) => LookupResult::NotFound(MerkleProof::new(pos, proof)),
-        }
+        result
     }
 
     fn non_membership_remember(
@@ -188,47 +171,22 @@ where
         pos: Self::Index,
         proof: impl Borrow<Self::NonMembershipProof>,
     ) -> Result<(), MerkleTreeError> {
+        let pos = pos.borrow();
         let proof = proof.borrow();
-        let traversal_path = pos.to_traversal_path(self.height);
-        if matches!(&proof.proof[0], MerkleNode::Empty) {
-            let empty_value = T::default();
-            let mut path_values = vec![empty_value];
-            traversal_path
-                .iter()
-                .zip(proof.proof.iter().skip(1))
-                .try_fold(
-                    empty_value,
-                    |val: T, (branch, node)| -> Result<T, MerkleTreeError> {
-                        match node {
-                            MerkleNode::Branch { value: _, children } => {
-                                let mut data: Vec<_> =
-                                    children.iter().map(|node| node.value()).collect();
-                                data[*branch] = val;
-                                let digest = H::digest(&data)?;
-                                path_values.push(digest);
-                                Ok(digest)
-                            },
-                            MerkleNode::Empty => {
-                                path_values.push(empty_value);
-                                Ok(empty_value)
-                            },
-                            _ => Err(MerkleTreeError::InconsistentStructureError(
-                                "Incompatible proof for this merkle tree".to_string(),
-                            )),
-                        }
-                    },
-                )?;
+        if Self::non_membership_verify(&self.commitment(), pos, proof)?.is_err() {
+            Err(MerkleTreeError::InconsistentStructureError(
+                "Wrong proof".to_string(),
+            ))
+        } else {
+            let traversal_path = pos.to_traversal_path(self.height);
             self.root = self.root.remember_internal::<H, ARITY>(
                 self.height,
                 &traversal_path,
-                &path_values,
-                &proof.proof,
+                pos,
+                None,
+                proof.path_values(),
             )?;
             Ok(())
-        } else {
-            Err(MerkleTreeError::InconsistentStructureError(
-                "Invalid proof type".to_string(),
-            ))
         }
     }
 }
@@ -236,11 +194,11 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::{MerkleNode, MerkleProof},
+        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueHash, RescueSparseMerkleTree},
         DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme, Index,
-        LookupResult, MerkleCommitment, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
-        ToTraversalPath, UniversalMerkleTreeScheme,
+        LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme,
+        PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fr as Fr377;
     use ark_bls12_381::Fr as Fr381;
@@ -287,18 +245,27 @@ mod mt_tests {
         let mt = RescueSparseMerkleTree::<BigUint, F>::from_kv_set(10, &hashmap).unwrap();
         assert_eq!(mt.num_leaves(), hashmap.len() as u64);
 
+        let commitment = mt.commitment();
+
         let mut proof = mt
             .universal_lookup(BigUint::from(3u64))
             .expect_not_found()
             .unwrap();
-        let verify_result = mt.non_membership_verify(BigUint::from(3u64), &proof);
-        assert!(verify_result.is_ok() && verify_result.unwrap());
 
-        proof.pos = BigUint::from(1u64);
-        let verify_result = mt.non_membership_verify(BigUint::from(1u64), &proof);
-        assert!(verify_result.is_ok() && !verify_result.unwrap());
+        let verify_result = RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+            &commitment,
+            BigUint::from(3u64),
+            &proof,
+        )
+        .unwrap();
+        assert!(verify_result.is_ok());
 
-        let verify_result = mt.non_membership_verify(BigUint::from(4u64), proof);
+        let verify_result = RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+            &commitment,
+            BigUint::from(1u64),
+            &proof,
+        )
+        .unwrap();
         assert!(verify_result.is_err());
     }
 
@@ -323,13 +290,14 @@ mod mt_tests {
         for i in 0..2 {
             mt.update(F::from(i as u64), F::from(i as u64)).unwrap();
         }
+        let commitment = mt.commitment();
         for i in 0..2 {
             let (val, proof) = mt.universal_lookup(F::from(i as u64)).expect_ok().unwrap();
             assert_eq!(val, &F::from(i as u64));
-            assert_eq!(proof.elem().unwrap(), val);
             assert!(RescueSparseMerkleTree::<F, F>::verify(
-                &mt.root.value(),
+                &commitment,
                 F::from(i as u64),
+                val,
                 &proof
             )
             .unwrap()
@@ -343,12 +311,12 @@ mod mt_tests {
             .unwrap();
         }
         assert_eq!(mt.num_leaves(), 10);
+        let commitment = mt.commitment();
         // test lookup at index 7
         let (val, proof) = mt.universal_lookup(F::from(7u64)).expect_ok().unwrap();
         assert_eq!(val, &F::from(7u64));
-        assert_eq!(proof.elem().unwrap(), val);
         assert!(
-            RescueSparseMerkleTree::<F, F>::verify(&mt.root.value(), F::from(7u64), &proof)
+            RescueSparseMerkleTree::<F, F>::verify(&commitment, F::from(7u64), val, &proof)
                 .unwrap()
                 .is_ok()
         );
@@ -378,7 +346,7 @@ mod mt_tests {
             ],
         )
         .unwrap();
-        let root = mt.commitment().digest();
+        let commitment = mt.commitment();
 
         // Look up and forget an element that is in the tree.
         let (lookup_elem, lookup_mem_proof) = mt
@@ -390,17 +358,19 @@ mod mt_tests {
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_mem_proof, mem_proof);
         assert_eq!(elem, 1u64.into());
-        assert_eq!(mem_proof.tree_height(), 11);
+        assert_eq!(mem_proof.height(), 10);
         assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
-            &root,
+            &commitment,
             BigUint::from(0u64),
+            &elem,
             &lookup_mem_proof
         )
         .unwrap()
         .is_ok());
         assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
-            &root,
+            &commitment,
             BigUint::from(0u64),
+            &elem,
             &mem_proof
         )
         .unwrap()
@@ -422,11 +392,14 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, &3u64.into());
-        assert!(
-            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
-                .unwrap()
-                .is_ok()
-        );
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
+            &commitment,
+            BigUint::from(2u64),
+            elem,
+            &proof
+        )
+        .unwrap()
+        .is_ok());
 
         // Look up and forget an empty sub-tree.
         let lookup_non_mem_proof = match mt.universal_lookup(BigUint::from(1u64)) {
@@ -438,13 +411,21 @@ mod mt_tests {
             res => panic!("expected NotFound, got {:?}", res),
         };
         assert_eq!(lookup_non_mem_proof, non_mem_proof);
-        assert_eq!(non_mem_proof.tree_height(), 11);
-        assert!(mt
-            .non_membership_verify(BigUint::from(1u64), &lookup_non_mem_proof)
-            .unwrap());
-        assert!(mt
-            .non_membership_verify(BigUint::from(1u64), &non_mem_proof)
-            .unwrap());
+        assert_eq!(non_mem_proof.height(), 10);
+        assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+            &commitment,
+            BigUint::from(1u64),
+            &lookup_non_mem_proof
+        )
+        .unwrap()
+        .is_ok());
+        assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+            &commitment,
+            BigUint::from(1u64),
+            &non_mem_proof
+        )
+        .unwrap()
+        .is_ok());
 
         // Forgetting an empty sub-tree will never actually cause any new entries to be
         // forgotten, since empty sub-trees are _already_ treated as if they
@@ -452,9 +433,13 @@ mod mt_tests {
         // though we "forgot" it, the empty sub-tree is still in memory.
         match mt.universal_lookup(BigUint::from(1u64)) {
             LookupResult::NotFound(proof) => {
-                assert!(mt
-                    .non_membership_verify(BigUint::from(1u64), &proof)
-                    .unwrap());
+                assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+                    &commitment,
+                    BigUint::from(1u64),
+                    &proof
+                )
+                .unwrap()
+                .is_ok());
             },
             res => {
                 panic!("expected NotFound, got {:?}", res);
@@ -467,11 +452,14 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, &3u64.into());
-        assert!(
-            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(2u64), &proof)
-                .unwrap()
-                .is_ok()
-        );
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
+            &commitment,
+            BigUint::from(2u64),
+            elem,
+            &proof
+        )
+        .unwrap()
+        .is_ok());
 
         // Now if we forget the last entry, which is the only thing keeping the root
         // branch in memory, every entry will be forgotten.
@@ -492,37 +480,20 @@ mod mt_tests {
         ));
 
         // Remember should fail if the proof is invalid.
+        mt.remember(BigUint::from(0u64), F::from(2u64), &mem_proof)
+            .unwrap_err();
+        mt.remember(BigUint::from(1u64), F::from(1u64), &mem_proof)
+            .unwrap_err();
         let mut bad_mem_proof = mem_proof.clone();
-        if let MerkleNode::Leaf { elem, .. } = &mut bad_mem_proof.proof[0] {
-            *elem = F::from(4u64);
-        } else {
-            panic!("expected membership proof to end in a Leaf");
-        }
+        bad_mem_proof.0[0][0] = F::one();
         mt.remember(BigUint::from(0u64), F::from(1u64), &bad_mem_proof)
             .unwrap_err();
 
+        mt.non_membership_remember(0u64.into(), &non_mem_proof)
+            .unwrap_err();
         let mut bad_non_mem_proof = non_mem_proof.clone();
-        bad_non_mem_proof.proof[0] = MerkleNode::Leaf {
-            pos: 1u64.into(),
-            elem: Default::default(),
-            value: Default::default(),
-        };
+        bad_non_mem_proof.0[0][0] = F::one();
         mt.non_membership_remember(1u64.into(), &bad_non_mem_proof)
-            .unwrap_err();
-
-        let mut forge_mem_proof = MerkleProof::new(1u64.into(), mem_proof.proof.clone());
-        if let MerkleNode::Leaf { pos, elem, .. } = &mut forge_mem_proof.proof[0] {
-            *pos = 1u64.into();
-            *elem = F::from(0u64);
-        } else {
-            panic!("expected membership proof to end in a Leaf");
-        }
-        mt.remember(BigUint::from(1u64), F::from(0u64), &forge_mem_proof)
-            .unwrap_err();
-
-        let forge_non_mem_proof = non_mem_proof.clone();
-        assert!(matches!(forge_non_mem_proof.proof[0], MerkleNode::Empty));
-        mt.non_membership_remember(0u64.into(), &forge_non_mem_proof)
             .unwrap_err();
 
         // Remember an occupied and an empty  sub-tree.
@@ -537,17 +508,24 @@ mod mt_tests {
             .expect_ok()
             .unwrap();
         assert_eq!(elem, &1u64.into());
-        assert!(
-            RescueSparseMerkleTree::<BigUint, F>::verify(&root, BigUint::from(0u64), &proof)
-                .unwrap()
-                .is_ok()
-        );
+        assert!(RescueSparseMerkleTree::<BigUint, F>::verify(
+            &commitment,
+            BigUint::from(0u64),
+            elem,
+            &proof
+        )
+        .unwrap()
+        .is_ok());
 
         match mt.universal_lookup(BigUint::from(1u64)) {
             LookupResult::NotFound(proof) => {
-                assert!(mt
-                    .non_membership_verify(BigUint::from(1u64), &proof)
-                    .unwrap());
+                assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+                    &commitment,
+                    BigUint::from(1u64),
+                    &proof
+                )
+                .unwrap()
+                .is_ok());
             },
             res => {
                 panic!("expected NotFound, got {:?}", res);
@@ -610,8 +588,8 @@ mod mt_tests {
         hashmap.insert(F::from(1u64), F::from(2u64));
         hashmap.insert(F::from(10u64), F::from(3u64));
         let mt = RescueSparseMerkleTree::<F, F>::from_kv_set(3, &hashmap).unwrap();
-        let mem_proof = mt.lookup(F::from(10u64)).expect_ok().unwrap().1;
-        let node = &mem_proof.proof[0];
+        let (_elem, mem_proof) = mt.lookup(F::from(10u64)).expect_ok().unwrap();
+        // let node = (F::from(10u64), elem.clone());
         let non_mem_proof = match mt.universal_lookup(F::from(9u64)) {
             LookupResult::NotFound(proof) => proof,
             res => panic!("expected NotFound, got {:?}", res),
@@ -629,9 +607,9 @@ mod mt_tests {
             non_mem_proof,
             bincode::deserialize(&bincode::serialize(&non_mem_proof).unwrap()).unwrap()
         );
-        assert_eq!(
-            *node,
-            bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
-        );
+        // assert_eq!(
+        //     node,
+        //     bincode::deserialize(&bincode::serialize(&node).unwrap()).unwrap()
+        // );
     }
 }

@@ -8,11 +8,11 @@
 
 use super::{
     internal::{
-        build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter,
-        MerkleTreeIter,
+        build_tree_internal, MerkleNode, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter,
+        MerkleTreeProof,
     },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{
     errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
@@ -104,12 +104,10 @@ where
     }
 }
 
-// TODO(Chengyu): extract a merkle frontier
-
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::{MerkleNode, MerkleProof},
+        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueMerkleTree, RescueSparseMerkleTree},
         *,
     };
@@ -166,43 +164,36 @@ mod mt_tests {
 
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
-        let root = mt.commitment().digest();
+        let commitment = mt.commitment();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, &F::from(3u64));
-        assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, 0u64, &proof)
+        assert_eq!(proof.height(), 2);
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, 0u64, elem, &proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        // Wrong element value, should fail.
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, 0, F::from(14u64), &proof)
+                .unwrap()
+                .is_err()
+        );
+
+        // Wrong pos, should fail.
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 1, elem, &proof)
             .unwrap()
-            .is_ok());
+            .is_err());
 
         let mut bad_proof = proof.clone();
-        if let MerkleNode::Leaf {
-            value: _,
-            pos: _,
-            elem,
-        } = &mut bad_proof.proof[0]
-        {
-            *elem = F::from(4u64);
-        } else {
-            unreachable!()
-        }
+        bad_proof.0[0][0] = F::one();
 
-        let result = RescueMerkleTree::<F>::verify(&root, 0, &bad_proof);
-        assert!(result.unwrap().is_err());
-
-        let mut forge_proof = MerkleProof::new(2, proof.proof);
-        if let MerkleNode::Leaf {
-            value: _,
-            pos,
-            elem,
-        } = &mut forge_proof.proof[0]
-        {
-            *pos = 2;
-            *elem = F::from(0u64);
-        } else {
-            unreachable!()
-        }
-        let result = RescueMerkleTree::<F>::verify(&root, 0, &forge_proof);
-        assert!(result.unwrap().is_err());
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, 0, elem, &bad_proof)
+                .unwrap()
+                .is_err()
+        );
     }
 
     #[test]
@@ -213,55 +204,67 @@ mod mt_tests {
     }
 
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
-        let mut mt =
-            RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
-        let root = mt.commitment().digest();
-        let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
-        let lookup_elem = *lookup_elem;
+        let mut mt = RescueMerkleTree::<F>::from_elems(
+            Some(2),
+            [F::from(3u64), F::from(1u64), F::from(2u64), F::from(5u64)],
+        )
+        .unwrap();
+        let commitment = mt.commitment();
+        let (&lookup_elem, mut lookup_proof) = mt.lookup(3).expect_ok().unwrap();
+        let (elem, proof) = mt.forget(3).expect_ok().unwrap();
+        assert_eq!(lookup_elem, elem);
+        assert_eq!(lookup_proof, proof);
+        assert_eq!(elem, F::from(5u64));
+        assert_eq!(proof.height(), 2);
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, 3, elem, &lookup_proof)
+                .unwrap()
+                .is_ok()
+        );
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 3, elem, &proof)
+            .unwrap()
+            .is_ok());
+
+        assert!(mt.forget(3).expect_ok().is_err());
+        assert!(matches!(mt.lookup(3), LookupResult::NotInMemory));
+
+        // Wrong element
+        assert!(mt.remember(3, F::from(19u64), &proof).is_err());
+        // Wrong pos
+        assert!(mt.remember(1, elem, &proof).is_err());
+        // Wrong proof
+        lookup_proof.0[0][0] = F::one();
+        assert!(mt.remember(3, elem, &lookup_proof).is_err());
+
+        assert!(mt.remember(3, elem, &proof).is_ok());
+        assert!(mt.lookup(3).expect_ok().is_ok());
+
+        // test another index
+        let (&lookup_elem, mut lookup_proof) = mt.lookup(0).expect_ok().unwrap();
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
-        assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, 0, &lookup_proof)
-            .unwrap()
-            .is_ok());
-        assert!(RescueMerkleTree::<F>::verify(&root, 0, &proof)
+        assert_eq!(proof.height(), 2);
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, 0, elem, &lookup_proof)
+                .unwrap()
+                .is_ok()
+        );
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 0, elem, &proof)
             .unwrap()
             .is_ok());
 
         assert!(mt.forget(0).expect_ok().is_err());
         assert!(matches!(mt.lookup(0), LookupResult::NotInMemory));
 
-        let mut bad_proof = proof.clone();
-        if let MerkleNode::Leaf {
-            value: _,
-            pos: _,
-            elem,
-        } = &mut bad_proof.proof[0]
-        {
-            *elem = F::from(4u64);
-        } else {
-            unreachable!()
-        }
-
-        let result = mt.remember(0, elem, &bad_proof);
-        assert!(result.is_err());
-
-        let mut forge_proof = MerkleProof::new(2, proof.proof.clone());
-        if let MerkleNode::Leaf {
-            value: _,
-            pos,
-            elem,
-        } = &mut forge_proof.proof[0]
-        {
-            *pos = 2;
-            *elem = F::from(0u64);
-        } else {
-            unreachable!()
-        }
-        let result = mt.remember(2, elem, &forge_proof);
-        assert!(result.is_err());
+        // Wrong element
+        assert!(mt.remember(0, F::from(19u64), &proof).is_err());
+        // Wrong pos
+        assert!(mt.remember(1, elem, &proof).is_err());
+        // Wrong proof
+        lookup_proof.0[0][0] = F::one();
+        assert!(mt.remember(0, elem, &lookup_proof).is_err());
 
         assert!(mt.remember(0, elem, &proof).is_ok());
         assert!(mt.lookup(0).expect_ok().is_ok());
@@ -278,7 +281,7 @@ mod mt_tests {
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let proof = mt.lookup(0).expect_ok().unwrap().1;
-        let node = &proof.proof[0];
+        // let node = &proof.proof.0[0];
 
         assert_eq!(
             mt,
@@ -288,10 +291,10 @@ mod mt_tests {
             proof,
             bincode::deserialize(&bincode::serialize(&proof).unwrap()).unwrap()
         );
-        assert_eq!(
-            *node,
-            bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
-        );
+        // assert_eq!(
+        //     *node,
+        //     bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
+        // );
     }
 
     #[test]

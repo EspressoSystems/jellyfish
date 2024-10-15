@@ -212,11 +212,12 @@ where
     }
 
     fn verify(
-        root: impl Borrow<Self::NodeValue>,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
+        element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError> {
-        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(root, pos, proof)
+        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(commitment, pos, element, proof)
     }
 
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
@@ -257,7 +258,7 @@ where
 {
     // Helper function to lookup a proof that should be in the tree because of NMT
     // invariants
-    fn lookup_proof(&self, idx: u64) -> MerkleProof<E, u64, NamespacedHash<T, N>, ARITY> {
+    fn lookup_proof(&self, idx: u64) -> MerkleProof<NamespacedHash<T, N>> {
         if let LookupResult::Ok(_, proof) = self.inner.lookup(idx) {
             proof
         } else {

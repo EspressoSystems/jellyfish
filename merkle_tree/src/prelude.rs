@@ -9,7 +9,7 @@
 pub use crate::{
     append_only::MerkleTree,
     impl_to_traversal_path_biguint, impl_to_traversal_path_primitives,
-    internal::{MerkleNode, MerklePath, MerkleProof},
+    internal::{MerkleNode, MerkleTreeProof},
     universal_merkle_tree::UniversalMerkleTree,
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme,
     ForgetableUniversalMerkleTreeScheme, Index, LookupResult, MerkleCommitment, MerkleTreeScheme,
