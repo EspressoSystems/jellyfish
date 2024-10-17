@@ -178,7 +178,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         Ok((Self::Proof { proof }, eval))
     }
 
-    /// Input a list of polynomials, and a same number of points,
+    /// Input a list of polynomials, and the same number of points,
     /// compute a multi-opening for all the polynomials.
     // This is a naive approach
     // TODO: to implement the more efficient batch opening algorithm

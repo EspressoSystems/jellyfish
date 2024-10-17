@@ -95,7 +95,7 @@ impl EncKey {
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
         let ephemeral_keypair = crypto_kx::Keypair::generate(&mut rng);
         // `crypto_kx` generates a pair of shared secrets, see <https://libsodium.gitbook.io/doc/key_exchange>
-        // we use the transimission key of the ephemeral sender (equals to the receiving
+        // we use the transmission key of the ephemeral sender (equals to the receiving
         // key of the server) as the shared secret.
         let shared_secret = ephemeral_keypair.session_keys_to(&self.0).tx;
         let cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());
@@ -179,7 +179,7 @@ impl KeyPair {
     }
 
     /// Decrypt a ciphertext with authenticated associated data provided.
-    /// If the associated data is different that that used during encryption,
+    /// If the associated data is different from that used during encryption,
     /// then decryption will fail.
     pub fn decrypt(&self, ciphertext: &Ciphertext, aad: &[u8]) -> Result<Vec<u8>, AEADError> {
         let shared_secret = crypto_kx::Keypair::from(self.dec_key.0.clone())
