@@ -222,26 +222,26 @@ mod mt_tests {
         );
     }
 
-    // #[test]
-    // fn test_light_mt_serde() {
-    //     test_light_mt_serde_helper::<Fr254>();
-    //     test_light_mt_serde_helper::<Fr377>();
-    //     test_light_mt_serde_helper::<Fr381>();
-    // }
+    #[test]
+    fn test_light_mt_serde() {
+        test_light_mt_serde_helper::<Fr254>();
+        test_light_mt_serde_helper::<Fr377>();
+        test_light_mt_serde_helper::<Fr381>();
+    }
 
-    // fn test_light_mt_serde_helper<F: RescueParameter>() {
-    //     let mt =
-    //         RescueLightWeightMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)])
-    //             .unwrap();
-    //     let (elem, proof) = mt.lookup(1).expect_ok().unwrap();
+    fn test_light_mt_serde_helper<F: RescueParameter>() {
+        let mt =
+            RescueLightWeightMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)])
+                .unwrap();
+        let (_, proof) = mt.lookup(1).expect_ok().unwrap();
 
-    //     assert_eq!(
-    //         mt,
-    //         bincode::deserialize(&bincode::serialize(&mt).unwrap()).unwrap()
-    //     );
-    //     assert_eq!(
-    //         proof,
-    //         bincode::deserialize(&bincode::serialize(&proof).unwrap()).unwrap()
-    //     );
-    // }
+        assert_eq!(
+            mt,
+            bincode::deserialize(&bincode::serialize(&mt).unwrap()).unwrap()
+        );
+        assert_eq!(
+            proof,
+            bincode::deserialize(&bincode::serialize(&proof).unwrap()).unwrap()
+        );
+    }
 }

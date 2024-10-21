@@ -588,7 +588,7 @@ mod mt_tests {
         hashmap.insert(F::from(1u64), F::from(2u64));
         hashmap.insert(F::from(10u64), F::from(3u64));
         let mt = RescueSparseMerkleTree::<F, F>::from_kv_set(3, &hashmap).unwrap();
-        let (_elem, mem_proof) = mt.lookup(F::from(10u64)).expect_ok().unwrap();
+        let (_, mem_proof) = mt.lookup(F::from(10u64)).expect_ok().unwrap();
         // let node = (F::from(10u64), elem.clone());
         let non_mem_proof = match mt.universal_lookup(F::from(9u64)) {
             LookupResult::NotFound(proof) => proof,
@@ -607,9 +607,5 @@ mod mt_tests {
             non_mem_proof,
             bincode::deserialize(&bincode::serialize(&non_mem_proof).unwrap()).unwrap()
         );
-        // assert_eq!(
-        //     node,
-        //     bincode::deserialize(&bincode::serialize(&node).unwrap()).unwrap()
-        // );
     }
 }

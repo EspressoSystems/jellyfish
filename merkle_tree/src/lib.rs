@@ -25,7 +25,6 @@ pub mod gadgets;
 pub mod hasher;
 pub mod light_weight;
 pub mod macros;
-// pub mod namespaced_merkle_tree;
 pub mod universal_merkle_tree;
 
 pub(crate) mod internal;

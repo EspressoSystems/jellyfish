@@ -128,7 +128,8 @@ impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
     }
 }
 
-/// A (non)membership Merkle proof consists of all values of siblings of a Merkle path.
+/// A (non)membership Merkle proof consists of all values of siblings of a
+/// Merkle path.
 #[derive(
     Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, CanonicalSerialize, CanonicalDeserialize,
 )]
@@ -152,8 +153,8 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
 /// * `pos` - zero-based index of the leaf in the tree
 /// * `element` - the leaf value, None if verifying a non-membership proof
 /// * `proof` - a membership proof for `element` at given `pos`
-/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
-///   if the proof is not well structured, E.g. not for this merkle tree.
+/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
+///   the proof is not well structured, E.g. not for this merkle tree.
 pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
     commitment: &MerkleTreeCommitment<T>,
     pos: &I,

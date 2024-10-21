@@ -280,8 +280,7 @@ mod mt_tests {
     fn test_mt_serde_helper<F: RescueParameter>() {
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
-        let proof = mt.lookup(0).expect_ok().unwrap().1;
-        // let node = &proof.proof.0[0];
+        let (_, proof) = mt.lookup(0).expect_ok().unwrap();
 
         assert_eq!(
             mt,
@@ -291,10 +290,6 @@ mod mt_tests {
             proof,
             bincode::deserialize(&bincode::serialize(&proof).unwrap()).unwrap()
         );
-        // assert_eq!(
-        //     *node,
-        //     bincode::deserialize(&bincode::serialize(node).unwrap()).unwrap()
-        // );
     }
 
     #[test]
