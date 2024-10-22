@@ -167,37 +167,39 @@ where
     T: NodeValue,
     H: DigestAlgorithm<E, I, T>,
 {
-    if proof.len() == commitment.height() {
-        let init = if let Some(elem) = element {
-            H::digest_leaf(pos, elem)?
-        } else {
-            T::default()
-        };
-        let computed_root = pos
-            .to_traversal_path(commitment.height())
-            .iter()
-            .zip(proof.iter())
-            .try_fold(
-                init,
-                |val, (branch, values)| -> Result<T, MerkleTreeError> {
-                    if values.len() == 0 {
-                        Ok(T::default())
-                    } else {
-                        let mut data = values.clone();
-                        data.insert(*branch, val);
-                        H::digest(&data)
-                    }
-                },
-            )?;
-        if computed_root == commitment.digest() {
-            Ok(Ok(()))
-        } else {
-            Ok(Err(()))
-        }
-    } else {
-        Err(MerkleTreeError::InconsistentStructureError(
+    if proof.len() != commitment.height() {
+        return Err(MerkleTreeError::InconsistentStructureError(
             "Inconsistent Merkle tree height.".to_string(),
-        ))
+        ));
+    }
+
+    let init = if let Some(elem) = element {
+        H::digest_leaf(pos, elem)?
+    } else {
+        T::default()
+    };
+    let mut data = [T::default(); ARITY];
+    let computed_root = pos
+        .to_traversal_path(commitment.height())
+        .iter()
+        .zip(proof.iter())
+        .try_fold(
+            init,
+            |val, (branch, values)| -> Result<T, MerkleTreeError> {
+                if values.len() == 0 {
+                    Ok(T::default())
+                } else {
+                    data[..*branch].copy_from_slice(&values[..*branch]);
+                    data[*branch] = val;
+                    data[*branch + 1..].copy_from_slice(&values[*branch..]);
+                    H::digest(&data)
+                }
+            },
+        )?;
+    if computed_root == commitment.digest() {
+        Ok(Ok(()))
+    } else {
+        Ok(Err(()))
     }
 }
 
