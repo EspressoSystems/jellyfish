@@ -7,7 +7,7 @@
 use super::{
     DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
 };
-use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult};
+use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FAILED, SUCCESS};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
@@ -197,9 +197,9 @@ where
             },
         )?;
     if computed_root == commitment.digest() {
-        Ok(Ok(()))
+        Ok(SUCCESS)
     } else {
-        Ok(Err(()))
+        Ok(FAILED)
     }
 }
 

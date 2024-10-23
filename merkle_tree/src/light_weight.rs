@@ -110,7 +110,7 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::{MerkleNode, MerkleTreeProof},
+        internal::MerkleNode,
         prelude::{RescueLightWeightMerkleTree, RescueMerkleTree},
         *,
     };

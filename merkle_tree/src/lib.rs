@@ -41,6 +41,10 @@ use serde::{Deserialize, Serialize};
 
 /// Glorified bool type
 pub(crate) type VerificationResult = Result<(), ()>;
+/// Glorified true
+pub const SUCCESS: VerificationResult = Ok(());
+/// Glorified false
+pub const FAILED: VerificationResult = Err(());
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
