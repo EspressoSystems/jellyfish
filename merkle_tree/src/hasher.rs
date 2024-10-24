@@ -8,7 +8,7 @@
 //!
 //! ```
 //! # use jf_merkle_tree::errors::MerkleTreeError;
-//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
+//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -> Result<(), MerkleTreeError> {

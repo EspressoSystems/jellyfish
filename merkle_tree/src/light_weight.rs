@@ -9,11 +9,11 @@
 
 use super::{
     internal::{
-        build_light_weight_tree_internal, MerkleNode, MerkleTreeCommitment, MerkleTreeIntoIter,
-        MerkleTreeIter, MerkleTreeProof,
+        build_light_weight_tree_internal, MerkleNode, MerkleTreeIntoIter, MerkleTreeIter,
+        MerkleTreeProof,
     },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    LookupResult, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{
     errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,

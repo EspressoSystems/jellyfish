@@ -44,7 +44,7 @@ pub(crate) type VerificationResult = Result<(), ()>;
 /// Glorified true
 pub const SUCCESS: VerificationResult = Ok(());
 /// Glorified false
-pub const FAILED: VerificationResult = Err(());
+pub const FAIL: VerificationResult = Err(());
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -100,17 +100,7 @@ impl<T: Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Clone> Index for T {}
 
 /// An internal node value type in a Merkle tree.
 pub trait NodeValue:
-    Default
-    + Eq
-    + PartialEq
-    + Hash
-    + Ord
-    + PartialOrd
-    + Copy
-    + Clone
-    + Debug
-    + CanonicalSerialize
-    + CanonicalDeserialize
+    Default + Eq + PartialEq + Hash + Copy + Clone + Debug + CanonicalSerialize + CanonicalDeserialize
 {
 }
 impl<T> NodeValue for T where
@@ -118,8 +108,6 @@ impl<T> NodeValue for T where
         + Eq
         + PartialEq
         + Hash
-        + Ord
-        + PartialOrd
         + Copy
         + Clone
         + Debug
@@ -163,28 +151,6 @@ impl_to_traversal_path_biguint!(ark_bn254::Fq);
 impl_to_traversal_path_biguint!(ark_bls12_377::Fq);
 impl_to_traversal_path_biguint!(ark_bls12_381::Fq);
 
-/// Trait for a succinct merkle tree commitment
-pub trait MerkleCommitment<T: NodeValue>:
-    Eq
-    + PartialEq
-    + Hash
-    + Ord
-    + PartialOrd
-    + Clone
-    + Copy
-    + Serialize
-    + for<'a> Deserialize<'a>
-    + CanonicalDeserialize
-    + CanonicalSerialize
-{
-    /// Return a digest of the tree
-    fn digest(&self) -> T;
-    /// Return the height of the tree
-    fn height(&self) -> usize;
-    /// Return the number of elements included in the accumulator/tree
-    fn size(&self) -> u64;
-}
-
 /// Trait for a Merkle proof
 pub trait MerkleProof<T: NodeValue>:
     Eq
@@ -218,7 +184,7 @@ pub trait MerkleTreeScheme: Sized {
     /// Batch proof
     type BatchMembershipProof: Clone;
     /// Merkle tree commitment
-    type Commitment: MerkleCommitment<Self::NodeValue>;
+    type Commitment: NodeValue;
 
     /// Tree ARITY
     const ARITY: usize;
@@ -394,7 +360,11 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
 
     /// Rebuild a merkle tree from a commitment.
     /// Return a tree which is entirely forgotten.
-    fn from_commitment(commitment: impl Borrow<Self::Commitment>) -> Self;
+    fn from_commitment(
+        commitment: impl Borrow<Self::Commitment>,
+        height: usize,
+        num_leaves: u64,
+    ) -> Self;
 }
 
 /// Universal Merkle tree that allows forget/remember elements from the memory

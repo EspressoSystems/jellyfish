@@ -43,7 +43,7 @@ macro_rules! impl_merkle_tree_scheme {
             type MembershipProof = MerkleTreeProof<T>;
             // TODO(Chengyu): implement batch membership proof
             type BatchMembershipProof = ();
-            type Commitment = MerkleTreeCommitment<T>;
+            type Commitment = T;
 
             const ARITY: usize = ARITY;
 
@@ -60,7 +60,7 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn commitment(&self) -> Self::Commitment {
-                MerkleTreeCommitment::new(self.root.value(), self.height, self.num_leaves)
+                self.root.value()
             }
 
             fn lookup(
@@ -138,14 +138,16 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
-            fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
+            fn from_commitment(
+                com: impl Borrow<Self::Commitment>,
+                height: usize,
+                num_leaves: u64,
+            ) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Arc::new(MerkleNode::ForgottenSubtree {
-                        value: com.digest(),
-                    }),
-                    height: com.height(),
-                    num_leaves: com.size(),
+                    root: Arc::new(MerkleNode::ForgottenSubtree { value: com.clone() }),
+                    height,
+                    num_leaves,
                     _phantom: PhantomData,
                 }
             }

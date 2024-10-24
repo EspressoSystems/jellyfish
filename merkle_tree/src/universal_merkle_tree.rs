@@ -6,11 +6,9 @@
 
 //! Implementation of a typical Sparse Merkle Tree.
 use super::{
-    internal::{
-        MerkleNode, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof,
-    },
+    internal::{MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme, NodeValue,
+    Index, LookupResult, MerkleProof, MerkleTreeScheme, NodeValue,
     PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 use crate::{
@@ -197,8 +195,8 @@ mod mt_tests {
         internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueHash, RescueSparseMerkleTree},
         DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme, Index,
-        LookupResult, MerkleCommitment, MerkleProof, MerkleTreeScheme,
-        PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
+        LookupResult, MerkleProof, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
+        ToTraversalPath, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fr as Fr377;
     use ark_bls12_381::Fr as Fr381;

@@ -4,10 +4,8 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use super::{
-    DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
-};
-use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FAILED, SUCCESS};
+use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue, ToTraversalPath};
+use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FAIL, SUCCESS};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
@@ -80,54 +78,6 @@ where
     }
 }
 
-/// A merkle commitment consists a root hash value, a tree height and number of
-/// leaves
-#[derive(
-    Eq,
-    PartialEq,
-    Clone,
-    Copy,
-    Debug,
-    Ord,
-    PartialOrd,
-    Hash,
-    CanonicalSerialize,
-    CanonicalDeserialize,
-)]
-#[tagged("MERKLE_COMM")]
-pub struct MerkleTreeCommitment<T: NodeValue> {
-    /// Root of a tree
-    digest: T,
-    /// Height of a tree
-    height: usize,
-    /// Number of leaves in the tree
-    num_leaves: u64,
-}
-
-impl<T: NodeValue> MerkleTreeCommitment<T> {
-    pub fn new(digest: T, height: usize, num_leaves: u64) -> Self {
-        MerkleTreeCommitment {
-            digest,
-            height,
-            num_leaves,
-        }
-    }
-}
-
-impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
-    fn digest(&self) -> T {
-        self.digest
-    }
-
-    fn height(&self) -> usize {
-        self.height
-    }
-
-    fn size(&self) -> u64 {
-        self.num_leaves
-    }
-}
-
 /// A (non)membership Merkle proof consists of all values of siblings of a
 /// Merkle path.
 #[derive(
@@ -156,7 +106,7 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
 /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
 ///   the proof is not well structured, E.g. not for this merkle tree.
 pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
-    commitment: &MerkleTreeCommitment<T>,
+    commitment: &T,
     pos: &I,
     element: Option<&E>,
     proof: &[Vec<T>],
@@ -167,12 +117,6 @@ where
     T: NodeValue,
     H: DigestAlgorithm<E, I, T>,
 {
-    if proof.len() != commitment.height() {
-        return Err(MerkleTreeError::InconsistentStructureError(
-            "Inconsistent Merkle tree height.".to_string(),
-        ));
-    }
-
     let init = if let Some(elem) = element {
         H::digest_leaf(pos, elem)?
     } else {
@@ -180,7 +124,7 @@ where
     };
     let mut data = [T::default(); ARITY];
     let computed_root = pos
-        .to_traversal_path(commitment.height())
+        .to_traversal_path(proof.len())
         .iter()
         .zip(proof.iter())
         .try_fold(
@@ -196,10 +140,10 @@ where
                 }
             },
         )?;
-    if computed_root == commitment.digest() {
+    if computed_root == *commitment {
         Ok(SUCCESS)
     } else {
-        Ok(FAILED)
+        Ok(FAIL)
     }
 }
 
