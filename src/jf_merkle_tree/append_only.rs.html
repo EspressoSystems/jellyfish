@@ -338,9 +338,6 @@
 <a href="#338" id="338">338</a>
 <a href="#339" id="339">339</a>
 <a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -351,11 +348,10 @@
 
 </span><span class="kw">use super</span>::{
     internal::{
-        build_tree_internal, MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter,
-        MerkleTreeIter,
+        build_tree_internal, MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof,
     },
     AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    LookupResult, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 <span class="kw">use crate</span>::{
     errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
@@ -447,12 +443,10 @@
     }
 }
 
-<span class="comment">// TODO(Chengyu): extract a merkle frontier
-
-</span><span class="attr">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>mt_tests {
     <span class="kw">use crate</span>::{
-        internal::{MerkleNode, MerkleProof},
+        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueMerkleTree, RescueSparseMerkleTree},
         <span class="kw-2">*</span>,
     };
@@ -509,43 +503,36 @@
 
         <span class="kw">let </span>mt =
             RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>root = mt.commitment().digest();
+        <span class="kw">let </span>commitment = mt.commitment();
         <span class="kw">let </span>(elem, proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span>F::from(<span class="number">3u64</span>));
-        <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0u64</span>, <span class="kw-2">&amp;</span>proof)
+        <span class="macro">assert_eq!</span>(proof.height(), <span class="number">2</span>);
+        <span class="macro">assert!</span>(
+            RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">0u64</span>, elem, <span class="kw-2">&amp;</span>proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        <span class="comment">// Wrong element value, should fail.
+        </span><span class="macro">assert!</span>(
+            RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">0</span>, F::from(<span class="number">14u64</span>), <span class="kw-2">&amp;</span>proof)
+                .unwrap()
+                .is_err()
+        );
+
+        <span class="comment">// Wrong pos, should fail.
+        </span><span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">1</span>, elem, <span class="kw-2">&amp;</span>proof)
             .unwrap()
-            .is_ok());
+            .is_err());
 
         <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos: <span class="kw">_</span>,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>bad_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>elem = F::from(<span class="number">4u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
+        bad_proof.<span class="number">0</span>[<span class="number">0</span>][<span class="number">0</span>] = F::one();
 
-        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>bad_proof);
-        <span class="macro">assert!</span>(result.unwrap().is_err());
-
-        <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof);
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>forge_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>pos = <span class="number">2</span>;
-            <span class="kw-2">*</span>elem = F::from(<span class="number">0u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
-        <span class="kw">let </span>result = RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>forge_proof);
-        <span class="macro">assert!</span>(result.unwrap().is_err());
+        <span class="macro">assert!</span>(
+            RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">0</span>, elem, <span class="kw-2">&amp;</span>bad_proof)
+                .unwrap()
+                .is_err()
+        );
     }
 
     <span class="attr">#[test]
@@ -556,55 +543,67 @@
     }
 
     <span class="kw">fn </span>test_mt_forget_remember_helper&lt;F: RescueParameter&gt;() {
-        <span class="kw">let </span><span class="kw-2">mut </span>mt =
-            RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>root = mt.commitment().digest();
-        <span class="kw">let </span>(lookup_elem, lookup_proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
-        <span class="kw">let </span>lookup_elem = <span class="kw-2">*</span>lookup_elem;
+        <span class="kw">let </span><span class="kw-2">mut </span>mt = RescueMerkleTree::&lt;F&gt;::from_elems(
+            <span class="prelude-val">Some</span>(<span class="number">2</span>),
+            [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>), F::from(<span class="number">5u64</span>)],
+        )
+        .unwrap();
+        <span class="kw">let </span>commitment = mt.commitment();
+        <span class="kw">let </span>(<span class="kw-2">&amp;</span>lookup_elem, <span class="kw-2">mut </span>lookup_proof) = mt.lookup(<span class="number">3</span>).expect_ok().unwrap();
+        <span class="kw">let </span>(elem, proof) = mt.forget(<span class="number">3</span>).expect_ok().unwrap();
+        <span class="macro">assert_eq!</span>(lookup_elem, elem);
+        <span class="macro">assert_eq!</span>(lookup_proof, proof);
+        <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">5u64</span>));
+        <span class="macro">assert_eq!</span>(proof.height(), <span class="number">2</span>);
+        <span class="macro">assert!</span>(
+            RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">3</span>, elem, <span class="kw-2">&amp;</span>lookup_proof)
+                .unwrap()
+                .is_ok()
+        );
+        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">3</span>, elem, <span class="kw-2">&amp;</span>proof)
+            .unwrap()
+            .is_ok());
+
+        <span class="macro">assert!</span>(mt.forget(<span class="number">3</span>).expect_ok().is_err());
+        <span class="macro">assert!</span>(<span class="macro">matches!</span>(mt.lookup(<span class="number">3</span>), LookupResult::NotInMemory));
+
+        <span class="comment">// Wrong element
+        </span><span class="macro">assert!</span>(mt.remember(<span class="number">3</span>, F::from(<span class="number">19u64</span>), <span class="kw-2">&amp;</span>proof).is_err());
+        <span class="comment">// Wrong pos
+        </span><span class="macro">assert!</span>(mt.remember(<span class="number">1</span>, elem, <span class="kw-2">&amp;</span>proof).is_err());
+        <span class="comment">// Wrong proof
+        </span>lookup_proof.<span class="number">0</span>[<span class="number">0</span>][<span class="number">0</span>] = F::one();
+        <span class="macro">assert!</span>(mt.remember(<span class="number">3</span>, elem, <span class="kw-2">&amp;</span>lookup_proof).is_err());
+
+        <span class="macro">assert!</span>(mt.remember(<span class="number">3</span>, elem, <span class="kw-2">&amp;</span>proof).is_ok());
+        <span class="macro">assert!</span>(mt.lookup(<span class="number">3</span>).expect_ok().is_ok());
+
+        <span class="comment">// test another index
+        </span><span class="kw">let </span>(<span class="kw-2">&amp;</span>lookup_elem, <span class="kw-2">mut </span>lookup_proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
         <span class="kw">let </span>(elem, proof) = mt.forget(<span class="number">0</span>).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(lookup_elem, elem);
         <span class="macro">assert_eq!</span>(lookup_proof, proof);
         <span class="macro">assert_eq!</span>(elem, F::from(<span class="number">3u64</span>));
-        <span class="macro">assert_eq!</span>(proof.tree_height(), <span class="number">3</span>);
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>lookup_proof)
-            .unwrap()
-            .is_ok());
-        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>root, <span class="number">0</span>, <span class="kw-2">&amp;</span>proof)
+        <span class="macro">assert_eq!</span>(proof.height(), <span class="number">2</span>);
+        <span class="macro">assert!</span>(
+            RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">0</span>, elem, <span class="kw-2">&amp;</span>lookup_proof)
+                .unwrap()
+                .is_ok()
+        );
+        <span class="macro">assert!</span>(RescueMerkleTree::&lt;F&gt;::verify(<span class="kw-2">&amp;</span>commitment, <span class="number">0</span>, elem, <span class="kw-2">&amp;</span>proof)
             .unwrap()
             .is_ok());
 
         <span class="macro">assert!</span>(mt.forget(<span class="number">0</span>).expect_ok().is_err());
         <span class="macro">assert!</span>(<span class="macro">matches!</span>(mt.lookup(<span class="number">0</span>), LookupResult::NotInMemory));
 
-        <span class="kw">let </span><span class="kw-2">mut </span>bad_proof = proof.clone();
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos: <span class="kw">_</span>,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>bad_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>elem = F::from(<span class="number">4u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
-
-        <span class="kw">let </span>result = mt.remember(<span class="number">0</span>, elem, <span class="kw-2">&amp;</span>bad_proof);
-        <span class="macro">assert!</span>(result.is_err());
-
-        <span class="kw">let </span><span class="kw-2">mut </span>forge_proof = MerkleProof::new(<span class="number">2</span>, proof.proof.clone());
-        <span class="kw">if let </span>MerkleNode::Leaf {
-            value: <span class="kw">_</span>,
-            pos,
-            elem,
-        } = <span class="kw-2">&amp;mut </span>forge_proof.proof[<span class="number">0</span>]
-        {
-            <span class="kw-2">*</span>pos = <span class="number">2</span>;
-            <span class="kw-2">*</span>elem = F::from(<span class="number">0u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">unreachable!</span>()
-        }
-        <span class="kw">let </span>result = mt.remember(<span class="number">2</span>, elem, <span class="kw-2">&amp;</span>forge_proof);
-        <span class="macro">assert!</span>(result.is_err());
+        <span class="comment">// Wrong element
+        </span><span class="macro">assert!</span>(mt.remember(<span class="number">0</span>, F::from(<span class="number">19u64</span>), <span class="kw-2">&amp;</span>proof).is_err());
+        <span class="comment">// Wrong pos
+        </span><span class="macro">assert!</span>(mt.remember(<span class="number">1</span>, elem, <span class="kw-2">&amp;</span>proof).is_err());
+        <span class="comment">// Wrong proof
+        </span>lookup_proof.<span class="number">0</span>[<span class="number">0</span>][<span class="number">0</span>] = F::one();
+        <span class="macro">assert!</span>(mt.remember(<span class="number">0</span>, elem, <span class="kw-2">&amp;</span>lookup_proof).is_err());
 
         <span class="macro">assert!</span>(mt.remember(<span class="number">0</span>, elem, <span class="kw-2">&amp;</span>proof).is_ok());
         <span class="macro">assert!</span>(mt.lookup(<span class="number">0</span>).expect_ok().is_ok());
@@ -620,8 +619,7 @@
     <span class="kw">fn </span>test_mt_serde_helper&lt;F: RescueParameter&gt;() {
         <span class="kw">let </span>mt =
             RescueMerkleTree::&lt;F&gt;::from_elems(<span class="prelude-val">Some</span>(<span class="number">2</span>), [F::from(<span class="number">3u64</span>), F::from(<span class="number">1u64</span>)]).unwrap();
-        <span class="kw">let </span>proof = mt.lookup(<span class="number">0</span>).expect_ok().unwrap().<span class="number">1</span>;
-        <span class="kw">let </span>node = <span class="kw-2">&amp;</span>proof.proof[<span class="number">0</span>];
+        <span class="kw">let </span>(<span class="kw">_</span>, proof) = mt.lookup(<span class="number">0</span>).expect_ok().unwrap();
 
         <span class="macro">assert_eq!</span>(
             mt,
@@ -630,10 +628,6 @@
         <span class="macro">assert_eq!</span>(
             proof,
             bincode::deserialize(<span class="kw-2">&amp;</span>bincode::serialize(<span class="kw-2">&amp;</span>proof).unwrap()).unwrap()
-        );
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">*</span>node,
-            bincode::deserialize(<span class="kw-2">&amp;</span>bincode::serialize(node).unwrap()).unwrap()
         );
     }
 

@@ -439,14 +439,6 @@
 <a href="#439" id="439">439</a>
 <a href="#440" id="440">440</a>
 <a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
-<a href="#447" id="447">447</a>
-<a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -474,7 +466,6 @@
 <span class="kw">pub mod </span>hasher;
 <span class="kw">pub mod </span>light_weight;
 <span class="kw">pub mod </span>macros;
-<span class="kw">pub mod </span>namespaced_merkle_tree;
 <span class="kw">pub mod </span>universal_merkle_tree;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>internal;
@@ -491,6 +482,10 @@
 
 <span class="doccomment">/// Glorified bool type
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>VerificationResult = <span class="prelude-ty">Result</span>&lt;(), ()&gt;;
+<span class="doccomment">/// Glorified true
+</span><span class="kw">pub const </span>SUCCESS: VerificationResult = <span class="prelude-val">Ok</span>(());
+<span class="doccomment">/// Glorified false
+</span><span class="kw">pub const </span>FAIL: VerificationResult = <span class="prelude-val">Err</span>(());
 
 <span class="attr">#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 </span><span class="doccomment">/// The result of querying at an index in the tree
@@ -546,17 +541,7 @@
 
 <span class="doccomment">/// An internal node value type in a Merkle tree.
 </span><span class="kw">pub trait </span>NodeValue:
-    Default
-    + Eq
-    + PartialEq
-    + Hash
-    + Ord
-    + PartialOrd
-    + Copy
-    + Clone
-    + Debug
-    + CanonicalSerialize
-    + CanonicalDeserialize
+    Default + Eq + PartialEq + Hash + Copy + Clone + Debug + CanonicalSerialize + CanonicalDeserialize
 {
 }
 <span class="kw">impl</span>&lt;T&gt; NodeValue <span class="kw">for </span>T <span class="kw">where
@@ -564,8 +549,6 @@
         + Eq
         + PartialEq
         + Hash
-        + Ord
-        + PartialOrd
         + Copy
         + Clone
         + Debug
@@ -609,26 +592,22 @@
 <span class="macro">impl_to_traversal_path_biguint!</span>(ark_bls12_377::Fq);
 <span class="macro">impl_to_traversal_path_biguint!</span>(ark_bls12_381::Fq);
 
-<span class="doccomment">/// Trait for a succinct merkle tree commitment
-</span><span class="kw">pub trait </span>MerkleCommitment&lt;T: NodeValue&gt;:
+<span class="doccomment">/// Trait for a Merkle proof
+</span><span class="kw">pub trait </span>MerkleProof&lt;T: NodeValue&gt;:
     Eq
     + PartialEq
     + Hash
-    + Ord
-    + PartialOrd
     + Clone
-    + Copy
+    + CanonicalSerialize
+    + CanonicalDeserialize
     + Serialize
     + <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Deserialize&lt;<span class="lifetime">'a</span>&gt;
-    + CanonicalDeserialize
-    + CanonicalSerialize
 {
-    <span class="doccomment">/// Return a digest of the tree
-    </span><span class="kw">fn </span>digest(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; T;
-    <span class="doccomment">/// Return the height of the tree
+    <span class="doccomment">/// Expected height of the Merkle tree.
     </span><span class="kw">fn </span>height(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
-    <span class="doccomment">/// Return the number of elements included in the accumulator/tree
-    </span><span class="kw">fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64;
+
+    <span class="doccomment">/// Return all values of siblings of this Merkle path
+    </span><span class="kw">fn </span>path_values(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[Vec&lt;T&gt;];
 }
 
 <span class="doccomment">/// Basic functionalities for a merkle tree implementation. Abstracted as an
@@ -642,11 +621,11 @@
     <span class="doccomment">/// Internal and root node value
     </span><span class="kw">type </span>NodeValue: NodeValue;
     <span class="doccomment">/// Merkle proof
-    </span><span class="kw">type </span>MembershipProof: Clone + Eq + Hash;
+    </span><span class="kw">type </span>MembershipProof: MerkleProof&lt;<span class="self">Self</span>::NodeValue&gt;;
     <span class="doccomment">/// Batch proof
     </span><span class="kw">type </span>BatchMembershipProof: Clone;
     <span class="doccomment">/// Merkle tree commitment
-    </span><span class="kw">type </span>Commitment: MerkleCommitment&lt;<span class="self">Self</span>::NodeValue&gt;;
+    </span><span class="kw">type </span>Commitment: NodeValue;
 
     <span class="doccomment">/// Tree ARITY
     </span><span class="kw">const </span>ARITY: usize;
@@ -672,15 +651,16 @@
     ) -&gt; LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, ()&gt;;
 
     <span class="doccomment">/// Verify an element is a leaf of a Merkle tree given the proof
-    /// * `root` - a merkle tree root, usually obtained from
-    ///   `Self::commitment().digest()`
+    /// * `commitment` - a merkle tree commitment
     /// * `pos` - zero-based index of the leaf in the tree
-    /// * `proof` - a merkle tree proof
+    /// * `element` - the leaf value
+    /// * `proof` - a membership proof for `element` at given `pos`
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     </span><span class="kw">fn </span>verify(
-        root: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NodeValue&gt;,
+        commitment: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
+        element: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, MerkleTreeError&gt;;
 
@@ -791,10 +771,10 @@
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     </span><span class="kw">fn </span>non_membership_verify(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        commitment: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NonMembershipProof&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, MerkleTreeError&gt;;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, MerkleTreeError&gt;;
     <span class="comment">// TODO(Chengyu): non-membership proof interfaces
 </span>}
 
@@ -821,7 +801,11 @@
 
     <span class="doccomment">/// Rebuild a merkle tree from a commitment.
     /// Return a tree which is entirely forgotten.
-    </span><span class="kw">fn </span>from_commitment(commitment: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;) -&gt; <span class="self">Self</span>;
+    </span><span class="kw">fn </span>from_commitment(
+        commitment: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;,
+        height: usize,
+        num_leaves: u64,
+    ) -&gt; <span class="self">Self</span>;
 }
 
 <span class="doccomment">/// Universal Merkle tree that allows forget/remember elements from the memory

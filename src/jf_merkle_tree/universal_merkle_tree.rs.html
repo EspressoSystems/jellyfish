@@ -607,34 +607,6 @@
 <a href="#607" id="607">607</a>
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
-<a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
-<a href="#613" id="613">613</a>
-<a href="#614" id="614">614</a>
-<a href="#615" id="615">615</a>
-<a href="#616" id="616">616</a>
-<a href="#617" id="617">617</a>
-<a href="#618" id="618">618</a>
-<a href="#619" id="619">619</a>
-<a href="#620" id="620">620</a>
-<a href="#621" id="621">621</a>
-<a href="#622" id="622">622</a>
-<a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
@@ -643,9 +615,9 @@
 
 </span><span class="doccomment">//! Implementation of a typical Sparse Merkle Tree.
 </span><span class="kw">use super</span>::{
-    internal::{MerkleNode, MerkleProof, MerkleTreeCommitment, MerkleTreeIntoIter, MerkleTreeIter},
+    internal::{MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof},
     DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleCommitment, MerkleTreeScheme, NodeValue,
+    Index, LookupResult, MerkleProof, MerkleTreeScheme, NodeValue,
     PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
 };
 <span class="kw">use crate</span>::{
@@ -707,7 +679,7 @@
     I: Index + ToTraversalPath&lt;ARITY&gt;,
     T: NodeValue,
 {
-    <span class="kw">type </span>NonMembershipProof = MerkleProof&lt;E, I, T, ARITY&gt;;
+    <span class="kw">type </span>NonMembershipProof = MerkleTreeProof&lt;T&gt;;
     <span class="kw">type </span>BatchNonMembershipProof = ();
 
     <span class="kw">fn </span>update_with&lt;F&gt;(
@@ -729,23 +701,16 @@
     }
 
     <span class="kw">fn </span>non_membership_verify(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        commitment: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Commitment&gt;,
         pos: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Index&gt;,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NonMembershipProof&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, MerkleTreeError&gt; {
-        <span class="kw">let </span>pos = pos.borrow();
-        <span class="kw">let </span>proof = proof.borrow();
-        <span class="kw">if </span><span class="self">self</span>.height != proof.tree_height() - <span class="number">1 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
-                <span class="string">"Incompatible membership proof for this merkle tree"</span>.to_string(),
-            ));
-        }
-        <span class="kw">if </span><span class="kw-2">*</span>pos != proof.pos {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
-                <span class="string">"Inconsistent proof index"</span>.to_string(),
-            ));
-        }
-        proof.verify_non_membership_proof::&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.root.value())
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, MerkleTreeError&gt; {
+        <span class="kw">crate</span>::internal::verify_merkle_proof::&lt;E, H, I, ARITY, T&gt;(
+            commitment.borrow(),
+            pos.borrow(),
+            <span class="prelude-val">None</span>,
+            proof.borrow().path_values(),
+        )
     }
 
     <span class="kw">fn </span>universal_lookup(
@@ -754,15 +719,7 @@
     ) -&gt; LookupResult&lt;<span class="kw-2">&amp;</span><span class="self">Self</span>::Element, <span class="self">Self</span>::MembershipProof, <span class="self">Self</span>::NonMembershipProof&gt; {
         <span class="kw">let </span>pos = pos.borrow();
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-        <span class="kw">match </span><span class="self">self</span>.root.lookup_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path) {
-            LookupResult::Ok(value, proof) =&gt; {
-                LookupResult::Ok(value, MerkleProof::new(pos.clone(), proof))
-            },
-            LookupResult::NotInMemory =&gt; LookupResult::NotInMemory,
-            LookupResult::NotFound(non_membership_proof) =&gt; {
-                LookupResult::NotFound(MerkleProof::new(pos.clone(), non_membership_proof))
-            },
-        }
+        <span class="self">self</span>.root.lookup_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path)
     }
 }
 
@@ -813,11 +770,7 @@
         <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
         <span class="kw">let </span>(root, result) = <span class="self">self</span>.root.forget_internal(<span class="self">self</span>.height, <span class="kw-2">&amp;</span>traversal_path);
         <span class="self">self</span>.root = root;
-        <span class="kw">match </span>result {
-            LookupResult::Ok(elem, proof) =&gt; LookupResult::Ok(elem, MerkleProof::new(pos, proof)),
-            LookupResult::NotInMemory =&gt; LookupResult::NotInMemory,
-            LookupResult::NotFound(proof) =&gt; LookupResult::NotFound(MerkleProof::new(pos, proof)),
-        }
+        result
     }
 
     <span class="kw">fn </span>non_membership_remember(
@@ -825,47 +778,22 @@
         pos: <span class="self">Self</span>::Index,
         proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::NonMembershipProof&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MerkleTreeError&gt; {
+        <span class="kw">let </span>pos = pos.borrow();
         <span class="kw">let </span>proof = proof.borrow();
-        <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
-        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">&amp;</span>proof.proof[<span class="number">0</span>], MerkleNode::Empty) {
-            <span class="kw">let </span>empty_value = T::default();
-            <span class="kw">let </span><span class="kw-2">mut </span>path_values = <span class="macro">vec!</span>[empty_value];
-            traversal_path
-                .iter()
-                .zip(proof.proof.iter().skip(<span class="number">1</span>))
-                .try_fold(
-                    empty_value,
-                    |val: T, (branch, node)| -&gt; <span class="prelude-ty">Result</span>&lt;T, MerkleTreeError&gt; {
-                        <span class="kw">match </span>node {
-                            MerkleNode::Branch { value: <span class="kw">_</span>, children } =&gt; {
-                                <span class="kw">let </span><span class="kw-2">mut </span>data: Vec&lt;<span class="kw">_</span>&gt; =
-                                    children.iter().map(|node| node.value()).collect();
-                                data[<span class="kw-2">*</span>branch] = val;
-                                <span class="kw">let </span>digest = H::digest(<span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>;
-                                path_values.push(digest);
-                                <span class="prelude-val">Ok</span>(digest)
-                            },
-                            MerkleNode::Empty =&gt; {
-                                path_values.push(empty_value);
-                                <span class="prelude-val">Ok</span>(empty_value)
-                            },
-                            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
-                                <span class="string">"Incompatible proof for this merkle tree"</span>.to_string(),
-                            )),
-                        }
-                    },
-                )<span class="question-mark">?</span>;
+        <span class="kw">if </span><span class="self">Self</span>::non_membership_verify(<span class="kw-2">&amp;</span><span class="self">self</span>.commitment(), pos, proof)<span class="question-mark">?</span>.is_err() {
+            <span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
+                <span class="string">"Wrong proof"</span>.to_string(),
+            ))
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>traversal_path = pos.to_traversal_path(<span class="self">self</span>.height);
             <span class="self">self</span>.root = <span class="self">self</span>.root.remember_internal::&lt;H, ARITY&gt;(
                 <span class="self">self</span>.height,
                 <span class="kw-2">&amp;</span>traversal_path,
-                <span class="kw-2">&amp;</span>path_values,
-                <span class="kw-2">&amp;</span>proof.proof,
+                pos,
+                <span class="prelude-val">None</span>,
+                proof.path_values(),
             )<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(())
-        } <span class="kw">else </span>{
-            <span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
-                <span class="string">"Invalid proof type"</span>.to_string(),
-            ))
         }
     }
 }
@@ -873,10 +801,10 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>mt_tests {
     <span class="kw">use crate</span>::{
-        internal::{MerkleNode, MerkleProof},
+        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueHash, RescueSparseMerkleTree},
         DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme, Index,
-        LookupResult, MerkleCommitment, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
+        LookupResult, MerkleProof, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
         ToTraversalPath, UniversalMerkleTreeScheme,
     };
     <span class="kw">use </span>ark_bls12_377::Fr <span class="kw">as </span>Fr377;
@@ -924,18 +852,27 @@
         <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;BigUint, F&gt;::from_kv_set(<span class="number">10</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
         <span class="macro">assert_eq!</span>(mt.num_leaves(), hashmap.len() <span class="kw">as </span>u64);
 
+        <span class="kw">let </span>commitment = mt.commitment();
+
         <span class="kw">let </span><span class="kw-2">mut </span>proof = mt
             .universal_lookup(BigUint::from(<span class="number">3u64</span>))
             .expect_not_found()
             .unwrap();
-        <span class="kw">let </span>verify_result = mt.non_membership_verify(BigUint::from(<span class="number">3u64</span>), <span class="kw-2">&amp;</span>proof);
-        <span class="macro">assert!</span>(verify_result.is_ok() &amp;&amp; verify_result.unwrap());
 
-        proof.pos = BigUint::from(<span class="number">1u64</span>);
-        <span class="kw">let </span>verify_result = mt.non_membership_verify(BigUint::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>proof);
-        <span class="macro">assert!</span>(verify_result.is_ok() &amp;&amp; !verify_result.unwrap());
+        <span class="kw">let </span>verify_result = RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">3u64</span>),
+            <span class="kw-2">&amp;</span>proof,
+        )
+        .unwrap();
+        <span class="macro">assert!</span>(verify_result.is_ok());
 
-        <span class="kw">let </span>verify_result = mt.non_membership_verify(BigUint::from(<span class="number">4u64</span>), proof);
+        <span class="kw">let </span>verify_result = RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">1u64</span>),
+            <span class="kw-2">&amp;</span>proof,
+        )
+        .unwrap();
         <span class="macro">assert!</span>(verify_result.is_err());
     }
 
@@ -960,13 +897,14 @@
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
             mt.update(F::from(i <span class="kw">as </span>u64), F::from(i <span class="kw">as </span>u64)).unwrap();
         }
+        <span class="kw">let </span>commitment = mt.commitment();
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">2 </span>{
             <span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(i <span class="kw">as </span>u64)).expect_ok().unwrap();
             <span class="macro">assert_eq!</span>(val, <span class="kw-2">&amp;</span>F::from(i <span class="kw">as </span>u64));
-            <span class="macro">assert_eq!</span>(proof.elem().unwrap(), val);
             <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;F, F&gt;::verify(
-                <span class="kw-2">&amp;</span>mt.root.value(),
+                <span class="kw-2">&amp;</span>commitment,
                 F::from(i <span class="kw">as </span>u64),
+                val,
                 <span class="kw-2">&amp;</span>proof
             )
             .unwrap()
@@ -980,12 +918,12 @@
             .unwrap();
         }
         <span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">10</span>);
+        <span class="kw">let </span>commitment = mt.commitment();
         <span class="comment">// test lookup at index 7
         </span><span class="kw">let </span>(val, proof) = mt.universal_lookup(F::from(<span class="number">7u64</span>)).expect_ok().unwrap();
         <span class="macro">assert_eq!</span>(val, <span class="kw-2">&amp;</span>F::from(<span class="number">7u64</span>));
-        <span class="macro">assert_eq!</span>(proof.elem().unwrap(), val);
         <span class="macro">assert!</span>(
-            RescueSparseMerkleTree::&lt;F, F&gt;::verify(<span class="kw-2">&amp;</span>mt.root.value(), F::from(<span class="number">7u64</span>), <span class="kw-2">&amp;</span>proof)
+            RescueSparseMerkleTree::&lt;F, F&gt;::verify(<span class="kw-2">&amp;</span>commitment, F::from(<span class="number">7u64</span>), val, <span class="kw-2">&amp;</span>proof)
                 .unwrap()
                 .is_ok()
         );
@@ -1015,7 +953,7 @@
             ],
         )
         .unwrap();
-        <span class="kw">let </span>root = mt.commitment().digest();
+        <span class="kw">let </span>commitment = mt.commitment();
 
         <span class="comment">// Look up and forget an element that is in the tree.
         </span><span class="kw">let </span>(lookup_elem, lookup_mem_proof) = mt
@@ -1027,17 +965,19 @@
         <span class="macro">assert_eq!</span>(lookup_elem, elem);
         <span class="macro">assert_eq!</span>(lookup_mem_proof, mem_proof);
         <span class="macro">assert_eq!</span>(elem, <span class="number">1u64</span>.into());
-        <span class="macro">assert_eq!</span>(mem_proof.tree_height(), <span class="number">11</span>);
+        <span class="macro">assert_eq!</span>(mem_proof.height(), <span class="number">10</span>);
         <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(
-            <span class="kw-2">&amp;</span>root,
+            <span class="kw-2">&amp;</span>commitment,
             BigUint::from(<span class="number">0u64</span>),
+            <span class="kw-2">&amp;</span>elem,
             <span class="kw-2">&amp;</span>lookup_mem_proof
         )
         .unwrap()
         .is_ok());
         <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(
-            <span class="kw-2">&amp;</span>root,
+            <span class="kw-2">&amp;</span>commitment,
             BigUint::from(<span class="number">0u64</span>),
+            <span class="kw-2">&amp;</span>elem,
             <span class="kw-2">&amp;</span>mem_proof
         )
         .unwrap()
@@ -1059,11 +999,14 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">3u64</span>.into());
-        <span class="macro">assert!</span>(
-            RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof)
-                .unwrap()
-                .is_ok()
-        );
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">2u64</span>),
+            elem,
+            <span class="kw-2">&amp;</span>proof
+        )
+        .unwrap()
+        .is_ok());
 
         <span class="comment">// Look up and forget an empty sub-tree.
         </span><span class="kw">let </span>lookup_non_mem_proof = <span class="kw">match </span>mt.universal_lookup(BigUint::from(<span class="number">1u64</span>)) {
@@ -1075,13 +1018,21 @@
             res =&gt; <span class="macro">panic!</span>(<span class="string">"expected NotFound, got {:?}"</span>, res),
         };
         <span class="macro">assert_eq!</span>(lookup_non_mem_proof, non_mem_proof);
-        <span class="macro">assert_eq!</span>(non_mem_proof.tree_height(), <span class="number">11</span>);
-        <span class="macro">assert!</span>(mt
-            .non_membership_verify(BigUint::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>lookup_non_mem_proof)
-            .unwrap());
-        <span class="macro">assert!</span>(mt
-            .non_membership_verify(BigUint::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>non_mem_proof)
-            .unwrap());
+        <span class="macro">assert_eq!</span>(non_mem_proof.height(), <span class="number">10</span>);
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">1u64</span>),
+            <span class="kw-2">&amp;</span>lookup_non_mem_proof
+        )
+        .unwrap()
+        .is_ok());
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">1u64</span>),
+            <span class="kw-2">&amp;</span>non_mem_proof
+        )
+        .unwrap()
+        .is_ok());
 
         <span class="comment">// Forgetting an empty sub-tree will never actually cause any new entries to be
         // forgotten, since empty sub-trees are _already_ treated as if they
@@ -1089,9 +1040,13 @@
         // though we "forgot" it, the empty sub-tree is still in memory.
         </span><span class="kw">match </span>mt.universal_lookup(BigUint::from(<span class="number">1u64</span>)) {
             LookupResult::NotFound(proof) =&gt; {
-                <span class="macro">assert!</span>(mt
-                    .non_membership_verify(BigUint::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>proof)
-                    .unwrap());
+                <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+                    <span class="kw-2">&amp;</span>commitment,
+                    BigUint::from(<span class="number">1u64</span>),
+                    <span class="kw-2">&amp;</span>proof
+                )
+                .unwrap()
+                .is_ok());
             },
             res =&gt; {
                 <span class="macro">panic!</span>(<span class="string">"expected NotFound, got {:?}"</span>, res);
@@ -1104,11 +1059,14 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">3u64</span>.into());
-        <span class="macro">assert!</span>(
-            RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>proof)
-                .unwrap()
-                .is_ok()
-        );
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">2u64</span>),
+            elem,
+            <span class="kw-2">&amp;</span>proof
+        )
+        .unwrap()
+        .is_ok());
 
         <span class="comment">// Now if we forget the last entry, which is the only thing keeping the root
         // branch in memory, every entry will be forgotten.
@@ -1129,37 +1087,20 @@
         ));
 
         <span class="comment">// Remember should fail if the proof is invalid.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>bad_mem_proof = mem_proof.clone();
-        <span class="kw">if let </span>MerkleNode::Leaf { elem, .. } = <span class="kw-2">&amp;mut </span>bad_mem_proof.proof[<span class="number">0</span>] {
-            <span class="kw-2">*</span>elem = F::from(<span class="number">4u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">panic!</span>(<span class="string">"expected membership proof to end in a Leaf"</span>);
-        }
+        </span>mt.remember(BigUint::from(<span class="number">0u64</span>), F::from(<span class="number">2u64</span>), <span class="kw-2">&amp;</span>mem_proof)
+            .unwrap_err();
+        mt.remember(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>mem_proof)
+            .unwrap_err();
+        <span class="kw">let </span><span class="kw-2">mut </span>bad_mem_proof = mem_proof.clone();
+        bad_mem_proof.<span class="number">0</span>[<span class="number">0</span>][<span class="number">0</span>] = F::one();
         mt.remember(BigUint::from(<span class="number">0u64</span>), F::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>bad_mem_proof)
             .unwrap_err();
 
+        mt.non_membership_remember(<span class="number">0u64</span>.into(), <span class="kw-2">&amp;</span>non_mem_proof)
+            .unwrap_err();
         <span class="kw">let </span><span class="kw-2">mut </span>bad_non_mem_proof = non_mem_proof.clone();
-        bad_non_mem_proof.proof[<span class="number">0</span>] = MerkleNode::Leaf {
-            pos: <span class="number">1u64</span>.into(),
-            elem: Default::default(),
-            value: Default::default(),
-        };
+        bad_non_mem_proof.<span class="number">0</span>[<span class="number">0</span>][<span class="number">0</span>] = F::one();
         mt.non_membership_remember(<span class="number">1u64</span>.into(), <span class="kw-2">&amp;</span>bad_non_mem_proof)
-            .unwrap_err();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>forge_mem_proof = MerkleProof::new(<span class="number">1u64</span>.into(), mem_proof.proof.clone());
-        <span class="kw">if let </span>MerkleNode::Leaf { pos, elem, .. } = <span class="kw-2">&amp;mut </span>forge_mem_proof.proof[<span class="number">0</span>] {
-            <span class="kw-2">*</span>pos = <span class="number">1u64</span>.into();
-            <span class="kw-2">*</span>elem = F::from(<span class="number">0u64</span>);
-        } <span class="kw">else </span>{
-            <span class="macro">panic!</span>(<span class="string">"expected membership proof to end in a Leaf"</span>);
-        }
-        mt.remember(BigUint::from(<span class="number">1u64</span>), F::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>forge_mem_proof)
-            .unwrap_err();
-
-        <span class="kw">let </span>forge_non_mem_proof = non_mem_proof.clone();
-        <span class="macro">assert!</span>(<span class="macro">matches!</span>(forge_non_mem_proof.proof[<span class="number">0</span>], MerkleNode::Empty));
-        mt.non_membership_remember(<span class="number">0u64</span>.into(), <span class="kw-2">&amp;</span>forge_non_mem_proof)
             .unwrap_err();
 
         <span class="comment">// Remember an occupied and an empty  sub-tree.
@@ -1174,17 +1115,24 @@
             .expect_ok()
             .unwrap();
         <span class="macro">assert_eq!</span>(elem, <span class="kw-2">&amp;</span><span class="number">1u64</span>.into());
-        <span class="macro">assert!</span>(
-            RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(<span class="kw-2">&amp;</span>root, BigUint::from(<span class="number">0u64</span>), <span class="kw-2">&amp;</span>proof)
-                .unwrap()
-                .is_ok()
-        );
+        <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::verify(
+            <span class="kw-2">&amp;</span>commitment,
+            BigUint::from(<span class="number">0u64</span>),
+            elem,
+            <span class="kw-2">&amp;</span>proof
+        )
+        .unwrap()
+        .is_ok());
 
         <span class="kw">match </span>mt.universal_lookup(BigUint::from(<span class="number">1u64</span>)) {
             LookupResult::NotFound(proof) =&gt; {
-                <span class="macro">assert!</span>(mt
-                    .non_membership_verify(BigUint::from(<span class="number">1u64</span>), <span class="kw-2">&amp;</span>proof)
-                    .unwrap());
+                <span class="macro">assert!</span>(RescueSparseMerkleTree::&lt;BigUint, F&gt;::non_membership_verify(
+                    <span class="kw-2">&amp;</span>commitment,
+                    BigUint::from(<span class="number">1u64</span>),
+                    <span class="kw-2">&amp;</span>proof
+                )
+                .unwrap()
+                .is_ok());
             },
             res =&gt; {
                 <span class="macro">panic!</span>(<span class="string">"expected NotFound, got {:?}"</span>, res);
@@ -1247,9 +1195,9 @@
         hashmap.insert(F::from(<span class="number">1u64</span>), F::from(<span class="number">2u64</span>));
         hashmap.insert(F::from(<span class="number">10u64</span>), F::from(<span class="number">3u64</span>));
         <span class="kw">let </span>mt = RescueSparseMerkleTree::&lt;F, F&gt;::from_kv_set(<span class="number">3</span>, <span class="kw-2">&amp;</span>hashmap).unwrap();
-        <span class="kw">let </span>mem_proof = mt.lookup(F::from(<span class="number">10u64</span>)).expect_ok().unwrap().<span class="number">1</span>;
-        <span class="kw">let </span>node = <span class="kw-2">&amp;</span>mem_proof.proof[<span class="number">0</span>];
-        <span class="kw">let </span>non_mem_proof = <span class="kw">match </span>mt.universal_lookup(F::from(<span class="number">9u64</span>)) {
+        <span class="kw">let </span>(<span class="kw">_</span>, mem_proof) = mt.lookup(F::from(<span class="number">10u64</span>)).expect_ok().unwrap();
+        <span class="comment">// let node = (F::from(10u64), elem.clone());
+        </span><span class="kw">let </span>non_mem_proof = <span class="kw">match </span>mt.universal_lookup(F::from(<span class="number">9u64</span>)) {
             LookupResult::NotFound(proof) =&gt; proof,
             res =&gt; <span class="macro">panic!</span>(<span class="string">"expected NotFound, got {:?}"</span>, res),
         };
@@ -1265,10 +1213,6 @@
         <span class="macro">assert_eq!</span>(
             non_mem_proof,
             bincode::deserialize(<span class="kw-2">&amp;</span>bincode::serialize(<span class="kw-2">&amp;</span>non_mem_proof).unwrap()).unwrap()
-        );
-        <span class="macro">assert_eq!</span>(
-            <span class="kw-2">*</span>node,
-            bincode::deserialize(<span class="kw-2">&amp;</span>bincode::serialize(node).unwrap()).unwrap()
         );
     }
 }

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["NMT"],"trait":["BindNamespace","Namespace","NamespaceProof","Namespaced","NamespacedMerkleTreeScheme"]};

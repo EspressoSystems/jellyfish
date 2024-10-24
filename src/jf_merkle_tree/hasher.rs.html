@@ -250,7 +250,7 @@
 //!
 //! ```
 //! # use jf_merkle_tree::errors::MerkleTreeError;
-//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
+//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -&gt; Result&lt;(), MerkleTreeError&gt; {
@@ -259,10 +259,10 @@
 //! // payload type is `usize`, hash function is `Sha256`.
 //! let mt = HasherMerkleTree::&lt;Sha256, usize&gt;::from_elems(Some(2), &amp;my_data)?;
 //!
-//! let root = mt.commitment().digest();
+//! let commitment = mt.commitment();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
 //! assert_eq!(val, &amp;3);
-//! assert!(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(root, 2, proof)?.is_ok());
+//! assert!(HasherMerkleTree::&lt;Sha256, usize&gt;::verify(commitment, 2, val, proof)?.is_ok());
 //! # Ok(())
 //! # }
 //! ```
