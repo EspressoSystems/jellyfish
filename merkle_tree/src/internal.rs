@@ -4,10 +4,8 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-use super::{
-    DigestAlgorithm, Element, Index, LookupResult, MerkleCommitment, NodeValue, ToTraversalPath,
-};
-use crate::{errors::MerkleTreeError, VerificationResult};
+use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue, ToTraversalPath};
+use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FAIL, SUCCESS};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
@@ -46,7 +44,7 @@ pub enum MerkleNode<E: Element, I: Index, T: NodeValue> {
         elem: E,
     },
     /// The subtree is forgotten from the memory
-    ForgettenSubtree {
+    ForgottenSubtree {
         /// Merkle hash value of this forgotten subtree
         #[serde(with = "canonical")]
         value: T,
@@ -70,113 +68,82 @@ where
                 elem: _,
             } => *value,
             Self::Branch { value, children: _ } => *value,
-            Self::ForgettenSubtree { value } => *value,
+            Self::ForgottenSubtree { value } => *value,
         }
     }
 
     #[inline]
     pub(crate) fn is_forgotten(&self) -> bool {
-        matches!(self, Self::ForgettenSubtree { .. })
+        matches!(self, Self::ForgottenSubtree { .. })
     }
 }
 
-/// A merkle path is a bottom-up list of nodes from leaf to the root.
-pub type MerklePath<E, I, T> = Vec<MerkleNode<E, I, T>>;
-
-/// A merkle commitment consists a root hash value, a tree height and number of
-/// leaves
+/// A (non)membership Merkle proof consists of all values of siblings of a
+/// Merkle path.
 #[derive(
-    Eq,
-    PartialEq,
-    Clone,
-    Copy,
-    Debug,
-    Ord,
-    PartialOrd,
-    Hash,
-    CanonicalSerialize,
-    CanonicalDeserialize,
+    Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, CanonicalSerialize, CanonicalDeserialize,
 )]
-#[tagged("MERKLE_COMM")]
-pub struct MerkleTreeCommitment<T: NodeValue> {
-    /// Root of a tree
-    digest: T,
-    /// Height of a tree
-    height: usize,
-    /// Number of leaves in the tree
-    num_leaves: u64,
-}
+#[tagged("MERKLE_PROOF")]
+pub struct MerkleTreeProof<T: NodeValue>(pub Vec<Vec<T>>);
 
-impl<T: NodeValue> MerkleTreeCommitment<T> {
-    pub fn new(digest: T, height: usize, num_leaves: u64) -> Self {
-        MerkleTreeCommitment {
-            digest,
-            height,
-            num_leaves,
-        }
-    }
-}
-
-impl<T: NodeValue> MerkleCommitment<T> for MerkleTreeCommitment<T> {
-    fn digest(&self) -> T {
-        self.digest
-    }
-
+impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
+    /// Expected height of the Merkle tree.
     fn height(&self) -> usize {
-        self.height
+        self.0.len()
     }
 
-    fn size(&self) -> u64 {
-        self.num_leaves
+    /// Return all values of siblings of this Merkle path
+    fn path_values(&self) -> &[Vec<T>] {
+        &self.0
     }
 }
 
-/// Merkle proof struct.
-#[derive(Derivative, Debug, Clone, Serialize, Deserialize)]
-#[derivative(Eq, Hash, PartialEq)]
-#[serde(bound = "E: CanonicalSerialize + CanonicalDeserialize,
-             I: CanonicalSerialize + CanonicalDeserialize,")]
-pub struct MerkleProof<E, I, T, const ARITY: usize>
+/// Verify a merkle proof
+/// * `commitment` - a merkle tree commitment
+/// * `pos` - zero-based index of the leaf in the tree
+/// * `element` - the leaf value, None if verifying a non-membership proof
+/// * `proof` - a membership proof for `element` at given `pos`
+/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
+///   the proof is not well structured, E.g. not for this merkle tree.
+pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
+    commitment: &T,
+    pos: &I,
+    element: Option<&E>,
+    proof: &[Vec<T>],
+) -> Result<VerificationResult, MerkleTreeError>
 where
     E: Element,
-    I: Index,
+    I: Index + ToTraversalPath<ARITY>,
     T: NodeValue,
+    H: DigestAlgorithm<E, I, T>,
 {
-    /// Proof of inclusion for element at index `pos`
-    #[serde(with = "canonical")]
-    pub pos: I,
-    /// Nodes of proof path, from root to leaf
-    pub proof: MerklePath<E, I, T>,
-}
-
-impl<E, I, T, const ARITY: usize> MerkleProof<E, I, T, ARITY>
-where
-    E: Element,
-    I: Index,
-    T: NodeValue,
-{
-    /// Return the height of this proof.
-    pub fn tree_height(&self) -> usize {
-        self.proof.len()
-    }
-
-    /// Form a `MerkleProof` from a given index and Merkle path.
-    pub fn new(pos: I, proof: MerklePath<E, I, T>) -> Self {
-        MerkleProof { pos, proof }
-    }
-
-    /// Return the index of this `MerkleProof`.
-    pub fn index(&self) -> &I {
-        &self.pos
-    }
-
-    /// Return the element associated with this `MerkleProof`. None if it's a
-    /// non-membership proof.
-    pub fn elem(&self) -> Option<&E> {
-        match self.proof.first() {
-            Some(MerkleNode::Leaf { elem, .. }) => Some(elem),
-            _ => None,
-        }
+    let init = if let Some(elem) = element {
+        H::digest_leaf(pos, elem)?
+    } else {
+        T::default()
+    };
+    let mut data = [T::default(); ARITY];
+    let computed_root = pos
+        .to_traversal_path(proof.len())
+        .iter()
+        .zip(proof.iter())
+        .try_fold(
+            init,
+            |val, (branch, values)| -> Result<T, MerkleTreeError> {
+                if values.len() == 0 {
+                    Ok(T::default())
+                } else {
+                    data[..*branch].copy_from_slice(&values[..*branch]);
+                    data[*branch] = val;
+                    data[*branch + 1..].copy_from_slice(&values[*branch..]);
+                    H::digest(&data)
+                }
+            },
+        )?;
+    if computed_root == *commitment {
+        Ok(SUCCESS)
+    } else {
+        Ok(FAIL)
     }
 }
 
@@ -247,9 +214,9 @@ where
                 .chunks(ARITY)
                 .into_iter()
                 .map(|chunk| {
-                    let children = chunk
+                    let children: Vec<_> = chunk
                         .pad_using(ARITY, |_| Arc::new(MerkleNode::<E, u64, T>::Empty))
-                        .collect::<Vec<_>>();
+                        .collect();
                     Ok(Arc::new(MerkleNode::<E, u64, T>::Branch {
                         value: digest_branch::<E, H, u64, T>(&children)?,
                         children,
@@ -311,7 +278,7 @@ where
                     .map(|(pos, elem)| {
                         let pos = pos as u64;
                         Ok(if pos < num_leaves - 1 {
-                            Arc::new(MerkleNode::ForgettenSubtree {
+                            Arc::new(MerkleNode::ForgottenSubtree {
                                 value: H::digest_leaf(&pos, elem.borrow())?,
                             })
                         } else {
@@ -331,7 +298,7 @@ where
             })
             .collect::<Result<Vec<_>, MerkleTreeError>>()?;
         for i in 1..cur_nodes.len() - 1 {
-            cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
+            cur_nodes[i] = Arc::new(MerkleNode::ForgottenSubtree {
                 value: cur_nodes[i].value(),
             })
         }
@@ -351,7 +318,7 @@ where
                 })
                 .collect::<Result<Vec<_>, MerkleTreeError>>()?;
             for i in 1..cur_nodes.len() - 1 {
-                cur_nodes[i] = Arc::new(MerkleNode::ForgettenSubtree {
+                cur_nodes[i] = Arc::new(MerkleNode::ForgottenSubtree {
                     value: cur_nodes[i].value(),
                 })
             }
@@ -390,44 +357,37 @@ where
         traversal_path: &[usize],
     ) -> (
         Arc<Self>,
-        LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>>,
+        LookupResult<E, MerkleTreeProof<T>, MerkleTreeProof<T>>,
     ) {
         match self {
             MerkleNode::Empty => (
                 Arc::new(self.clone()),
-                LookupResult::NotFound(vec![MerkleNode::Empty; height + 1]),
+                LookupResult::NotFound(MerkleTreeProof(vec![])),
             ),
             MerkleNode::Branch { value, children } => {
                 let mut children = children.clone();
                 let (new_child, result) = children[traversal_path[height - 1]]
                     .forget_internal(height - 1, traversal_path);
                 match result {
-                    LookupResult::Ok(elem, mut proof) => {
-                        proof.push(MerkleNode::Branch {
-                            value: T::default(),
-                            children: children
+                    LookupResult::Ok(elem, mut membership_proof) => {
+                        membership_proof.0.push(
+                            children
                                 .iter()
-                                .map(|child| {
-                                    if let MerkleNode::Empty = **child {
-                                        Arc::new(MerkleNode::Empty)
-                                    } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
-                                    }
-                                })
+                                .enumerate()
+                                .filter(|(id, _)| *id != traversal_path[height - 1])
+                                .map(|(_, child)| child.value())
                                 .collect::<Vec<_>>(),
-                        });
+                        );
                         children[traversal_path[height - 1]] = new_child;
                         if children.iter().all(|child| {
                             matches!(
                                 **child,
-                                MerkleNode::Empty | MerkleNode::ForgettenSubtree { .. }
+                                MerkleNode::Empty | MerkleNode::ForgottenSubtree { .. }
                             )
                         }) {
                             (
-                                Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
-                                LookupResult::Ok(elem, proof),
+                                Arc::new(MerkleNode::ForgottenSubtree { value: *value }),
+                                LookupResult::Ok(elem, membership_proof),
                             )
                         } else {
                             (
@@ -435,7 +395,7 @@ where
                                     value: *value,
                                     children,
                                 }),
-                                LookupResult::Ok(elem, proof),
+                                LookupResult::Ok(elem, membership_proof),
                             )
                         }
                     },
@@ -443,21 +403,14 @@ where
                         (Arc::new(self.clone()), LookupResult::NotInMemory)
                     },
                     LookupResult::NotFound(mut non_membership_proof) => {
-                        non_membership_proof.push(MerkleNode::Branch {
-                            value: T::default(),
-                            children: children
+                        non_membership_proof.0.push(
+                            children
                                 .iter()
-                                .map(|child| {
-                                    if let MerkleNode::Empty = **child {
-                                        Arc::new(MerkleNode::Empty)
-                                    } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
-                                    }
-                                })
+                                .enumerate()
+                                .filter(|(id, _)| *id != traversal_path[height - 1])
+                                .map(|(_, child)| child.value())
                                 .collect::<Vec<_>>(),
-                        });
+                        );
                         (
                             Arc::new(self.clone()),
                             LookupResult::NotFound(non_membership_proof),
@@ -465,87 +418,96 @@ where
                     },
                 }
             },
-            MerkleNode::Leaf { value, pos, elem } => {
-                let elem = elem.clone();
-                let proof = vec![MerkleNode::<E, I, T>::Leaf {
-                    value: *value,
-                    pos: pos.clone(),
-                    elem: elem.clone(),
-                }];
-                (
-                    Arc::new(MerkleNode::ForgettenSubtree { value: *value }),
-                    LookupResult::Ok(elem, proof),
-                )
-            },
+            MerkleNode::Leaf { value, pos, elem } => (
+                Arc::new(MerkleNode::ForgottenSubtree { value: *value }),
+                LookupResult::Ok(elem.clone(), MerkleTreeProof(vec![])),
+            ),
             _ => (Arc::new(self.clone()), LookupResult::NotInMemory),
         }
     }
 
-    /// Re-insert a forgotten leaf to the Merkle tree. We assume that the proof
-    /// is valid and already checked.
+    /// Re-insert a forgotten leaf to the Merkle tree.
+    /// It also fails if the Merkle proof is invalid.
     pub(crate) fn remember_internal<H, const ARITY: usize>(
         &self,
         height: usize,
         traversal_path: &[usize],
-        path_values: &[T],
-        proof: &[MerkleNode<E, I, T>],
+        pos: &I,
+        element: Option<&E>,
+        proof: &[Vec<T>],
     ) -> Result<Arc<Self>, MerkleTreeError>
     where
         H: DigestAlgorithm<E, I, T>,
     {
-        if self.value() != path_values[height] {
-            return Err(MerkleTreeError::InconsistentStructureError(format!(
-                "Invalid proof. Hash differs at height {}: (expected: {:?}, received: {:?})",
-                height,
-                self.value(),
-                path_values[height]
-            )));
-        }
-
-        match (self, &proof[height]) {
-            (Self::ForgettenSubtree { value }, Self::Branch { children, .. }) => {
-                // Recurse into the appropriate sub-tree to remember the rest of the path.
-                let mut children = children.clone();
-                children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
-                    .remember_internal::<H, ARITY>(
+        match self {
+            MerkleNode::Empty => Ok(Arc::new(self.clone())),
+            MerkleNode::Leaf {
+                value,
+                pos: leaf_pos,
+                elem,
+            } => {
+                if height != 0 {
+                    // Reach a leaf before it should
+                    Err(MerkleTreeError::InconsistentStructureError(
+                        "Malformed Merkle tree or proof".to_string(),
+                    ))
+                } else {
+                    Ok(Arc::new(self.clone()))
+                }
+            },
+            MerkleNode::Branch { value, children } => {
+                if height == 0 {
+                    // Reach a branch when there should be a leaf
+                    Err(MerkleTreeError::InconsistentStructureError(
+                        "Malformed merkle tree".to_string(),
+                    ))
+                } else {
+                    let branch = traversal_path[height - 1];
+                    let mut children = children.clone();
+                    children[branch] = children[branch].remember_internal::<H, ARITY>(
                         height - 1,
                         traversal_path,
-                        path_values,
+                        pos,
+                        element,
                         proof,
                     )?;
-                // Remember `*self`.
-                Ok(Arc::new(Self::Branch {
-                    value: *value,
+                    Ok(Arc::new(MerkleNode::Branch {
+                        value: *value,
+                        children,
+                    }))
+                }
+            },
+            MerkleNode::ForgottenSubtree { value } => Ok(Arc::new(if height == 0 {
+                if let Some(element) = element {
+                    MerkleNode::Leaf {
+                        value: H::digest_leaf(pos, element)?,
+                        pos: pos.clone(),
+                        elem: element.clone(),
+                    }
+                } else {
+                    MerkleNode::Empty
+                }
+            } else {
+                let branch = traversal_path[height - 1];
+                let mut values = proof[height - 1].clone();
+                values.insert(branch, *value);
+                let mut children = values
+                    .iter()
+                    .map(|&value| Arc::new(MerkleNode::ForgottenSubtree { value }))
+                    .collect::<Vec<_>>();
+                children[branch] = children[branch].remember_internal::<H, ARITY>(
+                    height - 1,
+                    traversal_path,
+                    pos,
+                    element,
+                    proof,
+                )?;
+                values[branch] = children[branch].value();
+                MerkleNode::Branch {
+                    value: H::digest(&values)?,
                     children,
-                }))
-            },
-            (Self::ForgettenSubtree { .. }, node) => {
-                // Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
-                // proof. Safe because we already checked our hash value matches the proof.
-                Ok(Arc::new(node.clone()))
-            },
-            (Self::Branch { value, children }, Self::Branch { .. }) => {
-                let mut children = children.clone();
-                children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
-                    .remember_internal::<H, ARITY>(
-                        height - 1,
-                        traversal_path,
-                        path_values,
-                        proof,
-                    )?;
-                Ok(Arc::new(Self::Branch {
-                    value: *value,
-                    children,
-                }))
-            },
-            (Self::Leaf { .. }, Self::Leaf { .. }) | (Self::Empty, Self::Empty) => {
-                // This node is already a complete sub-tree, so there's nothing to remember. The
-                // proof matches, so just return success.
-                Ok(Arc::new(self.clone()))
-            },
-            (..) => Err(MerkleTreeError::InconsistentStructureError(
-                "Invalid proof".into(),
-            )),
+                }
+            })),
         }
     }
 
@@ -557,50 +519,34 @@ where
         &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<&E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
+    ) -> LookupResult<&E, MerkleTreeProof<T>, MerkleTreeProof<T>> {
         match self {
-            MerkleNode::Empty => {
-                LookupResult::NotFound(vec![MerkleNode::<E, I, T>::Empty; height + 1])
-            },
+            MerkleNode::Empty => LookupResult::NotFound(MerkleTreeProof(vec![vec![]; height])),
             MerkleNode::Branch { value: _, children } => {
                 match children[traversal_path[height - 1]]
                     .lookup_internal(height - 1, traversal_path)
                 {
-                    LookupResult::Ok(elem, mut proof) => {
-                        proof.push(MerkleNode::Branch {
-                            value: T::default(),
-                            children: children
+                    LookupResult::Ok(elem, mut membership_proof) => {
+                        membership_proof.0.push(
+                            children
                                 .iter()
-                                .map(|child| {
-                                    if let MerkleNode::Empty = **child {
-                                        Arc::new(MerkleNode::Empty)
-                                    } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
-                                    }
-                                })
+                                .enumerate()
+                                .filter(|(id, _)| *id != traversal_path[height - 1])
+                                .map(|(_, child)| child.value())
                                 .collect::<Vec<_>>(),
-                        });
-                        LookupResult::Ok(elem, proof)
+                        );
+                        LookupResult::Ok(elem, membership_proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(mut non_membership_proof) => {
-                        non_membership_proof.push(MerkleNode::Branch {
-                            value: T::default(),
-                            children: children
+                        non_membership_proof.0.push(
+                            children
                                 .iter()
-                                .map(|child| {
-                                    if let MerkleNode::Empty = **child {
-                                        Arc::new(MerkleNode::Empty)
-                                    } else {
-                                        Arc::new(MerkleNode::ForgettenSubtree {
-                                            value: child.value(),
-                                        })
-                                    }
-                                })
+                                .enumerate()
+                                .filter(|(id, _)| *id != traversal_path[height - 1])
+                                .map(|(_, child)| child.value())
                                 .collect::<Vec<_>>(),
-                        });
+                        );
                         LookupResult::NotFound(non_membership_proof)
                     },
                 }
@@ -609,7 +555,7 @@ where
                 elem,
                 value: _,
                 pos: _,
-            } => LookupResult::Ok(elem, vec![self.clone()]),
+            } => LookupResult::Ok(elem, MerkleTreeProof(vec![])),
             _ => LookupResult::NotInMemory,
         }
     }
@@ -662,7 +608,7 @@ where
                 )?;
                 let mut children = children.clone();
                 children[branch] = result.0;
-                if matches!(*children[branch], MerkleNode::ForgettenSubtree { .. }) {
+                if matches!(*children[branch], MerkleNode::ForgottenSubtree { .. }) {
                     // If the branch containing the update was forgotten by
                     // user, the update failed and nothing was changed, so we
                     // can short-circuit without recomputing this node's value.
@@ -714,9 +660,7 @@ where
                     }
                 } else {
                     let branch = traversal_path[height - 1];
-                    let mut children = (0..ARITY)
-                        .map(|_| Arc::new(Self::Empty))
-                        .collect::<Vec<_>>();
+                    let mut children: Vec<_> = (0..ARITY).map(|_| Arc::new(Self::Empty)).collect();
                     // Inserting new leave here, shortcutting
                     let result = children[branch].update_with_internal::<H, ARITY, _>(
                         height - 1,
@@ -740,7 +684,7 @@ where
                     }
                 }
             },
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }
@@ -812,7 +756,7 @@ where
                         0
                     };
                     let cap = ARITY;
-                    let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
+                    let mut children: Vec<_> = (0..cap).map(|_| Arc::new(Self::Empty)).collect();
                     while data.peek().is_some() && frontier < cap {
                         let (new_child, increment) = children[frontier]
                             .extend_internal::<H, ARITY>(
@@ -837,7 +781,7 @@ where
                 }
             },
             MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 
@@ -871,7 +815,7 @@ where
                 while data.peek().is_some() && frontier < cap {
                     if frontier > 0 && !children[frontier - 1].is_forgotten() {
                         children[frontier - 1] =
-                            Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                            Arc::new(MerkleNode::<E, u64, T>::ForgottenSubtree {
                                 value: children[frontier - 1].value(),
                             });
                     }
@@ -911,11 +855,11 @@ where
                         0
                     };
                     let cap = ARITY;
-                    let mut children = (0..cap).map(|_| Arc::new(Self::Empty)).collect::<Vec<_>>();
+                    let mut children: Vec<_> = (0..cap).map(|_| Arc::new(Self::Empty)).collect();
                     while data.peek().is_some() && frontier < cap {
                         if frontier > 0 && !children[frontier - 1].is_forgotten() {
                             children[frontier - 1] =
-                                Arc::new(MerkleNode::<E, u64, T>::ForgettenSubtree {
+                                Arc::new(MerkleNode::<E, u64, T>::ForgottenSubtree {
                                     value: children[frontier - 1].value(),
                                 });
                         }
@@ -942,98 +886,7 @@ where
                 }
             },
             MerkleNode::Leaf { .. } => Err(MerkleTreeError::ExistingLeaf),
-            MerkleNode::ForgettenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
-        }
-    }
-}
-
-impl<E, I, T, const ARITY: usize> MerkleProof<E, I, T, ARITY>
-where
-    E: Element,
-    I: Index + ToTraversalPath<ARITY>,
-    T: NodeValue,
-{
-    /// Verify a membership proof by comparing the computed root value to the
-    /// expected one.
-    pub(crate) fn verify_membership_proof<H>(
-        &self,
-        expected_root: &T,
-    ) -> Result<VerificationResult, MerkleTreeError>
-    where
-        H: DigestAlgorithm<E, I, T>,
-    {
-        if let MerkleNode::<E, I, T>::Leaf {
-            value: _,
-            pos,
-            elem,
-        } = &self.proof[0]
-        {
-            let init = H::digest_leaf(pos, elem)?;
-            let computed_root = self
-                .pos
-                .to_traversal_path(self.tree_height() - 1)
-                .iter()
-                .zip(self.proof.iter().skip(1))
-                .try_fold(init, |val, (branch, node)| -> Result<T, MerkleTreeError> {
-                    match node {
-                        MerkleNode::Branch { value: _, children } => {
-                            let mut data =
-                                children.iter().map(|node| node.value()).collect::<Vec<_>>();
-                            data[*branch] = val;
-                            H::digest(&data)
-                        },
-                        _ => Err(MerkleTreeError::InconsistentStructureError(
-                            "Incompatible proof for this merkle tree".to_string(),
-                        )),
-                    }
-                })?;
-            if computed_root == *expected_root {
-                Ok(Ok(()))
-            } else {
-                Ok(Err(()))
-            }
-        } else {
-            Err(MerkleTreeError::InconsistentStructureError(
-                "Invalid proof type".to_string(),
-            ))
-        }
-    }
-
-    /// Verify a non membership proof by comparing the computed root value
-    /// to the expected one.
-    pub(crate) fn verify_non_membership_proof<H>(
-        &self,
-        expected_root: &T,
-    ) -> Result<bool, MerkleTreeError>
-    where
-        H: DigestAlgorithm<E, I, T>,
-    {
-        if let MerkleNode::<E, I, T>::Empty = &self.proof[0] {
-            let init = T::default();
-            let computed_root = self
-                .pos
-                .to_traversal_path(self.tree_height() - 1)
-                .iter()
-                .zip(self.proof.iter().skip(1))
-                .try_fold(init, |val, (branch, node)| -> Result<T, MerkleTreeError> {
-                    match node {
-                        MerkleNode::Branch { value: _, children } => {
-                            let mut data =
-                                children.iter().map(|node| node.value()).collect::<Vec<_>>();
-                            data[*branch] = val;
-                            H::digest(&data)
-                        },
-                        MerkleNode::Empty => Ok(init),
-                        _ => Err(MerkleTreeError::InconsistentStructureError(
-                            "Incompatible proof for this merkle tree".to_string(),
-                        )),
-                    }
-                })?;
-            Ok(computed_root == *expected_root)
-        } else {
-            Err(MerkleTreeError::InconsistentStructureError(
-                "Invalid proof type".to_string(),
-            ))
+            MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
 }

@@ -40,10 +40,10 @@ macro_rules! impl_merkle_tree_scheme {
             type Element = E;
             type Index = I;
             type NodeValue = T;
-            type MembershipProof = MerkleProof<E, I, T, ARITY>;
+            type MembershipProof = MerkleTreeProof<T>;
             // TODO(Chengyu): implement batch membership proof
             type BatchMembershipProof = ();
-            type Commitment = MerkleTreeCommitment<T>;
+            type Commitment = T;
 
             const ARITY: usize = ARITY;
 
@@ -60,7 +60,7 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn commitment(&self) -> Self::Commitment {
-                MerkleTreeCommitment::new(self.root.value(), self.height, self.num_leaves)
+                self.root.value()
             }
 
             fn lookup(
@@ -71,7 +71,7 @@ macro_rules! impl_merkle_tree_scheme {
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.lookup_internal(self.height, &traversal_path) {
                     LookupResult::Ok(value, proof) => {
-                        LookupResult::Ok(&value, MerkleProof::new(pos.clone(), proof))
+                        LookupResult::Ok(&value, proof)
                     },
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
@@ -79,14 +79,12 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn verify(
-                root: impl Borrow<Self::NodeValue>,
+                commitment: impl Borrow<Self::Commitment>,
                 pos: impl Borrow<Self::Index>,
+                element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<VerificationResult, MerkleTreeError> {
-                if *pos.borrow() != proof.borrow().pos {
-                    return Ok(Err(())); // invalid proof for the given pos
-                }
-                proof.borrow().verify_membership_proof::<H>(root.borrow())
+                crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow().path_values())
             }
 
             fn iter(&self) -> MerkleTreeIter<E, I, T> {
@@ -140,14 +138,16 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             I: Index + ToTraversalPath<ARITY>,
             T: NodeValue,
         {
-            fn from_commitment(com: impl Borrow<Self::Commitment>) -> Self {
+            fn from_commitment(
+                com: impl Borrow<Self::Commitment>,
+                height: usize,
+                num_leaves: u64,
+            ) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Arc::new(MerkleNode::ForgettenSubtree {
-                        value: com.digest(),
-                    }),
-                    height: com.height(),
-                    num_leaves: com.size(),
+                    root: Arc::new(MerkleNode::ForgottenSubtree { value: com.clone() }),
+                    height,
+                    num_leaves,
                     _phantom: PhantomData,
                 }
             }
@@ -161,9 +161,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 let (new_root, result) = self.root.forget_internal(self.height, &traversal_path);
                 self.root = new_root;
                 match result {
-                    LookupResult::Ok(elem, proof) => {
-                        LookupResult::Ok(elem, MerkleProof::new(pos.clone(), proof))
-                    },
+                    LookupResult::Ok(elem, proof) => LookupResult::Ok(elem, proof),
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
                 }
@@ -175,53 +173,23 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<(), MerkleTreeError> {
+                let pos = pos.borrow();
+                let element = element.borrow();
                 let proof = proof.borrow();
-                let traversal_path = pos.borrow().to_traversal_path(self.height);
-                if let MerkleNode::<E, I, T>::Leaf {
-                    value: _,
-                    pos,
-                    elem,
-                } = &proof.proof[0]
-                {
-                    if !elem.eq(element.borrow()) {
-                        return Err(MerkleTreeError::InconsistentStructureError(
-                            "Element does not match the proof.".to_string(),
-                        ));
-                    }
-                    let proof_leaf_value = H::digest_leaf(pos, elem)?;
-                    let mut path_values = vec![proof_leaf_value];
-                    traversal_path.iter().zip(proof.proof.iter().skip(1)).fold(
-                        Ok(proof_leaf_value),
-                        |result, (branch, node)| -> Result<T, MerkleTreeError> {
-                            match result {
-                                Ok(val) => match node {
-                                    MerkleNode::Branch { value: _, children } => {
-                                        let mut data: Vec<_> =
-                                            children.iter().map(|node| node.value()).collect();
-                                        data[*branch] = val;
-                                        let digest = H::digest(&data)?;
-                                        path_values.push(digest);
-                                        Ok(digest)
-                                    },
-                                    _ => Err(MerkleTreeError::InconsistentStructureError(
-                                        "Incompatible proof for this merkle tree".to_string(),
-                                    )),
-                                },
-                                Err(e) => Err(e),
-                            }
-                        },
-                    )?;
+                if Self::verify(&self.commitment(), pos, element, proof)?.is_err() {
+                    Err(MerkleTreeError::InconsistentStructureError(
+                        "Wrong proof".to_string(),
+                    ))
+                } else {
+                    let traversal_path = pos.to_traversal_path(self.height);
                     self.root = self.root.remember_internal::<H, ARITY>(
                         self.height,
                         &traversal_path,
-                        &path_values,
-                        &proof.proof,
+                        pos,
+                        Some(element),
+                        proof.path_values(),
                     )?;
                     Ok(())
-                } else {
-                    Err(MerkleTreeError::InconsistentStructureError(
-                        "Invalid proof type".to_string(),
-                    ))
                 }
             }
         }
