@@ -16,7 +16,7 @@ use ark_std::{string::ToString, vec::Vec};
 use crate::{
     internal::{MerkleNode, MerkleTreeProof},
     prelude::RescueMerkleTree,
-    Element, Index, MerkleCommitment, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    Element, Index, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
     UniversalMerkleTreeScheme,
 };
 use jf_rescue::RescueParameter;
@@ -31,7 +31,7 @@ use jf_rescue::gadgets::RescueNativeGadget;
 /// use ark_bls12_377::Fq;
 /// use jf_merkle_tree::gadgets::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
+/// use jf_merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 ///
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
@@ -127,7 +127,7 @@ where
 /// use ark_bls12_377::Fq;
 /// use jf_merkle_tree::gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget};
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_merkle_tree::{MerkleTreeScheme, MerkleCommitment, UniversalMerkleTreeScheme,
+/// use jf_merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme,
 ///     prelude::RescueSparseMerkleTree};
 /// use hashbrown::HashMap;
 /// use num_bigint::BigUint;
@@ -288,10 +288,10 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
     }
 }
 
-impl<T> MerkleTreeGadget<T> for PlonkCircuit<T::NodeValue>
+impl<T, F> MerkleTreeGadget<T> for PlonkCircuit<F>
 where
-    T: MerkleTreeScheme,
-    T::NodeValue: PrimeField + RescueParameter,
+    T: MerkleTreeScheme<NodeValue = F, Commitment = F>,
+    F: PrimeField + RescueParameter,
     T::Index: ToTraversalPath<3>,
 {
     type MembershipProofVar = Merkle3AryProofVar;
@@ -335,7 +335,7 @@ where
         &mut self,
         commitment: &<T as MerkleTreeScheme>::Commitment,
     ) -> Result<Variable, CircuitError> {
-        self.create_variable(commitment.digest())
+        self.create_variable(*commitment)
     }
 
     fn is_member(
@@ -390,7 +390,7 @@ mod test {
         gadgets::{constrain_sibling_order, Merkle3AryProofVar, MerkleTreeGadget},
         internal::MerkleNode,
         prelude::RescueMerkleTree,
-        MerkleCommitment, MerkleTreeScheme,
+        MerkleTreeScheme,
     };
     use alloc::sync::Arc;
     use ark_bls12_377::Fq as Fq377;

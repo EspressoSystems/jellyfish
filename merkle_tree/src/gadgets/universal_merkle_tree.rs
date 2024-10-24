@@ -108,7 +108,7 @@ mod test {
     use crate::{
         gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget},
         prelude::RescueSparseMerkleTree,
-        MerkleCommitment, MerkleTreeScheme, UniversalMerkleTreeScheme,
+        MerkleTreeScheme, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
