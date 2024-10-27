@@ -22,7 +22,7 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
-use ark_std::{marker::PhantomData, vec::Vec};
+use ark_std::{fmt, marker::PhantomData, vec::Vec};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use sha3::{Digest, Keccak256, Sha3_256};
 
@@ -63,8 +63,16 @@ pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I,
 macro_rules! impl_mt_hash_256 {
     ($hasher:ident, $node_name:ident, $digest_name:ident) => {
         /// Internal node for merkle tree
-        #[derive(Default, Eq, PartialEq, Clone, Copy, Debug, Ord, PartialOrd, Hash)]
+        #[derive(Default, Eq, PartialEq, Clone, Copy, Ord, PartialOrd, Hash)]
         pub struct $node_name(pub(crate) [u8; 32]);
+
+        impl fmt::Debug for $node_name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.debug_tuple(&stringify!($node_name))
+                    .field(&hex::encode(self.0))
+                    .finish()
+            }
+        }
 
         impl AsRef<[u8]> for $node_name {
             fn as_ref(&self) -> &[u8] {

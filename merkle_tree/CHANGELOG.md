@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Merkle proof verification proof APIs now takes `MerkleCommitment` instead of simply a root digest 
       value. It can now be called without instantiating an actual Merkle tree struct.
     - Deprecate namespace Merkle tree for now because it's no longer in use.
+- [#685](https://github.com/EspressoSystems/jellyfish/pull/685) Include a keccak256 Merkle trees in prelude
 
 ## 0.1.0
 
