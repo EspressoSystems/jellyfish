@@ -107,7 +107,6 @@ impl core::fmt::Debug for BLSSignKey {
 impl BLSSignKey {
     /// Explicit calls to serialize a `SignKey` into bytes.
     pub fn to_bytes(&self) -> [u8; 32] {
-        // self.0.into_bigint().to_bytes_le()
         self.0.to_bytes()
     }
 
