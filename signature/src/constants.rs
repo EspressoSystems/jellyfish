@@ -7,6 +7,8 @@
 
 /// Tags
 pub mod tag {
+    /// Tag for BLS key pair
+    pub const BLS_KEY_PAIR: &str = "BLS_KEY_PAIR";
     /// Tag for BLS verification key
     pub const BLS_VER_KEY: &str = "BLS_VER_KEY";
     /// Tag for BLS signing key
