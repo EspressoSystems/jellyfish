@@ -116,7 +116,7 @@ impl BLSSignKey {
     }
 
     /// Deserialize `SignKey` from bytes.
-    pub fn from_bytes(bytes: &[u8]) -> Result<BLSSignKey, BLST_ERROR> {
+    pub fn from_bytes(bytes: &[u8; 32]) -> Result<BLSSignKey, BLST_ERROR> {
         SecretKey::from_bytes(bytes).map(|sk| BLSSignKey(sk))
     }
 
@@ -133,7 +133,9 @@ impl<'a> TryFrom<&'a TaggedBase64> for BLSSignKey {
         if tb.tag() != tag::BLS_SIGNING_KEY {
             return Err(Tb64Error::InvalidTag);
         }
-        BLSSignKey::from_bytes(tb.as_ref()).map_err(|err| Tb64Error::InvalidData)
+        SecretKey::from_bytes(tb.as_ref())
+            .map(|sk| BLSSignKey(sk))
+            .map_err(|err| Tb64Error::InvalidData)
     }
 }
 
@@ -144,7 +146,9 @@ impl TryFrom<TaggedBase64> for BLSSignKey {
         if tb.tag() != tag::BLS_SIGNING_KEY {
             return Err(Tb64Error::InvalidTag);
         }
-        BLSSignKey::from_bytes(tb.as_ref()).map_err(|err| Tb64Error::InvalidData)
+        SecretKey::from_bytes(tb.as_ref())
+            .map(|sk| BLSSignKey(sk))
+            .map_err(|err| Tb64Error::InvalidData)
     }
 }
 
