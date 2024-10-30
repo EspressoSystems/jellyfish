@@ -227,12 +227,18 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 #[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
 #[zeroize(drop)]
-/// Signing key for BLS signature.
+/// Signing key for BLS signature. This struct is intentionally made not
+/// serializable so that it won't be unnoticably serialized or printed out
+/// through outer structs. However, users could manually serialize it into bytes
+/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// self-cautions.
 pub struct SignKey(pub(crate) ScalarField);
 
+// This content-hiding `Debug` implementation makes sure that the auto-derived
+// `Debug` for user's outer struct won't undesirably print out this secret key.
 impl core::fmt::Debug for SignKey {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("<private signing key>").finish()
+        f.debug_struct("<BLSSignKey>").finish()
     }
 }
 
@@ -603,9 +609,17 @@ mod tests {
         let de = KeyPair::from_bytes(&ser_bytes);
         assert_eq!(de, keypair);
 
+        let tagged_blob = keypair.to_tagged_base64().unwrap();
+        let de: KeyPair = tagged_blob.try_into().unwrap();
+        assert_eq!(de, keypair);
+
         let mut ser_bytes: Vec<u8> = sk.to_bytes();
         let de = SignKey::from_bytes(&ser_bytes);
         assert_eq!(VerKey::from(&de), VerKey::from(&sk));
+
+        let tagged_blob = sk.to_tagged_base64().unwrap();
+        let de: SignKey = tagged_blob.try_into().unwrap();
+        assert_eq!(de, sk);
 
         let mut ser_bytes: Vec<u8> = Vec::new();
         vk.serialize_compressed(&mut ser_bytes).unwrap();

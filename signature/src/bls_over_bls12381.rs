@@ -92,15 +92,20 @@ use derivative::Derivative;
 use tagged_base64::{tagged, TaggedBase64, Tb64Error};
 use zeroize::{Zeroize, Zeroizing};
 
-// #[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(Clone, Derivative, Zeroize)]
 #[zeroize(drop)]
-/// A BLS Secret Key (Signing Key).
+/// A BLS Secret Key (Signing Key). This struct is intentionally made not
+/// serializable so that it won't be unnoticably serialized or printed out
+/// through outer structs. However, users could manually serialize it into bytes
+/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// self-cautions.
 pub struct BLSSignKey(SecretKey);
 
+// This content-hiding `Debug` implementation makes sure that the auto-derived
+// `Debug` for user's outer struct won't undesirably print out this secret key.
 impl core::fmt::Debug for BLSSignKey {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("<private signing key>").finish()
+        f.debug_struct("<BLSSignKey>").finish()
     }
 }
 
@@ -442,6 +447,11 @@ mod test {
         let bytes = sk.to_bytes();
         let de = BLSSignKey::from_bytes(&bytes).unwrap();
         assert_eq!(sk, de);
+
+        let tagged_blob = sk.to_tagged_base64().unwrap();
+        let de: BLSSignKey = tagged_blob.try_into().unwrap();
+        assert_eq!(sk, de);
+
         test_canonical_serde_helper(pk);
         test_canonical_serde_helper(sig);
     }

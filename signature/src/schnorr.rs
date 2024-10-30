@@ -102,12 +102,16 @@ where
 // Signing key
 // =====================================================
 #[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
-/// Signing key for Schnorr signature.
+/// Signing key for Schnorr signature. This struct is intentionally made not
+/// serializable so that it won't be unnoticably serialized or printed out
+/// through outer structs. However, users could manually serialize it into bytes
+/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// self-cautions.
 pub struct SignKey<F: PrimeField>(pub(crate) F);
 
 impl<F: PrimeField> core::fmt::Debug for SignKey<F> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("<private signing key>").finish()
+        f.debug_struct("<SchnorrSignKey>").finish()
     }
 }
 
@@ -676,8 +680,16 @@ mod tests {
                 let de = SignKey::<$scalar_field>::from_bytes(&ser_bytes);
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
 
+                let tagged_blob = sk.to_tagged_base64().unwrap();
+                let de: SignKey<$scalar_field> = tagged_blob.try_into().unwrap();
+                assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
+
                 let mut ser_bytes: Vec<u8> = keypair.to_bytes();
                 let de = KeyPair::<$curve_param>::from_bytes(&ser_bytes);
+                assert_eq!(de, keypair);
+
+                let tagged_blob = keypair.to_tagged_base64().unwrap();
+                let de: KeyPair<$curve_param> = tagged_blob.try_into().unwrap();
                 assert_eq!(de, keypair);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
