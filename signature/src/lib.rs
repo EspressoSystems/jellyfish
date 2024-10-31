@@ -74,15 +74,7 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey: Debug
-        + Clone
-        + Send
-        + Sync
-        + Zeroize
-        + for<'a> Deserialize<'a>
-        + Serialize
-        + PartialEq
-        + Eq;
+    type SigningKey: Debug + Clone + Send + Sync + Zeroize + PartialEq + Eq;
 
     /// Verification key
     type VerificationKey: Debug

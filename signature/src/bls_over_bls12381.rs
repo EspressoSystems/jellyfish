@@ -89,66 +89,66 @@ use ark_std::{
 };
 use blst::{min_sig::*, BLST_ERROR};
 use derivative::Derivative;
-use tagged_base64::tagged;
+use tagged_base64::{tagged, TaggedBase64, Tb64Error};
 use zeroize::{Zeroize, Zeroizing};
 
-#[tagged(tag::BLS_SIGNING_KEY)]
 #[derive(Clone, Derivative, Zeroize)]
 #[zeroize(drop)]
-#[derivative(Debug)]
-/// A BLS Secret Key (Signing Key).
-pub struct BLSSignKey(#[derivative(Debug = "ignore")] SecretKey);
+/// A BLS Secret Key (Signing Key). We intentionally omit the implementation of
+/// `serde::Serializable` so that it won't be unnoticably serialized or printed
+/// out through outer structs. However, users could manually serialize it into
+/// bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// self-cautions.
+pub struct BLSSignKey(SecretKey);
 
-impl Deref for BLSSignKey {
-    type Target = SecretKey;
-    fn deref(&self) -> &Self::Target {
-        &self.0
+// This content-hiding `Debug` implementation makes sure that the auto-derived
+// `Debug` for user's outer struct won't undesirably print out this secret key.
+impl core::fmt::Debug for BLSSignKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("<BLSSignKey>").finish()
     }
 }
 
-impl CanonicalSerialize for BLSSignKey {
-    /// Secret key can only be serialized in compressed mode.
-    fn serialize_with_mode<W: Write>(
-        &self,
-        writer: W,
-        _compress: Compress,
-    ) -> Result<(), SerializationError> {
-        // TODO (tessico): should we fail if compress is `Compress::No`?
-        CanonicalSerialize::serialize_compressed(&self.to_bytes()[..], writer)
+impl BLSSignKey {
+    /// Explicit calls to serialize a `SignKey` into bytes.
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.0.to_bytes()
     }
 
-    fn serialized_size(&self, _compress: Compress) -> usize {
-        BLS_SIG_SK_SIZE
+    /// Deserialize `SignKey` from bytes.
+    pub fn from_bytes(bytes: &[u8; 32]) -> Result<BLSSignKey, BLST_ERROR> {
+        SecretKey::from_bytes(bytes).map(|sk| BLSSignKey(sk))
+    }
+
+    /// Explicit calls to serialize a `SignKey` into `TaggedBase64`.
+    pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
+        TaggedBase64::new(tag::BLS_SIGNING_KEY, &self.to_bytes())
     }
 }
 
-impl CanonicalDeserialize for BLSSignKey {
-    fn deserialize_with_mode<R: Read>(
-        mut reader: R,
-        compress: Compress,
-        validate: Validate,
-    ) -> Result<Self, SerializationError> {
-        let len = <usize as ark_serialize::CanonicalDeserialize>::deserialize_with_mode(
-            &mut reader,
-            compress,
-            validate,
-        )?;
-        if len != BLS_SIG_SK_SIZE {
-            return Err(SerializationError::InvalidData);
+impl<'a> TryFrom<&'a TaggedBase64> for BLSSignKey {
+    type Error = Tb64Error;
+
+    fn try_from(tb: &'a TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
         }
-
-        let mut sk_bytes = [0u8; BLS_SIG_SK_SIZE];
-        reader.read_exact(&mut sk_bytes)?;
-        SecretKey::deserialize(&sk_bytes)
-            .map(Self)
-            .map_err(|_| SerializationError::InvalidData)
+        SecretKey::from_bytes(tb.as_ref())
+            .map(|sk| BLSSignKey(sk))
+            .map_err(|err| Tb64Error::InvalidData)
     }
 }
 
-impl Valid for BLSSignKey {
-    fn check(&self) -> Result<(), ark_serialize::SerializationError> {
-        // TODO no `validate()` method in `blst` on `SecretKey`
-        Ok(())
+impl TryFrom<TaggedBase64> for BLSSignKey {
+    type Error = Tb64Error;
+
+    fn try_from(tb: TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
+        }
+        SecretKey::from_bytes(tb.as_ref())
+            .map(|sk| BLSSignKey(sk))
+            .map_err(|err| Tb64Error::InvalidData)
     }
 }
 
@@ -374,7 +374,7 @@ impl SignatureScheme for BLSSignatureScheme {
         msg: M,
         _prng: &mut R,
     ) -> Result<Self::Signature, SignatureError> {
-        Ok(BLSSignature(sk.sign(
+        Ok(BLSSignature(sk.0.sign(
             msg.as_ref(),
             Self::CS_ID.as_bytes(),
             &[],
@@ -448,7 +448,14 @@ mod test {
         let msg = "The quick brown fox jumps over the lazy dog";
         let sig = BLSSignatureScheme::sign(&(), &sk, msg, &mut rng).unwrap();
 
-        test_canonical_serde_helper(sk);
+        let bytes = sk.to_bytes();
+        let de = BLSSignKey::from_bytes(&bytes).unwrap();
+        assert_eq!(sk, de);
+
+        let tagged_blob = sk.to_tagged_base64().unwrap();
+        let de: BLSSignKey = tagged_blob.try_into().unwrap();
+        assert_eq!(sk, de);
+
         test_canonical_serde_helper(pk);
         test_canonical_serde_helper(sig);
     }
