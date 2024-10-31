@@ -227,10 +227,10 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 #[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
 #[zeroize(drop)]
-/// Signing key for BLS signature. This struct is intentionally made not
-/// serializable so that it won't be unnoticably serialized or printed out
-/// through outer structs. However, users could manually serialize it into bytes
-/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// Signing key for BLS signature. We intentionally omit the implementation of
+/// `serde::Serializable` so that it won't be unnoticably serialized or printed
+/// out through outer structs. However, users could manually serialize it into
+/// bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise with
 /// self-cautions.
 pub struct SignKey(pub(crate) ScalarField);
 

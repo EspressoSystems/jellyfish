@@ -102,11 +102,11 @@ where
 // Signing key
 // =====================================================
 #[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
-/// Signing key for Schnorr signature. This struct is intentionally made not
-/// serializable so that it won't be unnoticably serialized or printed out
-/// through outer structs. However, users could manually serialize it into bytes
-/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
-/// self-cautions.
+/// Signing key for Schnorr signature. We intentionally omit the implementation
+/// of `serde::Serializable` so that it won't be unnoticably serialized or
+/// printed out through outer structs. However, users could manually serialize
+/// it into bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise
+/// with self-cautions.
 pub struct SignKey<F: PrimeField>(pub(crate) F);
 
 impl<F: PrimeField> core::fmt::Debug for SignKey<F> {

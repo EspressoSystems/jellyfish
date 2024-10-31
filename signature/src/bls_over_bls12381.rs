@@ -94,10 +94,10 @@ use zeroize::{Zeroize, Zeroizing};
 
 #[derive(Clone, Derivative, Zeroize)]
 #[zeroize(drop)]
-/// A BLS Secret Key (Signing Key). This struct is intentionally made not
-/// serializable so that it won't be unnoticably serialized or printed out
-/// through outer structs. However, users could manually serialize it into bytes
-/// by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// A BLS Secret Key (Signing Key). We intentionally omit the implementation of
+/// `serde::Serializable` so that it won't be unnoticably serialized or printed
+/// out through outer structs. However, users could manually serialize it into
+/// bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise with
 /// self-cautions.
 pub struct BLSSignKey(SecretKey);
 
