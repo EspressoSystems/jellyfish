@@ -5,7 +5,7 @@
 We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) and [arkworks](https://github.com/arkworks-rs/algebra/blob/master/CHANGELOG.md).
 
 **Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
-**Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
+**Added, Changed, Removed, Deprecated** contains backward compatible improvements or new features.
 
 ## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.4.0...main)
 
@@ -38,8 +38,8 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
   - Remove the unnecessary trait bounds, for example `I: From<u64>`.
   - Restricting the index type for `AppendableMerkleTreeScheme` to be `u64`.
   - Add new `update_with()` and `remove()` interface for the universal Merkle tree.
-  - Add new `iter()` interface for Merkle tree scheme, allows user to iterate through all elements that are in memory.
-- [#489](https://github.com/EspressoSystems/jellyfish/pull/489) (`jf-primitives`) Add non destructive universal Merkle tree.
+  - Add new `iter()` interface for Merkle tree scheme, allowing the user to iterate through all elements that are in memory.
+- [#489](https://github.com/EspressoSystems/jellyfish/pull/489) (`jf-primitives`) Add non-destructive universal Merkle tree.
 
 ### Fixed
 
@@ -53,7 +53,7 @@ We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) 
 - [#231](https://github.com/EspressoSystems/jellyfish/pull/231) Implemented FK23 for fast amortized opening for univariate PCS
 - [#225](https://github.com/EspressoSystems/jellyfish/pull/225) Implemented Reed Solomon erasure code
 - [#254](https://github.com/EspressoSystems/jellyfish/pull/254) Ensure `no_std` and target WASM support
-- [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregateable signatures
+- [#271](https://github.com/EspressoSystems/jellyfish/pull/271) Serde support for Aggregatable signatures
 - [#291](https://github.com/EspressoSystems/jellyfish/pull/291) Non-native field operations and elliptic curve addition
 - [#309](https://github.com/EspressoSystems/jellyfish/pull/309) Reed-Solomon decoder accept FFT domain
 - [#320](https://github.com/EspressoSystems/jellyfish/pull/320) Non-native elliptic curve addition in short Weierstrass form
