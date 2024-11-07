@@ -1,10 +1,10 @@
 # CHANGELOG
 
-**WARNING**: this repository is under active development. Unlike [semantic versioning](https://semver.org/), we do expect backward incompatible changes when upgrading PATCH version.
+**WARNING**: this repository is under active development. Unlike [semantic versioning](https://semver.org/), we do expect backward-incompatible changes when upgrading PATCH version.
 
 We take inspiration from [keep changelog](https://keepachangelog.com/en/1.0.0/) and [arkworks](https://github.com/arkworks-rs/algebra/blob/master/CHANGELOG.md).
 
-**Breaking Changes** and **Fixed** contain backward incompatible changes, bug fixes, and security patches;
+**Breaking Changes** and **Fixed** contain backward-incompatible changes, bug fixes, and security patches;
 **Added, Changed, Removed, Deprecated** contain backward compatible improvements or new features.
 
 ## [Unreleased](https://github.com/EspressoSystems/jellyfish/compare/0.4.0...main)
