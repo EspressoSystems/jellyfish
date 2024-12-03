@@ -25,7 +25,6 @@ pub mod gadgets;
 pub mod hasher;
 pub mod light_weight;
 pub mod macros;
-pub mod namespaced_merkle_tree;
 pub mod universal_merkle_tree;
 
 pub(crate) mod internal;
@@ -42,6 +41,10 @@ use serde::{Deserialize, Serialize};
 
 /// Glorified bool type
 pub(crate) type VerificationResult = Result<(), ()>;
+/// Glorified true
+pub const SUCCESS: VerificationResult = Ok(());
+/// Glorified false
+pub const FAIL: VerificationResult = Err(());
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 /// The result of querying at an index in the tree
@@ -97,17 +100,7 @@ impl<T: Debug + Eq + PartialEq + Hash + Ord + PartialOrd + Clone> Index for T {}
 
 /// An internal node value type in a Merkle tree.
 pub trait NodeValue:
-    Default
-    + Eq
-    + PartialEq
-    + Hash
-    + Ord
-    + PartialOrd
-    + Copy
-    + Clone
-    + Debug
-    + CanonicalSerialize
-    + CanonicalDeserialize
+    Default + Eq + PartialEq + Hash + Copy + Clone + Debug + CanonicalSerialize + CanonicalDeserialize
 {
 }
 impl<T> NodeValue for T where
@@ -115,8 +108,6 @@ impl<T> NodeValue for T where
         + Eq
         + PartialEq
         + Hash
-        + Ord
-        + PartialOrd
         + Copy
         + Clone
         + Debug
@@ -160,26 +151,22 @@ impl_to_traversal_path_biguint!(ark_bn254::Fq);
 impl_to_traversal_path_biguint!(ark_bls12_377::Fq);
 impl_to_traversal_path_biguint!(ark_bls12_381::Fq);
 
-/// Trait for a succinct merkle tree commitment
-pub trait MerkleCommitment<T: NodeValue>:
+/// Trait for a Merkle proof
+pub trait MerkleProof<T: NodeValue>:
     Eq
     + PartialEq
     + Hash
-    + Ord
-    + PartialOrd
     + Clone
-    + Copy
+    + CanonicalSerialize
+    + CanonicalDeserialize
     + Serialize
     + for<'a> Deserialize<'a>
-    + CanonicalDeserialize
-    + CanonicalSerialize
 {
-    /// Return a digest of the tree
-    fn digest(&self) -> T;
-    /// Return the height of the tree
+    /// Expected height of the Merkle tree.
     fn height(&self) -> usize;
-    /// Return the number of elements included in the accumulator/tree
-    fn size(&self) -> u64;
+
+    /// Return all values of siblings of this Merkle path
+    fn path_values(&self) -> &[Vec<T>];
 }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
@@ -193,11 +180,11 @@ pub trait MerkleTreeScheme: Sized {
     /// Internal and root node value
     type NodeValue: NodeValue;
     /// Merkle proof
-    type MembershipProof: Clone + Eq + Hash;
+    type MembershipProof: MerkleProof<Self::NodeValue>;
     /// Batch proof
     type BatchMembershipProof: Clone;
     /// Merkle tree commitment
-    type Commitment: MerkleCommitment<Self::NodeValue>;
+    type Commitment: NodeValue;
 
     /// Tree ARITY
     const ARITY: usize;
@@ -223,15 +210,16 @@ pub trait MerkleTreeScheme: Sized {
     ) -> LookupResult<&Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
-    /// * `root` - a merkle tree root, usually obtained from
-    ///   `Self::commitment().digest()`
+    /// * `commitment` - a merkle tree commitment
     /// * `pos` - zero-based index of the leaf in the tree
-    /// * `proof` - a merkle tree proof
+    /// * `element` - the leaf value
+    /// * `proof` - a membership proof for `element` at given `pos`
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
-        root: impl Borrow<Self::NodeValue>,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
+        element: impl Borrow<Self::Element>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError>;
 
@@ -342,10 +330,10 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn non_membership_verify(
-        &self,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
-    ) -> Result<bool, MerkleTreeError>;
+    ) -> Result<VerificationResult, MerkleTreeError>;
     // TODO(Chengyu): non-membership proof interfaces
 }
 
@@ -372,7 +360,11 @@ pub trait ForgetableMerkleTreeScheme: MerkleTreeScheme {
 
     /// Rebuild a merkle tree from a commitment.
     /// Return a tree which is entirely forgotten.
-    fn from_commitment(commitment: impl Borrow<Self::Commitment>) -> Self;
+    fn from_commitment(
+        commitment: impl Borrow<Self::Commitment>,
+        height: usize,
+        num_leaves: u64,
+    ) -> Self;
 }
 
 /// Universal Merkle tree that allows forget/remember elements from the memory

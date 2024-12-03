@@ -40,15 +40,7 @@ pub trait Vrf {
         + Eq;
 
     /// VRF secret key.
-    type SecretKey: Debug
-        + Clone
-        + Send
-        + Sync
-        + Zeroize
-        + for<'a> Deserialize<'a>
-        + Serialize
-        + PartialEq
-        + Eq;
+    type SecretKey: Debug + Clone + Send + Sync + Zeroize + PartialEq + Eq;
 
     /// VRF signature.
     type Proof: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize + PartialEq + Eq;

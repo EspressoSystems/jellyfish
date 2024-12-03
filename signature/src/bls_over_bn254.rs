@@ -57,6 +57,7 @@ use ark_std::{
     hash::{Hash, Hasher},
     rand::{CryptoRng, RngCore},
     string::ToString,
+    vec,
     vec::Vec,
     One, UniformRand,
 };
@@ -67,7 +68,7 @@ use sha3::Keccak256;
 
 use crate::SignatureError::{ParameterError, VerificationError};
 
-use tagged_base64::tagged;
+use tagged_base64::{tagged, TaggedBase64, Tb64Error};
 use zeroize::Zeroize;
 
 /// BLS signature scheme.
@@ -224,24 +225,66 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
 // =====================================================
 // Signing key
 // =====================================================
-#[tagged(tag::BLS_SIGNING_KEY)]
-#[derive(
-    Clone,
-    Hash,
-    Default,
-    Zeroize,
-    Eq,
-    PartialEq,
-    CanonicalSerialize,
-    CanonicalDeserialize,
-    Derivative,
-    Ord,
-    PartialOrd,
-)]
+#[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
 #[zeroize(drop)]
-#[derivative(Debug)]
-/// Signing key for BLS signature.
-pub struct SignKey(#[derivative(Debug = "ignore")] pub(crate) ScalarField);
+/// Signing key for BLS signature. We intentionally omit the implementation of
+/// `serde::Serializable` so that it won't be unnoticably serialized or printed
+/// out through outer structs. However, users could manually serialize it into
+/// bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise with
+/// self-cautions.
+pub struct SignKey(pub(crate) ScalarField);
+
+// This content-hiding `Debug` implementation makes sure that the auto-derived
+// `Debug` for user's outer struct won't undesirably print out this secret key.
+impl core::fmt::Debug for SignKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("<BLSSignKey>").finish()
+    }
+}
+
+impl SignKey {
+    /// Signature Key generation function
+    pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> SignKey {
+        SignKey(ScalarField::rand(prng))
+    }
+
+    /// Explicit calls to serialize a `SignKey` into bytes.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.into_bigint().to_bytes_le()
+    }
+
+    /// Deserialize `SignKey` from bytes.
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self(ScalarField::from_le_bytes_mod_order(bytes))
+    }
+
+    /// Explicit calls to serialize a `SignKey` into `TaggedBase64`.
+    pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
+        TaggedBase64::new(tag::BLS_SIGNING_KEY, &self.to_bytes())
+    }
+}
+
+impl<'a> TryFrom<&'a TaggedBase64> for SignKey {
+    type Error = Tb64Error;
+
+    fn try_from(tb: &'a TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(SignKey::from_bytes(tb.as_ref()))
+    }
+}
+
+impl TryFrom<TaggedBase64> for SignKey {
+    type Error = Tb64Error;
+
+    fn try_from(tb: TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(SignKey::from_bytes(tb.as_ref()))
+    }
+}
 
 // =====================================================
 // Verification key
@@ -279,7 +322,7 @@ impl VerKey {
 // =====================================================
 
 /// Signature secret key pair used to sign messages
-#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Zeroize)]
+#[derive(Clone, Debug, Zeroize, Eq, PartialEq)]
 #[zeroize(drop)]
 pub struct KeyPair {
     sk: SignKey,
@@ -402,19 +445,49 @@ impl KeyPair {
         let sigma = hash_value * self.sk.0;
         Signature { sigma }
     }
+
+    /// Explicit calls to serialize a `KeyPair` into bytes.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.sk.to_bytes()
+    }
+
+    /// Deserialize `KeyPair` from bytes.
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self::generate_with_sign_key(ScalarField::from_le_bytes_mod_order(bytes))
+    }
+
+    /// Explicit calls to serialize a `KeyPair` into `TaggedBase64`.
+    pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
+        TaggedBase64::new(tag::BLS_KEY_PAIR, &self.to_bytes())
+    }
+}
+
+impl<'a> TryFrom<&'a TaggedBase64> for KeyPair {
+    type Error = Tb64Error;
+
+    fn try_from(tb: &'a TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_KEY_PAIR {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(KeyPair::from_bytes(tb.as_ref()))
+    }
+}
+
+impl TryFrom<TaggedBase64> for KeyPair {
+    type Error = Tb64Error;
+
+    fn try_from(tb: TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::BLS_KEY_PAIR {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(KeyPair::from_bytes(tb.as_ref()))
+    }
 }
 
 impl From<SignKey> for KeyPair {
     fn from(sk: SignKey) -> Self {
         let vk = VerKey::from(&sk);
         Self { sk, vk }
-    }
-}
-
-impl SignKey {
-    /// Signature Key generation function
-    pub fn generate<R: CryptoRng + RngCore>(prng: &mut R) -> SignKey {
-        SignKey(ScalarField::rand(prng))
     }
 }
 
@@ -532,16 +605,21 @@ mod tests {
         let msg = vec![87u8];
         let sig = keypair.sign(&msg, CS_ID_BLS_BN254);
 
-        let mut ser_bytes: Vec<u8> = Vec::new();
-        keypair.serialize_compressed(&mut ser_bytes).unwrap();
-        let de: KeyPair = KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
-        assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
-        assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
+        let mut ser_bytes: Vec<u8> = keypair.to_bytes();
+        let de = KeyPair::from_bytes(&ser_bytes);
+        assert_eq!(de, keypair);
 
-        let mut ser_bytes: Vec<u8> = Vec::new();
-        sk.serialize_compressed(&mut ser_bytes).unwrap();
-        let de: SignKey = SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
+        let tagged_blob = keypair.to_tagged_base64().unwrap();
+        let de: KeyPair = tagged_blob.try_into().unwrap();
+        assert_eq!(de, keypair);
+
+        let mut ser_bytes: Vec<u8> = sk.to_bytes();
+        let de = SignKey::from_bytes(&ser_bytes);
         assert_eq!(VerKey::from(&de), VerKey::from(&sk));
+
+        let tagged_blob = sk.to_tagged_base64().unwrap();
+        let de: SignKey = tagged_blob.try_into().unwrap();
+        assert_eq!(de, sk);
 
         let mut ser_bytes: Vec<u8> = Vec::new();
         vk.serialize_compressed(&mut ser_bytes).unwrap();

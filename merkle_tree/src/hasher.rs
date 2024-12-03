@@ -8,7 +8,7 @@
 //!
 //! ```
 //! # use jf_merkle_tree::errors::MerkleTreeError;
-//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
+//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -> Result<(), MerkleTreeError> {
@@ -17,10 +17,10 @@
 //! // payload type is `usize`, hash function is `Sha256`.
 //! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &my_data)?;
 //!
-//! let root = mt.commitment().digest();
+//! let commitment = mt.commitment();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
 //! assert_eq!(val, &3);
-//! assert!(HasherMerkleTree::<Sha256, usize>::verify(root, 2, proof)?.is_ok());
+//! assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, val, proof)?.is_ok());
 //! # Ok(())
 //! # }
 //! ```

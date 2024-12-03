@@ -1,6 +1,6 @@
 [package]
 name = "jf-merkle-tree"
-version = "0.1.0"
+version = "0.2.0"
 description = "Various Merkle tree implementations."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -22,6 +22,7 @@ derivative = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
+hex = "0.4.3"
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }

@@ -3,6 +3,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0]((https://github.com/EspressoSystems/jellyfish/compare/jf-signatures-v0.1.1...jf-signatures-v0.2.0)) (2024-10-29)
+
+### Changed
+
+- [#696](https://github.com/EspressoSystems/jellyfish/pull/696): removed derived `Debug` and `Serialize` for private keys.
+  - Manually implemented `Debug` for private signing keys to not print the actual value.
+  - Remove derived (de)serialization. Implemented `to/from_bytes()` and the conversions to/from `TaggedBase64`.
+
 ## [0.1.1]((https://github.com/EspressoSystems/jellyfish/compare/0.4.5...jf-signatures-v0.1.1)) (2024-07-25)
 
 ### Changed
