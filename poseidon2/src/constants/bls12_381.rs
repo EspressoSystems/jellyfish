@@ -1,32 +1,20 @@
 //! Poseidon2 constants for the scalar field of BLS12-381
 
 use super::from_hex;
-use crate::Poseidon2Params;
+use crate::{define_poseidon2_params, Poseidon2Params};
 use ark_bls12_381::Fr;
 use lazy_static::lazy_static;
 
-/// Poseidon parameters for Bls12-381 scalar field, with
-/// - state size = 2
-/// - sbox size = 5
-/// - external rounds = 8
-/// - internal rounds = 56
-pub struct Poseidon2ParamsBls2;
-
-impl Poseidon2Params<Fr, 2> for Poseidon2ParamsBls2 {
-    const T: usize = 2;
-    const D: usize = 5;
-    const EXT_ROUNDS: usize = 8;
-    const INT_ROUNDS: usize = 56;
-    fn external_rc() -> &'static [[Fr; 2]] {
-        &*RC2_EXT
-    }
-    fn internal_rc() -> &'static [Fr] {
-        &*RC2_INT
-    }
-    fn internal_mat_diag_m_1() -> &'static [Fr; 2] {
-        &MAT_DIAG2_M_1
-    }
-}
+define_poseidon2_params!(
+    Poseidon2ParamsBls2,
+    2,             // State size
+    5,             // S-box size
+    8,             // External rounds
+    56,            // Internal rounds
+    RC2_EXT,       // External round constants
+    RC2_INT,       // Internal round constants
+    MAT_DIAG2_M_1  // Diagonal matrix constant
+);
 
 // adapted from <https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/poseidon2_instance_bls12.rs>
 lazy_static! {
