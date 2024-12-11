@@ -1,0 +1,15 @@
+[package]
+name = "jf-poseidon2"
+version = "0.1.0"
+description = "Poseidon2 algebraic hash functions implementation."
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+ark-ff = { workspace = true }
+ark-std = { workspace = true }
