@@ -18,11 +18,13 @@ pub use crate::{
 
 use super::light_weight::LightWeightMerkleTree;
 use crate::errors::MerkleTreeError;
+use ark_ff::PrimeField;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
 use ark_std::{fmt, marker::PhantomData, vec::Vec};
+use jf_poseidon2::{Poseidon2, Poseidon2Params};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use sha3::{Digest, Keccak256, Sha3_256};
 
@@ -51,6 +53,36 @@ pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>
 
 /// Example instantiation of a SparseMerkleTree indexed by I
 pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
+
+// TODO: (alex) move this compression to CRHF and wrap with better API?
+/// Wrapper for Poseidon2 compression function
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Poseidon2Compression<F, P, const N: usize>(
+    (PhantomData<F>, PhantomData<P>, PhantomData<[(); N]>),
+)
+where
+    F: PrimeField,
+    P: Poseidon2Params<F, N>;
+
+impl<I, F, P, const N: usize> DigestAlgorithm<F, I, F> for Poseidon2Compression<F, P, N>
+where
+    I: Index,
+    F: PrimeField + From<I>,
+    P: Poseidon2Params<F, N>,
+{
+    fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
+        let mut input = [F::default(); N];
+        input.copy_from_slice(&data[..]);
+        Ok(Poseidon2::permute::<P, N>(&input)[0])
+    }
+
+    fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
+        let mut input = [F::default(); N];
+        input[N - 1] = F::from(pos.clone());
+        input[N - 2] = *elem;
+        Ok(Poseidon2::permute::<P, N>(&input)[0])
+    }
+}
 
 /// Implement Internal node type and implement DigestAlgorithm for a hash
 /// function with 32 bytes output size

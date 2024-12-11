@@ -73,7 +73,7 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 
 /// Convenience trait and blanket impl for downstream trait bounds.
 ///
-/// Useful for downstream code that's generic offer [`Digest`] hasher `H`.
+/// Useful for downstream code that's generic over [`Digest`] hasher `H`.
 ///
 /// # Example
 ///
@@ -120,19 +120,19 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 ///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
-pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write + Send + Sync {
-    /// Associated type needed to express trait bounds.
-    type Foo: ArrayLength<u8, ArrayType = Self::Bar>;
-    /// Associated type needed to express trait bounds.
-    type Bar: Copy;
+pub trait HasherDigest: Digest<OutputSize = Self::OutSize> + Write + Send + Sync {
+    /// Type for the output size
+    type OutSize: ArrayLength<u8, ArrayType = Self::ArrayType>;
+    /// Type for the array
+    type ArrayType: Copy;
 }
 impl<T> HasherDigest for T
 where
     T: Digest + Write + Send + Sync,
     <T::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
-    type Foo = T::OutputSize;
-    type Bar = <<T as HasherDigest>::Foo as ArrayLength<u8>>::ArrayType;
+    type OutSize = T::OutputSize;
+    type ArrayType = <<T as HasherDigest>::OutSize as ArrayLength<u8>>::ArrayType;
 }
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
