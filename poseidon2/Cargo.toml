@@ -11,5 +11,15 @@ documentation = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
+# ark-bls12-381 = { workspace = true, optional = true }
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true, optional = true }
 ark-ff = { workspace = true }
 ark-std = { workspace = true }
+hex = "0.4.3"
+lazy_static = "1.5.0"
+
+[features]
+# curve-named features contains constants for scalar fields of that curve
+# bls12-381 = ["dep:ark-bls12-381"]
+bn254 = ["dep:ark-bn254"]

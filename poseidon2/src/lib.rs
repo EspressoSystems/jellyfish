@@ -17,6 +17,7 @@
 use ark_ff::PrimeField;
 use ark_std::{borrow::ToOwned, marker::PhantomData};
 
+pub mod constants;
 mod external;
 mod internal;
 
@@ -25,8 +26,11 @@ mod internal;
 /// # Generic parameters
 /// - `F`: field choice
 /// - `T`: state size = rate + capacity, `T` is made generic for easy trait
-///   bound on `permute<F,T>(input: [F; N])`.
+///   bound on `permute<F,T>(input: [F; N])` and type safety on `external_rc()`
+///   return type.
 pub trait Poseidon2Params<F: PrimeField, const T: usize> {
+    /// t: state size = rate + capacity
+    const T: usize = T;
     /// d: sbox degree
     const D: usize;
     /// round_F: number of external rounds (incl. initial and terminal)
@@ -36,11 +40,11 @@ pub trait Poseidon2Params<F: PrimeField, const T: usize> {
     const INT_ROUNDS: usize;
 
     /// round constants for all external rounds
-    fn external_rc(&self) -> &'static [&'static [F; T]];
+    fn external_rc() -> &'static [[F; T]];
     /// round constants for internal rounds
-    fn internal_rc(&self) -> &'static [F];
+    fn internal_rc() -> &'static [F];
     /// diffusion (diagonal) matrix minus one used in internal rounds
-    fn internal_mat_diag_m_1(&self) -> &'static [F; T];
+    fn internal_mat_diag_m_1() -> &'static [F; T];
 
     /// A default sanity check on the parameters and constant getters
     ///
@@ -51,9 +55,9 @@ pub trait Poseidon2Params<F: PrimeField, const T: usize> {
     /// Rust doesn't permit generic param to be used in const operations, thus
     /// leveraging type system to ensure sanity such as `const INT_RC: &'static
     /// [F; Self::INT_ROUNDS]` is not allowed.
-    fn sanity_check(&self) -> bool {
-        let ext_rc = self.external_rc();
-        let int_rc = self.internal_rc();
+    fn sanity_check() -> bool {
+        let ext_rc = Self::external_rc();
+        let int_rc = Self::internal_rc();
 
         // TODO: consider adding more security-related check, incl. number of internal
         // rounds in terms of field size to achieve 128-bit security. see
@@ -72,33 +76,33 @@ pub struct Poseidon2<F: PrimeField>(PhantomData<F>);
 
 impl<F: PrimeField> Poseidon2<F> {
     /// Apply Poseidon2 permutation on `input` and return the permuted result
-    pub fn permute<P, const T: usize>(param: &P, input: &[F; T]) -> [F; T]
+    pub fn permute<P, const T: usize>(input: &[F; T]) -> [F; T]
     where
         P: Poseidon2Params<F, T>,
     {
         let mut input = input.to_owned();
-        Self::permute_mut(param, &mut input);
+        Self::permute_mut::<P, T>(&mut input);
         input
     }
 
     /// Apply Poseidon2 permutation on `input` in place
-    pub fn permute_mut<P, const T: usize>(param: &P, input: &mut [F; T])
+    pub fn permute_mut<P, const T: usize>(input: &mut [F; T])
     where
         P: Poseidon2Params<F, T>,
     {
-        assert!(param.sanity_check(), "Unexpected: Invalid Poseidon2 param!");
+        assert!(P::sanity_check(), "Unexpected: Invalid Poseidon2 param!");
         // M_e * x
         external::matmul_external(input);
 
         // Initial external rounds (first EXT_ROUNDS/2 rounds)
-        let ext_rc = param.external_rc();
+        let ext_rc = P::external_rc();
         for rc in ext_rc.iter().take(P::EXT_ROUNDS / 2) {
             external::permute_state(input, rc, P::D);
         }
 
         // Internal rounds
-        let int_rc = param.internal_rc();
-        let mat_diag_minus_1 = param.internal_mat_diag_m_1();
+        let int_rc = P::internal_rc();
+        let mat_diag_minus_1 = P::internal_mat_diag_m_1();
         for rc in int_rc.iter() {
             internal::permute_state(input, *rc, P::D, mat_diag_minus_1);
         }
