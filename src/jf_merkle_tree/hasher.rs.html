@@ -315,7 +315,7 @@
 
 <span class="doccomment">/// Convenience trait and blanket impl for downstream trait bounds.
 ///
-/// Useful for downstream code that's generic offer [`Digest`] hasher `H`.
+/// Useful for downstream code that's generic over [`Digest`] hasher `H`.
 ///
 /// # Example
 ///
@@ -362,19 +362,19 @@
 ///     let mt = HasherMerkleTree::&lt;H, usize&gt;::from_elems(None, &amp;my_data).unwrap();
 /// }
 /// ```
-</span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::Foo&gt; + Write + Send + Sync {
-    <span class="doccomment">/// Associated type needed to express trait bounds.
-    </span><span class="kw">type </span>Foo: ArrayLength&lt;u8, ArrayType = <span class="self">Self</span>::Bar&gt;;
-    <span class="doccomment">/// Associated type needed to express trait bounds.
-    </span><span class="kw">type </span>Bar: Copy;
+</span><span class="kw">pub trait </span>HasherDigest: Digest&lt;OutputSize = <span class="self">Self</span>::OutSize&gt; + Write + Send + Sync {
+    <span class="doccomment">/// Type for the output size
+    </span><span class="kw">type </span>OutSize: ArrayLength&lt;u8, ArrayType = <span class="self">Self</span>::ArrayType&gt;;
+    <span class="doccomment">/// Type for the array
+    </span><span class="kw">type </span>ArrayType: Copy;
 }
 <span class="kw">impl</span>&lt;T&gt; HasherDigest <span class="kw">for </span>T
 <span class="kw">where
     </span>T: Digest + Write + Send + Sync,
     &lt;T::OutputSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType: Copy,
 {
-    <span class="kw">type </span>Foo = T::OutputSize;
-    <span class="kw">type </span>Bar = &lt;&lt;T <span class="kw">as </span>HasherDigest&gt;::Foo <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType;
+    <span class="kw">type </span>OutSize = T::OutputSize;
+    <span class="kw">type </span>ArrayType = &lt;&lt;T <span class="kw">as </span>HasherDigest&gt;::OutSize <span class="kw">as </span>ArrayLength&lt;u8&gt;&gt;::ArrayType;
 }
 
 <span class="doccomment">/// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
