@@ -1,0 +1,32 @@
+[package]
+name = "jf-poseidon2"
+version = "0.1.0"
+description = "Poseidon2 algebraic hash functions implementation."
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[dependencies]
+ark-bls12-381 = { workspace = true, optional = true }
+ark-bn254 = { workspace = true, optional = true }
+ark-ff = { workspace = true }
+ark-std = { workspace = true }
+hex = "0.4.3"
+lazy_static = "1.5.0"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[features]
+default = ["bls12-381", "bn254"]
+# curve-named features contains constants for scalar fields of that curve
+bls12-381 = ["dep:ark-bls12-381"]
+bn254 = ["dep:ark-bn254"]
+
+[[bench]]
+name = "p2_native"
+harness = false
