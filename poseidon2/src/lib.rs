@@ -6,6 +6,11 @@
 
 //! The Poseidon2 permutation.
 //!
+//! # Available instances
+//! We have implemented Poseidon2 instances: (field, state_size)
+//! - (Bls12_381::Fr, 2), (Bls12_381::Fr, 3)
+//! - (Bn254::Fr, 3)
+//!
 //! This implementation was based upon the following resources:
 //! - https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/poseidon2.rs
 //! - https://eprint.iacr.org/2023/323.pdf

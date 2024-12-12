@@ -6,4 +6,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.1.0
 
-- Initial release.
+- Initial release with Poseidon2 Permutation (w/ BLS12-381, BN254 instances)
