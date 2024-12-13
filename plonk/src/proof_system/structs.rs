@@ -289,7 +289,6 @@ impl<T: PrimeField> ProofEvaluations<T> {
     /// create variables for the ProofEvaluations who's field
     /// is smaller than plonk circuit field.
     /// The output wires are in the FpElemVar form.
-
     pub(crate) fn create_variables<F>(
         &self,
         circuit: &mut PlonkCircuit<F>,

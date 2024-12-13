@@ -8,6 +8,7 @@ pub mod bls12_381;
 #[cfg(feature = "bn254")]
 pub mod bn254;
 
+#[allow(dead_code)]
 #[inline]
 pub(crate) fn from_hex<F: PrimeField>(s: &str) -> F {
     F::from_be_bytes_mod_order(&<[u8; 32]>::from_hex(s).expect("Invalid HexStr"))
