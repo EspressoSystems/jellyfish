@@ -31,6 +31,7 @@ macro_rules! define_poseidon2_params {
         /// - sbox size = $sbox_size
         /// - external rounds = $ext_rounds
         /// - internal rounds = $int_rounds
+        #[derive(Clone, Debug)]
         pub struct $struct_name;
 
         impl Poseidon2Params<Fr, $state_size> for $struct_name {

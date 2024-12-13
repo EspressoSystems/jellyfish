@@ -25,6 +25,7 @@ use ark_std::{borrow::ToOwned, marker::PhantomData};
 pub mod constants;
 mod external;
 mod internal;
+pub mod sponge;
 
 /// Parameters required for a Poseidon2 permutation instance.
 ///
@@ -33,7 +34,7 @@ mod internal;
 /// - `T`: state size = rate + capacity, `T` is made generic for easy trait
 ///   bound on `permute<F,T>(input: [F; N])` and type safety on `external_rc()`
 ///   return type.
-pub trait Poseidon2Params<F: PrimeField, const T: usize> {
+pub trait Poseidon2Params<F: PrimeField, const T: usize>: Clone {
     /// t: state size = rate + capacity
     const T: usize = T;
     /// d: sbox degree

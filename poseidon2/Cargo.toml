@@ -16,7 +16,11 @@ ark-bn254 = { workspace = true, optional = true }
 ark-ff = { workspace = true }
 ark-std = { workspace = true }
 hex = "0.4.3"
+jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 lazy_static = "1.5.0"
+# TODO: fix this once upstream release a new tag
+nimue = { git = "https://github.com/alxiong/nimue", branch = "ax/0.1.1", features = ["ark"] }
+zeroize = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

@@ -17,7 +17,7 @@ displaydoc = { workspace = true }
 jf-signature = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-signature-v0.2.0", default-features = false, features = [ "bls" ] }
 serde = { workspace = true }
 sha2 = { workspace = true }
-zeroize = { version = "1.5", default-features = false }
+zeroize = { workspace = true }
 
 [dev-dependencies]
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
