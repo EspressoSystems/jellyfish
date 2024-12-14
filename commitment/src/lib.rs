@@ -15,27 +15,50 @@ use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, UniformRand};
 /// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
 type VerificationResult = Result<(), ()>;
 
+/// Trait defining a cryptographic commitment scheme.
+///
+/// A commitment scheme allows one to "commit" to a value while keeping it hidden
+/// and optionally binding it to a blinding factor. Later, the value can be "opened"
+/// to reveal the original input and verify its authenticity.
 pub trait CommitmentScheme {
-    /// Input to the commitment
+    /// The type of input to the commitment scheme.
     type Input;
-    /// The type of output commitment value
+
+    /// The type of output produced by the commitment scheme.
     type Output: Clone + Debug + PartialEq + Eq + Hash;
-    /// The type of the hiding/blinding factor
+
+    /// The type of randomness or blinding factor used in the scheme.
     type Randomness: Clone + Debug + PartialEq + Eq + UniformRand;
-    /// Error type
+
+    /// The type of error that may occur during commitment or verification.
     type Error: ark_std::error::Error;
 
-    /// Commit algorithm that takes `input` and blinding randomness `r`
-    /// (optional for hiding commitment schemes), outputs a commitment.
+    /// Generate a commitment for the given input and optional randomness.
+    ///
+    /// - If `r` is `None`, the scheme may produce a deterministic commitment or use default randomness.
     fn commit<T: Borrow<Self::Input>>(
         input: T,
         r: Option<&Self::Randomness>,
     ) -> Result<Self::Output, Self::Error>;
 
-    /// Verify algorithm that output `Ok` if accepted, or `Err` if rejected.
+    /// Verify that the provided commitment corresponds to the input and randomness.
+    ///
+    /// Returns a `VerificationOutcome` indicating whether the verification succeeded or failed.
     fn verify<T: Borrow<Self::Input>>(
         input: T,
         r: Option<&Self::Randomness>,
         comm: &Self::Output,
-    ) -> Result<VerificationResult, Self::Error>;
+    ) -> Result<VerificationOutcome, Self::Error>;
+}
+
+/// The result of a verification process, indicating success or failure.
+type VerificationOutcome = Result<(), VerificationError>;
+
+/// Custom error type for verification failures.
+#[derive(Debug, thiserror::Error)]
+pub enum VerificationError {
+    #[error("The commitment does not match the input and randomness.")]
+    CommitmentMismatch,
+    #[error("Invalid input provided.")]
+    InvalidInput,
 }
