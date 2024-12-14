@@ -53,7 +53,9 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a></pre></div><pre class="rust"><code><span class="doccomment">//! Poseidon2 Constants copied from &lt;https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/&gt;
+<a href="#55" id="55">55</a>
+<a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a></pre></div><pre class="rust"><code><span class="doccomment">//! Poseidon2 Constants copied from &lt;https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/&gt;
 
 </span><span class="kw">use </span>ark_ff::PrimeField;
 <span class="kw">use </span>hex::FromHex;
@@ -63,7 +65,8 @@
 <span class="attr">#[cfg(feature = <span class="string">"bn254"</span>)]
 </span><span class="kw">pub mod </span>bn254;
 
-<span class="attr">#[inline]
+<span class="attr">#[allow(dead_code)]
+#[inline]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>from_hex&lt;F: PrimeField&gt;(s: <span class="kw-2">&amp;</span>str) -&gt; F {
     F::from_be_bytes_mod_order(<span class="kw-2">&amp;</span>&lt;[u8; <span class="number">32</span>]&gt;::from_hex(s).expect(<span class="string">"Invalid HexStr"</span>))
 }
@@ -86,6 +89,7 @@
         /// - sbox size = $sbox_size
         /// - external rounds = $ext_rounds
         /// - internal rounds = $int_rounds
+        </span><span class="attr">#[derive(Clone, Debug)]
         </span><span class="kw">pub struct </span><span class="macro-nonterminal">$struct_name</span>;
 
         <span class="kw">impl </span>Poseidon2Params&lt;Fr, <span class="macro-nonterminal">$state_size</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$struct_name </span>{

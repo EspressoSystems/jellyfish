@@ -129,7 +129,8 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 Espresso Systems (espressosys.com)
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
@@ -156,6 +157,7 @@
 <span class="kw">pub mod </span>constants;
 <span class="kw">mod </span>external;
 <span class="kw">mod </span>internal;
+<span class="kw">pub mod </span>sponge;
 
 <span class="doccomment">/// Parameters required for a Poseidon2 permutation instance.
 ///
@@ -164,7 +166,7 @@
 /// - `T`: state size = rate + capacity, `T` is made generic for easy trait
 ///   bound on `permute&lt;F,T&gt;(input: [F; N])` and type safety on `external_rc()`
 ///   return type.
-</span><span class="kw">pub trait </span>Poseidon2Params&lt;F: PrimeField, <span class="kw">const </span>T: usize&gt; {
+</span><span class="kw">pub trait </span>Poseidon2Params&lt;F: PrimeField, <span class="kw">const </span>T: usize&gt;: Clone {
     <span class="doccomment">/// t: state size = rate + capacity
     </span><span class="kw">const </span>T: usize = T;
     <span class="doccomment">/// d: sbox degree

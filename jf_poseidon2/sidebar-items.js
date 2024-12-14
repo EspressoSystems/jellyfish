@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["define_poseidon2_params"],"mod":["constants"],"struct":["Poseidon2"],"trait":["Poseidon2Params"]};
+window.SIDEBAR_ITEMS = {"macro":["define_poseidon2_params"],"mod":["constants","sponge"],"struct":["Poseidon2"],"trait":["Poseidon2Params"]};
