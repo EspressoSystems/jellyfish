@@ -14,8 +14,8 @@ use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash};
 /// (based on ark-primitives' definition, but self-declared for minimal
 /// dependency and easier future upgradability.)
 pub trait CRHF {
-    /// Input to the CRHF
-    type Input;
+    /// Input to the CRHF, allowed to be dynamically sized
+    type Input: ?Sized;
     /// Output of the CRHF
     type Output: Clone + PartialEq + Eq + Hash + Debug + CanonicalSerialize + CanonicalDeserialize;
     /// Error type

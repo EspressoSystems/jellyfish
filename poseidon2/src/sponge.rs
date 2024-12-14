@@ -146,6 +146,7 @@ mod bn254 {
     pub type Poseidon2SpongeStateBnN3R1 = Poseidon2SpongeState<Fr, 3, 1, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=1.
     pub type Poseidon2SpongeBnN3R1 = DuplexSponge<Poseidon2SpongeStateBnN3R1>;
+
     /// State of a sponge over BN254 scalar field, state_size=3, rate=2.
     pub type Poseidon2SpongeStateBnN3R2 = Poseidon2SpongeState<Fr, 3, 2, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=2.
