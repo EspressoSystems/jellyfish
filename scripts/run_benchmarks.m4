@@ -30,7 +30,7 @@ fi
 
 # Run the benchmark binary
 set -e
-cargo +nightly bench
+cargo +nightly-2024-06-25 bench
 
 
 # ^^^  TERMINATE YOUR CODE BEFORE THE BOTTOM ARGBASH MARKER  ^^^
