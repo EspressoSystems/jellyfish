@@ -4,39 +4,25 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! A convenience wrapper [`HasherMerkleTree`] to instantiate [`MerkleTree`] for any [RustCrypto-compatible](https://github.com/RustCrypto/hashes) hash function.
+//! A wrapper for [`MerkleTree`] to work with RustCrypto-compatible hash functions.
+//! Example usage:
 //!
-//! ```
-//! # use jf_merkle_tree::errors::MerkleTreeError;
+//! ```rust
 //! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
-//! # fn main() -> Result<(), MerkleTreeError> {
-//! let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+//! fn main() -> Result<(), jf_merkle_tree::errors::MerkleTreeError> {
+//!     let data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+//!     let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &data)?;
 //!
-//! // payload type is `usize`, hash function is `Sha256`.
-//! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &my_data)?;
-//!
-//! let commitment = mt.commitment();
-//! let (val, proof) = mt.lookup(2).expect_ok()?;
-//! assert_eq!(val, &3);
-//! assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, val, proof)?.is_ok());
-//! # Ok(())
-//! # }
+//!     let commitment = mt.commitment();
+//!     let (value, proof) = mt.lookup(2).expect_ok()?;
+//!     assert_eq!(value, &3);
+//!     assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, value, proof)?.is_ok());
+//!     Ok(())
+//! }
 //! ```
-//!
-//! [`HasherMerkleTree`] requires the `std` feature for your hasher, which is
-//! enabled by default. Example:
-//! ```toml
-//! [dependencies]
-//! sha2 = "0.10"
-//! ```
-//!
-//! Use [`GenericHasherMerkleTree`] if you prefer to specify your own `ARITY`
-//! and node [`Index`] types.
 
-// clippy is freaking out about `HasherNode` and this is the only thing I
-// could do to stop it
 #![allow(clippy::non_canonical_partial_ord_impl)]
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
@@ -53,89 +39,45 @@ use digest::{
 };
 use tagged_base64::tagged;
 
-/// Merkle tree generic over [`Digest`] hasher `H`.
+/// A Merkle tree using a RustCrypto-compatible hasher.
 ///
-/// It's a trinary tree whose nodes are indexed by [`u64`].
-/// - `H` is a [RustCrypto-compatible](https://github.com/RustCrypto/hashes)
-///   hash function.
-/// - `E` is a [`Element`] payload data type for the Merkle tree.
+/// - `H`: Hash function (e.g., `Sha256`).
+/// - `E`: Payload type.
 pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, 3>;
 
-/// Like [`HasherMerkleTree`] except with additional parameters.
+/// A generic Merkle tree with additional parameters.
 ///
-/// Additional parameters beyond [`HasherMerkleTree`]:
-/// - `I` is a [`Index`] data type that impls [`From<u64>`]. (eg. [`u64`],
-///   [`Field`](ark_ff::Field), etc.)
-/// - `ARITY` is a const generic. (eg. 2 for a binary tree, 3 for a trinary
-///   tree, etc.)
+/// - `I`: Index type (e.g., `u64`, `ark_ff::Field`).
+/// - `ARITY`: Tree arity (e.g., 2 for binary, 3 for trinary).
 pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
     MerkleTree<E, HasherDigestAlgorithm, I, ARITY, HasherNode<H>>;
 
-/// Convenience trait and blanket impl for downstream trait bounds.
-///
-/// Useful for downstream code that's generic over [`Digest`] hasher `H`.
-///
-/// # Example
-///
-/// Do this:
-/// ```
-/// # use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
-/// # use jf_merkle_tree::hasher::HasherDigest;
-/// fn generic_over_hasher<H>()
-/// where
-///     H: HasherDigest,
-/// {
-///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
-/// }
-/// ```
-///
-/// Instead of this:
-/// ```
-/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
-/// # use ark_serialize::Write;
-/// # use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
-/// # use jf_merkle_tree::hasher::HasherDigest;
-/// fn generic_over_hasher<H>()
-/// where
-///     H: Digest + Write + Send + Sync,
-///     <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
-/// {
-///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
-/// }
-/// ```
-///
-/// Note that the complex trait bound for [`Copy`] is necessary:
-/// ```compile_fail
-/// # use digest::{crypto_common::generic_array::ArrayLength, Digest, OutputSizeUser};
-/// # use ark_serialize::Write;
-/// # use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme};
-/// # use jf_merkle_tree::hasher::HasherDigest;
-/// fn generic_over_hasher<H>()
-/// where
-///     H: Digest + Write + Send + Sync,
-/// {
-///     let my_data = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
-/// }
-/// ```
+// ===================================
+// Trait: HasherDigest
+// ===================================
+
+/// A trait for hashers compatible with RustCrypto [`Digest`].
 pub trait HasherDigest: Digest<OutputSize = Self::OutSize> + Write + Send + Sync {
-    /// Type for the output size
+    /// The output size of the hasher.
     type OutSize: ArrayLength<u8, ArrayType = Self::ArrayType>;
-    /// Type for the array
+    /// The array type of the hasher output.
     type ArrayType: Copy;
 }
+
 impl<T> HasherDigest for T
 where
     T: Digest + Write + Send + Sync,
     <T::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
     type OutSize = T::OutputSize;
-    type ArrayType = <<T as HasherDigest>::OutSize as ArrayLength<u8>>::ArrayType;
+    type ArrayType = <Self::OutSize as ArrayLength<u8>>::ArrayType;
 }
 
-/// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
+// ===================================
+// Struct: HasherDigestAlgorithm
+// ===================================
+
+/// Implements [`DigestAlgorithm`] for Merkle trees.
 pub struct HasherDigestAlgorithm;
 
 impl<E, I, H> DigestAlgorithm<E, I, HasherNode<H>> for HasherDigestAlgorithm
@@ -155,15 +97,19 @@ where
     fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
         pos.serialize_uncompressed(&mut hasher)
-            .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
+            .map_err(|_| MerkleTreeError::DigestError("Failed to serialize position".to_string()))?;
         elem.serialize_uncompressed(&mut hasher)
-            .map_err(|_| MerkleTreeError::DigestError("Failed serializing elem".to_string()))?;
+            .map_err(|_| MerkleTreeError::DigestError("Failed to serialize element".to_string()))?;
         Ok(HasherNode(hasher.finalize()))
     }
 }
 
-/// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
-#[derive(Derivative)]
+// ===================================
+// Struct: HasherNode
+// ===================================
+
+/// A wrapper for hash outputs in the Merkle tree.
+#[derive(Derivative, tagged("HASH"))]
 #[derivative(
     Clone(bound = ""),
     Copy(bound = "<<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy"),
@@ -175,12 +121,10 @@ where
     PartialEq(bound = ""),
     PartialOrd(bound = "")
 )]
-#[tagged("HASH")]
 pub struct HasherNode<H>(Output<H>)
 where
     H: Digest;
 
-/// Allow creation from [`Output`]
 impl<H> From<Output<H>> for HasherNode<H>
 where
     H: Digest,
@@ -190,7 +134,6 @@ where
     }
 }
 
-/// Allow access to the underlying [`Output`]
 impl<H> AsRef<Output<H>> for HasherNode<H>
 where
     H: Digest,
@@ -200,7 +143,10 @@ where
     }
 }
 
-// Manual impls of some subtraits of [`NodeValue`](super::NodeValue).
+// ===================================
+// Serialization Traits
+// ===================================
+
 impl<H> CanonicalSerialize for HasherNode<H>
 where
     H: Digest,
@@ -215,9 +161,10 @@ where
     }
 
     fn serialized_size(&self, _compress: Compress) -> usize {
-        <H as Digest>::output_size()
+        H::output_size()
     }
 }
+
 impl<H> CanonicalDeserialize for HasherNode<H>
 where
     H: Digest,
@@ -227,16 +174,39 @@ where
         _compress: Compress,
         _validate: Validate,
     ) -> Result<Self, SerializationError> {
-        let mut ret = Output::<H>::default();
-        reader.read_exact(&mut ret)?;
-        Ok(HasherNode(ret))
+        let mut buffer = Output::<H>::default();
+        reader.read_exact(&mut buffer)?;
+        Ok(Self(buffer))
     }
 }
+
 impl<H> Valid for HasherNode<H>
 where
     H: Digest,
 {
     fn check(&self) -> Result<(), SerializationError> {
+        Ok(())
+    }
+}
+
+// ===================================
+// Tests
+// ===================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sha2::Sha256;
+
+    #[test]
+    fn test_merkle_tree_creation() -> Result<(), MerkleTreeError> {
+        let data = [1, 2, 3, 4];
+        let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &data)?;
+
+        let commitment = mt.commitment();
+        let (value, proof) = mt.lookup(2).expect_ok()?;
+        assert_eq!(value, &3);
+        assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, value, proof)?.is_ok());
         Ok(())
     }
 }
