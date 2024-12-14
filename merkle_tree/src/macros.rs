@@ -4,13 +4,13 @@
 // You should have received a copy of the MIT License
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
-//! Useful macros
+//! Useful macros for implementing Merkle Tree schemes.
 
-/// Macro for generating a standard merkle tree implementation
+/// Macro for generating a standard Merkle tree implementation.
 #[macro_export]
 macro_rules! impl_merkle_tree_scheme {
     ($name: ident) => {
-        /// A standard append only Merkle tree implementation
+        /// A standard append-only Merkle tree implementation.
         #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
         #[serde(
             bound = "E: ark_serialize::CanonicalSerialize + ark_serialize::CanonicalDeserialize,
@@ -26,7 +26,6 @@ macro_rules! impl_merkle_tree_scheme {
             root: Arc<MerkleNode<E, I, T>>,
             height: usize,
             num_leaves: u64,
-
             _phantom: PhantomData<H>,
         }
 
@@ -41,8 +40,7 @@ macro_rules! impl_merkle_tree_scheme {
             type Index = I;
             type NodeValue = T;
             type MembershipProof = MerkleTreeProof<T>;
-            // TODO(Chengyu): implement batch membership proof
-            type BatchMembershipProof = ();
+            type BatchMembershipProof = (); // Placeholder for future implementation.
             type Commitment = T;
 
             const ARITY: usize = ARITY;
@@ -70,9 +68,7 @@ macro_rules! impl_merkle_tree_scheme {
                 let pos = pos.borrow();
                 let traversal_path = pos.to_traversal_path(self.height);
                 match self.root.lookup_internal(self.height, &traversal_path) {
-                    LookupResult::Ok(value, proof) => {
-                        LookupResult::Ok(&value, proof)
-                    },
+                    LookupResult::Ok(value, proof) => LookupResult::Ok(&value, proof),
                     LookupResult::NotInMemory => LookupResult::NotInMemory,
                     LookupResult::NotFound(_) => LookupResult::NotFound(()),
                 }
@@ -84,7 +80,12 @@ macro_rules! impl_merkle_tree_scheme {
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<VerificationResult, MerkleTreeError> {
-                crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow().path_values())
+                crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(
+                    commitment.borrow(),
+                    pos.borrow(),
+                    Some(element.borrow()),
+                    proof.borrow().path_values(),
+                )
             }
 
             fn iter(&self) -> MerkleTreeIter<E, I, T> {
@@ -92,6 +93,7 @@ macro_rules! impl_merkle_tree_scheme {
             }
         }
 
+        // Implementations for iterators.
         impl<'a, E, H, I, const ARITY: usize, T> IntoIterator for &'a $name<E, H, I, ARITY, T>
         where
             E: Element,
@@ -100,7 +102,6 @@ macro_rules! impl_merkle_tree_scheme {
             T: NodeValue,
         {
             type Item = (&'a I, &'a E);
-
             type IntoIter = MerkleTreeIter<'a, E, I, T>;
 
             fn into_iter(self) -> Self::IntoIter {
@@ -116,18 +117,16 @@ macro_rules! impl_merkle_tree_scheme {
             T: NodeValue,
         {
             type Item = (I, E);
-
             type IntoIter = MerkleTreeIntoIter<E, I, T>;
 
             fn into_iter(self) -> Self::IntoIter {
                 MerkleTreeIntoIter::new(self.root)
             }
         }
-
     };
 }
 
-/// Macro for generating a forgetable merkle tree implementation
+/// Macro for generating a forgettable Merkle tree implementation.
 #[macro_export]
 macro_rules! impl_forgetable_merkle_tree_scheme {
     ($name: ident) => {
@@ -177,56 +176,57 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 let element = element.borrow();
                 let proof = proof.borrow();
                 if Self::verify(&self.commitment(), pos, element, proof)?.is_err() {
-                    Err(MerkleTreeError::InconsistentStructureError(
-                        "Wrong proof".to_string(),
-                    ))
-                } else {
-                    let traversal_path = pos.to_traversal_path(self.height);
-                    self.root = self.root.remember_internal::<H, ARITY>(
-                        self.height,
-                        &traversal_path,
-                        pos,
-                        Some(element),
-                        proof.path_values(),
-                    )?;
-                    Ok(())
+                    return Err(MerkleTreeError::InconsistentStructureError(
+                        "Invalid proof".to_string(),
+                    ));
                 }
+                let traversal_path = pos.to_traversal_path(self.height);
+                self.root = self.root.remember_internal::<H, ARITY>(
+                    self.height,
+                    &traversal_path,
+                    pos,
+                    Some(element),
+                    proof.path_values(),
+                )?;
+                Ok(())
             }
         }
     };
 }
 
-/// Macros for implementing ToTreversalPath for primitive types
+/// Macro for implementing `ToTraversalPath` for primitive integer types.
 #[macro_export]
 macro_rules! impl_to_traversal_path_primitives {
     ($t: ty) => {
         impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
                 let mut pos = *self as u64;
-                let mut ret = vec![];
-                for _i in 0..height {
-                    ret.push((pos % (ARITY as u64)) as usize);
-                    pos /= ARITY as u64;
-                }
-                ret
+                (0..height)
+                    .map(|_| {
+                        let branch = (pos % ARITY as u64) as usize;
+                        pos /= ARITY as u64;
+                        branch
+                    })
+                    .collect()
             }
         }
     };
 }
 
-/// Macros for implementing ToTreversalPath for BigUint types
+/// Macro for implementing `ToTraversalPath` for `BigUint`.
 #[macro_export]
 macro_rules! impl_to_traversal_path_biguint {
     ($t: ty) => {
         impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
-                let mut pos: BigUint = <Self as Into<BigUint>>::into(self.clone());
-                let mut ret = vec![];
-                for _i in 0..height {
-                    ret.push((&pos % ARITY).to_usize().unwrap());
-                    pos /= ARITY;
-                }
-                ret
+                let mut pos = self.clone();
+                (0..height)
+                    .map(|_| {
+                        let branch = (&pos % ARITY).to_usize().unwrap();
+                        pos /= ARITY;
+                        branch
+                    })
+                    .collect()
             }
         }
     };
