@@ -6,7 +6,7 @@ use ark_std::marker::PhantomData;
 use nimue::{hash::sponge::Sponge, Unit};
 use zeroize::Zeroize;
 
-/// Poseidon2-based Cryptographic Sponge
+/// the state of Poseidon2-based Cryptographic Sponge
 ///
 /// # Generic parameters:
 /// - N: state size = rate (R) + capacity (C)
@@ -14,21 +14,25 @@ use zeroize::Zeroize;
 ///
 /// For security, for b=128-bit security, field size |F|, C*|F|>=2b:
 /// i.e. 128-bit for 256-bit fields, C>=1.
-/// This check is being down during `Poseidon2Sponge::new(&iv)`
+/// This check is being down during `Poseidon2SpongeState::new(&iv)`
 /// (See Poseidon2 paper Page 7 Footnote 5)
 ///
 /// For BLS12-381, we choose C=1 for 128 security
 /// For BN254, we choose C=1 for (100<*<128)-security
 #[derive(Clone, Debug)]
-pub struct Poseidon2Sponge<F: PrimeField, const N: usize, const R: usize, P: Poseidon2Params<F, N>>
-{
+pub struct Poseidon2SpongeState<
+    F: PrimeField,
+    const N: usize,
+    const R: usize,
+    P: Poseidon2Params<F, N>,
+> {
     /// state of sponge
     pub(crate) state: [F; N],
     _rate: PhantomData<[(); R]>,
     _p: PhantomData<P>,
 }
 
-impl<F, const N: usize, const R: usize, P> Sponge for Poseidon2Sponge<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> Sponge for Poseidon2SpongeState<F, N, R, P>
 where
     F: PrimeField + Unit,
     P: Poseidon2Params<F, N>,
@@ -57,7 +61,7 @@ where
         Poseidon2::permute_mut::<P, N>(&mut self.state);
     }
 }
-impl<F, const N: usize, const R: usize, P> Default for Poseidon2Sponge<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> Default for Poseidon2SpongeState<F, N, R, P>
 where
     F: PrimeField,
     P: Poseidon2Params<F, N>,
@@ -71,7 +75,7 @@ where
     }
 }
 
-impl<F, const N: usize, const R: usize, P> AsRef<[F]> for Poseidon2Sponge<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> AsRef<[F]> for Poseidon2SpongeState<F, N, R, P>
 where
     F: PrimeField,
     P: Poseidon2Params<F, N>,
@@ -80,7 +84,7 @@ where
         &self.state
     }
 }
-impl<F, const N: usize, const R: usize, P> AsMut<[F]> for Poseidon2Sponge<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> AsMut<[F]> for Poseidon2SpongeState<F, N, R, P>
 where
     F: PrimeField,
     P: Poseidon2Params<F, N>,
@@ -90,7 +94,7 @@ where
     }
 }
 
-impl<F, const N: usize, const R: usize, P> Zeroize for Poseidon2Sponge<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> Zeroize for Poseidon2SpongeState<F, N, R, P>
 where
     F: PrimeField,
     P: Poseidon2Params<F, N>,
@@ -107,12 +111,20 @@ mod bls12_381 {
     use crate::constants::bls12_381::*;
     use ark_bls12_381::Fr;
     use nimue::hash::sponge::DuplexSponge;
+    /// State of a sponge over BLS12-381 scalar field, state_size=2, rate=1.
+    pub type Poseidon2SpongeStateBlsN2R1 = Poseidon2SpongeState<Fr, 2, 1, Poseidon2ParamsBls2>;
     /// A sponge over BLS12-381 scalar field, state_size=2, rate=1.
-    pub type Poseidon2SpongeBlsN2R1 = DuplexSponge<Poseidon2Sponge<Fr, 2, 1, Poseidon2ParamsBls2>>;
+    pub type Poseidon2SpongeBlsN2R1 = DuplexSponge<Poseidon2SpongeStateBlsN2R1>;
+
+    /// State of a sponge over BLS12-381 scalar field, state_size=3, rate=1.
+    pub type Poseidon2SpongeStateBlsN3R1 = Poseidon2SpongeState<Fr, 3, 1, Poseidon2ParamsBls3>;
     /// A sponge over BLS12-381 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeBlsN3R1 = DuplexSponge<Poseidon2Sponge<Fr, 3, 1, Poseidon2ParamsBls3>>;
+    pub type Poseidon2SpongeBlsN3R1 = DuplexSponge<Poseidon2SpongeStateBlsN3R1>;
+
+    /// State of a sponge over BLS12-381 scalar field, state_size=3, rate=2.
+    pub type Poseidon2SpongeStateBlsN3R2 = Poseidon2SpongeState<Fr, 3, 2, Poseidon2ParamsBls3>;
     /// A sponge over BLS12-381 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeBlsN3R2 = DuplexSponge<Poseidon2Sponge<Fr, 3, 2, Poseidon2ParamsBls3>>;
+    pub type Poseidon2SpongeBlsN3R2 = DuplexSponge<Poseidon2SpongeStateBlsN3R2>;
 
     #[test]
     fn test_bls_sponge() {
@@ -130,10 +142,14 @@ mod bn254 {
     use crate::constants::bn254::*;
     use ark_bn254::Fr;
     use nimue::hash::sponge::DuplexSponge;
+    /// State of a sponge over BN254 scalar field, state_size=3, rate=1.
+    pub type Poseidon2SpongeStateBnN3R1 = Poseidon2SpongeState<Fr, 3, 1, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeBnN3R1 = DuplexSponge<Poseidon2Sponge<Fr, 3, 1, Poseidon2ParamsBn3>>;
+    pub type Poseidon2SpongeBnN3R1 = DuplexSponge<Poseidon2SpongeStateBnN3R1>;
+    /// State of a sponge over BN254 scalar field, state_size=3, rate=2.
+    pub type Poseidon2SpongeStateBnN3R2 = Poseidon2SpongeState<Fr, 3, 2, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeBnN3R2 = DuplexSponge<Poseidon2Sponge<Fr, 3, 2, Poseidon2ParamsBn3>>;
+    pub type Poseidon2SpongeBnN3R2 = DuplexSponge<Poseidon2SpongeStateBnN3R2>;
 
     #[test]
     fn test_bn_sponge() {
