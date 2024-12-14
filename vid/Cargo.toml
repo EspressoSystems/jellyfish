@@ -20,9 +20,9 @@ ark-std = { workspace = true }
 derivative = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
-generic-array = { version = "0", features = [
-        "serde",
-] } # not a direct dependency, but we need serde
+# not a direct dependency, but we need serde;
+# inherited from digest-v0.10.7->crypto_common->generic-array
+generic-array = { version = "0.14.6", features = ["more_lengths", "serde"] }
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-merkle-tree = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-pcs = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }

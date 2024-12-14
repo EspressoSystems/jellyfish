@@ -17,7 +17,7 @@ ark-ec = { workspace = true }
 ark-ff = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-blst = { version = "0.3.11", default-features = false }
+blst = { version = "0.3.13", default-features = false }
 derivative = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
@@ -33,6 +33,11 @@ serde = { workspace = true }
 sha3 = { workspace = true }
 tagged-base64 = { workspace = true }
 zeroize = { workspace = true }
+
+[target.wasm32-unknown-unknown.dependencies]
+# not directly used, but used by every member crate via ark-std
+# since we can't specify [target] in workspace Cargo.toml, specify here
+getrandom = { version = "^0.2", features = ["js"] }
 
 [dev-dependencies]
 ark-ed-on-bls12-377 = "0.4.0"
