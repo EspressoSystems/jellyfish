@@ -18,7 +18,7 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 - ['jf-utils'](utilities): utilities and helper functions.
 
 ### Primitives
-- ['jf-prf'](prf): trait definitions for pesudorandom function (PRF).
+- ['jf-prf'](prf): trait definitions for pseudorandom function (PRF).
 - ['jf-crhf'](crhf): trait definitions for collision-resistant hash function (CRHF).
 - ['jf-commitment'](commitment): trait definitions for cryptographic commitment scheme.
 - ['jf-rescue'](rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
@@ -75,7 +75,7 @@ Jellyfish is `no_std` compliant and compilable to WASM target environment, just 
 
 ### Backends
 
-To choose different backends for arithmetics of `curve25519-dalek`, which is currently
+To choose different backends for arithmetic of `curve25519-dalek`, which is currently
 used by `jf-primitives/aead`, set the environment variable:
 
 ```
@@ -96,7 +96,7 @@ RUSTFLAGS='--cfg curve25519_dalek_bits="SIZE"'
 cargo test --release
 ```
 
-Note that by default the _release_ mode does not check integers overflow.
+Note that, by default, the _release_ mode does not check for integer overflow. 
 In order to enforce this check run:
 
 ```
