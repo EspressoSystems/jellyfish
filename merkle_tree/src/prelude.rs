@@ -24,8 +24,10 @@ use ark_serialize::{
     Write,
 };
 use ark_std::{fmt, marker::PhantomData, vec::Vec};
-use jf_poseidon2::{Poseidon2, Poseidon2Params};
+use jf_crhf::CRHF;
+use jf_poseidon2::{crhf::FixedLenPoseidon2Hash, Poseidon2, Poseidon2Params};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
+use nimue::hash::sponge::Sponge;
 use sha3::{Digest, Keccak256, Sha3_256};
 
 /// Wrapper for rescue hash function
@@ -54,33 +56,25 @@ pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>
 /// Example instantiation of a SparseMerkleTree indexed by I
 pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
 
-// TODO: (alex) move this compression to CRHF and wrap with better API?
-/// Wrapper for Poseidon2 compression function
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Poseidon2Compression<F, P, const N: usize>(
-    (PhantomData<F>, PhantomData<P>, PhantomData<[(); N]>),
-)
-where
-    F: PrimeField,
-    P: Poseidon2Params<F, N>;
-
-impl<I, F, P, const N: usize> DigestAlgorithm<F, I, F> for Poseidon2Compression<F, P, N>
+// Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
+impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
+    for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
 where
     I: Index,
-    F: PrimeField + From<I>,
-    P: Poseidon2Params<F, N>,
+    F: PrimeField + From<I> + nimue::Unit,
+    S: Sponge<U = F>,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); N];
+        let mut input = [F::default(); INPUT_SIZE];
         input.copy_from_slice(&data[..]);
-        Ok(Poseidon2::permute::<P, N>(&input)[0])
+        Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); N];
-        input[N - 1] = F::from(pos.clone());
-        input[N - 2] = *elem;
-        Ok(Poseidon2::permute::<P, N>(&input)[0])
+        let mut input = [F::default(); INPUT_SIZE];
+        input[INPUT_SIZE - 1] = F::from(pos.clone());
+        input[INPUT_SIZE - 2] = *elem;
+        Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 }
 
