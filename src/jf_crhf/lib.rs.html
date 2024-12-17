@@ -40,8 +40,8 @@
 /// (based on ark-primitives' definition, but self-declared for minimal
 /// dependency and easier future upgradability.)
 </span><span class="kw">pub trait </span>CRHF {
-    <span class="doccomment">/// Input to the CRHF
-    </span><span class="kw">type </span>Input;
+    <span class="doccomment">/// Input to the CRHF, allowed to be dynamically sized
+    </span><span class="kw">type </span>Input: <span class="question-mark">?</span>Sized;
     <span class="doccomment">/// Output of the CRHF
     </span><span class="kw">type </span>Output: Clone + PartialEq + Eq + Hash + Debug + CanonicalSerialize + CanonicalDeserialize;
     <span class="doccomment">/// Error type

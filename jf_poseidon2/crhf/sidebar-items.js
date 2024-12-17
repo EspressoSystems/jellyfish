@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["FixedLenPoseidon2Hash","VariableLenPoseidon2Hash"]};
