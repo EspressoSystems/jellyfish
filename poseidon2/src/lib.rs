@@ -20,9 +20,11 @@
 #![deny(missing_docs)]
 
 use ark_ff::PrimeField;
-use ark_std::{borrow::ToOwned, marker::PhantomData};
+use ark_std::{borrow::ToOwned, marker::PhantomData, string::String};
+use displaydoc::Display;
 
 pub mod constants;
+pub mod crhf;
 mod external;
 mod internal;
 pub mod sponge;
@@ -130,3 +132,11 @@ pub(crate) fn add_rc_and_sbox<F: PrimeField>(val: &mut F, rc: F, d: usize) {
     *val += rc;
     *val = val.pow([d as u64]);
 }
+
+/// Poseidon2 Error type
+#[derive(Debug, Clone, Display, Eq, PartialEq)]
+pub enum Poseidon2Error {
+    /// Bad parameter: {0}
+    ParamErr(String),
+}
+impl ark_std::error::Error for Poseidon2Error {}
