@@ -49,7 +49,12 @@ pub struct ParameterError(String);
 // =====================================================
 // encrypt key
 // =====================================================
-/// Encryption key for encryption scheme
+/// Encryption key for ElGamal encryption scheme
+/// 
+/// This struct represents the public key component used for encryption.
+/// It contains a point on the Edwards curve represented in projective coordinates.
+/// The public key is derived from the secret key by multiplying the curve's generator
+/// point with the secret scalar.
 #[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
 #[derivative(
     Debug(bound = "P: Config"),
@@ -89,7 +94,11 @@ where
 // =====================================================
 // decrypt key
 // =====================================================
-/// Decryption key for encryption scheme
+/// Decryption key for ElGamal encryption scheme
+/// 
+/// This struct represents the private/secret key component.
+/// It contains a scalar field element that serves as the secret key.
+/// The struct implements zeroization for secure cleanup when dropped.
 #[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Config"),
@@ -131,7 +140,16 @@ where
 // =====================================================
 // ciphertext
 // =====================================================
-/// Public encryption cipher text
+/// ElGamal ciphertext structure
+/// 
+/// Contains two components:
+/// * `ephemeral`: A one-time public key generated during encryption
+/// * `data`: The encrypted message represented as field elements
+///
+/// The encryption follows the standard ElGamal encryption scheme:
+/// 1. Generate random ephemeral key pair
+/// 2. Compute shared secret using recipient's public key
+/// 3. Use shared secret to encrypt the message
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
     Debug(bound = "P: Config"),
@@ -324,8 +342,14 @@ where
     }
 }
 
+/// Specifies the direction of the counter mode stream operation
+/// 
+/// Used internally to determine whether to add or subtract the stream
+/// during encryption/decryption operations.
 pub(crate) enum Direction {
+    /// Add the stream for encryption
     Encrypt,
+    /// Subtract the stream for decryption  
     Decrypt,
 }
 
