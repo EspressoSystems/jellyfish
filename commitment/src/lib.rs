@@ -13,6 +13,13 @@ use ark_std::{borrow::Borrow, fmt::Debug, hash::Hash, UniformRand};
 ///
 /// Intended as the return type for verification of proofs, signatures, etc.
 /// Recommended for use in the nested [`Result`] pattern: see <https://sled.rs/errors>.
+///
+/// # Returns
+/// - `Ok(())` - Verification passed successfully
+/// - `Err(())` - Verification failed
+///
+/// This type is designed to be more explicit than a simple boolean,
+/// forcing the caller to handle both success and failure cases.
 type VerificationResult = Result<(), ()>;
 
 pub trait CommitmentScheme {
