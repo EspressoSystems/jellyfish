@@ -16,16 +16,27 @@ use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec::Vec};
 use jf_prf::PRF;
 use jf_utils::pad_with_zeros;
 
-/// Rescue PRF
+/// Rescue PRF Core implementation
+/// 
+/// This is the core implementation of the Rescue-based Pseudorandom Function (PRF)
+/// that uses the Full State Keyed Sponge (FSKS) construction.
+/// The implementation provides methods for both zero-padding and no-padding variants.
 #[derive(Debug, Clone)]
 pub(crate) struct RescuePRFCore<F: RescueParameter> {
     sponge: RescueSponge<F, STATE_SIZE>,
 }
 
 impl<F: RescueParameter> RescuePRFCore<F> {
-    /// Similar to [`Self::full_state_keyed_sponge_with_bit_padding`] except the
-    /// padding scheme are all "0" until the length of padded input is a
-    /// multiple of `STATE_SIZE`
+    /// Performs a full state keyed sponge operation with zero padding
+    /// 
+    /// # Arguments
+    /// * `key` - The PRF key
+    /// * `input` - Input data to process
+    /// * `num_outputs` - Number of field elements to output
+    /// 
+    /// # Returns
+    /// * `Ok(Vec<F>)` - Vector containing the PRF output
+    /// * `Err(RescueError)` - If the input parameters are invalid
     pub(crate) fn full_state_keyed_sponge_with_zero_padding(
         key: &F,
         input: &[F],
@@ -36,9 +47,16 @@ impl<F: RescueParameter> RescuePRFCore<F> {
         Self::full_state_keyed_sponge_no_padding(key, padded.as_slice(), num_outputs)
     }
 
-    /// Pseudorandom function based on rescue permutation for RATE 4. It allows
-    /// inputs with length that is a multiple of `STATE_SIZE` and returns a
-    /// vector of `num_outputs` elements.
+    /// Performs a full state keyed sponge operation without padding
+    /// 
+    /// # Arguments
+    /// * `key` - The PRF key
+    /// * `input` - Input data that must be a multiple of STATE_SIZE
+    /// * `num_outputs` - Number of field elements to output
+    /// 
+    /// # Returns
+    /// * `Ok(Vec<F>)` - Vector containing the PRF output
+    /// * `Err(RescueError)` - If input length is not a multiple of STATE_SIZE
     pub(crate) fn full_state_keyed_sponge_no_padding(
         key: &F,
         input: &[F],
@@ -63,9 +81,16 @@ impl<F: RescueParameter> RescuePRFCore<F> {
     }
 }
 
+/// A Rescue-based PRF implementation using Full State Keyed Sponge construction
+/// 
+/// This implementation provides a PRF with:
+/// * Fixed input length of INPUT_LEN field elements
+/// * Fixed output length of OUTPUT_LEN field elements
+/// * Key size of one field element
+/// 
+/// The implementation uses the Rescue permutation in a sponge construction
+/// for cryptographic security.
 #[derive(Debug, Clone)]
-/// A rescue-based PRF that leverages on Full State Keyed (FSK) sponge
-/// construction
 pub struct RescuePRF<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize>(
     PhantomData<F>,
 );
