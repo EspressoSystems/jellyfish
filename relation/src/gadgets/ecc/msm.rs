@@ -84,7 +84,7 @@ where
 }
 
 // A naive way to implement msm by computing them individually.
-// Used for double checking the correctness; also as a fall-back solution
+// Used for double-checking the correctness; also as a fall-back solution
 // to Pippenger.
 //
 // Some typical result on BW6-761 curve is shown below (i.e. the circuit
