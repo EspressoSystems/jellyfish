@@ -45,7 +45,7 @@ pub trait UniversalSNARK<E: Pairing> {
 
     /// Generate the universal SRS for the argument system.
     /// This setup is for trusted party to run, and mostly only used for
-    /// testing purpose. In practice, a MPC flavor of the setup will be carried
+    /// testing purpose. In practice, an MPC flavor of the setup will be carried
     /// out to have higher assurance on the "toxic waste"/trapdoor being thrown
     /// away to ensure soundness of the argument system.
     fn universal_setup<R: RngCore + CryptoRng>(
