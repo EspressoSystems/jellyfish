@@ -117,7 +117,7 @@ where
     // Step 2:
     // now we create variables for each input to the circuit.
 
-    // First variable is x which is an field element over P::ScalarField.
+    // First variable is x which is a field element over P::ScalarField.
     // We will need to lift it to P::BaseField.
     let x_fq = fr_to_fq::<_, EmbedCurve>(&x);
     let x_var = circuit.create_variable(x_fq)?;
