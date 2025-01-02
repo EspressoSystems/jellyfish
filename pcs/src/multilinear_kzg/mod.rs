@@ -346,7 +346,7 @@ fn open_internal<E: Pairing>(
         end_timer!(ith_round_eval);
         let scalars: Vec<_> = q.iter().map(|x| x.into_bigint()).collect();
 
-        // this is a MSM over G1 and is likely to be the bottleneck
+        // this is an MSM over G1 and is likely to be the bottleneck
         let msm_timer = start_timer!(|| format!("msm of size {} at round {}", gi.evals.len(), i));
 
         proofs.push(E::G1::msm_bigint(&gi.evals, &scalars).into_affine());
