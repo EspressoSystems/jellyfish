@@ -84,7 +84,7 @@ where
         _prng: &mut R,
     ) -> Result<Self::Signature, SignatureError> {
         let kp = KeyPair::<P>::generate_with_sign_key(sk.0);
-        Ok(kp.sign(msg.as_ref(), Self::CS_ID))
+        kp.sign(&msg.as_ref(), CS_ID_SCHNORR)
     }
 
     /// Verify a signature.
@@ -94,7 +94,7 @@ where
         msg: M,
         sig: &Self::Signature,
     ) -> Result<(), SignatureError> {
-        vk.verify(msg.as_ref(), sig, Self::CS_ID)
+        vk.verify(msg.as_ref(), sig, CS_ID_SCHNORR)
     }
 }
 
@@ -342,19 +342,41 @@ where
 
     /// Signature function
     #[allow(non_snake_case)]
-    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[F], csid: B) -> Signature<P> {
-        // Do we want to remove the instance description?
+    pub fn sign<B: AsRef<[u8]>>(&self, msg: &[F], csid: B) -> Result<Signature<P>, SignatureError> {
+        if msg.iter().any(|x| x.is_zero()) {
+            return Err(SignatureError::VerificationError(
+                "message contains zero elements".to_string(),
+            ));
+        }
+
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut msg_input = vec![instance_description, fr_to_fq::<F, P>(&self.sk.0)];
         msg_input.extend(msg.iter());
 
-        let r =
-            fq_to_fr::<F, P>(&VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input).unwrap()[0]); // safe unwrap
+        let r = fq_to_fr::<F, P>(
+            &VariableLengthRescueCRHF::<F, 1>::evaluate(&msg_input)
+                .map_err(|e| SignatureError::VerificationError(format!("CRHF error: {}", e)))?[0],
+        );
+
+        // Ensure r is not zero
+        if r.is_zero() {
+            return Err(SignatureError::VerificationError(
+                "generated r value is zero".to_string(),
+            ));
+        }
+
         let R = Projective::<P>::generator() * r;
         let c = self.vk.challenge(&R, msg, csid);
         let s = c * self.sk.0 + r;
 
-        Signature { s, R }
+        // Ensure s is not zero
+        if s.is_zero() {
+            return Err(SignatureError::VerificationError(
+                "generated s value is zero".to_string(),
+            ));
+        }
+
+        Ok(Signature { s, R })
     }
 
     /// Randomize the key pair with the `randomizer`, return the randomized key
@@ -459,10 +481,29 @@ where
         sig: &Signature<P>,
         csid: B,
     ) -> Result<(), SignatureError> {
+        // Validate signature components are not identity/zero
+        if sig.R.is_zero() {
+            return Err(SignatureError::VerificationError(
+                "signature R component is zero".to_string(),
+            ));
+        }
+        if sig.s.is_zero() {
+            return Err(SignatureError::VerificationError(
+                "signature s component is zero".to_string(),
+            ));
+        }
+
         // Reject if public key is of small order
         if (self.0 * P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
             return Err(SignatureError::VerificationError(
                 "public key is not valid: not in the correct subgroup".to_string(),
+            ));
+        }
+
+        // Check that R is in the correct subgroup
+        if (sig.R * P::ScalarField::from(curve_cofactor::<P>())) == Projective::<P>::default() {
+            return Err(SignatureError::VerificationError(
+                "signature R component is not in the correct subgroup".to_string(),
             ));
         }
 
@@ -477,7 +518,7 @@ where
             Ok(())
         } else {
             Err(SignatureError::VerificationError(
-                "Signature verification error".to_string(),
+                "Signature verification failed: equation does not hold".to_string(),
             ))
         }
     }
@@ -492,13 +533,18 @@ where
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid: B) -> P::ScalarField {
-        // is the domain separator always an Fr? If so how about using Fr as domain
-        // separator rather than bytes?
+        // Add domain separation constant for Schnorr signatures
+        const SCHNORR_CHALLENGE_DOMAIN: &[u8] = b"SCHNORR_SIGNATURE_CHALLENGE_V1";
+        
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut challenge_input = {
             let vk_affine = self.0.into_affine();
             let R_affine = R.into_affine();
+            
+            // Add domain separation as first element
+            let domain_sep = F::from_be_bytes_mod_order(SCHNORR_CHALLENGE_DOMAIN);
             vec![
+                domain_sep,
                 instance_description,
                 vk_affine.x,
                 vk_affine.y,
@@ -506,11 +552,18 @@ where
                 R_affine.y,
             ]
         };
-        challenge_input.extend(msg);
-        let challenge_fq = VariableLengthRescueCRHF::<F, 1>::evaluate(challenge_input).unwrap()[0]; // safe unwrap
+        
+        // Validate message is not empty
+        if msg.is_empty() {
+            challenge_input.push(F::zero()); // Add zero element for empty message case
+        } else {
+            challenge_input.extend(msg);
+        }
 
-        // this masking will drop the last byte, and the resulting
-        // challenge will be 248 bits
+        let challenge_fq = VariableLengthRescueCRHF::<F, 1>::evaluate(&challenge_input)
+            .expect("CRHF evaluation should not fail");
+
+        // Use masked conversion to get challenge in correct field
         fq_to_fr_with_mask(&challenge_fq)
     }
 }
