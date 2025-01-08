@@ -470,7 +470,7 @@ mod tests {
             .into_iter()
             .map(|l| payload_bytes_base_len - l);
 
-        // TEST: prove data ranges for this paylaod
+        // TEST: prove data ranges for this payload
         // it takes too long to test all combos of (polynomial, start, len)
         // so do some edge cases and random cases
         let edge_cases = {
