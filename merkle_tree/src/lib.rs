@@ -130,7 +130,7 @@ where
     fn digest_leaf(pos: &I, elem: &E) -> Result<T, MerkleTreeError>;
 }
 
-/// An trait for Merkle tree index type.
+/// A trait for Merkle tree index type.
 pub trait ToTraversalPath<const ARITY: usize> {
     /// Convert the given index to a vector of branch indices given tree height
     /// and ARITY.
@@ -170,8 +170,8 @@ pub trait MerkleProof<T: NodeValue>:
 }
 
 /// Basic functionalities for a merkle tree implementation. Abstracted as an
-/// accumulator for fixed-length array. Supports generate membership proof at a
-/// given position and verify a membership proof.
+/// accumulator for fixed-length array. Supports generating membership proof at
+/// a given position and verify a membership proof.
 pub trait MerkleTreeScheme: Sized {
     /// Merkle tree element type
     type Element: Element;
@@ -231,7 +231,7 @@ pub trait MerkleTreeScheme: Sized {
     // ) -> Result<(), MerkleTreeError>;
 
     /// Return an iterator that iterates through all element that are not
-    /// forgetton
+    /// forgotten
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
 }
 
