@@ -17,12 +17,9 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
-# TODO: need to update after jf-crhf have a new tag
-# jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-crhf = { path = "../crhf" }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
 lazy_static = "1.5.0"
-# TODO: fix this once upstream release a new tag
-nimue = { git = "https://github.com/alxiong/nimue", branch = "ax/0.1.1", features = ["ark"] }
+nimue = { version = "=0.1.1", features = ["ark"] }
 zeroize = { workspace = true }
 
 [dev-dependencies]
