@@ -1,6 +1,6 @@
 [package]
 name = "jf-merkle-tree"
-version = "0.2.0"
+version = "0.2.1"
 description = "Various Merkle tree implementations."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -25,9 +25,7 @@ hashbrown = { workspace = true }
 hex = "0.4.3"
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
-# TODO: switch to this once jf-poseidon2 cut a release
-# jf-poseidon2 = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish" }
-jf-poseidon2 = { path = "../poseidon2" }
+jf-poseidon2 = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-poseidon2-v0.1.0" }
 jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }

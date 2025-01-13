@@ -3,6 +3,9 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.1 (2025-01-13)
+- [#716](https://github.com/EspressoSystems/jellyfish/pull/716) Poseidon2-based Merkle Tree available.
+
 ## 0.2.0 (2024-10-21)
 
 - [#692](https://github.com/EspressoSystems/jellyfish/pull/692) Major refactor for ergonomics reason
