@@ -650,7 +650,7 @@
         </span><span class="macro">assert!</span>(mt.forget(<span class="number">1</span>).expect_ok().is_ok());
         <span class="comment">// Number of leaves shall not change
         </span><span class="macro">assert_eq!</span>(mt.num_leaves(), <span class="number">3</span>);
-        <span class="comment">// Leaves that are forgotten doesn't appear here
+        <span class="comment">// Leaves that are forgotten don't appear here
         </span><span class="kw">let </span>leaves = mt.into_iter().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="macro">assert_eq!</span>(leaves, [(<span class="number">0</span>, F::from(<span class="number">0u64</span>)), (<span class="number">2</span>, F::from(<span class="number">2u64</span>))]);
 

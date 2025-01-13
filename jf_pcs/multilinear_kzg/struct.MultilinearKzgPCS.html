@@ -28,7 +28,7 @@ input.</p>
 <p>This function takes 2^{num_var +1} number of scalar multiplications over
 G1:</p>
 <ul>
-<li>it prodceeds with <code>num_var</code> number of rounds,</li>
+<li>it proceeds with <code>num_var</code> number of rounds,</li>
 <li>at round i, we compute an MSM for <code>2^{num_var - i + 1}</code> number of G2
 elements.</li>
 </ul>
@@ -43,11 +43,11 @@ elements.</li>
 <li>the prover parameters for multilinear KZG,</li>
 <li>a list of polynomials,</li>
 <li>a (batch) commitment to all polynomials,</li>
-<li>and a same number of points,
+<li>and the same number of points,
 compute a batch opening for all the polynomials.</li>
 </ul>
 <p>For simplicity, this API requires each MLE to have only one point. If
-the caller wish to use more than one points per MLE, it should be
+the caller wish to use more than one point per MLE, it should be
 handled at the caller layer.</p>
 <p>Returns an error if the lengths do not match.</p>
 <p>Returns the proof, consists of</p>

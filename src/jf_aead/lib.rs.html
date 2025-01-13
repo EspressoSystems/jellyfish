@@ -582,7 +582,7 @@
         <span class="comment">// generate an ephemeral key pair as the virtual sender to derive the crypto box
         </span><span class="kw">let </span>ephemeral_keypair = crypto_kx::Keypair::generate(<span class="kw-2">&amp;mut </span>rng);
         <span class="comment">// `crypto_kx` generates a pair of shared secrets, see &lt;https://libsodium.gitbook.io/doc/key_exchange&gt;
-        // we use the transimission key of the ephemeral sender (equals to the receiving
+        // we use the transmission key of the ephemeral sender (equals to the receiving
         // key of the server) as the shared secret.
         </span><span class="kw">let </span>shared_secret = ephemeral_keypair.session_keys_to(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).tx;
         <span class="kw">let </span>cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());
