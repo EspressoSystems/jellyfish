@@ -310,7 +310,7 @@ mod mt_tests {
         assert!(mt.forget(1).expect_ok().is_ok());
         // Number of leaves shall not change
         assert_eq!(mt.num_leaves(), 3);
-        // Leaves that are forgotten doesn't appear here
+        // Leaves that are forgotten don't appear here
         let leaves = mt.into_iter().collect::<Vec<_>>();
         assert_eq!(leaves, [(0, F::from(0u64)), (2, F::from(2u64))]);
 
