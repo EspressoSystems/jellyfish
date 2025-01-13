@@ -24,15 +24,14 @@ displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 hex = "0.4.3"
 itertools = { workspace = true, features = ["use_alloc"] }
-jf-crhf = { path = "../crhf" }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
 # TODO: switch to this once jf-poseidon2 cut a release
 # jf-poseidon2 = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish" }
 jf-poseidon2 = { path = "../poseidon2" }
 jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-# TODO: fix this once upstream release a new tag
-nimue = { git = "https://github.com/alxiong/nimue", branch = "ax/0.1.1", features = ["ark"] }
+nimue = { version = "=0.1.1", features = ["ark"] }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
 serde = { workspace = true }
