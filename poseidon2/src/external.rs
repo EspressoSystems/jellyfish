@@ -88,9 +88,8 @@ pub(crate) fn permute_state<F: PrimeField, const T: usize>(
     rc: &'static [F; T],
     d: usize,
 ) {
-    state
-        .iter_mut()
-        .zip(rc.iter())
-        .for_each(|(s, &rc)| add_rc_and_sbox(s, rc, d));
+    for i in 0..T {
+        add_rc_and_sbox(&mut state[i], rc[i], d)
+    }
     matmul_external(state);
 }

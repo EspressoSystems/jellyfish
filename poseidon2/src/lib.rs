@@ -130,7 +130,15 @@ impl<F: PrimeField> Poseidon2<F> {
 #[inline(always)]
 pub(crate) fn add_rc_and_sbox<F: PrimeField>(val: &mut F, rc: F, d: usize) {
     *val += rc;
-    *val = val.pow([d as u64]);
+    if d == 5 {
+        // Perform unrolled computation for val^5, faster
+        let original = *val;
+        val.square_in_place();
+        val.square_in_place();
+        *val *= &original;
+    } else {
+        *val = val.pow([d as u64]);
+    }
 }
 
 /// Poseidon2 Error type

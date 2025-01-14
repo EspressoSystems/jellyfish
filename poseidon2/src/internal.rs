@@ -22,6 +22,7 @@ fn matmul_internal<F: PrimeField, const T: usize>(
 
 /// One internal round
 // @credit `internal_permute_state()` in plonky3
+#[inline(always)]
 pub(crate) fn permute_state<F: PrimeField, const T: usize>(
     state: &mut [F; T],
     rc: F,

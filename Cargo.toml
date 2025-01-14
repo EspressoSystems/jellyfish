@@ -34,3 +34,7 @@ sha3 = { version = "0.10", default-features = false }
 itertools = { version = "0.12", default-features = false }
 tagged-base64 = "0.4"
 zeroize = { version = "^1.8" }
+
+[profile.profiling]
+inherits = "release"
+debug = true
