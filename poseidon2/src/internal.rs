@@ -13,10 +13,36 @@ fn matmul_internal<F: PrimeField, const T: usize>(
     state: &mut [F; T],
     mat_diag_minus_1: &'static [F; T],
 ) {
-    let sum: F = state.iter().sum();
-    for i in 0..T {
-        state[i] *= mat_diag_minus_1[i];
-        state[i] += sum;
+    match T {
+        // for 2 and 3, since we know the constants, we hardcode it
+        2 => {
+            // [2, 1]
+            // [1, 3]
+            let mut sum = state[0];
+            sum += state[1];
+            state[0] += sum;
+            state[1].double_in_place();
+            state[1] += sum;
+        },
+        3 => {
+            // [2, 1, 1]
+            // [1, 2, 1]
+            // [1, 1, 3]
+            let mut sum = state[0];
+            sum += state[1];
+            sum += state[2];
+            state[0] += sum;
+            state[1] += sum;
+            state[2].double_in_place();
+            state[2] += sum;
+        },
+        _ => {
+            let sum: F = state.iter().sum();
+            for i in 0..T {
+                state[i] *= mat_diag_minus_1[i];
+                state[i] += sum;
+            }
+        },
     }
 }
 
