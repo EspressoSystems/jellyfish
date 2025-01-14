@@ -2,7 +2,7 @@
 
 use ark_ff::PrimeField;
 
-use crate::add_rc_and_sbox;
+use crate::s_box;
 
 /// Matrix multiplication in the internal layers
 /// Given a vector v compute the matrix vector product (1 + diag(v))*state
@@ -55,6 +55,7 @@ pub(crate) fn permute_state<F: PrimeField, const T: usize>(
     d: usize,
     mat_diag_minus_1: &'static [F; T],
 ) {
-    add_rc_and_sbox(&mut state[0], rc, d);
+    state[0] += rc;
+    s_box(&mut state[0], d);
     matmul_internal(state, mat_diag_minus_1);
 }

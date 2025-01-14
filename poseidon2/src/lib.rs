@@ -122,14 +122,18 @@ impl<F: PrimeField> Poseidon2<F> {
     }
 }
 
-/// A generic method performing the transformation, used both in external and
-/// internal layers:
-///
-/// `s -> (s + rc)^d`
 // @credit: `add_rc_and_sbox_generic()` in plonky3
+/// add RCs to the entire state
 #[inline(always)]
-pub(crate) fn add_rc_and_sbox<F: PrimeField>(val: &mut F, rc: F, d: usize) {
-    *val += rc;
+pub(crate) fn add_rcs<F: PrimeField, const T: usize>(state: &mut [F; T], rc: &[F; T]) {
+    for i in 0..T {
+        state[i] += rc[i];
+    }
+}
+
+/// `s -> s^d`
+#[inline(always)]
+pub(crate) fn s_box<F: PrimeField>(val: &mut F, d: usize) {
     if d == 5 {
         // Perform unrolled computation for val^5, faster
         let original = *val;
