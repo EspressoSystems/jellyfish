@@ -2,7 +2,6 @@
 //! `cargo bench --bench p2_native`
 #[macro_use]
 extern crate criterion;
-use std::time::Duration;
 
 use ark_std::{test_rng, UniformRand};
 use criterion::Criterion;
@@ -17,7 +16,7 @@ use jf_poseidon2::{
 // BLS12-381 scalar field, state size = 2
 fn bls2(c: &mut Criterion) {
     let mut group = c.benchmark_group("Poseidon2 over (Bls12_381::Fr, t=2)");
-    group.sample_size(10).measurement_time(Duration::new(20, 0));
+    group.sample_size(10);
     type Fr = ark_bls12_381::Fr;
     let rng = &mut test_rng();
 
@@ -43,7 +42,7 @@ fn bls2(c: &mut Criterion) {
 // BLS12-381 scalar field, state size = 3
 fn bls3(c: &mut Criterion) {
     let mut group = c.benchmark_group("Poseidon2 over (Bls12_381::Fr, t=3)");
-    group.sample_size(10).measurement_time(Duration::new(20, 0));
+    group.sample_size(10);
     type Fr = ark_bls12_381::Fr;
     let rng = &mut test_rng();
 
@@ -69,7 +68,7 @@ fn bls3(c: &mut Criterion) {
 // BN254 scalar field, state size = 3
 fn bn3(c: &mut Criterion) {
     let mut group = c.benchmark_group("Poseidon2 over (Bn254::Fr, t=3)");
-    group.sample_size(10).measurement_time(Duration::new(20, 0));
+    group.sample_size(10);
     type Fr = ark_bn254::Fr;
     let rng = &mut test_rng();
 
