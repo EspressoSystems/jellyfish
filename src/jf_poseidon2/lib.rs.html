@@ -140,7 +140,19 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 Espresso Systems (espressosys.com)
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a></pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2024 Espresso Systems (espressosys.com)
 // This file is part of the Jellyfish library.
 
 // You should have received a copy of the MIT License
@@ -264,15 +276,27 @@
     }
 }
 
-<span class="doccomment">/// A generic method performing the transformation, used both in external and
-/// internal layers:
-///
-/// `s -&gt; (s + rc)^d`
-</span><span class="comment">// @credit: `add_rc_and_sbox_generic()` in plonky3
+<span class="comment">// @credit: `add_rc_and_sbox_generic()` in plonky3
+</span><span class="doccomment">/// add RCs to the entire state
 </span><span class="attr">#[inline(always)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_rc_and_sbox&lt;F: PrimeField&gt;(val: <span class="kw-2">&amp;mut </span>F, rc: F, d: usize) {
-    <span class="kw-2">*</span>val += rc;
-    <span class="kw-2">*</span>val = val.pow([d <span class="kw">as </span>u64]);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>add_rcs&lt;F: PrimeField, <span class="kw">const </span>T: usize&gt;(state: <span class="kw-2">&amp;mut </span>[F; T], rc: <span class="kw-2">&amp;</span>[F; T]) {
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..T {
+        state[i] += rc[i];
+    }
+}
+
+<span class="doccomment">/// `s -&gt; s^d`
+</span><span class="attr">#[inline(always)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>s_box&lt;F: PrimeField&gt;(val: <span class="kw-2">&amp;mut </span>F, d: usize) {
+    <span class="kw">if </span>d == <span class="number">5 </span>{
+        <span class="comment">// Perform unrolled computation for val^5, faster
+        </span><span class="kw">let </span>original = <span class="kw-2">*</span>val;
+        val.square_in_place();
+        val.square_in_place();
+        <span class="kw-2">*</span>val <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>original;
+    } <span class="kw">else </span>{
+        <span class="kw-2">*</span>val = val.pow([d <span class="kw">as </span>u64]);
+    }
 }
 
 <span class="doccomment">/// Poseidon2 Error type

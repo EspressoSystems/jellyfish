@@ -98,7 +98,7 @@
 
 </span><span class="kw">use </span>ark_ff::PrimeField;
 
-<span class="kw">use </span><span class="kw">crate</span>::add_rc_and_sbox;
+<span class="kw">use crate</span>::{add_rcs, s_box};
 
 <span class="doccomment">/// The fastest 4x4 MDS matrix.
 /// [ 2 3 1 1 ]
@@ -184,10 +184,10 @@
     rc: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[F; T],
     d: usize,
 ) {
-    state
-        .iter_mut()
-        .zip(rc.iter())
-        .for_each(|(s, <span class="kw-2">&amp;</span>rc)| add_rc_and_sbox(s, rc, d));
+    add_rcs(state, rc);
+    <span class="kw">for </span>s <span class="kw">in </span>state.iter_mut() {
+        s_box(s, d);
+    }
     matmul_external(state);
 }
 </code></pre></div></section></main></body></html>
