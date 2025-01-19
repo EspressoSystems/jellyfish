@@ -13,7 +13,7 @@ use crate::{
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
-use ark_ff::{FftField, Field, PrimeField};
+use ark_ff::{FftField, Field, PrimeField, Zero};
 #[cfg(not(feature = "seq-fk-23"))]
 use ark_poly::EvaluationDomain;
 use ark_poly::{
@@ -30,7 +30,7 @@ use ark_std::{
     string::ToString,
     vec,
     vec::Vec,
-    One, UniformRand, Zero,
+    One, UniformRand,
 };
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
@@ -626,7 +626,7 @@ where
         let mut toep_col = vec![*padded_coeffs
             .last()
             .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
-        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Field>::ZERO);
+        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField>::zero());
         let toep_row = padded_coeffs.iter().skip(1).rev().cloned().collect();
         let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
 

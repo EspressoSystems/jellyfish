@@ -19,11 +19,11 @@ use crate::{
 use alloc::sync::Arc;
 use ark_ec::{
     pairing::Pairing,
-    scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
-    AffineRepr, CurveGroup,
+    scalar_mul::{variable_base::VariableBaseMSM, BatchMulPreprocessing},
+    AffineRepr, CurveGroup, ScalarMul,
 };
 use ark_ff::PrimeField;
-use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
+use ark_poly::{DenseMultilinearExtension, MultilinearExtension, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
@@ -295,7 +295,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
 fn open_internal<E: Pairing>(
     prover_param: &MultilinearProverParam<E>,
     polynomial: &DenseMultilinearExtension<E::ScalarField>,
-    point: &[E::ScalarField],
+    point: &Vec<E::ScalarField>,
 ) -> Result<(MultilinearKzgProof<E>, E::ScalarField), PCSError> {
     let open_timer = start_timer!(|| format!("open mle with {} variable", polynomial.num_vars));
 
@@ -354,9 +354,7 @@ fn open_internal<E: Pairing>(
 
         end_timer!(ith_round);
     }
-    let eval = polynomial
-        .evaluate(point)
-        .ok_or_else(|| PCSError::InvalidParameters("fail to eval poly at the point".to_string()))?;
+    let eval = polynomial.evaluate(point);
     end_timer!(open_timer);
     Ok((MultilinearKzgProof { proofs }, eval))
 }
@@ -385,13 +383,7 @@ fn verify_internal<E: Pairing>(
     }
 
     let prepare_inputs_timer = start_timer!(|| "prepare pairing inputs");
-
-    let scalar_size = E::ScalarField::MODULUS_BIT_SIZE as usize;
-    let window_size = FixedBase::get_mul_window_size(num_var);
-
-    let h_table =
-        FixedBase::get_window_table(scalar_size, window_size, verifier_param.h.into_group());
-    let h_mul: Vec<E::G2> = FixedBase::msm(scalar_size, window_size, &h_table, point);
+    let h_mul = verifier_param.h.into_group().batch_mul(point);
 
     // the first `ignored` G2 parameters are unused
     let ignored = verifier_param.num_vars - num_var;

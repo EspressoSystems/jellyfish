@@ -8,13 +8,13 @@ license = { workspace = true }
 rust-version = { workspace = true }
 
 [dependencies]
-ark-ec = { workspace = true }
-ark-ed-on-bls12-377 = "0.4.0"
-ark-ed-on-bls12-381 = "0.4.0"
-ark-ff = { workspace = true }
-ark-poly = { workspace = true }
-ark-serialize = { workspace = true }
-ark-std = { workspace = true }
+ark-ec = "^0.5"
+ark-ed-on-bls12-377 = "^0.5"
+ark-ed-on-bls12-381 = "^0.5"
+ark-ff = "^0.5"
+ark-poly = "^0.5"
+ark-serialize = "^0.5"
+ark-std = "^0.5"
 digest = { workspace = true }
 displaydoc = { workspace = true }
 rand_chacha = { workspace = true }
@@ -24,10 +24,10 @@ sha2 = { workspace = true }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
-ark-bls12-377 = { workspace = true }
-ark-bls12-381 = { workspace = true }
-ark-bn254 = { workspace = true }
-ark-ed-on-bn254 = "0.4.0"
+ark-bls12-377 = "^0.5"
+ark-bls12-381 = "^0.5"
+ark-bn254 = "^0.5"
+ark-ed-on-bn254 = "^0.5"
 criterion = "0.5.1"
 
 [features]

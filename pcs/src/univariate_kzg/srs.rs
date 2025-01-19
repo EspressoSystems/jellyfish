@@ -162,7 +162,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
 mod tests {
     use super::UnivariateUniversalParams;
     use crate::PCSError;
-    use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, CurveGroup};
+    use ark_ec::{pairing::Pairing, CurveGroup, ScalarMul};
     use ark_ff::PrimeField;
     use ark_std::{
         end_timer,
@@ -193,17 +193,9 @@ mod tests {
             cur *= &beta;
         }
 
-        let window_size = FixedBase::get_mul_window_size(prover_degree + 1);
-
-        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
         let g_time = start_timer!(|| "Generating powers of G");
-        // TODO: parallelization
-        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
-        let powers_of_g =
-            FixedBase::msm::<E::G1>(scalar_bits, window_size, &g_table, &powers_of_beta);
+        let powers_of_g = g.batch_mul(&powers_of_beta);
         end_timer!(g_time);
-
-        let powers_of_g = E::G1::normalize_batch(&powers_of_g);
 
         let h = h.into_affine();
         let beta_h = (h * beta).into_affine();

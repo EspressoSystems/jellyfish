@@ -12,7 +12,8 @@ use crate::{
     },
     StructuredReferenceString,
 };
-use ark_ec::{pairing::Pairing, AffineRepr};
+use ark_ec::{pairing::Pairing, AffineRepr, ScalarMul};
+use ark_poly::Polynomial;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{format, vec::Vec};
 
@@ -247,7 +248,7 @@ impl<E: Pairing> StructuredReferenceString
 mod tests {
     use super::*;
     use crate::multilinear_kzg::util::eq_eval;
-    use ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+    use ark_ec::CurveGroup;
     use ark_ff::{Field, PrimeField, Zero};
     use ark_poly::DenseMultilinearExtension;
     use ark_std::{
@@ -343,15 +344,7 @@ mod tests {
             pp_powers.extend(pp_k_powers);
             total_scalars += 1 << (num_vars - i);
         }
-        let window_size = FixedBase::get_mul_window_size(total_scalars);
-        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
-
-        let pp_g = E::G1::normalize_batch(&FixedBase::msm(
-            scalar_bits,
-            window_size,
-            &g_table,
-            &pp_powers,
-        ));
+        let pp_g = g.batch_mul(&pp_powers);
 
         let mut start = 0;
         for i in 0..num_vars {
@@ -381,11 +374,7 @@ mod tests {
         end_timer!(pp_generation_timer);
 
         let vp_generation_timer = start_timer!(|| "VP generation");
-        let h_mask = {
-            let window_size = FixedBase::get_mul_window_size(num_vars);
-            let h_table = FixedBase::get_window_table(scalar_bits, window_size, h);
-            E::G2::normalize_batch(&FixedBase::msm(scalar_bits, window_size, &h_table, &t))
-        };
+        let h_mask = h.batch_mul(&t);
         end_timer!(vp_generation_timer);
         end_timer!(total_timer);
         Ok(MultilinearUniversalParams {
