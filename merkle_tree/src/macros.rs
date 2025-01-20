@@ -41,8 +41,7 @@ macro_rules! impl_merkle_tree_scheme {
             type Index = I;
             type NodeValue = T;
             type MembershipProof = MerkleTreeProof<T>;
-            // TODO(Chengyu): implement batch membership proof
-            type BatchMembershipProof = ();
+            type BatchMembershipProof = Vec<MerkleTreeProof<T>>;
             type Commitment = T;
 
             const ARITY: usize = ARITY;
@@ -89,6 +88,34 @@ macro_rules! impl_merkle_tree_scheme {
 
             fn iter(&self) -> MerkleTreeIter<E, I, T> {
                 MerkleTreeIter::new(&self.root)
+            }
+
+            fn batch_lookup(
+                &self,
+                positions: impl IntoIterator<Item = impl Borrow<Self::Index>>,
+            ) -> Vec<LookupResult<&Self::Element, Self::MembershipProof, ()>> {
+                positions
+                    .into_iter()
+                    .map(|pos| self.lookup(pos))
+                    .collect()
+            }
+
+            fn batch_verify(
+                commitment: impl Borrow<Self::Commitment>,
+                positions: impl IntoIterator<Item = impl Borrow<Self::Index>>,
+                elements: impl IntoIterator<Item = impl Borrow<Self::Element>>,
+                proofs: impl Borrow<Self::BatchMembershipProof>,
+            ) -> Result<Vec<VerificationResult>, MerkleTreeError> {
+                let commitment = commitment.borrow();
+                let proofs = proofs.borrow();
+                positions
+                    .into_iter()
+                    .zip(elements.into_iter())
+                    .zip(proofs.iter())
+                    .map(|((pos, elem), proof)| {
+                        Self::verify(commitment, pos, elem, proof)
+                    })
+                    .collect()
             }
         }
 
