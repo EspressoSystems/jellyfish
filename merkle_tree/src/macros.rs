@@ -41,7 +41,7 @@ macro_rules! impl_merkle_tree_scheme {
             type Index = I;
             type NodeValue = T;
             type MembershipProof = MerkleTreeProof<T>;
-            type BatchMembershipProof = Vec<MerkleTreeProof<T>>;
+            type BatchMembershipProof = CompactBatchProof<T>;
             type Commitment = T;
 
             const ARITY: usize = ARITY;
@@ -104,18 +104,48 @@ macro_rules! impl_merkle_tree_scheme {
                 commitment: impl Borrow<Self::Commitment>,
                 positions: impl IntoIterator<Item = impl Borrow<Self::Index>>,
                 elements: impl IntoIterator<Item = impl Borrow<Self::Element>>,
-                proofs: impl Borrow<Self::BatchMembershipProof>,
+                proof: impl Borrow<Self::BatchMembershipProof>,
             ) -> Result<Vec<VerificationResult>, MerkleTreeError> {
                 let commitment = commitment.borrow();
-                let proofs = proofs.borrow();
-                positions
+                let proof = proof.borrow();
+                let mut results = Vec::new();
+                
+                // Get shared path information
+                let shared_nodes = proof.get_shared_nodes();
+                let individual_proofs = proof.get_individual_proofs();
+                
+                // Verify each element using shared path information
+                for ((pos, elem), indiv_proof) in positions
                     .into_iter()
                     .zip(elements.into_iter())
-                    .zip(proofs.iter())
-                    .map(|((pos, elem), proof)| {
-                        Self::verify(commitment, pos, elem, proof)
-                    })
-                    .collect()
+                    .zip(individual_proofs.iter())
+                {
+                    let mut proof_path = Vec::new();
+                    // Combine shared nodes with individual proof nodes
+                    for (level, shared) in shared_nodes.iter().enumerate() {
+                        let mut level_nodes = shared[level].clone();
+                        if let Some(indiv_nodes) = indiv_proof.get(level) {
+                            // Merge individual nodes with shared nodes
+                            for (idx, node) in indiv_nodes.iter().enumerate() {
+                                if !node.is_empty() {
+                                    level_nodes[idx] = node.clone();
+                                }
+                            }
+                        }
+                        proof_path.push(level_nodes);
+                    }
+                    
+                    // Verify individual proof
+                    let result = Self::verify(
+                        commitment,
+                        pos,
+                        elem,
+                        &MerkleTreeProof(proof_path),
+                    )?;
+                    results.push(result);
+                }
+                
+                Ok(results)
             }
         }
 
