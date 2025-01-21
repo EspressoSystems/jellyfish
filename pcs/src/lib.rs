@@ -52,7 +52,15 @@ pub trait PolynomialCommitmentScheme {
     /// Polynomial and its associated types
     type Polynomial: Clone + Debug + Hash + PartialEq + Eq;
     /// Polynomial input domain
-    type Point: Clone + Ord + Debug + Sync + Hash + PartialEq + Eq;
+    type Point: Clone
+        + Ord
+        + Debug
+        + Sync
+        + Hash
+        + PartialEq
+        + Eq
+        + CanonicalSerialize
+        + CanonicalDeserialize;
     /// Polynomial Evaluation
     type Evaluation: Field;
     /// Commitments
