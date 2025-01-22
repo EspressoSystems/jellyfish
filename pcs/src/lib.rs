@@ -223,9 +223,9 @@ pub trait PolynomialCommitmentScheme {
 /// API definitions for structured reference string
 pub trait StructuredReferenceString: Sized {
     /// Prover parameters
-    type ProverParam;
+    type ProverParam: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
     /// Verifier parameters
-    type VerifierParam;
+    type VerifierParam: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
 
     /// Extract the prover parameters from the public parameters.
     fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam;
