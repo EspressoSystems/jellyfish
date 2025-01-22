@@ -227,6 +227,9 @@ pub trait StructuredReferenceString: Sized {
     /// Verifier parameters
     type VerifierParam: Clone + Debug + CanonicalSerialize + CanonicalDeserialize;
 
+    /// Returns the max supported degree (or num_vars in multilinear case).
+    fn supported_degree(&self) -> usize;
+
     /// Extract the prover parameters from the public parameters.
     fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam;
     /// Extract the verifier parameters from the public parameters.

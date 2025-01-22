@@ -65,6 +65,10 @@ impl<E: Pairing> StructuredReferenceString for MultilinearUniversalParams<E> {
     type ProverParam = MultilinearProverParam<E>;
     type VerifierParam = MultilinearVerifierParam<E>;
 
+    fn supported_degree(&self) -> usize {
+        self.prover_param.num_vars
+    }
+
     /// Extract the prover parameters from the public parameters.
     fn extract_prover_param(&self, supported_num_vars: usize) -> Self::ProverParam {
         let to_reduce = self.prover_param.num_vars - supported_num_vars;
@@ -156,6 +160,12 @@ impl<E: Pairing> StructuredReferenceString
 {
     type ProverParam = (MultilinearProverParam<E>, UnivariateProverParam<E>);
     type VerifierParam = (MultilinearVerifierParam<E>, UnivariateVerifierParam<E>);
+
+    fn supported_degree(&self) -> usize {
+        let degree = self.0.supported_degree();
+        assert_eq!(degree, self.1.supported_degree());
+        degree
+    }
 
     fn trim(
         &self,
@@ -389,9 +399,12 @@ mod tests {
         use jf_utils::test_rng;
         type E = Bls12_381;
 
+        type Srs = (MultilinearUniversalParams<E>, UnivariateUniversalParams<E>);
+
         let mut rng = test_rng();
         for nv in 4..10 {
             let _ = MultilinearUniversalParams::<E>::gen_srs_for_testing(&mut rng, nv)?;
+            let _ = Srs::gen_srs_for_testing(&mut rng, nv)?;
         }
 
         Ok(())

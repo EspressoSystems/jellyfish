@@ -66,6 +66,10 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
     type ProverParam = UnivariateProverParam<E>;
     type VerifierParam = UnivariateVerifierParam<E>;
 
+    fn supported_degree(&self) -> usize {
+        self.powers_of_g.len() - 1
+    }
+
     /// Extract the prover parameters from the public parameters.
     fn extract_prover_param(&self, supported_degree: usize) -> Self::ProverParam {
         let powers_of_g = self.powers_of_g[..=supported_degree].to_vec();
