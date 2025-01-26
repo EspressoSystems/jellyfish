@@ -330,7 +330,7 @@ where
 
     /// Compute the bases and scalars in the batched polynomial commitment,
     /// which is a generalization of `[D]1` specified in Sec 8.3, Verifier
-    /// algorithm step 9 of https://eprint.iacr.org/2019/953.pdf.
+    /// algorithm step 9 of https://eprint.iacr.org/2019/953
     #[allow(clippy::too_many_arguments)]
     pub fn linearization_scalars_and_bases(
         &self,
