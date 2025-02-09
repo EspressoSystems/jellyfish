@@ -14,6 +14,9 @@ use jf_utils::hadamard_product;
 
 use crate::prelude::PCSError;
 
+#[cfg(feature = "parallel")]
+use rayon::prelude::*;
+
 /// An `NxN` [Circulant Matrix](https://en.wikipedia.org/wiki/Circulant_matrix)
 /// is unambiguously represented by its first column, and has the form:
 ///
@@ -103,15 +106,52 @@ impl<F: FftField> ToeplitzMatrix<F> {
     /// Embeds a Toeplitz matrix of size N to a Circulant matrix of size 2N.
     ///
     /// Details see Section 2.3.1 of [Tomescu20](https://eprint.iacr.org/2020/1516.pdf).
-    // TODO: (alex) turn this into concurrent code after: https://github.com/EspressoSystems/jellyfish/issues/111
+    ///
+    /// When the "parallel" feature is enabled and matrix size is larger than 1024,
+    /// uses parallel implementation for better performance.
     pub fn circulant_embedding(&self) -> Result<CirculantMatrix<F>, PCSError> {
         let mut extension_col = self.row.clone();
         extension_col.rotate_left(1);
-        extension_col.reverse();
+        
+        #[cfg(feature = "parallel")]
+        {
+            if extension_col.len() > 1024 {
+                // For large matrices, use parallel operations for reverse
+                extension_col = extension_col.par_iter()
+                    .rev()
+                    .cloned()
+                    .collect();
+            } else {
+                extension_col.reverse();
+            }
+        }
+        
+        #[cfg(not(feature = "parallel"))]
+        {
+            extension_col.reverse();
+        }
 
-        Ok(CirculantMatrix {
-            col: [self.col.clone(), extension_col].concat(),
-        })
+        let mut result = Vec::with_capacity(self.col.len() * 2);
+        
+        #[cfg(feature = "parallel")]
+        {
+            if self.col.len() > 1024 {
+                // For large matrices, use parallel extend
+                result.par_extend(self.col.par_iter().cloned());
+                result.par_extend(extension_col.par_iter().cloned());
+            } else {
+                result.extend_from_slice(&self.col);
+                result.extend_from_slice(&extension_col);
+            }
+        }
+        
+        #[cfg(not(feature = "parallel"))]
+        {
+            result.extend_from_slice(&self.col);
+            result.extend_from_slice(&extension_col);
+        }
+
+        Ok(CirculantMatrix { col: result })
     }
 
     /// Fast multiplication of a Toeplitz matrix by embedding it into a
@@ -359,6 +399,53 @@ mod tests {
             "Fast Toeplitz Matrix mul is incorrect."
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_parallel_circulant_embedding() -> Result<(), PCSError> {
+        let mut rng = test_rng();
+        
+        // Test with small matrix (should use sequential implementation)
+        const SMALL_N: usize = 16;
+        let small_col: Vec<Fr> = (0..SMALL_N).map(|_| Fr::rand(&mut rng)).collect();
+        let small_row = (0..SMALL_N)
+            .map(|i| if i == 0 { small_col[0] } else { Fr::rand(&mut rng) })
+            .collect();
+        let small_toep = ToeplitzMatrix::new(small_col.clone(), small_row.clone())?;
+        let small_circulant = small_toep.circulant_embedding()?;
+        
+        // Test with large matrix (should use parallel implementation when feature enabled)
+        const LARGE_N: usize = 2048;
+        let large_col: Vec<Fr> = (0..LARGE_N).map(|_| Fr::rand(&mut rng)).collect();
+        let large_row = (0..LARGE_N)
+            .map(|i| if i == 0 { large_col[0] } else { Fr::rand(&mut rng) })
+            .collect();
+        let large_toep = ToeplitzMatrix::new(large_col.clone(), large_row.clone())?;
+        let large_circulant = large_toep.circulant_embedding()?;
+        
+        // Verify results are correct regardless of parallel/sequential implementation
+        fn verify_circulant<const N: usize>(
+            toep: ToeplitzMatrix<Fr>,
+            circulant: CirculantMatrix<Fr>
+        ) -> bool {
+            let full_toep = toep.full_matrix::<N>();
+            let full_circ = circulant.full_matrix::<{ N * 2 }>();
+            
+            // Verify first N rows match original Toeplitz matrix
+            for i in 0..N {
+                for j in 0..N {
+                    if full_toep.0[i][j] != full_circ.0[i][j] {
+                        return false;
+                    }
+                }
+            }
+            true
+        }
+        
+        assert!(verify_circulant::<SMALL_N>(small_toep, small_circulant));
+        assert!(verify_circulant::<LARGE_N>(large_toep, large_circulant));
+        
         Ok(())
     }
 }
