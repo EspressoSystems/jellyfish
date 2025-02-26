@@ -46,7 +46,7 @@ jobs:
         name: Enable Rust Caching
 
       - name: Spell Check
-        uses: crate-ci/typos@v1.29.4
+        uses: crate-ci/typos@v1.29.10
 
       - name: Format Check
         run: cargo +nightly-2024-06-25 fmt -- --check
