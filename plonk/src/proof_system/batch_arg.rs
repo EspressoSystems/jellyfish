@@ -89,7 +89,7 @@ where
     {
         if instances_type_a.len() != instances_type_b.len() {
             return Err(ParameterError(format!(
-                "the number of type A instances {} is different from the number of type B instances {}.", 
+                "the number of type A instances {} is different from the number of type B instances {}.",
                 instances_type_a.len(),
                 instances_type_b.len())
             ).into());
