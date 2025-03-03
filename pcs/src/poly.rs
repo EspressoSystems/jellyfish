@@ -168,12 +168,41 @@ where
 
     // Horner's method for polynomial evaluation with cost O(n).
     fn horner_evaluate(&self, point: &F) -> T {
-        self.coeffs
-            .iter()
-            .rfold(T::zero(), move |mut result, coeff| {
-                result *= *point;
-                result + *coeff
-            })
+        // For very small polynomials, use the original implementation
+        if self.coeffs.len() < 16 {
+            return self.coeffs
+                .iter()
+                .rfold(T::zero(), move |mut result, coeff| {
+                    result *= *point;
+                    result + *coeff
+                });
+        }
+
+        // For larger polynomials, use a more cache-friendly approach
+        // by processing chunks of the polynomial
+        let chunk_size = 8;
+        let mut results = Vec::with_capacity((self.coeffs.len() + chunk_size - 1) / chunk_size);
+        
+        // Process each chunk separately
+        for chunk in self.coeffs.chunks(chunk_size) {
+            let mut chunk_result = T::zero();
+            for coeff in chunk.iter().rev() {
+                chunk_result *= *point;
+                chunk_result = chunk_result + *coeff;
+            }
+            results.push(chunk_result);
+        }
+        
+        // Combine chunk results
+        let point_pow_chunk = point.pow([chunk_size as u64]);
+        let mut final_result = *results.last().unwrap_or(&T::zero());
+        
+        for &chunk_result in results.iter().rev().skip(1) {
+            final_result *= point_pow_chunk;
+            final_result = final_result + chunk_result;
+        }
+        
+        final_result
     }
 }
 
