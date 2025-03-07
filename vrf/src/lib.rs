@@ -61,7 +61,6 @@ pub trait Vrf {
     //   `S::param_gen::<StdRng>(None)`
     // where `StdRng` is redundant.
     fn param_gen<R: CryptoRng + RngCore>(
-        &self,
         prng: Option<&mut R>,
     ) -> Result<Self::PublicParameter, Self::Error>;
 
@@ -83,14 +82,14 @@ pub trait Vrf {
 
     /// Computes the VRF output associated with a VRF proof.
     fn proof_to_hash(
-        &mut self,
+        &self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
     ) -> Result<Self::Output, Self::Error>;
 
     /// Computes the VRF output given a public input and a VRF secret key.
     fn evaluate<R: CryptoRng + RngCore>(
-        &mut self,
+        &self,
         pp: &Self::PublicParameter,
         secret_key: &Self::SecretKey,
         input: &Self::Input,
@@ -103,7 +102,7 @@ pub trait Vrf {
     /// Verifies a VRF proof.
     #[must_use = "Output must be used"]
     fn verify(
-        &mut self,
+        &self,
         pp: &Self::PublicParameter,
         proof: &Self::Proof,
         public_key: &Self::PublicKey,
