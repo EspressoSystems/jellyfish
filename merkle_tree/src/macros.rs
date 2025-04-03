@@ -41,8 +41,7 @@ macro_rules! impl_merkle_tree_scheme {
             type Index = I;
             type NodeValue = T;
             type MembershipProof = MerkleTreeProof<T>;
-            // TODO(Chengyu): implement batch membership proof
-            type BatchMembershipProof = ();
+            type BatchMembershipProof = crate::internal::BatchMerkleTreeProof<T>;
             type Commitment = T;
 
             const ARITY: usize = ARITY;
@@ -89,6 +88,73 @@ macro_rules! impl_merkle_tree_scheme {
 
             fn iter(&self) -> MerkleTreeIter<E, I, T> {
                 MerkleTreeIter::new(&self.root)
+            }
+
+            fn batch_lookup<J>(
+                &self,
+                positions: impl IntoIterator<Item = J>,
+            ) -> LookupResult<Vec<&Self::Element>, Self::BatchMembershipProof, ()>
+            where
+                J: Borrow<Self::Index>,
+            {
+                let mut elements = Vec::new();
+                let mut proofs = Vec::new();
+                let mut all_found = true;
+
+                for pos in positions {
+                    match self.lookup(pos) {
+                        LookupResult::Ok(elem, proof) => {
+                            elements.push(elem);
+                            proofs.push(proof);
+                        }
+                        LookupResult::NotInMemory => return LookupResult::NotInMemory,
+                        LookupResult::NotFound(_) => {
+                            all_found = false;
+                            break;
+                        }
+                    }
+                }
+
+                if all_found {
+                    LookupResult::Ok(elements, crate::internal::BatchMerkleTreeProof::new(proofs))
+                } else {
+                    LookupResult::NotFound(())
+                }
+            }
+
+            fn batch_verify<J, F>(
+                commitment: impl Borrow<Self::Commitment>,
+                positions: impl IntoIterator<Item = J>,
+                elements: impl IntoIterator<Item = F>,
+                proof: impl Borrow<Self::BatchMembershipProof>,
+            ) -> Result<VerificationResult, MerkleTreeError>
+            where
+                J: Borrow<Self::Index>,
+                F: Borrow<Self::Element>,
+            {
+                let commitment = commitment.borrow();
+                let proof = proof.borrow();
+                let positions: Vec<_> = positions.into_iter().collect();
+                let elements: Vec<_> = elements.into_iter().collect();
+                
+                if positions.len() != elements.len() || positions.len() != proof.proofs().len() {
+                    return Err(MerkleTreeError::ParametersError(
+                        "Mismatched number of positions, elements, and proofs".to_string(),
+                    ));
+                }
+
+                // Verify each proof individually
+                for ((pos, elem), individual_proof) in positions.into_iter()
+                    .zip(elements.into_iter())
+                    .zip(proof.proofs().iter())
+                {
+                    match Self::verify(commitment, pos, elem, individual_proof)? {
+                        crate::SUCCESS => continue,
+                        crate::FAIL => return Ok(crate::FAIL),
+                    }
+                }
+
+                Ok(crate::SUCCESS)
             }
         }
 
