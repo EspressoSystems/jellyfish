@@ -223,12 +223,32 @@ pub trait MerkleTreeScheme: Sized {
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError>;
 
-    // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
-    // Self::BatchProof>; fn batch_verify(
-    //     &self,
-    //     pos: impl Iterator<Item = usize>,
-    //     proof: impl Borrow<Self::BatchProof>,
-    // ) -> Result<(), MerkleTreeError>;
+    /// Batch lookup for multiple positions in the tree
+    /// * `positions` - Iterator of positions to lookup
+    /// * `returns` - A batch proof for all positions
+    fn batch_lookup<I>(
+        &self,
+        positions: impl IntoIterator<Item = I>,
+    ) -> LookupResult<Vec<&Self::Element>, Self::BatchMembershipProof, ()>
+    where
+        I: Borrow<Self::Index>;
+
+    /// Batch verify for multiple elements in the tree
+    /// * `commitment` - a merkle tree commitment
+    /// * `positions` - positions of elements to verify
+    /// * `elements` - elements to verify
+    /// * `proof` - a batch membership proof for all elements
+    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
+    ///   if the proof is not well structured
+    fn batch_verify<I, E>(
+        commitment: impl Borrow<Self::Commitment>,
+        positions: impl IntoIterator<Item = I>,
+        elements: impl IntoIterator<Item = E>,
+        proof: impl Borrow<Self::BatchMembershipProof>,
+    ) -> Result<VerificationResult, MerkleTreeError>
+    where
+        I: Borrow<Self::Index>,
+        E: Borrow<Self::Element>;
 
     /// Return an iterator that iterates through all element that are not
     /// forgotten
@@ -334,7 +354,6 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError>;
-    // TODO(Chengyu): non-membership proof interfaces
 }
 
 /// Merkle tree that allows forget/remember elements from the memory
