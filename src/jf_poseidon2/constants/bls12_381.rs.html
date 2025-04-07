@@ -1,623 +1,311 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `poseidon2/src/constants/bls12_381.rs`."><title>bls12_381.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_poseidon2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.1 (e71f9a9a9 2025-01-27)" data-channel="1.84.1" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_poseidon2/constants/</div>bls12_381.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
-<a href="#1" id="1">1</a>
-<a href="#2" id="2">2</a>
-<a href="#3" id="3">3</a>
-<a href="#4" id="4">4</a>
-<a href="#5" id="5">5</a>
-<a href="#6" id="6">6</a>
-<a href="#7" id="7">7</a>
-<a href="#8" id="8">8</a>
-<a href="#9" id="9">9</a>
-<a href="#10" id="10">10</a>
-<a href="#11" id="11">11</a>
-<a href="#12" id="12">12</a>
-<a href="#13" id="13">13</a>
-<a href="#14" id="14">14</a>
-<a href="#15" id="15">15</a>
-<a href="#16" id="16">16</a>
-<a href="#17" id="17">17</a>
-<a href="#18" id="18">18</a>
-<a href="#19" id="19">19</a>
-<a href="#20" id="20">20</a>
-<a href="#21" id="21">21</a>
-<a href="#22" id="22">22</a>
-<a href="#23" id="23">23</a>
-<a href="#24" id="24">24</a>
-<a href="#25" id="25">25</a>
-<a href="#26" id="26">26</a>
-<a href="#27" id="27">27</a>
-<a href="#28" id="28">28</a>
-<a href="#29" id="29">29</a>
-<a href="#30" id="30">30</a>
-<a href="#31" id="31">31</a>
-<a href="#32" id="32">32</a>
-<a href="#33" id="33">33</a>
-<a href="#34" id="34">34</a>
-<a href="#35" id="35">35</a>
-<a href="#36" id="36">36</a>
-<a href="#37" id="37">37</a>
-<a href="#38" id="38">38</a>
-<a href="#39" id="39">39</a>
-<a href="#40" id="40">40</a>
-<a href="#41" id="41">41</a>
-<a href="#42" id="42">42</a>
-<a href="#43" id="43">43</a>
-<a href="#44" id="44">44</a>
-<a href="#45" id="45">45</a>
-<a href="#46" id="46">46</a>
-<a href="#47" id="47">47</a>
-<a href="#48" id="48">48</a>
-<a href="#49" id="49">49</a>
-<a href="#50" id="50">50</a>
-<a href="#51" id="51">51</a>
-<a href="#52" id="52">52</a>
-<a href="#53" id="53">53</a>
-<a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a>
-<a href="#56" id="56">56</a>
-<a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-<a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
-<a href="#68" id="68">68</a>
-<a href="#69" id="69">69</a>
-<a href="#70" id="70">70</a>
-<a href="#71" id="71">71</a>
-<a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
-<a href="#237" id="237">237</a>
-<a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
-<a href="#297" id="297">297</a>
-<a href="#298" id="298">298</a>
-<a href="#299" id="299">299</a>
-<a href="#300" id="300">300</a>
-<a href="#301" id="301">301</a>
-<a href="#302" id="302">302</a>
-<a href="#303" id="303">303</a>
-<a href="#304" id="304">304</a>
-<a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a></pre></div><pre class="rust"><code><span class="doccomment">//! Poseidon2 constants for the scalar field of BLS12-381
-
-</span><span class="kw">use </span><span class="kw">super</span>::from_hex;
-<span class="kw">use crate</span>::{define_poseidon2_params, Poseidon2Params};
-<span class="kw">use </span>ark_bls12_381::Fr;
-<span class="kw">use </span>lazy_static::lazy_static;
-
-<span class="macro">define_poseidon2_params!</span>(
-    Poseidon2ParamsBls2,
-    <span class="number">2</span>,             <span class="comment">// State size
-    </span><span class="number">5</span>,             <span class="comment">// S-box size
-    </span><span class="number">8</span>,             <span class="comment">// External rounds
-    </span><span class="number">56</span>,            <span class="comment">// Internal rounds
-    </span>RC2_EXT,       <span class="comment">// External round constants
-    </span>RC2_INT,       <span class="comment">// Internal round constants
-    </span>MAT_DIAG2_M_1  <span class="comment">// Diagonal matrix constant
-</span>);
-
-<span class="macro">define_poseidon2_params!</span>(
-    Poseidon2ParamsBls3,
-    <span class="number">3</span>,             <span class="comment">// State size
-    </span><span class="number">5</span>,             <span class="comment">// S-box size
-    </span><span class="number">8</span>,             <span class="comment">// External rounds
-    </span><span class="number">56</span>,            <span class="comment">// Internal rounds
-    </span>RC3_EXT,       <span class="comment">// External round constants
-    </span>RC3_INT,       <span class="comment">// Internal round constants
-    </span>MAT_DIAG3_M_1  <span class="comment">// Diagonal matrix constant
-</span>);
-
-<span class="comment">// adapted from &lt;https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/poseidon2_instance_bls12.rs&gt;
-</span><span class="macro">lazy_static!</span> {
-    <span class="doccomment">/// internal diagonal matrix, state size = 2
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>MAT_DIAG2_M_1: [Fr; <span class="number">2</span>] = [
-        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
-        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000002"</span>),
-    ];
-
-    <span class="doccomment">/// external round constants, state size = 2
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC2_EXT: [[Fr; <span class="number">2</span>]; <span class="number">8</span>] = [
-        [
-            from_hex(<span class="string">"6267f5556c88257324c1c8b00d5871b2eba13cc39d72aa10dde6b69bc44c41c7"</span>),
-            from_hex(<span class="string">"30347723511438a085118166c68bf0c4f4ab5c10a2c55adb5cf87cc9e030f60f"</span>),
-        ],
-        [
-            from_hex(<span class="string">"10db856965e40038eb6427303181e7b7439f1a051aa4630c26cf86d0a0451a4b"</span>),
-            from_hex(<span class="string">"5a3d2dcd541e4faaae7eb143eec847a0f652b6dc1b92e3f39ec23c808b3a5d63"</span>),
-        ],
-        [
-            from_hex(<span class="string">"3b07f0ff7edcf93b1dd0487bc9fab1c6905f9ceee38dcce83efeb3a320398526"</span>),
-            from_hex(<span class="string">"40c73c524b9fd0fab63128175befe07b5c63ccdde9ca10e1a37205c9607fdf8a"</span>),
-        ],
-        [
-            from_hex(<span class="string">"3a933861cf23752376d94dbb24b0f3c61630787928875c07672b68abfb9191e0"</span>),
-            from_hex(<span class="string">"71cc165e208570b2d5ef81db84e3c5e714ea4edfb36fc7fb11ef65a64b2d9755"</span>),
-        ],
-        [
-            from_hex(<span class="string">"6e690b956e00b9e339dec49d675586f661f9b081ee3fa7696d73977658aa6fea"</span>),
-            from_hex(<span class="string">"660b85bc22de06d476c47bf084ad436f59874f1d630c0f5c91fbef51d5e738c5"</span>),
-        ],
-        [
-            from_hex(<span class="string">"32bf3d451b69dde075fc370eaa8c1b77b5c0bc2aab1c7b46da7ef9d1840b0419"</span>),
-            from_hex(<span class="string">"73924b40beaa9c1ce4074c2154d1af4d658c09395a568b99b2fbcc3b5685e810"</span>),
-        ],
-        [
-            from_hex(<span class="string">"17cbb3ee0adcb9d977e96e9152b36042925244fdd0aa184c7a89a58a2dc40097"</span>),
-            from_hex(<span class="string">"29d76a821e3220775c552f6b5977ab94956e52b8dac36ef88ace050d553766a3"</span>),
-        ],
-        [
-            from_hex(<span class="string">"62b1a6c06ab26881a1fe57eceac56b5aec0b96da7211557f4e27ec24296d7db6"</span>),
-            from_hex(<span class="string">"0dfc474151e5c605a693a51ae8227cc0a99fdc4524fc2810c6eda9035d04334d"</span>),
-        ],
-    ];
-
-    <span class="doccomment">/// internal round constants, state size = 2
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC2_INT: [Fr; <span class="number">56</span>] = [
-        from_hex(<span class="string">"6c0dc9eb332b5d968bec8ad68fe24ce34087ea54093f153618434475bce402f8"</span>),
-        from_hex(<span class="string">"0af5bafd335dae5c86967b11d5dcefb986a54c9d60d35eb06dc7a3fd779b3906"</span>),
-        from_hex(<span class="string">"6e12847918f030f2626c150ab69e4be0f13d202ae1f8bc87ea74323e93372e3b"</span>),
-        from_hex(<span class="string">"5565d40e21d059a26db241ca125d9316283eadf144b1318e604e253eeae1fe9a"</span>),
-        from_hex(<span class="string">"608e01b42d3dca09fed9b54eadaaba3e4ce6aefe92b0dc954a0fa4683a9678f2"</span>),
-        from_hex(<span class="string">"16bbe434b24f94e2c40ed1f4f9bd7d17e5be96c3aec15579b35fd80f0f80de9e"</span>),
-        from_hex(<span class="string">"0d1be811a8e73220cab01ce981d475522c3d7dd9e2716c3a2cf4ddd541546890"</span>),
-        from_hex(<span class="string">"5997a3affb18f942868b86f8ee10a68966e90bac7bbd8c65ede7e6e5ef1f6320"</span>),
-        from_hex(<span class="string">"4d92e86d270041061eec80278079fca771499dea5ccdc99682a953bb3a038b8e"</span>),
-        from_hex(<span class="string">"616c8c5ce232b9314f694fc6a968446ea9daf7a4079ce1a75fcc950741d680bb"</span>),
-        from_hex(<span class="string">"677e31e7846d9131bdc350eaf11a8ff918dd258ddd800444424afab34dfdfe3d"</span>),
-        from_hex(<span class="string">"4e7d7f85aefc110b233525ee3e53851aee7d3241e2a132585e0e25005eee0b0e"</span>),
-        from_hex(<span class="string">"06a8b4539488b7dddc48c3a226dbda313f906e106f844196d55013d321244f13"</span>),
-        from_hex(<span class="string">"5091517b6a85783108999f8e6bda3c793bef3f2e9589641d260bdfde8bdef00d"</span>),
-        from_hex(<span class="string">"0d2703e5b30f54d7f414e901802d54f8c14cd6355415df6e0f063d16bef9c43a"</span>),
-        from_hex(<span class="string">"56f69096811148eb38eec143d32565c077b3d1a4a4351f2b458f43b1659d4495"</span>),
-        from_hex(<span class="string">"622d94d38d1ded428afd062008c5709b43a678f6ba518ec56383e8ffba473504"</span>),
-        from_hex(<span class="string">"2730c607bba7333723a4a44577819b7db82a24574f6d13eee4c856c1ca3de9c7"</span>),
-        from_hex(<span class="string">"01ac5f59256c5004dc1043c53b23800a3fbab53eb1a83f551056f227b514b9f6"</span>),
-        from_hex(<span class="string">"0790b92523c973f1c95b94937afbb5796d89481e7a56328b44bab5ba81ae42f3"</span>),
-        from_hex(<span class="string">"1d63b59d97bc269d13964fb3e8771d0acc749bc83eb2f0372484e266142bb8c0"</span>),
-        from_hex(<span class="string">"1a52d04e5f14a3a05f7a01262df9e68c77fdf7e2bfb56c8b252d2140efdf0914"</span>),
-        from_hex(<span class="string">"5aa9b3b808812b284857e8622843a8717fa5cb49b217017f31d79e8d0f963fc0"</span>),
-        from_hex(<span class="string">"6a3d18fdbeb1d77ec1304539b00e6188786dbbc4435269b4c6281367f42656e3"</span>),
-        from_hex(<span class="string">"4743e860df269a85dd76fb99dbe9d840eb669dc859754b3f74805e57ba288b00"</span>),
-        from_hex(<span class="string">"6c32cac3946825f80a434c5ab397fc1a1c6a9bdfaab53175d4cf3d29ddb6cbc6"</span>),
-        from_hex(<span class="string">"333b0eea5da7ed1e3959d16280a361aa77dd24ecbfb28e1b2583ac4e9894305c"</span>),
-        from_hex(<span class="string">"3b503fc333b795ccc0c5bb3ae26b077dc3742cb745ec8821648c5ce7ebd9df18"</span>),
-        from_hex(<span class="string">"4fa5853188d9f728a17532d94bee6fb28fee510380a5d50927c6c5b1ce283444"</span>),
-        from_hex(<span class="string">"5d2ed8a6603a905bac490ebfb9e6c18f0bc9da1bbc2173291b18de6b6186118f"</span>),
-        from_hex(<span class="string">"2d830a53584c5556264852f075c78f7f9eb068016ae88af9cda933d6ae52eca7"</span>),
-        from_hex(<span class="string">"0250f4d6780ad29ae60e55f135b9ac80ccc7c81e3add37db276c26f1a2b1b86e"</span>),
-        from_hex(<span class="string">"6e3e9595f59220599e23e830728d4a0c4d62515ec1ed10b72446cf4df5b4c308"</span>),
-        from_hex(<span class="string">"2cd3314555d6faf23ee90cdb884f1c4697ebe98e3a450a624c4d896233b93cd5"</span>),
-        from_hex(<span class="string">"584a408d0f370543b8413fee70a060a394e561f504d8679f7bece4bf222e4108"</span>),
-        from_hex(<span class="string">"499cd53437b9fcbf7479c00fcc21295759074ce9bd1bb1fbd3460237aef4759e"</span>),
-        from_hex(<span class="string">"56a9b567bd0646effd0608d74d537991136098d9a06af6cb3ff8f010efb57578"</span>),
-        from_hex(<span class="string">"6a5fae2b00d968b931441b374e27ba4d03b306bd602d48731677169e75a67e8c"</span>),
-        from_hex(<span class="string">"2e1cc28e390e64aa1d60edb99c0aeda7c8c32bdb01ba11abbad5026b46eccb27"</span>),
-        from_hex(<span class="string">"2d4820000675df7c276beac408fe2e851e734a7008ae09bbcb3c96c70024f71b"</span>),
-        from_hex(<span class="string">"0c2fe101a2b52b538b902c6b2dc992cb266f7636e05b0c068385b5fa19e97142"</span>),
-        from_hex(<span class="string">"209b790b78c0e7927c6a178ef2f00b8687fc7bd4f21a9e02578551535002bc95"</span>),
-        from_hex(<span class="string">"2dd0926cf56bbaaec6491513d08a9983f94a910852a7b4ea4bd4222b93e14c10"</span>),
-        from_hex(<span class="string">"4316b39dd7d65b1bb575198104d409b169236a7ade371f7ab176fcbae75a5f0d"</span>),
-        from_hex(<span class="string">"540276d61041b91f6ea3068ec260a9338b6e3da15d934e648c24f35aee04e535"</span>),
-        from_hex(<span class="string">"37af612900b839977b146324c84772c58a4ccc0f6494cc054571827e74bfd2d3"</span>),
-        from_hex(<span class="string">"2af00c93d59ed14c9911e5cb3781d772371e83228e4267bbce11d065c1955338"</span>),
-        from_hex(<span class="string">"62b48779b0cf7ff2c10fd9b91a6ff7b7a99f935e961a5a94aa38f9d4f71c8b4c"</span>),
-        from_hex(<span class="string">"540bf5bbe01f28563bcbe11a2ce346d8231a2cdd0fe07641f9fa89e5c21978e3"</span>),
-        from_hex(<span class="string">"232b6c847a6d23912cb10ecbe50b53491f67f71e9b87a4a30446f2218017874b"</span>),
-        from_hex(<span class="string">"0ab34adbe77b8f1e57a370e4fd626071eea74b3f0b66644a629efaa0e96456c0"</span>),
-        from_hex(<span class="string">"1a83e43ef118c90046b1bdbeab8dd5cdcab632807c2cd0dc9147cbc5b7084be8"</span>),
-        from_hex(<span class="string">"1ec6fa41b41b672d9005468720918130b642567462a3d557a595d4dc6c56f2f9"</span>),
-        from_hex(<span class="string">"01f81a153199a751a111b8f5212cfc5bf82aacf0287d03e1864f8e5713fe4a17"</span>),
-        from_hex(<span class="string">"2617307587a675f4ecd73a54a7b206162d751cabf3d9fd007bcca4de2c6f0649"</span>),
-        from_hex(<span class="string">"1647be94c515178c7974a245624b642bb1ae6e2d4e1682087e362d7f98bc953f"</span>),
-    ];
-
-    <span class="doccomment">/// internal diagonal matrix, state size = 3
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>MAT_DIAG3_M_1: [Fr; <span class="number">3</span>] = [
-        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
-        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
-        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000002"</span>),
-    ];
-
-    <span class="doccomment">/// external round constants, state size = 3
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC3_EXT: [[Fr; <span class="number">3</span>]; <span class="number">8</span>] = [
-        [
-            from_hex(<span class="string">"6f007a551156b3a449e44936b7c093644a0ed33f33eaccc628e942e836c1a875"</span>),
-            from_hex(<span class="string">"360d7470611e473d353f628f76d110f34e71162f31003b7057538c2596426303"</span>),
-            from_hex(<span class="string">"4b5fec3aa073df44019091f007a44ca996484965f7036dce3e9d0977edcdc0f6"</span>),
-        ],
-        [
-            from_hex(<span class="string">"67cf1868af6396c0b84cce715e539f849e06cd1c383ac5b06100c76bcc973a11"</span>),
-            from_hex(<span class="string">"555db4d1dced819f5d3de70fde83f1c7d3e8c98968e516a23a771a5c9c8257aa"</span>),
-            from_hex(<span class="string">"2bab94d7ae222d135dc3c6c5febfaa314908ac2f12ebe06fbdb74213bf63188b"</span>),
-        ],
-        [
-            from_hex(<span class="string">"66f44be5296682c4fa7882799d6dd049b6d7d2c950ccf98cf2e50d6d1ebb77c2"</span>),
-            from_hex(<span class="string">"150c93fef652fb1c2bf03e1a29aa871fef77e7d736766c5d0939d92753cc5dc8"</span>),
-            from_hex(<span class="string">"3270661e68928b3a955d55db56dc57c103cc0a60141e894e14259dce537782b2"</span>),
-        ],
-        [
-            from_hex(<span class="string">"073f116f04122e25a0b7afe4e2057299b407c370f2b5a1ccce9fb9ffc345afb3"</span>),
-            from_hex(<span class="string">"409fda22558cfe4d3dd8dce24f69e76f8c2aaeb1dd0f09d65e654c71f32aa23f"</span>),
-            from_hex(<span class="string">"2a32ec5c4ee5b1837affd09c1f53f5fd55c9cd2061ae93ca8ebad76fc71554d8"</span>),
-        ],
-        [
-            from_hex(<span class="string">"6cbac5e1700984ebc32da15b4bb9683faabab55f67ccc4f71d9560b3475a77eb"</span>),
-            from_hex(<span class="string">"4603c403bbfa9a17738a5c6278eaab1c37ec30b0737aa2409fc4898069eb983c"</span>),
-            from_hex(<span class="string">"6894e7e22b2c1d5c70a712a6345ae6b192a9c833a9234c31c56aacd16bc2f100"</span>),
-        ],
-        [
-            from_hex(<span class="string">"5be2cbbc44053ad08afa4d1eabc7f3d231eea799b93f226e905b7d4d65c58ebb"</span>),
-            from_hex(<span class="string">"58e55f287b453a9808624a8c2a353d528da0f7e713a5c6d0d7711e47063fa611"</span>),
-            from_hex(<span class="string">"366ebfafa3ad381c0ee258c9b8fdfccdb868a7d7e1f1f69a2b5dfcc5572555df"</span>),
-        ],
-        [
-            from_hex(<span class="string">"45766ab728968c642f90d97ccf5504ddc10518a819ebbcc4d09c3f5d784d67ce"</span>),
-            from_hex(<span class="string">"39678f65512f1ee404db3024f41d3f567ef66d89d044d022e6bc229e95bc76b1"</span>),
-            from_hex(<span class="string">"463aed1d2f1f955e3078be5bf7bfc46fc0eb8c51551906a8868f18ffae30cf4f"</span>),
-        ],
-        [
-            from_hex(<span class="string">"21668f016a8063c0d58b7750a3bc2fe1cf82c25f99dc01a4e534c88fe53d85fe"</span>),
-            from_hex(<span class="string">"39d00994a8a5046a1bc749363e98a768e34dea56439fe1954bef429bc5331608"</span>),
-            from_hex(<span class="string">"4d7f5dcd78ece9a933984de32c0b48fac2bba91f261996b8e9d1021773bd07cc"</span>),
-        ]
-    ];
-
-    <span class="doccomment">/// internal round constants, state size = 3
-    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC3_INT: [Fr; <span class="number">56</span>] = [
-        from_hex(<span class="string">"5848ebeb5923e92555b7124fffba5d6bd571c6f984195eb9cfd3a3e8eb55b1d4"</span>),
-        from_hex(<span class="string">"270326ee039df19e651e2cfc740628ca634d24fc6e2559f22d8ccbe292efeead"</span>),
-        from_hex(<span class="string">"27c6642ac633bc66dc100fe7fcfa54918af895bce012f182a068fc37c182e274"</span>),
-        from_hex(<span class="string">"1bdfd8b01401c70ad27f57396989129d710e1fb6ab976a459ca18682e26d7ff9"</span>),
-        from_hex(<span class="string">"491b9ba6983bcf9f05fe4794adb44a30879bf8289662e1f57d90f672414e8a4a"</span>),
-        from_hex(<span class="string">"162a14c62f9a89b814b9d6a9c84dd678f4f6fb3f9054d373c832d824261a35ea"</span>),
-        from_hex(<span class="string">"2d193e0f76de586b2af6f79e3127feeaac0a1fc71e2cf0c0f79824667b5b6bec"</span>),
-        from_hex(<span class="string">"46efd8a9a262d6d8fdc9ca5c04b0982f24ddcc6e9863885a6a732a3906a07b95"</span>),
-        from_hex(<span class="string">"509717e0c200e3c92d8dca2973b3db45f0788294351ad07ae75cbb780693a798"</span>),
-        from_hex(<span class="string">"7299b28464a8c94fb9d4df61380f39c0dca9c2c014118789e227252820f01bfc"</span>),
-        from_hex(<span class="string">"044ca3cc4a85d73b81696ef1104e674f4feff82984990ff85d0bf58dc8a4aa94"</span>),
-        from_hex(<span class="string">"1cbaf2b371dac6a81d0453416d3e235cb8d9e2d4f314f46f6198785f0cd6b9af"</span>),
-        from_hex(<span class="string">"1d5b2777692c205b0e6c49d061b6b5f4293c4ab038fdbbdc343e07610f3fede5"</span>),
-        from_hex(<span class="string">"56ae7c7a5293bdc23e85e1698c81c77f8ad88c4b33a5780437ad047c6edb59ba"</span>),
-        from_hex(<span class="string">"2e9bdbba3dd34bffaa30535bdd749a7e06a9adb0c1e6f962f60e971b8d73b04f"</span>),
-        from_hex(<span class="string">"2de11886b18011ca8bd5bae36969299fde40fbe26d047b05035a13661f22418b"</span>),
-        from_hex(<span class="string">"2e07de1780b8a70d0d5b4a3f1841dcd82ab9395c449be947bc998884ba96a721"</span>),
-        from_hex(<span class="string">"0f69f1854d20ca0cbbdb63dbd52dad16250440a99d6b8af3825e4c2bb74925ca"</span>),
-        from_hex(<span class="string">"5dc987318e6e59c1afb87b655dd58cc1d22e513a05838cd4585d04b135b957ca"</span>),
-        from_hex(<span class="string">"48b725758571c9df6c01dc639a85f07297696b1bb678633a29dc91de95ef53f6"</span>),
-        from_hex(<span class="string">"5e565e08c0821099256b56490eaee1d573afd10bb6d17d13ca4e5c611b2a3718"</span>),
-        from_hex(<span class="string">"2eb1b25417fe17670d135dc639fb09a46ce5113507f96de9816c059422dc705e"</span>),
-        from_hex(<span class="string">"115cd0a0643cfb988c24cb44c3fab48aff36c661d26cc42db8b1bdf4953bd82c"</span>),
-        from_hex(<span class="string">"26ca293f7b2c462d066d7378b999868bbb57ddf14e0f958ade801612311d04cd"</span>),
-        from_hex(<span class="string">"4147400d8e1aaccf311a6b5b762011ab3e45326e4d4b9de26992816b99c528ac"</span>),
-        from_hex(<span class="string">"6b0db7dccc4ba1b268f6bdcc4d372848d4a72976c268ea30519a2f73e6db4d55"</span>),
-        from_hex(<span class="string">"17bf1b93c4c7e01a2a830aa162412cd90f160bf9f71e967ff5209d14b24820ca"</span>),
-        from_hex(<span class="string">"4b431cd9efedbc94cf1eca6f9e9c1839d0e66a8bffa8c8464cac81a39d3cf8f1"</span>),
-        from_hex(<span class="string">"35b41a7ac4f3c571a24f8456369c85dfe03c0354bd8cfd3805c86f2e7dc293c5"</span>),
-        from_hex(<span class="string">"3b1480080523c439435927994849bea964e14d3beb2dddde72ac156af435d09e"</span>),
-        from_hex(<span class="string">"2cc6810031dc1b0d4950856dc907d57508e286442a2d3eb2271618d874b14c6d"</span>),
-        from_hex(<span class="string">"6f4141c8401c5a395ba6790efd71c70c04afea06c3c92826bcabdd5cb5477d51"</span>),
-        from_hex(<span class="string">"25bdbbeda1bde8c1059618e2afd2ef999e517aa93b78341d91f318c09f0cb566"</span>),
-        from_hex(<span class="string">"392a4a8758e06ee8b95f33c25dde8ac02a5ed0a27b61926cc6313487073f7f7b"</span>),
-        from_hex(<span class="string">"272a55878a08442b9aa6111f4de009485e6a6fd15db89365e7bbcef02eb5866c"</span>),
-        from_hex(<span class="string">"631ec1d6d28dd9e824ee89a30730aef7ab463acfc9d184b355aa05fd6938eab5"</span>),
-        from_hex(<span class="string">"4eb6fda10fd0fbde02c7449bfbddc35bcd8225e7e5c3833a0818a100409dc6f2"</span>),
-        from_hex(<span class="string">"2d5b308b0cf02cdfefa13c4e60e26239a6ebba011694dd129b925b3c5b21e0e2"</span>),
-        from_hex(<span class="string">"16549fc6af2f3b72dd5d293d72e2e5f244dff42f18b46c56ef38c57c311673ac"</span>),
-        from_hex(<span class="string">"42332677ff359c5e8db836d9f5fb54822e39bd5e22340bb9ba975ba1a92be382"</span>),
-        from_hex(<span class="string">"49d7d2c0b449e5179bc5ccc3b44c6075d9849b5610465f09ea725ddc97723a94"</span>),
-        from_hex(<span class="string">"64c20fb90d7a003831757cc4c6226f6e4985fc9ecb416b9f684ca0351d967904"</span>),
-        from_hex(<span class="string">"59cff40de83b52b41bc443d7979510d771c940b9758ca820fe73b5c8d5580934"</span>),
-        from_hex(<span class="string">"53db2731730c39b04edd875fe3b7c882808285cdbc621d7af4f80dd53ebb71b0"</span>),
-        from_hex(<span class="string">"1b10bb7a82afce39fa69c3a2ad52f76d76398265344203119b7126d9b46860df"</span>),
-        from_hex(<span class="string">"561b6012d666bfe179c4dd7f84cdd1531596d3aac7c5700ceb319f91046a63c9"</span>),
-        from_hex(<span class="string">"0f1e7505ebd91d2fc79c2df7dc98a3bed1b36968ba0405c090d27f6a00b7dfc8"</span>),
-        from_hex(<span class="string">"2f313faf0d3f6187537a7497a3b43f46797fd6e3f18eb1caff457756b819bb20"</span>),
-        from_hex(<span class="string">"3a5cbb6de450b481fa3ca61c0ed15bc55cad11ebf0f7ceb8f0bc3e732ecb26f6"</span>),
-        from_hex(<span class="string">"681d93411bf8ce63f6716aefbd0e24506454c0348ee38fabeb264702714ccf94"</span>),
-        from_hex(<span class="string">"5178e940f50004312646b436727f0e80a7b8f2e9ee1fdc677c4831a7672777fb"</span>),
-        from_hex(<span class="string">"3dab54bc9bef688dd92086e253b439d651baa6e20f892b62865527cbca915982"</span>),
-        from_hex(<span class="string">"4b3ce75311218f9ae905f84eaa5b2b3818448bbf3972e1aad69de321009015d0"</span>),
-        from_hex(<span class="string">"06dbfb42b979884de280d31670123f744c24b33b410fefd4368045acf2b71ae3"</span>),
-        from_hex(<span class="string">"068d6b4608aae810c6f039ea1973a63eb8d2de72e3d2c9eca7fc32d22f18b9d3"</span>),
-        from_hex(<span class="string">"4c5c254589a92a36084a57d3b1d964278acc7e4fe8f69f2955954f27a79cebef"</span>),
-    ];
-}
-
-<span class="attr">#[cfg(test)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>tests {
-    <span class="kw">use </span>ark_ff::PrimeField;
-    <span class="kw">use </span>ark_std::test_rng;
-
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::Poseidon2;
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>consistent_perm_helper&lt;
-        F: PrimeField,
-        <span class="kw">const </span>N: usize,
-        P: Poseidon2Params&lt;F, N&gt;,
-    &gt;() {
-        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
-        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
-            <span class="kw">let </span>input1 = [F::rand(rng); N];
-            <span class="kw">let </span>input2 = [F::rand(rng); N];
-
-            <span class="comment">// same input get the same permutated output
-            </span><span class="macro">assert_eq!</span>(
-                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1),
-                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1)
-            );
-            <span class="comment">// diff input get diff permutated output
-            </span><span class="macro">assert_ne!</span>(
-                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1),
-                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input2)
-            );
-        }
-    }
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>consistent_perm() {
-        consistent_perm_helper::&lt;Fr, <span class="number">2</span>, Poseidon2ParamsBls2&gt;();
-        consistent_perm_helper::&lt;Fr, <span class="number">3</span>, Poseidon2ParamsBls3&gt;();
-    }
-
-    <span class="comment">// copied from &lt;https://github.com/HorizenLabs/poseidon2/blob/055bde3f4782731ba5f5ce5888a440a94327eaf3/plain_implementations/src/poseidon2/poseidon2.rs#L425&gt;
-    </span><span class="attr">#[test]
-    </span><span class="kw">fn </span>fixed_test_vector() {
-        <span class="kw">let </span><span class="kw-2">mut </span>input = [Fr::from(<span class="number">0</span>), Fr::from(<span class="number">1</span>)];
-        Poseidon2::permute_mut::&lt;Poseidon2ParamsBls2, <span class="number">2</span>&gt;(<span class="kw-2">&amp;mut </span>input);
-        <span class="macro">assert_eq!</span>(
-            input[<span class="number">0</span>],
-            from_hex(<span class="string">"73c46dd530e248a87b61d19e67fa1b4ed30fc3d09f16531fe189fb945a15ce4e"</span>)
-        );
-        <span class="macro">assert_eq!</span>(
-            input[<span class="number">1</span>],
-            from_hex(<span class="string">"1f0e305ee21c9366d5793b80251405032a3fee32b9dd0b5f4578262891b043b4"</span>)
-        );
-
-        <span class="kw">let </span><span class="kw-2">mut </span>input = [Fr::from(<span class="number">0</span>), Fr::from(<span class="number">1</span>), Fr::from(<span class="number">2</span>)];
-        Poseidon2::permute_mut::&lt;Poseidon2ParamsBls3, <span class="number">3</span>&gt;(<span class="kw-2">&amp;mut </span>input);
-        <span class="macro">assert_eq!</span>(
-            input[<span class="number">0</span>],
-            from_hex(<span class="string">"1b152349b1950b6a8ca75ee4407b6e26ca5cca5650534e56ef3fd45761fbf5f0"</span>)
-        );
-        <span class="macro">assert_eq!</span>(
-            input[<span class="number">1</span>],
-            from_hex(<span class="string">"4c5793c87d51bdc2c08a32108437dc0000bd0275868f09ebc5f36919af5b3891"</span>)
-        );
-        <span class="macro">assert_eq!</span>(
-            input[<span class="number">2</span>],
-            from_hex(<span class="string">"1fc8ed171e67902ca49863159fe5ba6325318843d13976143b8125f08b50dc6b"</span>)
-        );
-    }
-}
-</code></pre></div></section></main></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `poseidon2/src/constants/bls12_381.rs`."><title>bls12_381.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-6c3ea77c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="jf_poseidon2" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0 (05f9846f8 2025-03-31)" data-channel="1.86.0" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../static.files/src-script-b8d3f215.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_poseidon2/constants/</div>bls12_381.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Poseidon2 constants for the scalar field of BLS12-381
+<a href=#2 id=2 data-nosnippet>2</a>
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">super</span>::from_hex;
+<a href=#4 id=4 data-nosnippet>4</a><span class="kw">use crate</span>::{define_poseidon2_params, Poseidon2Params};
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>ark_bls12_381::Fr;
+<a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>lazy_static::lazy_static;
+<a href=#7 id=7 data-nosnippet>7</a>
+<a href=#8 id=8 data-nosnippet>8</a><span class="macro">define_poseidon2_params!</span>(
+<a href=#9 id=9 data-nosnippet>9</a>    Poseidon2ParamsBls2,
+<a href=#10 id=10 data-nosnippet>10</a>    <span class="number">2</span>,             <span class="comment">// State size
+<a href=#11 id=11 data-nosnippet>11</a>    </span><span class="number">5</span>,             <span class="comment">// S-box size
+<a href=#12 id=12 data-nosnippet>12</a>    </span><span class="number">8</span>,             <span class="comment">// External rounds
+<a href=#13 id=13 data-nosnippet>13</a>    </span><span class="number">56</span>,            <span class="comment">// Internal rounds
+<a href=#14 id=14 data-nosnippet>14</a>    </span>RC2_EXT,       <span class="comment">// External round constants
+<a href=#15 id=15 data-nosnippet>15</a>    </span>RC2_INT,       <span class="comment">// Internal round constants
+<a href=#16 id=16 data-nosnippet>16</a>    </span>MAT_DIAG2_M_1  <span class="comment">// Diagonal matrix constant
+<a href=#17 id=17 data-nosnippet>17</a></span>);
+<a href=#18 id=18 data-nosnippet>18</a>
+<a href=#19 id=19 data-nosnippet>19</a><span class="macro">define_poseidon2_params!</span>(
+<a href=#20 id=20 data-nosnippet>20</a>    Poseidon2ParamsBls3,
+<a href=#21 id=21 data-nosnippet>21</a>    <span class="number">3</span>,             <span class="comment">// State size
+<a href=#22 id=22 data-nosnippet>22</a>    </span><span class="number">5</span>,             <span class="comment">// S-box size
+<a href=#23 id=23 data-nosnippet>23</a>    </span><span class="number">8</span>,             <span class="comment">// External rounds
+<a href=#24 id=24 data-nosnippet>24</a>    </span><span class="number">56</span>,            <span class="comment">// Internal rounds
+<a href=#25 id=25 data-nosnippet>25</a>    </span>RC3_EXT,       <span class="comment">// External round constants
+<a href=#26 id=26 data-nosnippet>26</a>    </span>RC3_INT,       <span class="comment">// Internal round constants
+<a href=#27 id=27 data-nosnippet>27</a>    </span>MAT_DIAG3_M_1  <span class="comment">// Diagonal matrix constant
+<a href=#28 id=28 data-nosnippet>28</a></span>);
+<a href=#29 id=29 data-nosnippet>29</a>
+<a href=#30 id=30 data-nosnippet>30</a><span class="comment">// adapted from &lt;https://github.com/HorizenLabs/poseidon2/blob/main/plain_implementations/src/poseidon2/poseidon2_instance_bls12.rs&gt;
+<a href=#31 id=31 data-nosnippet>31</a></span><span class="macro">lazy_static!</span> {
+<a href=#32 id=32 data-nosnippet>32</a>    <span class="doccomment">/// internal diagonal matrix, state size = 2
+<a href=#33 id=33 data-nosnippet>33</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>MAT_DIAG2_M_1: [Fr; <span class="number">2</span>] = [
+<a href=#34 id=34 data-nosnippet>34</a>        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
+<a href=#35 id=35 data-nosnippet>35</a>        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000002"</span>),
+<a href=#36 id=36 data-nosnippet>36</a>    ];
+<a href=#37 id=37 data-nosnippet>37</a>
+<a href=#38 id=38 data-nosnippet>38</a>    <span class="doccomment">/// external round constants, state size = 2
+<a href=#39 id=39 data-nosnippet>39</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC2_EXT: [[Fr; <span class="number">2</span>]; <span class="number">8</span>] = [
+<a href=#40 id=40 data-nosnippet>40</a>        [
+<a href=#41 id=41 data-nosnippet>41</a>            from_hex(<span class="string">"6267f5556c88257324c1c8b00d5871b2eba13cc39d72aa10dde6b69bc44c41c7"</span>),
+<a href=#42 id=42 data-nosnippet>42</a>            from_hex(<span class="string">"30347723511438a085118166c68bf0c4f4ab5c10a2c55adb5cf87cc9e030f60f"</span>),
+<a href=#43 id=43 data-nosnippet>43</a>        ],
+<a href=#44 id=44 data-nosnippet>44</a>        [
+<a href=#45 id=45 data-nosnippet>45</a>            from_hex(<span class="string">"10db856965e40038eb6427303181e7b7439f1a051aa4630c26cf86d0a0451a4b"</span>),
+<a href=#46 id=46 data-nosnippet>46</a>            from_hex(<span class="string">"5a3d2dcd541e4faaae7eb143eec847a0f652b6dc1b92e3f39ec23c808b3a5d63"</span>),
+<a href=#47 id=47 data-nosnippet>47</a>        ],
+<a href=#48 id=48 data-nosnippet>48</a>        [
+<a href=#49 id=49 data-nosnippet>49</a>            from_hex(<span class="string">"3b07f0ff7edcf93b1dd0487bc9fab1c6905f9ceee38dcce83efeb3a320398526"</span>),
+<a href=#50 id=50 data-nosnippet>50</a>            from_hex(<span class="string">"40c73c524b9fd0fab63128175befe07b5c63ccdde9ca10e1a37205c9607fdf8a"</span>),
+<a href=#51 id=51 data-nosnippet>51</a>        ],
+<a href=#52 id=52 data-nosnippet>52</a>        [
+<a href=#53 id=53 data-nosnippet>53</a>            from_hex(<span class="string">"3a933861cf23752376d94dbb24b0f3c61630787928875c07672b68abfb9191e0"</span>),
+<a href=#54 id=54 data-nosnippet>54</a>            from_hex(<span class="string">"71cc165e208570b2d5ef81db84e3c5e714ea4edfb36fc7fb11ef65a64b2d9755"</span>),
+<a href=#55 id=55 data-nosnippet>55</a>        ],
+<a href=#56 id=56 data-nosnippet>56</a>        [
+<a href=#57 id=57 data-nosnippet>57</a>            from_hex(<span class="string">"6e690b956e00b9e339dec49d675586f661f9b081ee3fa7696d73977658aa6fea"</span>),
+<a href=#58 id=58 data-nosnippet>58</a>            from_hex(<span class="string">"660b85bc22de06d476c47bf084ad436f59874f1d630c0f5c91fbef51d5e738c5"</span>),
+<a href=#59 id=59 data-nosnippet>59</a>        ],
+<a href=#60 id=60 data-nosnippet>60</a>        [
+<a href=#61 id=61 data-nosnippet>61</a>            from_hex(<span class="string">"32bf3d451b69dde075fc370eaa8c1b77b5c0bc2aab1c7b46da7ef9d1840b0419"</span>),
+<a href=#62 id=62 data-nosnippet>62</a>            from_hex(<span class="string">"73924b40beaa9c1ce4074c2154d1af4d658c09395a568b99b2fbcc3b5685e810"</span>),
+<a href=#63 id=63 data-nosnippet>63</a>        ],
+<a href=#64 id=64 data-nosnippet>64</a>        [
+<a href=#65 id=65 data-nosnippet>65</a>            from_hex(<span class="string">"17cbb3ee0adcb9d977e96e9152b36042925244fdd0aa184c7a89a58a2dc40097"</span>),
+<a href=#66 id=66 data-nosnippet>66</a>            from_hex(<span class="string">"29d76a821e3220775c552f6b5977ab94956e52b8dac36ef88ace050d553766a3"</span>),
+<a href=#67 id=67 data-nosnippet>67</a>        ],
+<a href=#68 id=68 data-nosnippet>68</a>        [
+<a href=#69 id=69 data-nosnippet>69</a>            from_hex(<span class="string">"62b1a6c06ab26881a1fe57eceac56b5aec0b96da7211557f4e27ec24296d7db6"</span>),
+<a href=#70 id=70 data-nosnippet>70</a>            from_hex(<span class="string">"0dfc474151e5c605a693a51ae8227cc0a99fdc4524fc2810c6eda9035d04334d"</span>),
+<a href=#71 id=71 data-nosnippet>71</a>        ],
+<a href=#72 id=72 data-nosnippet>72</a>    ];
+<a href=#73 id=73 data-nosnippet>73</a>
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="doccomment">/// internal round constants, state size = 2
+<a href=#75 id=75 data-nosnippet>75</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC2_INT: [Fr; <span class="number">56</span>] = [
+<a href=#76 id=76 data-nosnippet>76</a>        from_hex(<span class="string">"6c0dc9eb332b5d968bec8ad68fe24ce34087ea54093f153618434475bce402f8"</span>),
+<a href=#77 id=77 data-nosnippet>77</a>        from_hex(<span class="string">"0af5bafd335dae5c86967b11d5dcefb986a54c9d60d35eb06dc7a3fd779b3906"</span>),
+<a href=#78 id=78 data-nosnippet>78</a>        from_hex(<span class="string">"6e12847918f030f2626c150ab69e4be0f13d202ae1f8bc87ea74323e93372e3b"</span>),
+<a href=#79 id=79 data-nosnippet>79</a>        from_hex(<span class="string">"5565d40e21d059a26db241ca125d9316283eadf144b1318e604e253eeae1fe9a"</span>),
+<a href=#80 id=80 data-nosnippet>80</a>        from_hex(<span class="string">"608e01b42d3dca09fed9b54eadaaba3e4ce6aefe92b0dc954a0fa4683a9678f2"</span>),
+<a href=#81 id=81 data-nosnippet>81</a>        from_hex(<span class="string">"16bbe434b24f94e2c40ed1f4f9bd7d17e5be96c3aec15579b35fd80f0f80de9e"</span>),
+<a href=#82 id=82 data-nosnippet>82</a>        from_hex(<span class="string">"0d1be811a8e73220cab01ce981d475522c3d7dd9e2716c3a2cf4ddd541546890"</span>),
+<a href=#83 id=83 data-nosnippet>83</a>        from_hex(<span class="string">"5997a3affb18f942868b86f8ee10a68966e90bac7bbd8c65ede7e6e5ef1f6320"</span>),
+<a href=#84 id=84 data-nosnippet>84</a>        from_hex(<span class="string">"4d92e86d270041061eec80278079fca771499dea5ccdc99682a953bb3a038b8e"</span>),
+<a href=#85 id=85 data-nosnippet>85</a>        from_hex(<span class="string">"616c8c5ce232b9314f694fc6a968446ea9daf7a4079ce1a75fcc950741d680bb"</span>),
+<a href=#86 id=86 data-nosnippet>86</a>        from_hex(<span class="string">"677e31e7846d9131bdc350eaf11a8ff918dd258ddd800444424afab34dfdfe3d"</span>),
+<a href=#87 id=87 data-nosnippet>87</a>        from_hex(<span class="string">"4e7d7f85aefc110b233525ee3e53851aee7d3241e2a132585e0e25005eee0b0e"</span>),
+<a href=#88 id=88 data-nosnippet>88</a>        from_hex(<span class="string">"06a8b4539488b7dddc48c3a226dbda313f906e106f844196d55013d321244f13"</span>),
+<a href=#89 id=89 data-nosnippet>89</a>        from_hex(<span class="string">"5091517b6a85783108999f8e6bda3c793bef3f2e9589641d260bdfde8bdef00d"</span>),
+<a href=#90 id=90 data-nosnippet>90</a>        from_hex(<span class="string">"0d2703e5b30f54d7f414e901802d54f8c14cd6355415df6e0f063d16bef9c43a"</span>),
+<a href=#91 id=91 data-nosnippet>91</a>        from_hex(<span class="string">"56f69096811148eb38eec143d32565c077b3d1a4a4351f2b458f43b1659d4495"</span>),
+<a href=#92 id=92 data-nosnippet>92</a>        from_hex(<span class="string">"622d94d38d1ded428afd062008c5709b43a678f6ba518ec56383e8ffba473504"</span>),
+<a href=#93 id=93 data-nosnippet>93</a>        from_hex(<span class="string">"2730c607bba7333723a4a44577819b7db82a24574f6d13eee4c856c1ca3de9c7"</span>),
+<a href=#94 id=94 data-nosnippet>94</a>        from_hex(<span class="string">"01ac5f59256c5004dc1043c53b23800a3fbab53eb1a83f551056f227b514b9f6"</span>),
+<a href=#95 id=95 data-nosnippet>95</a>        from_hex(<span class="string">"0790b92523c973f1c95b94937afbb5796d89481e7a56328b44bab5ba81ae42f3"</span>),
+<a href=#96 id=96 data-nosnippet>96</a>        from_hex(<span class="string">"1d63b59d97bc269d13964fb3e8771d0acc749bc83eb2f0372484e266142bb8c0"</span>),
+<a href=#97 id=97 data-nosnippet>97</a>        from_hex(<span class="string">"1a52d04e5f14a3a05f7a01262df9e68c77fdf7e2bfb56c8b252d2140efdf0914"</span>),
+<a href=#98 id=98 data-nosnippet>98</a>        from_hex(<span class="string">"5aa9b3b808812b284857e8622843a8717fa5cb49b217017f31d79e8d0f963fc0"</span>),
+<a href=#99 id=99 data-nosnippet>99</a>        from_hex(<span class="string">"6a3d18fdbeb1d77ec1304539b00e6188786dbbc4435269b4c6281367f42656e3"</span>),
+<a href=#100 id=100 data-nosnippet>100</a>        from_hex(<span class="string">"4743e860df269a85dd76fb99dbe9d840eb669dc859754b3f74805e57ba288b00"</span>),
+<a href=#101 id=101 data-nosnippet>101</a>        from_hex(<span class="string">"6c32cac3946825f80a434c5ab397fc1a1c6a9bdfaab53175d4cf3d29ddb6cbc6"</span>),
+<a href=#102 id=102 data-nosnippet>102</a>        from_hex(<span class="string">"333b0eea5da7ed1e3959d16280a361aa77dd24ecbfb28e1b2583ac4e9894305c"</span>),
+<a href=#103 id=103 data-nosnippet>103</a>        from_hex(<span class="string">"3b503fc333b795ccc0c5bb3ae26b077dc3742cb745ec8821648c5ce7ebd9df18"</span>),
+<a href=#104 id=104 data-nosnippet>104</a>        from_hex(<span class="string">"4fa5853188d9f728a17532d94bee6fb28fee510380a5d50927c6c5b1ce283444"</span>),
+<a href=#105 id=105 data-nosnippet>105</a>        from_hex(<span class="string">"5d2ed8a6603a905bac490ebfb9e6c18f0bc9da1bbc2173291b18de6b6186118f"</span>),
+<a href=#106 id=106 data-nosnippet>106</a>        from_hex(<span class="string">"2d830a53584c5556264852f075c78f7f9eb068016ae88af9cda933d6ae52eca7"</span>),
+<a href=#107 id=107 data-nosnippet>107</a>        from_hex(<span class="string">"0250f4d6780ad29ae60e55f135b9ac80ccc7c81e3add37db276c26f1a2b1b86e"</span>),
+<a href=#108 id=108 data-nosnippet>108</a>        from_hex(<span class="string">"6e3e9595f59220599e23e830728d4a0c4d62515ec1ed10b72446cf4df5b4c308"</span>),
+<a href=#109 id=109 data-nosnippet>109</a>        from_hex(<span class="string">"2cd3314555d6faf23ee90cdb884f1c4697ebe98e3a450a624c4d896233b93cd5"</span>),
+<a href=#110 id=110 data-nosnippet>110</a>        from_hex(<span class="string">"584a408d0f370543b8413fee70a060a394e561f504d8679f7bece4bf222e4108"</span>),
+<a href=#111 id=111 data-nosnippet>111</a>        from_hex(<span class="string">"499cd53437b9fcbf7479c00fcc21295759074ce9bd1bb1fbd3460237aef4759e"</span>),
+<a href=#112 id=112 data-nosnippet>112</a>        from_hex(<span class="string">"56a9b567bd0646effd0608d74d537991136098d9a06af6cb3ff8f010efb57578"</span>),
+<a href=#113 id=113 data-nosnippet>113</a>        from_hex(<span class="string">"6a5fae2b00d968b931441b374e27ba4d03b306bd602d48731677169e75a67e8c"</span>),
+<a href=#114 id=114 data-nosnippet>114</a>        from_hex(<span class="string">"2e1cc28e390e64aa1d60edb99c0aeda7c8c32bdb01ba11abbad5026b46eccb27"</span>),
+<a href=#115 id=115 data-nosnippet>115</a>        from_hex(<span class="string">"2d4820000675df7c276beac408fe2e851e734a7008ae09bbcb3c96c70024f71b"</span>),
+<a href=#116 id=116 data-nosnippet>116</a>        from_hex(<span class="string">"0c2fe101a2b52b538b902c6b2dc992cb266f7636e05b0c068385b5fa19e97142"</span>),
+<a href=#117 id=117 data-nosnippet>117</a>        from_hex(<span class="string">"209b790b78c0e7927c6a178ef2f00b8687fc7bd4f21a9e02578551535002bc95"</span>),
+<a href=#118 id=118 data-nosnippet>118</a>        from_hex(<span class="string">"2dd0926cf56bbaaec6491513d08a9983f94a910852a7b4ea4bd4222b93e14c10"</span>),
+<a href=#119 id=119 data-nosnippet>119</a>        from_hex(<span class="string">"4316b39dd7d65b1bb575198104d409b169236a7ade371f7ab176fcbae75a5f0d"</span>),
+<a href=#120 id=120 data-nosnippet>120</a>        from_hex(<span class="string">"540276d61041b91f6ea3068ec260a9338b6e3da15d934e648c24f35aee04e535"</span>),
+<a href=#121 id=121 data-nosnippet>121</a>        from_hex(<span class="string">"37af612900b839977b146324c84772c58a4ccc0f6494cc054571827e74bfd2d3"</span>),
+<a href=#122 id=122 data-nosnippet>122</a>        from_hex(<span class="string">"2af00c93d59ed14c9911e5cb3781d772371e83228e4267bbce11d065c1955338"</span>),
+<a href=#123 id=123 data-nosnippet>123</a>        from_hex(<span class="string">"62b48779b0cf7ff2c10fd9b91a6ff7b7a99f935e961a5a94aa38f9d4f71c8b4c"</span>),
+<a href=#124 id=124 data-nosnippet>124</a>        from_hex(<span class="string">"540bf5bbe01f28563bcbe11a2ce346d8231a2cdd0fe07641f9fa89e5c21978e3"</span>),
+<a href=#125 id=125 data-nosnippet>125</a>        from_hex(<span class="string">"232b6c847a6d23912cb10ecbe50b53491f67f71e9b87a4a30446f2218017874b"</span>),
+<a href=#126 id=126 data-nosnippet>126</a>        from_hex(<span class="string">"0ab34adbe77b8f1e57a370e4fd626071eea74b3f0b66644a629efaa0e96456c0"</span>),
+<a href=#127 id=127 data-nosnippet>127</a>        from_hex(<span class="string">"1a83e43ef118c90046b1bdbeab8dd5cdcab632807c2cd0dc9147cbc5b7084be8"</span>),
+<a href=#128 id=128 data-nosnippet>128</a>        from_hex(<span class="string">"1ec6fa41b41b672d9005468720918130b642567462a3d557a595d4dc6c56f2f9"</span>),
+<a href=#129 id=129 data-nosnippet>129</a>        from_hex(<span class="string">"01f81a153199a751a111b8f5212cfc5bf82aacf0287d03e1864f8e5713fe4a17"</span>),
+<a href=#130 id=130 data-nosnippet>130</a>        from_hex(<span class="string">"2617307587a675f4ecd73a54a7b206162d751cabf3d9fd007bcca4de2c6f0649"</span>),
+<a href=#131 id=131 data-nosnippet>131</a>        from_hex(<span class="string">"1647be94c515178c7974a245624b642bb1ae6e2d4e1682087e362d7f98bc953f"</span>),
+<a href=#132 id=132 data-nosnippet>132</a>    ];
+<a href=#133 id=133 data-nosnippet>133</a>
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="doccomment">/// internal diagonal matrix, state size = 3
+<a href=#135 id=135 data-nosnippet>135</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>MAT_DIAG3_M_1: [Fr; <span class="number">3</span>] = [
+<a href=#136 id=136 data-nosnippet>136</a>        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
+<a href=#137 id=137 data-nosnippet>137</a>        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000001"</span>),
+<a href=#138 id=138 data-nosnippet>138</a>        from_hex(<span class="string">"0000000000000000000000000000000000000000000000000000000000000002"</span>),
+<a href=#139 id=139 data-nosnippet>139</a>    ];
+<a href=#140 id=140 data-nosnippet>140</a>
+<a href=#141 id=141 data-nosnippet>141</a>    <span class="doccomment">/// external round constants, state size = 3
+<a href=#142 id=142 data-nosnippet>142</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC3_EXT: [[Fr; <span class="number">3</span>]; <span class="number">8</span>] = [
+<a href=#143 id=143 data-nosnippet>143</a>        [
+<a href=#144 id=144 data-nosnippet>144</a>            from_hex(<span class="string">"6f007a551156b3a449e44936b7c093644a0ed33f33eaccc628e942e836c1a875"</span>),
+<a href=#145 id=145 data-nosnippet>145</a>            from_hex(<span class="string">"360d7470611e473d353f628f76d110f34e71162f31003b7057538c2596426303"</span>),
+<a href=#146 id=146 data-nosnippet>146</a>            from_hex(<span class="string">"4b5fec3aa073df44019091f007a44ca996484965f7036dce3e9d0977edcdc0f6"</span>),
+<a href=#147 id=147 data-nosnippet>147</a>        ],
+<a href=#148 id=148 data-nosnippet>148</a>        [
+<a href=#149 id=149 data-nosnippet>149</a>            from_hex(<span class="string">"67cf1868af6396c0b84cce715e539f849e06cd1c383ac5b06100c76bcc973a11"</span>),
+<a href=#150 id=150 data-nosnippet>150</a>            from_hex(<span class="string">"555db4d1dced819f5d3de70fde83f1c7d3e8c98968e516a23a771a5c9c8257aa"</span>),
+<a href=#151 id=151 data-nosnippet>151</a>            from_hex(<span class="string">"2bab94d7ae222d135dc3c6c5febfaa314908ac2f12ebe06fbdb74213bf63188b"</span>),
+<a href=#152 id=152 data-nosnippet>152</a>        ],
+<a href=#153 id=153 data-nosnippet>153</a>        [
+<a href=#154 id=154 data-nosnippet>154</a>            from_hex(<span class="string">"66f44be5296682c4fa7882799d6dd049b6d7d2c950ccf98cf2e50d6d1ebb77c2"</span>),
+<a href=#155 id=155 data-nosnippet>155</a>            from_hex(<span class="string">"150c93fef652fb1c2bf03e1a29aa871fef77e7d736766c5d0939d92753cc5dc8"</span>),
+<a href=#156 id=156 data-nosnippet>156</a>            from_hex(<span class="string">"3270661e68928b3a955d55db56dc57c103cc0a60141e894e14259dce537782b2"</span>),
+<a href=#157 id=157 data-nosnippet>157</a>        ],
+<a href=#158 id=158 data-nosnippet>158</a>        [
+<a href=#159 id=159 data-nosnippet>159</a>            from_hex(<span class="string">"073f116f04122e25a0b7afe4e2057299b407c370f2b5a1ccce9fb9ffc345afb3"</span>),
+<a href=#160 id=160 data-nosnippet>160</a>            from_hex(<span class="string">"409fda22558cfe4d3dd8dce24f69e76f8c2aaeb1dd0f09d65e654c71f32aa23f"</span>),
+<a href=#161 id=161 data-nosnippet>161</a>            from_hex(<span class="string">"2a32ec5c4ee5b1837affd09c1f53f5fd55c9cd2061ae93ca8ebad76fc71554d8"</span>),
+<a href=#162 id=162 data-nosnippet>162</a>        ],
+<a href=#163 id=163 data-nosnippet>163</a>        [
+<a href=#164 id=164 data-nosnippet>164</a>            from_hex(<span class="string">"6cbac5e1700984ebc32da15b4bb9683faabab55f67ccc4f71d9560b3475a77eb"</span>),
+<a href=#165 id=165 data-nosnippet>165</a>            from_hex(<span class="string">"4603c403bbfa9a17738a5c6278eaab1c37ec30b0737aa2409fc4898069eb983c"</span>),
+<a href=#166 id=166 data-nosnippet>166</a>            from_hex(<span class="string">"6894e7e22b2c1d5c70a712a6345ae6b192a9c833a9234c31c56aacd16bc2f100"</span>),
+<a href=#167 id=167 data-nosnippet>167</a>        ],
+<a href=#168 id=168 data-nosnippet>168</a>        [
+<a href=#169 id=169 data-nosnippet>169</a>            from_hex(<span class="string">"5be2cbbc44053ad08afa4d1eabc7f3d231eea799b93f226e905b7d4d65c58ebb"</span>),
+<a href=#170 id=170 data-nosnippet>170</a>            from_hex(<span class="string">"58e55f287b453a9808624a8c2a353d528da0f7e713a5c6d0d7711e47063fa611"</span>),
+<a href=#171 id=171 data-nosnippet>171</a>            from_hex(<span class="string">"366ebfafa3ad381c0ee258c9b8fdfccdb868a7d7e1f1f69a2b5dfcc5572555df"</span>),
+<a href=#172 id=172 data-nosnippet>172</a>        ],
+<a href=#173 id=173 data-nosnippet>173</a>        [
+<a href=#174 id=174 data-nosnippet>174</a>            from_hex(<span class="string">"45766ab728968c642f90d97ccf5504ddc10518a819ebbcc4d09c3f5d784d67ce"</span>),
+<a href=#175 id=175 data-nosnippet>175</a>            from_hex(<span class="string">"39678f65512f1ee404db3024f41d3f567ef66d89d044d022e6bc229e95bc76b1"</span>),
+<a href=#176 id=176 data-nosnippet>176</a>            from_hex(<span class="string">"463aed1d2f1f955e3078be5bf7bfc46fc0eb8c51551906a8868f18ffae30cf4f"</span>),
+<a href=#177 id=177 data-nosnippet>177</a>        ],
+<a href=#178 id=178 data-nosnippet>178</a>        [
+<a href=#179 id=179 data-nosnippet>179</a>            from_hex(<span class="string">"21668f016a8063c0d58b7750a3bc2fe1cf82c25f99dc01a4e534c88fe53d85fe"</span>),
+<a href=#180 id=180 data-nosnippet>180</a>            from_hex(<span class="string">"39d00994a8a5046a1bc749363e98a768e34dea56439fe1954bef429bc5331608"</span>),
+<a href=#181 id=181 data-nosnippet>181</a>            from_hex(<span class="string">"4d7f5dcd78ece9a933984de32c0b48fac2bba91f261996b8e9d1021773bd07cc"</span>),
+<a href=#182 id=182 data-nosnippet>182</a>        ]
+<a href=#183 id=183 data-nosnippet>183</a>    ];
+<a href=#184 id=184 data-nosnippet>184</a>
+<a href=#185 id=185 data-nosnippet>185</a>    <span class="doccomment">/// internal round constants, state size = 3
+<a href=#186 id=186 data-nosnippet>186</a>    </span><span class="kw">pub static </span><span class="kw-2">ref </span>RC3_INT: [Fr; <span class="number">56</span>] = [
+<a href=#187 id=187 data-nosnippet>187</a>        from_hex(<span class="string">"5848ebeb5923e92555b7124fffba5d6bd571c6f984195eb9cfd3a3e8eb55b1d4"</span>),
+<a href=#188 id=188 data-nosnippet>188</a>        from_hex(<span class="string">"270326ee039df19e651e2cfc740628ca634d24fc6e2559f22d8ccbe292efeead"</span>),
+<a href=#189 id=189 data-nosnippet>189</a>        from_hex(<span class="string">"27c6642ac633bc66dc100fe7fcfa54918af895bce012f182a068fc37c182e274"</span>),
+<a href=#190 id=190 data-nosnippet>190</a>        from_hex(<span class="string">"1bdfd8b01401c70ad27f57396989129d710e1fb6ab976a459ca18682e26d7ff9"</span>),
+<a href=#191 id=191 data-nosnippet>191</a>        from_hex(<span class="string">"491b9ba6983bcf9f05fe4794adb44a30879bf8289662e1f57d90f672414e8a4a"</span>),
+<a href=#192 id=192 data-nosnippet>192</a>        from_hex(<span class="string">"162a14c62f9a89b814b9d6a9c84dd678f4f6fb3f9054d373c832d824261a35ea"</span>),
+<a href=#193 id=193 data-nosnippet>193</a>        from_hex(<span class="string">"2d193e0f76de586b2af6f79e3127feeaac0a1fc71e2cf0c0f79824667b5b6bec"</span>),
+<a href=#194 id=194 data-nosnippet>194</a>        from_hex(<span class="string">"46efd8a9a262d6d8fdc9ca5c04b0982f24ddcc6e9863885a6a732a3906a07b95"</span>),
+<a href=#195 id=195 data-nosnippet>195</a>        from_hex(<span class="string">"509717e0c200e3c92d8dca2973b3db45f0788294351ad07ae75cbb780693a798"</span>),
+<a href=#196 id=196 data-nosnippet>196</a>        from_hex(<span class="string">"7299b28464a8c94fb9d4df61380f39c0dca9c2c014118789e227252820f01bfc"</span>),
+<a href=#197 id=197 data-nosnippet>197</a>        from_hex(<span class="string">"044ca3cc4a85d73b81696ef1104e674f4feff82984990ff85d0bf58dc8a4aa94"</span>),
+<a href=#198 id=198 data-nosnippet>198</a>        from_hex(<span class="string">"1cbaf2b371dac6a81d0453416d3e235cb8d9e2d4f314f46f6198785f0cd6b9af"</span>),
+<a href=#199 id=199 data-nosnippet>199</a>        from_hex(<span class="string">"1d5b2777692c205b0e6c49d061b6b5f4293c4ab038fdbbdc343e07610f3fede5"</span>),
+<a href=#200 id=200 data-nosnippet>200</a>        from_hex(<span class="string">"56ae7c7a5293bdc23e85e1698c81c77f8ad88c4b33a5780437ad047c6edb59ba"</span>),
+<a href=#201 id=201 data-nosnippet>201</a>        from_hex(<span class="string">"2e9bdbba3dd34bffaa30535bdd749a7e06a9adb0c1e6f962f60e971b8d73b04f"</span>),
+<a href=#202 id=202 data-nosnippet>202</a>        from_hex(<span class="string">"2de11886b18011ca8bd5bae36969299fde40fbe26d047b05035a13661f22418b"</span>),
+<a href=#203 id=203 data-nosnippet>203</a>        from_hex(<span class="string">"2e07de1780b8a70d0d5b4a3f1841dcd82ab9395c449be947bc998884ba96a721"</span>),
+<a href=#204 id=204 data-nosnippet>204</a>        from_hex(<span class="string">"0f69f1854d20ca0cbbdb63dbd52dad16250440a99d6b8af3825e4c2bb74925ca"</span>),
+<a href=#205 id=205 data-nosnippet>205</a>        from_hex(<span class="string">"5dc987318e6e59c1afb87b655dd58cc1d22e513a05838cd4585d04b135b957ca"</span>),
+<a href=#206 id=206 data-nosnippet>206</a>        from_hex(<span class="string">"48b725758571c9df6c01dc639a85f07297696b1bb678633a29dc91de95ef53f6"</span>),
+<a href=#207 id=207 data-nosnippet>207</a>        from_hex(<span class="string">"5e565e08c0821099256b56490eaee1d573afd10bb6d17d13ca4e5c611b2a3718"</span>),
+<a href=#208 id=208 data-nosnippet>208</a>        from_hex(<span class="string">"2eb1b25417fe17670d135dc639fb09a46ce5113507f96de9816c059422dc705e"</span>),
+<a href=#209 id=209 data-nosnippet>209</a>        from_hex(<span class="string">"115cd0a0643cfb988c24cb44c3fab48aff36c661d26cc42db8b1bdf4953bd82c"</span>),
+<a href=#210 id=210 data-nosnippet>210</a>        from_hex(<span class="string">"26ca293f7b2c462d066d7378b999868bbb57ddf14e0f958ade801612311d04cd"</span>),
+<a href=#211 id=211 data-nosnippet>211</a>        from_hex(<span class="string">"4147400d8e1aaccf311a6b5b762011ab3e45326e4d4b9de26992816b99c528ac"</span>),
+<a href=#212 id=212 data-nosnippet>212</a>        from_hex(<span class="string">"6b0db7dccc4ba1b268f6bdcc4d372848d4a72976c268ea30519a2f73e6db4d55"</span>),
+<a href=#213 id=213 data-nosnippet>213</a>        from_hex(<span class="string">"17bf1b93c4c7e01a2a830aa162412cd90f160bf9f71e967ff5209d14b24820ca"</span>),
+<a href=#214 id=214 data-nosnippet>214</a>        from_hex(<span class="string">"4b431cd9efedbc94cf1eca6f9e9c1839d0e66a8bffa8c8464cac81a39d3cf8f1"</span>),
+<a href=#215 id=215 data-nosnippet>215</a>        from_hex(<span class="string">"35b41a7ac4f3c571a24f8456369c85dfe03c0354bd8cfd3805c86f2e7dc293c5"</span>),
+<a href=#216 id=216 data-nosnippet>216</a>        from_hex(<span class="string">"3b1480080523c439435927994849bea964e14d3beb2dddde72ac156af435d09e"</span>),
+<a href=#217 id=217 data-nosnippet>217</a>        from_hex(<span class="string">"2cc6810031dc1b0d4950856dc907d57508e286442a2d3eb2271618d874b14c6d"</span>),
+<a href=#218 id=218 data-nosnippet>218</a>        from_hex(<span class="string">"6f4141c8401c5a395ba6790efd71c70c04afea06c3c92826bcabdd5cb5477d51"</span>),
+<a href=#219 id=219 data-nosnippet>219</a>        from_hex(<span class="string">"25bdbbeda1bde8c1059618e2afd2ef999e517aa93b78341d91f318c09f0cb566"</span>),
+<a href=#220 id=220 data-nosnippet>220</a>        from_hex(<span class="string">"392a4a8758e06ee8b95f33c25dde8ac02a5ed0a27b61926cc6313487073f7f7b"</span>),
+<a href=#221 id=221 data-nosnippet>221</a>        from_hex(<span class="string">"272a55878a08442b9aa6111f4de009485e6a6fd15db89365e7bbcef02eb5866c"</span>),
+<a href=#222 id=222 data-nosnippet>222</a>        from_hex(<span class="string">"631ec1d6d28dd9e824ee89a30730aef7ab463acfc9d184b355aa05fd6938eab5"</span>),
+<a href=#223 id=223 data-nosnippet>223</a>        from_hex(<span class="string">"4eb6fda10fd0fbde02c7449bfbddc35bcd8225e7e5c3833a0818a100409dc6f2"</span>),
+<a href=#224 id=224 data-nosnippet>224</a>        from_hex(<span class="string">"2d5b308b0cf02cdfefa13c4e60e26239a6ebba011694dd129b925b3c5b21e0e2"</span>),
+<a href=#225 id=225 data-nosnippet>225</a>        from_hex(<span class="string">"16549fc6af2f3b72dd5d293d72e2e5f244dff42f18b46c56ef38c57c311673ac"</span>),
+<a href=#226 id=226 data-nosnippet>226</a>        from_hex(<span class="string">"42332677ff359c5e8db836d9f5fb54822e39bd5e22340bb9ba975ba1a92be382"</span>),
+<a href=#227 id=227 data-nosnippet>227</a>        from_hex(<span class="string">"49d7d2c0b449e5179bc5ccc3b44c6075d9849b5610465f09ea725ddc97723a94"</span>),
+<a href=#228 id=228 data-nosnippet>228</a>        from_hex(<span class="string">"64c20fb90d7a003831757cc4c6226f6e4985fc9ecb416b9f684ca0351d967904"</span>),
+<a href=#229 id=229 data-nosnippet>229</a>        from_hex(<span class="string">"59cff40de83b52b41bc443d7979510d771c940b9758ca820fe73b5c8d5580934"</span>),
+<a href=#230 id=230 data-nosnippet>230</a>        from_hex(<span class="string">"53db2731730c39b04edd875fe3b7c882808285cdbc621d7af4f80dd53ebb71b0"</span>),
+<a href=#231 id=231 data-nosnippet>231</a>        from_hex(<span class="string">"1b10bb7a82afce39fa69c3a2ad52f76d76398265344203119b7126d9b46860df"</span>),
+<a href=#232 id=232 data-nosnippet>232</a>        from_hex(<span class="string">"561b6012d666bfe179c4dd7f84cdd1531596d3aac7c5700ceb319f91046a63c9"</span>),
+<a href=#233 id=233 data-nosnippet>233</a>        from_hex(<span class="string">"0f1e7505ebd91d2fc79c2df7dc98a3bed1b36968ba0405c090d27f6a00b7dfc8"</span>),
+<a href=#234 id=234 data-nosnippet>234</a>        from_hex(<span class="string">"2f313faf0d3f6187537a7497a3b43f46797fd6e3f18eb1caff457756b819bb20"</span>),
+<a href=#235 id=235 data-nosnippet>235</a>        from_hex(<span class="string">"3a5cbb6de450b481fa3ca61c0ed15bc55cad11ebf0f7ceb8f0bc3e732ecb26f6"</span>),
+<a href=#236 id=236 data-nosnippet>236</a>        from_hex(<span class="string">"681d93411bf8ce63f6716aefbd0e24506454c0348ee38fabeb264702714ccf94"</span>),
+<a href=#237 id=237 data-nosnippet>237</a>        from_hex(<span class="string">"5178e940f50004312646b436727f0e80a7b8f2e9ee1fdc677c4831a7672777fb"</span>),
+<a href=#238 id=238 data-nosnippet>238</a>        from_hex(<span class="string">"3dab54bc9bef688dd92086e253b439d651baa6e20f892b62865527cbca915982"</span>),
+<a href=#239 id=239 data-nosnippet>239</a>        from_hex(<span class="string">"4b3ce75311218f9ae905f84eaa5b2b3818448bbf3972e1aad69de321009015d0"</span>),
+<a href=#240 id=240 data-nosnippet>240</a>        from_hex(<span class="string">"06dbfb42b979884de280d31670123f744c24b33b410fefd4368045acf2b71ae3"</span>),
+<a href=#241 id=241 data-nosnippet>241</a>        from_hex(<span class="string">"068d6b4608aae810c6f039ea1973a63eb8d2de72e3d2c9eca7fc32d22f18b9d3"</span>),
+<a href=#242 id=242 data-nosnippet>242</a>        from_hex(<span class="string">"4c5c254589a92a36084a57d3b1d964278acc7e4fe8f69f2955954f27a79cebef"</span>),
+<a href=#243 id=243 data-nosnippet>243</a>    ];
+<a href=#244 id=244 data-nosnippet>244</a>}
+<a href=#245 id=245 data-nosnippet>245</a>
+<a href=#246 id=246 data-nosnippet>246</a><span class="attr">#[cfg(test)]
+<a href=#247 id=247 data-nosnippet>247</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span>tests {
+<a href=#248 id=248 data-nosnippet>248</a>    <span class="kw">use </span>ark_ff::PrimeField;
+<a href=#249 id=249 data-nosnippet>249</a>    <span class="kw">use </span>ark_std::test_rng;
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#252 id=252 data-nosnippet>252</a>    <span class="kw">use </span><span class="kw">crate</span>::Poseidon2;
+<a href=#253 id=253 data-nosnippet>253</a>
+<a href=#254 id=254 data-nosnippet>254</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>consistent_perm_helper&lt;
+<a href=#255 id=255 data-nosnippet>255</a>        F: PrimeField,
+<a href=#256 id=256 data-nosnippet>256</a>        <span class="kw">const </span>N: usize,
+<a href=#257 id=257 data-nosnippet>257</a>        P: Poseidon2Params&lt;F, N&gt;,
+<a href=#258 id=258 data-nosnippet>258</a>    &gt;() {
+<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw">let </span>rng = <span class="kw-2">&amp;mut </span>test_rng();
+<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">10 </span>{
+<a href=#261 id=261 data-nosnippet>261</a>            <span class="kw">let </span>input1 = [F::rand(rng); N];
+<a href=#262 id=262 data-nosnippet>262</a>            <span class="kw">let </span>input2 = [F::rand(rng); N];
+<a href=#263 id=263 data-nosnippet>263</a>
+<a href=#264 id=264 data-nosnippet>264</a>            <span class="comment">// same input get the same permutated output
+<a href=#265 id=265 data-nosnippet>265</a>            </span><span class="macro">assert_eq!</span>(
+<a href=#266 id=266 data-nosnippet>266</a>                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1),
+<a href=#267 id=267 data-nosnippet>267</a>                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1)
+<a href=#268 id=268 data-nosnippet>268</a>            );
+<a href=#269 id=269 data-nosnippet>269</a>            <span class="comment">// diff input get diff permutated output
+<a href=#270 id=270 data-nosnippet>270</a>            </span><span class="macro">assert_ne!</span>(
+<a href=#271 id=271 data-nosnippet>271</a>                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input1),
+<a href=#272 id=272 data-nosnippet>272</a>                Poseidon2::permute::&lt;P, N&gt;(<span class="kw-2">&amp;</span>input2)
+<a href=#273 id=273 data-nosnippet>273</a>            );
+<a href=#274 id=274 data-nosnippet>274</a>        }
+<a href=#275 id=275 data-nosnippet>275</a>    }
+<a href=#276 id=276 data-nosnippet>276</a>    <span class="attr">#[test]
+<a href=#277 id=277 data-nosnippet>277</a>    </span><span class="kw">fn </span>consistent_perm() {
+<a href=#278 id=278 data-nosnippet>278</a>        consistent_perm_helper::&lt;Fr, <span class="number">2</span>, Poseidon2ParamsBls2&gt;();
+<a href=#279 id=279 data-nosnippet>279</a>        consistent_perm_helper::&lt;Fr, <span class="number">3</span>, Poseidon2ParamsBls3&gt;();
+<a href=#280 id=280 data-nosnippet>280</a>    }
+<a href=#281 id=281 data-nosnippet>281</a>
+<a href=#282 id=282 data-nosnippet>282</a>    <span class="comment">// copied from &lt;https://github.com/HorizenLabs/poseidon2/blob/055bde3f4782731ba5f5ce5888a440a94327eaf3/plain_implementations/src/poseidon2/poseidon2.rs#L425&gt;
+<a href=#283 id=283 data-nosnippet>283</a>    </span><span class="attr">#[test]
+<a href=#284 id=284 data-nosnippet>284</a>    </span><span class="kw">fn </span>fixed_test_vector() {
+<a href=#285 id=285 data-nosnippet>285</a>        <span class="kw">let </span><span class="kw-2">mut </span>input = [Fr::from(<span class="number">0</span>), Fr::from(<span class="number">1</span>)];
+<a href=#286 id=286 data-nosnippet>286</a>        Poseidon2::permute_mut::&lt;Poseidon2ParamsBls2, <span class="number">2</span>&gt;(<span class="kw-2">&amp;mut </span>input);
+<a href=#287 id=287 data-nosnippet>287</a>        <span class="macro">assert_eq!</span>(
+<a href=#288 id=288 data-nosnippet>288</a>            input[<span class="number">0</span>],
+<a href=#289 id=289 data-nosnippet>289</a>            from_hex(<span class="string">"73c46dd530e248a87b61d19e67fa1b4ed30fc3d09f16531fe189fb945a15ce4e"</span>)
+<a href=#290 id=290 data-nosnippet>290</a>        );
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="macro">assert_eq!</span>(
+<a href=#292 id=292 data-nosnippet>292</a>            input[<span class="number">1</span>],
+<a href=#293 id=293 data-nosnippet>293</a>            from_hex(<span class="string">"1f0e305ee21c9366d5793b80251405032a3fee32b9dd0b5f4578262891b043b4"</span>)
+<a href=#294 id=294 data-nosnippet>294</a>        );
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>        <span class="kw">let </span><span class="kw-2">mut </span>input = [Fr::from(<span class="number">0</span>), Fr::from(<span class="number">1</span>), Fr::from(<span class="number">2</span>)];
+<a href=#297 id=297 data-nosnippet>297</a>        Poseidon2::permute_mut::&lt;Poseidon2ParamsBls3, <span class="number">3</span>&gt;(<span class="kw-2">&amp;mut </span>input);
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="macro">assert_eq!</span>(
+<a href=#299 id=299 data-nosnippet>299</a>            input[<span class="number">0</span>],
+<a href=#300 id=300 data-nosnippet>300</a>            from_hex(<span class="string">"1b152349b1950b6a8ca75ee4407b6e26ca5cca5650534e56ef3fd45761fbf5f0"</span>)
+<a href=#301 id=301 data-nosnippet>301</a>        );
+<a href=#302 id=302 data-nosnippet>302</a>        <span class="macro">assert_eq!</span>(
+<a href=#303 id=303 data-nosnippet>303</a>            input[<span class="number">1</span>],
+<a href=#304 id=304 data-nosnippet>304</a>            from_hex(<span class="string">"4c5793c87d51bdc2c08a32108437dc0000bd0275868f09ebc5f36919af5b3891"</span>)
+<a href=#305 id=305 data-nosnippet>305</a>        );
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="macro">assert_eq!</span>(
+<a href=#307 id=307 data-nosnippet>307</a>            input[<span class="number">2</span>],
+<a href=#308 id=308 data-nosnippet>308</a>            from_hex(<span class="string">"1fc8ed171e67902ca49863159fe5ba6325318843d13976143b8125f08b50dc6b"</span>)
+<a href=#309 id=309 data-nosnippet>309</a>        );
+<a href=#310 id=310 data-nosnippet>310</a>    }
+<a href=#311 id=311 data-nosnippet>311</a>}</code></pre></div></section></main></body></html>
