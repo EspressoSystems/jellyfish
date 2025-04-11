@@ -388,6 +388,10 @@ impl SignatureScheme for BLSSignatureScheme {
         msg: M,
         sig: &Self::Signature,
     ) -> Result<(), SignatureError> {
+        vk.check()
+            .map_err(|_| SignatureError::FailedValidityCheck)?;
+        sig.check()
+            .map_err(|_| SignatureError::FailedValidityCheck)?;
         match sig.verify(false, msg.as_ref(), Self::CS_ID.as_bytes(), &[], vk, true) {
             BLST_ERROR::BLST_SUCCESS => Ok(()),
             e => Err(SignatureError::VerificationError(format!("{e:?}"))),
@@ -431,7 +435,7 @@ impl BLSSignatureScheme {
 mod test {
     use super::*;
     use crate::tests::{failed_verification, sign_and_verify};
-    use ark_std::{fmt::Debug, vec};
+    use ark_std::{fmt::Debug, rand::Rng, vec};
 
     #[test]
     fn test_bls_sig() {
