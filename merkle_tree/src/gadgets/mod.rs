@@ -11,7 +11,7 @@ use ark_ff::PrimeField;
 use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 
 mod universal_merkle_tree;
-use ark_std::{string::ToString, vec::Vec};
+use ark_std::{string::ToString, vec, vec::Vec};
 
 use crate::{
     internal::{MerkleNode, MerkleTreeProof},
@@ -275,7 +275,10 @@ pub struct RescueDigestGadget {}
 
 impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
     fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError> {
-        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, data, 1)?[0])
+        let zero = circuit.zero();
+        let mut input = vec![zero];
+        input.extend(data.iter());
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &input, 1)?[0])
     }
 
     fn digest_leaf(
@@ -283,8 +286,8 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
         pos: Variable,
         elem: Variable,
     ) -> Result<Variable, CircuitError> {
-        let zero = circuit.zero();
-        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[zero, pos, elem], 1)?[0])
+        let one = circuit.one();
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[one, pos, elem], 1)?[0])
     }
 }
 
