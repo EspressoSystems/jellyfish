@@ -47,6 +47,10 @@ use zeroize::Zeroize;
 pub enum SignatureError {
     /// Bad parameter in function call, {0}
     ParameterError(String),
+    /// Value is not in the right subgroup
+    FailedSubgroupCheck,
+    /// Value is not on the right elliptic curve
+    FailedOnCurveCheck,
     /// Verification failed, {0}
     VerificationError(String),
 }

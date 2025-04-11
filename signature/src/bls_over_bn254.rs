@@ -171,11 +171,11 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 msgs.len(),
             )));
         }
-        // subgroup check
-        // TODO: for BN we don't need a subgroup check
-        sig.sigma.check().map_err(|_e| {
-            SignatureError::ParameterError("signature subgroup check failed".to_string())
-        })?;
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
         // verify
         let mut m_points: Vec<G1Prepared<_>> = msgs
             .iter()
@@ -215,6 +215,12 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 "no verification key for signature verification".to_string(),
             ));
         }
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
+
         let mut agg_vk = vks[0].0;
         for vk in vks.iter().skip(1) {
             agg_vk += vk.0;
@@ -510,6 +516,11 @@ impl VerKey {
         sig: &Signature,
         csid: B,
     ) -> Result<(), SignatureError> {
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
         let msg_input = [msg, csid.as_ref()].concat();
         let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
