@@ -36,15 +36,26 @@ pub struct RescueHash<F: RescueParameter> {
     phantom_f: PhantomData<F>,
 }
 
+fn rescue_hash_leaf_domain_separator<F: PrimeField>() -> F {
+    F::one()
+}
+fn rescue_hash_internal_domain_separator<F: PrimeField>() -> F {
+    F::zero()
+}
+
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = vec![F::zero()];
+        let mut input = vec![rescue_hash_internal_domain_separator::<F>()];
         input.extend(data.iter());
         Ok(RescueCRHF::<F>::sponge_with_zero_padding(&input, 1)[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let data = [F::one(), F::from(pos.clone()), *elem];
+        let data = [
+            rescue_hash_leaf_domain_separator::<F>(),
+            F::from(pos.clone()),
+            *elem,
+        ];
         Ok(RescueCRHF::<F>::sponge_with_zero_padding(&data, 1)[0])
     }
 }
@@ -58,8 +69,16 @@ pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>
 /// Example instantiation of a SparseMerkleTree indexed by I
 pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
 
+fn poseidon2_hash_leaf_domain_separator<F: PrimeField>() -> F {
+    F::one()
+}
+fn poseidon2_hash_internal_domain_separator<F: PrimeField>() -> F {
+    F::zero()
+}
+
 // Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
-// The first element for the domain separation is used for
+// for arity INPUT_SIZE - 1. The first input element is used for the domain
+// separation.
 impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
     for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
 where
@@ -68,21 +87,17 @@ where
     S: Sponge<U = F>,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = vec![F::zero(); INPUT_SIZE + 1];
-        if data.len() > INPUT_SIZE {
-            return Err(MerkleTreeError::ParametersError(
-                "input too large".to_string(),
-            ));
-        }
-        input[1..].copy_from_slice(&data[..]);
+        let mut input = vec![poseidon2_hash_internal_domain_separator::<F>()];
+        input.extend(data.iter());
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let mut input = vec![F::zero(); INPUT_SIZE + 1];
-        input[0] = F::one();
-        input[INPUT_SIZE - 1] = F::from(pos.clone());
-        input[INPUT_SIZE - 2] = *elem;
+        let mut input = vec![
+            poseidon2_hash_leaf_domain_separator::<F>(),
+            F::from(pos.clone()),
+            *elem,
+        ];
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 }
@@ -152,6 +167,7 @@ macro_rules! impl_mt_hash_256 {
         {
             fn digest(data: &[$node_name]) -> Result<$node_name, MerkleTreeError> {
                 let mut h = $hasher::new();
+                // domain separation for internal node
                 h.update(b"0");
                 for value in data {
                     h.update(value);
@@ -163,6 +179,7 @@ macro_rules! impl_mt_hash_256 {
                 let mut writer = Vec::new();
                 elem.serialize_compressed(&mut writer).unwrap();
                 let mut h = $hasher::new();
+                // domain separation for leaf
                 h.update(b"1");
                 h.update(writer);
                 Ok($node_name(h.finalize().into()))
