@@ -146,6 +146,7 @@ where
 {
     fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(b"0");
         for value in data {
             hasher.update(value.as_ref());
         }
@@ -154,6 +155,7 @@ where
 
     fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(b"1");
         pos.serialize_uncompressed(&mut hasher)
             .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
         elem.serialize_uncompressed(&mut hasher)

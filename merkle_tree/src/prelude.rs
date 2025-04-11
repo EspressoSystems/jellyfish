@@ -23,7 +23,7 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
-use ark_std::{fmt, marker::PhantomData, vec::Vec};
+use ark_std::{fmt, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_crhf::CRHF;
 use jf_poseidon2::{crhf::FixedLenPoseidon2Hash, Poseidon2, Poseidon2Params};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
@@ -38,25 +38,28 @@ pub struct RescueHash<F: RescueParameter> {
 
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
+        let mut input = vec![F::zero()];
+        input.extend(data.iter());
+        Ok(RescueCRHF::<F>::sponge_no_padding(&input, 1)?[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let data = [F::zero(), F::from(pos.clone()), *elem];
+        let data = [F::one(), F::from(pos.clone()), *elem];
         Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
     }
 }
 
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, 3, F>;
+pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, 2, F>;
 
 /// A standard light merkle tree using RATE-3 rescue hash function
-pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, 3, F>;
+pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, 2, F>;
 
 /// Example instantiation of a SparseMerkleTree indexed by I
-pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
+pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 2, F>;
 
 // Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
+// The first element for the domain separation is used for
 impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
     for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
 where
@@ -65,13 +68,19 @@ where
     S: Sponge<U = F>,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); INPUT_SIZE];
-        input.copy_from_slice(&data[..]);
+        let mut input = vec![F::zero(); INPUT_SIZE + 1];
+        if data.len() > INPUT_SIZE {
+            return Err(MerkleTreeError::ParametersError(
+                "input too large".to_string(),
+            ));
+        }
+        input[1..].copy_from_slice(&data[..]);
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); INPUT_SIZE];
+        let mut input = vec![F::zero(); INPUT_SIZE + 1];
+        input[0] = F::one();
         input[INPUT_SIZE - 1] = F::from(pos.clone());
         input[INPUT_SIZE - 2] = *elem;
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
@@ -143,6 +152,7 @@ macro_rules! impl_mt_hash_256 {
         {
             fn digest(data: &[$node_name]) -> Result<$node_name, MerkleTreeError> {
                 let mut h = $hasher::new();
+                h.update(b"0");
                 for value in data {
                     h.update(value);
                 }
@@ -153,6 +163,7 @@ macro_rules! impl_mt_hash_256 {
                 let mut writer = Vec::new();
                 elem.serialize_compressed(&mut writer).unwrap();
                 let mut h = $hasher::new();
+                h.update(b"1");
                 h.update(writer);
                 Ok($node_name(h.finalize().into()))
             }
