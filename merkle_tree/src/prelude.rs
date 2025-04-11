@@ -50,13 +50,13 @@ impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for Rescue
 }
 
 /// A standard merkle tree using RATE-3 rescue hash function
-pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, 2, F>;
+pub type RescueMerkleTree<F> = MerkleTree<F, RescueHash<F>, u64, 3, F>;
 
 /// A standard light merkle tree using RATE-3 rescue hash function
-pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, 2, F>;
+pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>, u64, 3, F>;
 
 /// Example instantiation of a SparseMerkleTree indexed by I
-pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 2, F>;
+pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
 
 // Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
 // The first element for the domain separation is used for

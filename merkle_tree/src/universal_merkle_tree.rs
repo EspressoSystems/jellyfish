@@ -280,8 +280,8 @@ mod mt_tests {
 
     fn test_update_and_lookup_helper<I, F>()
     where
-        I: Index + ToTraversalPath<2>,
-        F: RescueParameter + ToTraversalPath<2>,
+        I: Index + ToTraversalPath<3>,
+        F: RescueParameter + ToTraversalPath<3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
         let mut mt = RescueSparseMerkleTree::<F, F>::new(10);
@@ -544,8 +544,8 @@ mod mt_tests {
 
     fn test_persistent_update_helper<I, F>()
     where
-        I: Index + ToTraversalPath<2>,
-        F: RescueParameter + ToTraversalPath<2>,
+        I: Index + ToTraversalPath<3>,
+        F: RescueParameter + ToTraversalPath<3>,
         RescueHash<F>: DigestAlgorithm<F, I, F>,
     {
         let mt = RescueSparseMerkleTree::<F, F>::new(10);
@@ -581,7 +581,7 @@ mod mt_tests {
         test_universal_mt_serde_helper::<Fr381>();
     }
 
-    fn test_universal_mt_serde_helper<F: RescueParameter + ToTraversalPath<2>>() {
+    fn test_universal_mt_serde_helper<F: RescueParameter + ToTraversalPath<3>>() {
         let mut hashmap = HashMap::new();
         hashmap.insert(F::from(1u64), F::from(2u64));
         hashmap.insert(F::from(10u64), F::from(3u64));
