@@ -49,7 +49,7 @@
 <a href=#49 id=49 data-nosnippet>49</a><span class="doccomment">/// domain separator of byte-oriented hash, for the leaf node
 <a href=#50 id=50 data-nosnippet>50</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LEAF_HASH_DOM_SEP: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8; <span class="number">1</span>] = <span class="string">b"1"</span>;
 <a href=#51 id=51 data-nosnippet>51</a><span class="doccomment">/// domain separator of byte-oriented hash, for the internal node
-<a href=#52 id=52 data-nosnippet>52</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>INTERNAL_HASH_DOM_SEP: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8; <span class="number">1</span>] = <span class="string">b"1"</span>;
+<a href=#52 id=52 data-nosnippet>52</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>INTERNAL_HASH_DOM_SEP: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8; <span class="number">1</span>] = <span class="string">b"0"</span>;
 <a href=#53 id=53 data-nosnippet>53</a>
 <a href=#54 id=54 data-nosnippet>54</a><span class="kw">impl</span>&lt;I: Index, F: RescueParameter + From&lt;I&gt;&gt; DigestAlgorithm&lt;F, I, F&gt; <span class="kw">for </span>RescueHash&lt;F&gt; {
 <a href=#55 id=55 data-nosnippet>55</a>    <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[F]) -&gt; <span class="prelude-ty">Result</span>&lt;F, MerkleTreeError&gt; {
