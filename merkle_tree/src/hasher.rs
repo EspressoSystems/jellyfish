@@ -40,7 +40,10 @@
 #![allow(clippy::non_canonical_partial_ord_impl)]
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
-use crate::errors::MerkleTreeError;
+use crate::{
+    errors::MerkleTreeError,
+    prelude::{INTERNAL_HASH_DOM_SEP, LEAF_HASH_DOM_SEP},
+};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
@@ -146,7 +149,7 @@ where
 {
     fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
-        hasher.update(b"0");
+        hasher.update(INTERNAL_HASH_DOM_SEP);
         for value in data {
             hasher.update(value.as_ref());
         }
@@ -155,7 +158,7 @@ where
 
     fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
-        hasher.update(b"1");
+        hasher.update(LEAF_HASH_DOM_SEP);
         pos.serialize_uncompressed(&mut hasher)
             .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
         elem.serialize_uncompressed(&mut hasher)

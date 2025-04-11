@@ -47,9 +47,9 @@ fn internal_hash_dom_sep<F: PrimeField>() -> F {
 }
 
 /// domain separator of byte-oriented hash, for the leaf node
-const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+pub(crate) const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
 /// domain separator of byte-oriented hash, for the internal node
-const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"1";
 
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
@@ -160,7 +160,7 @@ macro_rules! impl_mt_hash_256 {
         {
             fn digest(data: &[$node_name]) -> Result<$node_name, MerkleTreeError> {
                 let mut h = $hasher::new();
-                h.update(LEAF_HASH_DOM_SEP);
+                h.update(INTERNAL_HASH_DOM_SEP);
                 for value in data {
                     h.update(value);
                 }
@@ -171,7 +171,7 @@ macro_rules! impl_mt_hash_256 {
                 let mut writer = Vec::new();
                 elem.serialize_compressed(&mut writer).unwrap();
                 let mut h = $hasher::new();
-                h.update(INTERNAL_HASH_DOM_SEP);
+                h.update(LEAF_HASH_DOM_SEP);
                 h.update(writer);
                 Ok($node_name(h.finalize().into()))
             }
