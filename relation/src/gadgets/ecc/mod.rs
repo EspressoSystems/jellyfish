@@ -618,7 +618,7 @@ mod test {
 
     fn test_is_neutral_helper<F, P>() -> Result<(), CircuitError>
     where
-        F: PrimeField + ?Sized,
+        F: PrimeField,
         P: Config<BaseField = F>,
     {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();

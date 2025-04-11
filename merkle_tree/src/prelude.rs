@@ -23,7 +23,7 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
-use ark_std::{fmt, marker::PhantomData, vec::Vec};
+use ark_std::{fmt, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_crhf::CRHF;
 use jf_poseidon2::{crhf::FixedLenPoseidon2Hash, Poseidon2, Poseidon2Params};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
@@ -36,14 +36,31 @@ pub struct RescueHash<F: RescueParameter> {
     phantom_f: PhantomData<F>,
 }
 
+/// domain separator of algebraic hash, for the leaf node
+fn leaf_hash_dom_sep<F: PrimeField>() -> F {
+    F::one()
+}
+
+/// domain separator of algebraic hash, for the internal node
+fn internal_hash_dom_sep<F: PrimeField>() -> F {
+    F::zero()
+}
+
+/// domain separator of byte-oriented hash, for the leaf node
+pub(crate) const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+/// domain separator of byte-oriented hash, for the internal node
+pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)?[0])
+        let mut input = vec![internal_hash_dom_sep()];
+        input.extend(data.iter());
+        Ok(RescueCRHF::<F>::sponge_with_zero_padding(&input, 1)[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let data = [F::zero(), F::from(pos.clone()), *elem];
-        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
+        let data = [leaf_hash_dom_sep(), F::from(pos.clone()), *elem];
+        Ok(RescueCRHF::<F>::sponge_with_zero_padding(&data, 1)[0])
     }
 }
 
@@ -57,6 +74,8 @@ pub type RescueLightWeightMerkleTree<F> = LightWeightMerkleTree<F, RescueHash<F>
 pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I, 3, F>;
 
 // Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
+// for arity INPUT_SIZE - 1. The first input element is used for the domain
+// separation.
 impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
     for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
 where
@@ -65,15 +84,13 @@ where
     S: Sponge<U = F>,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); INPUT_SIZE];
-        input.copy_from_slice(&data[..]);
+        let mut input = vec![internal_hash_dom_sep()];
+        input.extend(data.iter());
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let mut input = [F::default(); INPUT_SIZE];
-        input[INPUT_SIZE - 1] = F::from(pos.clone());
-        input[INPUT_SIZE - 2] = *elem;
+        let mut input = vec![leaf_hash_dom_sep(), F::from(pos.clone()), *elem];
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 }
@@ -143,6 +160,7 @@ macro_rules! impl_mt_hash_256 {
         {
             fn digest(data: &[$node_name]) -> Result<$node_name, MerkleTreeError> {
                 let mut h = $hasher::new();
+                h.update(INTERNAL_HASH_DOM_SEP);
                 for value in data {
                     h.update(value);
                 }
@@ -153,6 +171,7 @@ macro_rules! impl_mt_hash_256 {
                 let mut writer = Vec::new();
                 elem.serialize_compressed(&mut writer).unwrap();
                 let mut h = $hasher::new();
+                h.update(LEAF_HASH_DOM_SEP);
                 h.update(writer);
                 Ok($node_name(h.finalize().into()))
             }
@@ -173,3 +192,44 @@ pub type Keccak256MerkleTree<E> = MerkleTree<E, Keccak256Node, u64, 3, Keccak256
 /// Light weight merkle tree using Keccak256 hash
 pub type LightWeightKeccak256MerkleTree<E> =
     LightWeightMerkleTree<E, Keccak256Digest, u64, 3, Keccak256Node>;
+
+#[cfg(test)]
+mod tests {
+    use super::{MerkleTreeScheme, RescueMerkleTree};
+    use ark_bls12_377::Fr as Fr377;
+    use ark_bls12_381::Fr as Fr381;
+    use ark_bn254::Fr as Fr254;
+    use jf_rescue::{crhf::RescueCRHF, RescueParameter};
+
+    #[test]
+    fn test_extension_attack() {
+        test_extension_attack_helper::<Fr254>();
+        test_extension_attack_helper::<Fr377>();
+        test_extension_attack_helper::<Fr381>();
+    }
+
+    fn test_extension_attack_helper<F: RescueParameter>() {
+        let forged_val = F::from(42u64);
+        let attack_pos = 5u64;
+        let forged_pos = attack_pos * 3 + 2;
+        let data = [F::zero(), F::from(forged_pos), forged_val];
+        let val = RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0];
+        let elems = ark_std::vec![val; attack_pos as usize + 1];
+        let mt = RescueMerkleTree::<F>::from_elems(None, elems).unwrap();
+        let commit = mt.commitment();
+        let (elem, mut proof) = mt.lookup(attack_pos).expect_ok().unwrap();
+        assert!(
+            RescueMerkleTree::<F>::verify(&commit, attack_pos, elem, &proof)
+                .unwrap()
+                .is_ok()
+        );
+        proof
+            .0
+            .insert(0, ark_std::vec![F::zero(), F::from(attack_pos)]);
+        assert!(
+            RescueMerkleTree::<F>::verify(&commit, forged_pos, forged_val, &proof)
+                .unwrap()
+                .is_err()
+        );
+    }
+}
