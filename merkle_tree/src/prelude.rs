@@ -192,3 +192,44 @@ pub type Keccak256MerkleTree<E> = MerkleTree<E, Keccak256Node, u64, 3, Keccak256
 /// Light weight merkle tree using Keccak256 hash
 pub type LightWeightKeccak256MerkleTree<E> =
     LightWeightMerkleTree<E, Keccak256Digest, u64, 3, Keccak256Node>;
+
+#[cfg(test)]
+mod tests {
+    use super::{MerkleTreeScheme, RescueMerkleTree};
+    use ark_bls12_377::Fr as Fr377;
+    use ark_bls12_381::Fr as Fr381;
+    use ark_bn254::Fr as Fr254;
+    use jf_rescue::{crhf::RescueCRHF, RescueParameter};
+
+    #[test]
+    fn test_extension_attack() {
+        test_extension_attack_helper::<Fr254>();
+        test_extension_attack_helper::<Fr377>();
+        test_extension_attack_helper::<Fr381>();
+    }
+
+    fn test_extension_attack_helper<F: RescueParameter>() {
+        let forged_val = F::from(42u64);
+        let attack_pos = 5u64;
+        let forged_pos = attack_pos * 3 + 2;
+        let data = [F::zero(), F::from(forged_pos), forged_val];
+        let val = RescueCRHF::<F>::sponge_no_padding(&data, 1).unwrap()[0];
+        let elems = ark_std::vec![val; attack_pos as usize + 1];
+        let mt = RescueMerkleTree::<F>::from_elems(None, elems).unwrap();
+        let commit = mt.commitment();
+        let (elem, mut proof) = mt.lookup(attack_pos).expect_ok().unwrap();
+        assert!(
+            RescueMerkleTree::<F>::verify(&commit, attack_pos, elem, &proof)
+                .unwrap()
+                .is_ok()
+        );
+        proof
+            .0
+            .insert(0, ark_std::vec![F::zero(), F::from(attack_pos)]);
+        assert!(
+            RescueMerkleTree::<F>::verify(&commit, forged_pos, forged_val, &proof)
+                .unwrap()
+                .is_err()
+        );
+    }
+}
