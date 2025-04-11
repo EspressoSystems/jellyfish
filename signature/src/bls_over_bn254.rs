@@ -171,11 +171,15 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 msgs.len(),
             )));
         }
+        // both oncurve check and subgroup check for verification keys
+        vks.iter()
+            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
         // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
         // thus only conducting on_curve check
         if !sig.sigma.into_affine().is_on_curve() {
             return Err(SignatureError::FailedOnCurveCheck);
         }
+
         // verify
         let mut m_points: Vec<G1Prepared<_>> = msgs
             .iter()
@@ -215,6 +219,9 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 "no verification key for signature verification".to_string(),
             ));
         }
+        // both oncurve check and subgroup check for verification keys
+        vks.iter()
+            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
         // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
         // thus only conducting on_curve check
         if !sig.sigma.into_affine().is_on_curve() {
