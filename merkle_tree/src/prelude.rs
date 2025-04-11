@@ -40,12 +40,12 @@ impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for Rescue
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         let mut input = vec![F::zero()];
         input.extend(data.iter());
-        Ok(RescueCRHF::<F>::sponge_no_padding(&input, 1)?[0])
+        Ok(RescueCRHF::<F>::sponge_with_zero_padding(&input, 1)[0])
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
         let data = [F::one(), F::from(pos.clone()), *elem];
-        Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)?[0])
+        Ok(RescueCRHF::<F>::sponge_with_zero_padding(&data, 1)[0])
     }
 }
 
