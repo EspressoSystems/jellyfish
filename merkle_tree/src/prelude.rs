@@ -49,7 +49,7 @@ fn internal_hash_dom_sep<F: PrimeField>() -> F {
 /// domain separator of byte-oriented hash, for the leaf node
 pub(crate) const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
 /// domain separator of byte-oriented hash, for the internal node
-pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"0";
 
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
