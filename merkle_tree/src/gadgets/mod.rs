@@ -278,6 +278,8 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
         let zero = circuit.zero();
         let mut input = vec![zero];
         input.extend(data.iter());
+        let len = jf_utils::compute_len_to_next_multiple(input.len(), jf_rescue::CRHF_RATE);
+        input.resize(len, zero);
         Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &input, 1)?[0])
     }
 
@@ -287,7 +289,11 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
         elem: Variable,
     ) -> Result<Variable, CircuitError> {
         let one = circuit.one();
-        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[one, pos, elem], 1)?[0])
+        let zero = circuit.zero();
+        let mut input = vec![one, pos, elem];
+        let len = jf_utils::compute_len_to_next_multiple(input.len(), jf_rescue::CRHF_RATE);
+        input.resize(len, zero);
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &input, 1)?[0])
     }
 }
 
