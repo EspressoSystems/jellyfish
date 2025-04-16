@@ -34,6 +34,8 @@
 //! [eip196]: https://eips.ethereum.org/EIPS/eip-196
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
+use core::mem::swap;
+
 use super::{AggregateableSignatureSchemes, SignatureScheme};
 use crate::{
     constants::{tag, CS_ID_BLS_BN254},
@@ -59,7 +61,7 @@ use ark_std::{
     string::ToString,
     vec,
     vec::Vec,
-    One, UniformRand,
+    One, UniformRand, Zero,
 };
 use derivative::Derivative;
 use digest::DynDigest;
@@ -455,7 +457,7 @@ impl KeyPair {
     pub fn sign<B: AsRef<[u8]>>(&self, msg: &[u8], csid: B) -> Signature {
         let msg_input = [msg, csid.as_ref()].concat();
         let hash_value: G1Projective = hash_to_curve::<Keccak256>(&msg_input);
-        let sigma = hash_value * self.sk.0;
+        let sigma = constant_time_scalar_mul(&hash_value, &self.sk.0);
         Signature { sigma }
     }
 
@@ -473,6 +475,74 @@ impl KeyPair {
     pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
         TaggedBase64::new(tag::BLS_KEY_PAIR, &self.to_bytes())
     }
+}
+
+/// Constant time conditional swap for G1 group elements.
+fn constant_time_conditional_swap_g1(a: &mut G1Projective, b: &mut G1Projective, choice: bool) {
+    let t = *a;
+    // conditional swap for 3 coordinates x, y, and z
+    // they are all of type [u64; 4]
+    let mask = (-(choice as i64)) as u64;
+    let t = mask & (a.x.0 .0[0] ^ b.x.0 .0[0]);
+    a.x.0 .0[0] ^= t;
+    b.x.0 .0[0] ^= t;
+    let t = mask & (a.x.0 .0[1] ^ b.x.0 .0[1]);
+    a.x.0 .0[1] ^= t;
+    b.x.0 .0[1] ^= t;
+    let t = mask & (a.x.0 .0[2] ^ b.x.0 .0[2]);
+    a.x.0 .0[2] ^= t;
+    b.x.0 .0[2] ^= t;
+    let t = mask & (a.x.0 .0[3] ^ b.x.0 .0[3]);
+    a.x.0 .0[3] ^= t;
+    b.x.0 .0[3] ^= t;
+
+    let t = mask & (a.y.0 .0[0] ^ b.y.0 .0[0]);
+    a.y.0 .0[0] ^= t;
+    b.y.0 .0[0] ^= t;
+    let t = mask & (a.y.0 .0[1] ^ b.y.0 .0[1]);
+    a.y.0 .0[1] ^= t;
+    b.y.0 .0[1] ^= t;
+    let t = mask & (a.y.0 .0[2] ^ b.y.0 .0[2]);
+    a.y.0 .0[2] ^= t;
+    b.y.0 .0[2] ^= t;
+    let t = mask & (a.y.0 .0[3] ^ b.y.0 .0[3]);
+    a.y.0 .0[3] ^= t;
+    b.y.0 .0[3] ^= t;
+
+    let t = mask & (a.z.0 .0[0] ^ b.z.0 .0[0]);
+    a.z.0 .0[0] ^= t;
+    b.z.0 .0[0] ^= t;
+    let t = mask & (a.z.0 .0[1] ^ b.z.0 .0[1]);
+    a.z.0 .0[1] ^= t;
+    b.z.0 .0[1] ^= t;
+    let t = mask & (a.z.0 .0[2] ^ b.z.0 .0[2]);
+    a.z.0 .0[2] ^= t;
+    b.z.0 .0[2] ^= t;
+    let t = mask & (a.z.0 .0[3] ^ b.z.0 .0[3]);
+    a.z.0 .0[3] ^= t;
+    b.z.0 .0[3] ^= t;
+}
+
+/// Constant time scalar multiplication based on Montgomery ladder.
+fn constant_time_scalar_mul(base: &G1Projective, scalar: &ScalarField) -> G1Projective {
+    let mut r0 = G1Projective::zero();
+    let mut r1 = *base;
+    let mut lastbit = false;
+    for bit in scalar.into_bigint().to_bits_be() {
+        // constant time equivalence of the following
+        // if bit {
+        //     r0 += r1;
+        //     r1.double_in_place();
+        // } else {
+        //     r1 += r0;
+        //     r0.double_in_place();
+        // }
+        constant_time_conditional_swap_g1(&mut r0, &mut r1, bit);
+        r1 += r0;
+        r0.double_in_place();
+        constant_time_conditional_swap_g1(&mut r0, &mut r1, bit);
+    }
+    r0
 }
 
 impl<'a> TryFrom<&'a TaggedBase64> for KeyPair {
@@ -545,12 +615,15 @@ mod tests {
 
     // These tests are adapted from schnorr.rs
     use crate::{
-        bls_over_bn254::{BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey},
+        bls_over_bn254::{
+            constant_time_scalar_mul, BLSOverBN254CurveSignatureScheme, KeyPair, SignKey,
+            Signature, VerKey,
+        },
         constants::CS_ID_BLS_BN254,
         tests::{agg_sign_and_verify, failed_verification, sign_and_verify},
         AggregateableSignatureSchemes, SignatureError,
     };
-    use ark_bn254::{Fq, G1Affine};
+    use ark_bn254::{Fq, Fr, G1Affine, G1Projective};
     use ark_ec::AffineRepr;
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -745,5 +818,15 @@ mod tests {
             ),
             Result::Err(SignatureError::FailedValidityCheck),
         );
+    }
+
+    #[test]
+    fn test_constant_time_scalar_mul_g1() {
+        let mut rng = jf_utils::test_rng();
+        for _ in 0..100 {
+            let base = G1Projective::rand(&mut rng);
+            let scalar = Fr::rand(&mut rng);
+            assert_eq!(constant_time_scalar_mul(&base, &scalar), base * scalar);
+        }
     }
 }
