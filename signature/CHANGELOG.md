@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - [#773](https://github.com/EspressoSystems/jellyfish/pull/773): Add subgroup and on curve check to BLS signatures and public keys
+- [#777](https://github.com/EspressoSystems/jellyfish/pull/777): Constant time scalar multiplication for BLS signing.
 
 ## [0.2.0]((https://github.com/EspressoSystems/jellyfish/compare/jf-signatures-v0.1.1...jf-signatures-v0.2.0)) (2024-10-29)
 
