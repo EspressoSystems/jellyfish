@@ -34,8 +34,6 @@
 //! [eip196]: https://eips.ethereum.org/EIPS/eip-196
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
-use core::mem::swap;
-
 use super::{AggregateableSignatureSchemes, SignatureScheme};
 use crate::{
     constants::{tag, CS_ID_BLS_BN254},
