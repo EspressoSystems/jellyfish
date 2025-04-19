@@ -98,6 +98,28 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
     }
 }
 
+/// A batch membership proof consisting of multiple individual Merkle proofs
+#[derive(
+    Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, CanonicalSerialize, CanonicalDeserialize,
+)]
+#[tagged("BATCH_MERKLE_PROOF")]
+pub struct BatchMerkleTreeProof<T: NodeValue> {
+    /// Vector of individual proofs
+    pub proofs: Vec<MerkleTreeProof<T>>,
+}
+
+impl<T: NodeValue> BatchMerkleTreeProof<T> {
+    /// Create a new batch membership proof
+    pub fn new(proofs: Vec<MerkleTreeProof<T>>) -> Self {
+        Self { proofs }
+    }
+
+    /// Return all individual proofs
+    pub fn proofs(&self) -> &[MerkleTreeProof<T>] {
+        &self.proofs
+    }
+}
+
 /// Verify a merkle proof
 /// * `commitment` - a merkle tree commitment
 /// * `pos` - zero-based index of the leaf in the tree
