@@ -122,6 +122,11 @@ where
     } else {
         T::default()
     };
+    if proof.iter().any(|v| v.len() != ARITY - 1) {
+        return Err(MerkleTreeError::InconsistentStructureError(
+            "Malformed proof".to_string(),
+        ));
+    }
     let mut data = [T::default(); ARITY];
     let computed_root = pos
         .to_traversal_path(proof.len())
