@@ -90,7 +90,16 @@ where
     }
 
     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        let mut input = vec![leaf_hash_dom_sep(), F::from(pos.clone()), *elem];
+        if INPUT_SIZE < 3 {
+            return Err(MerkleTreeError::ParametersError(ark_std::format!(
+                "INPUT_SIZE {} too short",
+                INPUT_SIZE
+            )));
+        }
+        let mut input = vec![F::zero(); INPUT_SIZE];
+        input[0] = leaf_hash_dom_sep();
+        input[INPUT_SIZE - 2] = F::from(pos.clone());
+        input[INPUT_SIZE - 1] = *elem;
         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
     }
 }
