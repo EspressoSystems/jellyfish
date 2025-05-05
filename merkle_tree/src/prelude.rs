@@ -25,7 +25,9 @@ use ark_serialize::{
 };
 use ark_std::{fmt, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_crhf::CRHF;
-use jf_poseidon2::{crhf::FixedLenPoseidon2Hash, Poseidon2, Poseidon2Params};
+use jf_poseidon2::{
+    crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2, Poseidon2Params,
+};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use nimue::hash::sponge::Sponge;
 use sha3::{Digest, Keccak256, Sha3_256};
@@ -81,7 +83,7 @@ impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
 where
     I: Index,
     F: PrimeField + From<I> + nimue::Unit,
-    S: Sponge<U = F>,
+    S: Sponge<U = F> + Poseidon2Sponge,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         let mut input = vec![internal_hash_dom_sep()];

@@ -25,7 +25,8 @@ hashbrown = { workspace = true }
 hex = "0.4.3"
 itertools = { workspace = true, features = ["use_alloc"] }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
-jf-poseidon2 = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-poseidon2-v0.1.0" }
+# TODO: pin to an updated version/tag next time we release a tag
+jf-poseidon2 = { path = "../poseidon2" }
 jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
