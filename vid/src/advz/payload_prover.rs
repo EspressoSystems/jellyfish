@@ -51,9 +51,10 @@ pub struct SmallRangeProof<P> {
 /// A proof intended for use on large payload subslices.
 ///
 /// Metadata needed to recover a KZG commitment.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(bound = "F: CanonicalSerialize + CanonicalDeserialize")]
-pub struct LargeRangeProof<F> {
+#[derive(
+    Clone, Debug, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize, Serialize, Deserialize,
+)]
+pub struct LargeRangeProof<F: CanonicalSerialize + CanonicalDeserialize> {
     #[serde(with = "canonical")]
     prefix_elems: Vec<F>,
     #[serde(with = "canonical")]
