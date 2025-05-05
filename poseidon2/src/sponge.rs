@@ -6,6 +6,15 @@ use ark_std::marker::PhantomData;
 use nimue::{hash::sponge::Sponge, Unit};
 use zeroize::Zeroize;
 
+/// Marker trait for the state of Poseidon2-based Cryptographic Sponge
+pub trait Poseidon2Sponge {}
+impl<F, const N: usize, const R: usize, P> Poseidon2Sponge for Poseidon2SpongeState<F, N, R, P>
+where
+    F: PrimeField,
+    P: Poseidon2Params<F, N>,
+{
+}
+
 /// the state of Poseidon2-based Cryptographic Sponge
 ///
 /// # Generic parameters:
