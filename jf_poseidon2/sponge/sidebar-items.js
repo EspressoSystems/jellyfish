@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Poseidon2SpongeState"]};
+window.SIDEBAR_ITEMS = {"struct":["Poseidon2SpongeState"],"trait":["Poseidon2Sponge"]};
