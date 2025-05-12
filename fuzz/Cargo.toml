@@ -1,0 +1,22 @@
+[package]
+name = "jf-fuzz"
+version = "0.1.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1.4.1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+jf-merkle-tree = { path = "../merkle_tree" }
+sha2 = "0.10"
+rand = "0.9.1"
+
+[[bin]]
+name = "fuzz_merkle_tree"
+path = "fuzz_targets/fuzz_merkle_tree.rs"
+test = false
+doc = false
+bench = false
