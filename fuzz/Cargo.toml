@@ -11,12 +11,25 @@ cargo-fuzz = true
 arbitrary = { version = "1.4.1", features = ["derive"] }
 libfuzzer-sys = "0.4"
 jf-merkle-tree = { path = "../merkle_tree" }
+jf-rescue = { path = "../rescue" }
 sha2 = "0.10"
 rand = "0.9.1"
+num-bigint = { workspace = true }
+ark-bls12-377 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
+ark-bls12-381 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
+ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
+hashbrown = "0.14.3"
 
 [[bin]]
 name = "fuzz_merkle_tree"
 path = "fuzz_targets/fuzz_merkle_tree.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_universal_merkle_tree"
+path = "fuzz_targets/fuzz_universal_merkle_tree.rs"
 test = false
 doc = false
 bench = false
