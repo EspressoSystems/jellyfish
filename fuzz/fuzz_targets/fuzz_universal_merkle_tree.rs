@@ -26,8 +26,9 @@ fuzz_target!(|data: &[u8]| {
             .zip(input.v.iter())
             .map(|(k, v)| (BigUint::from(*k), Fr377::from(*v)))
             .collect::<HashMap<BigUint, Fr377>>();
+        let height = kv_pairs.len();
         let _ = UniversalMerkleTree::<Fr377, RescueHash<Fr377>, BigUint, 3, Fr377>::from_kv_set(
-            10,
+            height,
             kv_pairs.clone(),
         )
         .unwrap();
@@ -39,7 +40,7 @@ fuzz_target!(|data: &[u8]| {
             .map(|(k, v)| (BigUint::from(*k), Fr381::from(*v)))
             .collect::<HashMap<BigUint, Fr381>>();
         let _ = UniversalMerkleTree::<Fr381, RescueHash<Fr381>, BigUint, 3, Fr381>::from_kv_set(
-            10,
+            height,
             kv_pairs.clone(),
         )
         .unwrap();
@@ -51,7 +52,7 @@ fuzz_target!(|data: &[u8]| {
             .map(|(k, v)| (BigUint::from(*k), Fr254::from(*v)))
             .collect::<HashMap<BigUint, Fr254>>();
         let _ = UniversalMerkleTree::<Fr254, RescueHash<Fr254>, BigUint, 3, Fr254>::from_kv_set(
-            10, kv_pairs,
+            height, kv_pairs,
         )
         .unwrap();
     }
