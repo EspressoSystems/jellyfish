@@ -14,7 +14,7 @@ jf-merkle-tree = { path = "../merkle_tree" }
 jf-rescue = { path = "../rescue" }
 sha2 = "0.10"
 rand = "0.9.1"
-num-bigint = { workspace = true }
+num-bigint = { version = "0.4", default-features = false }
 ark-bls12-377 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
 ark-bls12-381 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
 ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
