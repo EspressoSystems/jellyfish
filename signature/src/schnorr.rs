@@ -196,7 +196,8 @@ impl<P: Config> VerKey<P> {
     }
 }
 
-// Override the Debug implementation to print the [`VerKey`] in TaggedBase64 format
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64
+// format
 impl<P: Config> Debug for VerKey<P> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         std::fmt::Display::fmt(self, f)

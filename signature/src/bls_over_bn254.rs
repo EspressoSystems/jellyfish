@@ -323,7 +323,8 @@ impl Ord for VerKey {
     }
 }
 
-// Override the Debug implementation to print the [`VerKey`] in TaggedBase64 format
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64
+// format
 impl Debug for VerKey {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         std::fmt::Display::fmt(self, f)
