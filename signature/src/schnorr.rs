@@ -7,6 +7,8 @@
 //! This module implements the Schnorr signature over the various Edwards
 //! curves.
 
+use core::fmt::Debug;
+
 use super::SignatureScheme;
 use crate::{
     constants::{tag, CS_ID_SCHNORR},
@@ -174,7 +176,6 @@ impl<F: PrimeField> TryFrom<TaggedBase64> for SignKey<F> {
 #[tagged(tag::SCHNORR_VER_KEY)]
 #[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
 #[derivative(
-    Debug(bound = "P: Config"),
     Default(bound = "P: Config"),
     Eq(bound = "P: Config"),
     Clone(bound = "P: Config")
@@ -192,6 +193,13 @@ impl<P: Config> VerKey<P> {
     {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
         Self(Projective::<P>::generator() * randomizer + self.0)
+    }
+}
+
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64 format
+impl<P: Config> Debug for VerKey<P> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        std::fmt::Display::fmt(self, f)
     }
 }
 
