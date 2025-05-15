@@ -327,7 +327,7 @@ impl Ord for VerKey {
 // format
 impl Debug for VerKey {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        std::fmt::Display::fmt(self, f)
+        core::fmt::Display::fmt(self, f)
     }
 }
 
