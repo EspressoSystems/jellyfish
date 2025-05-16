@@ -18,7 +18,7 @@
 //! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &my_data)?;
 //!
 //! let commitment = mt.commitment();
-//! let (val, proof) = mt.lookup(2).expect_ok()?;
+//! let (val, proof) = mt.lookup(2)?.expect("Element not found");
 //! assert_eq!(val, &3);
 //! assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, val, proof)?.is_ok());
 //! # Ok(())
