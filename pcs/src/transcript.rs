@@ -15,7 +15,7 @@ mod errors {
     pub enum TranscriptError {
         /// Invalid Transcript: {0}
         InvalidTranscript(String),
-        /// An error during (de)serialization: {0}
+        /// An error during (de)serialization: {:?}
         SerializationError(ark_serialize::SerializationError),
     }
 
