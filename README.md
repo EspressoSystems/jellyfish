@@ -1,8 +1,8 @@
 # Jellyfish cryptographic library
 
-![example workflow](https://github.com/EspressoSystems/jellyfish/actions/workflows/build.yml/badge.svg)
-![Crates.io (version)](https://img.shields.io/crates/dv/jf-plonk/0.1.0)
-![GitHub](https://img.shields.io/github/license/EspressoSystems/jellyfish)
+[![Example workflow](https://github.com/EspressoSystems/jellyfish/actions/workflows/build.yml/badge.svg)](https://github.com/EspressoSystems/jellyfish/actions/workflows/build.yml)
+[![Release)](https://img.shields.io/github/v/release/EspressoSystems/jellyfish)](https://github.com/EspressoSystems/jellyfish/releases)
+[![License](https://img.shields.io/github/license/EspressoSystems/jellyfish)](https://github.com/EspressoSystems/jellyfish/blob/main/LICENSE)
 
 ## Disclaimer
 
