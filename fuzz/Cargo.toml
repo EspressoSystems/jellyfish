@@ -13,12 +13,15 @@ ark-bls12-377 = { version = "0.4.0", default-features = false, features = [ "cur
 ark-bls12-381 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
 ark-bn254 = { version = "0.4.0", default-features = false, features = [ "curve" ] }
 hashbrown = "0.14.3"
+ark-ff = { version = "0.4.0", default-features = false }
 jf-merkle-tree = { path = "../merkle_tree", default-features = false }
 jf-rescue = { path = "../rescue", default-features = false }
 libfuzzer-sys = "0.4"
+ark-ed-on-bn254 = "0.4.0"
 num-bigint = { version = "0.4", default-features = false }
-rand = "0.9.1"
+rand = { version = "0.8", features = ["std"] }
 sha2 = "0.10"
+bincode = "1.3"
 
 [[bin]]
 name = "fuzz_merkle_tree"
@@ -29,10 +32,32 @@ bench = false
 
 [[bin]]
 name = "fuzz_universal_merkle_tree"
-path = "fuzz_targets/fuzz_universal_merkle_tree.rs"
+path = "fuzz_targets/mt/fuzz_universal_merkle_tree.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_extension_attack"
+path = "fuzz_targets/mt/fuzz_extension_attack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_test_light_mt_serde"
+path = "fuzz_targets/mt/fuzz_test_light_mt_serde.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_light_mt_lookup"
+path = "fuzz_targets/mt/fuzz_light_mt_lookup.rs"
 test = false
 doc = false
 bench = false
 
 [features]
 default = ["jf-merkle-tree/parallel", "jf-rescue/parallel"]
+fuzzing = []
