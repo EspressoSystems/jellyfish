@@ -196,7 +196,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
     };
 }
 
-/// Macros for implementing ToTreversalPath for primitive types
+/// Macros for implementing ToTraversalPath for primitive types
 #[macro_export]
 macro_rules! impl_to_traversal_path_primitives {
     ($t: ty) => {
@@ -214,7 +214,7 @@ macro_rules! impl_to_traversal_path_primitives {
     };
 }
 
-/// Macros for implementing ToTreversalPath for BigUint types
+/// Macros for implementing ToTraversalPath for BigUint types
 #[macro_export]
 macro_rules! impl_to_traversal_path_biguint {
     ($t: ty) => {
