@@ -34,6 +34,8 @@
 //! [eip196]: https://eips.ethereum.org/EIPS/eip-196
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
+use core::fmt::Debug;
+
 use super::{AggregateableSignatureSchemes, SignatureScheme};
 use crate::{
     constants::{tag, CS_ID_BLS_BN254},
@@ -305,9 +307,7 @@ impl TryFrom<TaggedBase64> for SignKey {
 
 /// Signature public verification key
 #[tagged(tag::BLS_VER_KEY)]
-#[derive(
-    CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, PartialEq, Clone, Debug, Copy, Hash,
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct VerKey(pub(crate) G2Projective);
 
 // An arbitrary comparison for VerKey.
@@ -320,6 +320,14 @@ impl PartialOrd for VerKey {
 impl Ord for VerKey {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.0.into_affine().xy().cmp(&other.0.into_affine().xy())
+    }
+}
+
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64
+// format
+impl Debug for VerKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
