@@ -28,6 +28,8 @@ pub mod macros;
 pub mod universal_merkle_tree;
 
 pub(crate) mod internal;
+pub mod merkle_proof;
+pub mod batch_proof;
 
 pub mod prelude;
 pub use crate::errors::MerkleTreeError;
@@ -441,3 +443,5 @@ pub trait PersistentUniversalMerkleTreeScheme: UniversalMerkleTreeScheme {
     where
         F: FnOnce(Option<&Self::Element>) -> Option<Self::Element>;
 }
+
+pub use batch_proof::CompactBatchProof;
