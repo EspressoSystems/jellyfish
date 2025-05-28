@@ -506,8 +506,7 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    /// Change the value of a variable. Only used for testing.
-    // TODO: make this function test only.
+    /// Change the value of a variable.
     pub fn witness_mut(&mut self, idx: Variable) -> &mut F {
         &mut self.witness[idx]
     }
