@@ -167,7 +167,7 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
                 *coeff = l_i * r_i;
                 // Increment l_i and negative_cur_elem
                 l_i *= &group_gen_inv;
-                negative_cur_elem *= &group_gen;
+                negative_cur_elem = negative_cur_elem * group_gen_inv;
             }
             ark_ff::fields::batch_inversion(lagrange_coefficients_inverse.as_mut_slice());
             lagrange_coefficients_inverse
