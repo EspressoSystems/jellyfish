@@ -53,7 +53,7 @@ pub(crate) const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
 /// domain separator of byte-oriented hash, for the internal node
 pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"0";
 
-impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
+impl<I: Index, F: PrimeField + RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         let mut input = vec![internal_hash_dom_sep()];
         input.extend(data.iter());
