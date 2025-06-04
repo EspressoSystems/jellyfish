@@ -60,7 +60,7 @@ pub fn commit<E: Pairing>(
     num_vars: usize,
 ) -> Duration {
     let rng = &mut test_rng();
-
+    let domain_size = 1 << num_vars;
     let (ml_ck, _ml_vk) = pp.0.trim(num_vars).unwrap();
     let (uni_ck, _uni_vk) = pp.1.trim(num_vars).unwrap();
     let ck = (ml_ck, uni_ck);
@@ -78,7 +78,7 @@ pub fn open<E: Pairing>(
     num_vars: usize,
 ) -> Duration {
     let rng = &mut test_rng();
-
+    let domain_size = 1 << num_vars;
     let (ml_ck, _ml_vk) = pp.0.trim(num_vars).unwrap();
     let (uni_ck, _uni_vk) = pp.1.trim(num_vars).unwrap();
     let ck = (ml_ck, uni_ck);
