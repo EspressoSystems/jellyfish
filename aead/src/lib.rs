@@ -284,6 +284,7 @@ pub struct Ciphertext {
 // Tracking issue: <https://github.com/EspressoSystems/jellyfish/issues/288>
 mod canonical_serde {
     use super::*;
+    use std::io::{Read, Write};
 
     impl CanonicalSerialize for EncKey {
         fn serialize_with_mode<W: Write>(
