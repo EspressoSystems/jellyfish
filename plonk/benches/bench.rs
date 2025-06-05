@@ -20,6 +20,8 @@ use jf_plonk::{
     PlonkType,
 };
 use jf_relation::{Circuit, PlonkCircuit};
+use jf_utils::test_rng;      // ← Import test_rng from jf_utils
+use std::vec;                // ← Import vec! macro
 use std::time::Instant;
 
 const NUM_REPETITIONS: usize = 10;
