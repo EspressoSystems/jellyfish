@@ -50,6 +50,12 @@ path = "benches/bench.rs"
 harness = false
 required-features = ["test-srs"]
 
+[[bench]]
+name = "key-aggregation-benches"
+path = "benches/emulated_key_aggregation.rs"
+harness = false
+required-features = ["test-srs", "print-trace"]
+
 [features]
 default = ["parallel"]
 std = [
@@ -80,6 +86,7 @@ parallel = [
     "dep:rayon",
 ]
 test-srs = []
+print-trace = ["ark-std/print-trace"]
 
 [[example]]
 name = "proof-of-exp"
