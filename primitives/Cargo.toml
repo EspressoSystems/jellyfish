@@ -27,11 +27,11 @@ jf-utils = { path = "../utilities" }
 
 # others
 rayon = { version = "1.5.0", default-features = false }
-zeroize = { version = "1.3", default-features = false }
+zeroize = { version = "1.8", default-features = false }
 itertools = { version = "0.10.1", default-features = false, features = [ "use_alloc" ] }
 serde = { version = "1.0", features = ["derive"] }
 generic-array = { version = "^0.14", default-features = false }
-crypto_box = { version = "0.7.1", default-features = false, features = [ "u64_backend", "alloc" ] }
+crypto_box = { version = "0.8.1", default-features = false, features = [ "u64_backend", "alloc", "getrandom" ] }
 displaydoc = { version = "0.2.3", default-features = false }
 derivative = { version = "2", features = ["use_core"] }
 rand_chacha = { version = "0.3.1", default-features = false }

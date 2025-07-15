@@ -15,7 +15,7 @@ use ark_std::{
     vec::Vec,
 };
 use crypto_box::{
-    aead::{Aead, Nonce, Payload},
+    aead::{Aead, AeadCore, Nonce, Payload},
     ChaChaBox,
 };
 use generic_array::{typenum::U24, GenericArray};
@@ -91,7 +91,7 @@ impl EncKey {
     where
         R: RngCore + CryptoRng,
     {
-        let nonce = crypto_box::generate_nonce(rng);
+        let nonce = ChaChaBox::generate_nonce(&mut *rng);
 
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
         let ephemeral_sk = crypto_box::SecretKey::generate(rng);
