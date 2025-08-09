@@ -808,7 +808,7 @@ impl<E: Pairing> VerifyingKey<E> {
 
         Ok(Self {
             domain_size: self.domain_size,
-            num_inputs: self.num_inputs + other_vk.num_inputs,
+            num_inputs: self.num_inputs,
             sigma_comms,
             selector_comms,
             k: self.k.clone(),
