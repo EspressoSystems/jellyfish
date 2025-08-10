@@ -177,11 +177,24 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             ) -> Result<(), MerkleTreeError> {
                 let proof = proof.borrow();
                 let traversal_path = pos.borrow().to_traversal_path(self.height);
-                if let MerkleNode::<E, I, T>::Leaf {
+
+                if proof.proof.len() != self.height + 1 || proof.proof.len() != traversal_path.len()
+                {
+                    return Err(MerkleTreeError::InconsistentStructureError(
+                        ark_std::format!(
+                            "Malformatted proof: len={}, height={}, len traversal path={}",
+                            proof.proof.len(),
+                            self.height,
+                            traversal_path.len()
+                        ),
+                    ));
+                };
+
+                if let Some(MerkleNode::<E, I, T>::Leaf {
                     value: _,
                     pos,
                     elem,
-                } = &proof.proof[0]
+                }) = proof.proof.first()
                 {
                     if !elem.eq(element.borrow()) {
                         return Err(MerkleTreeError::InconsistentStructureError(
@@ -198,6 +211,13 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                                     MerkleNode::Branch { value: _, children } => {
                                         let mut data: Vec<_> =
                                             children.iter().map(|node| node.value()).collect();
+                                        if *branch >= data.len() {
+                                            return Err(
+                                                MerkleTreeError::InconsistentStructureError(
+                                                    "Branch index out of bounds".to_string(),
+                                                ),
+                                            );
+                                        }
                                         data[*branch] = val;
                                         let digest = H::digest(&data)?;
                                         path_values.push(digest);

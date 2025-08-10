@@ -98,7 +98,12 @@ where
     ) -> Result<bool, MerkleTreeError> {
         let pos = pos.borrow();
         let proof = proof.borrow();
-        if self.height != proof.tree_height() - 1 {
+        let expected_height = proof.tree_height().checked_sub(1).ok_or_else(|| {
+            MerkleTreeError::InconsistentStructureError(
+                "Proof tree height is zero, cannot verify non-membership".to_string(),
+            )
+        })?;
+        if self.height != expected_height {
             return Err(MerkleTreeError::InconsistentStructureError(
                 "Incompatible membership proof for this merkle tree".to_string(),
             ));
@@ -190,7 +195,18 @@ where
     ) -> Result<(), MerkleTreeError> {
         let proof = proof.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        if matches!(&proof.proof[0], MerkleNode::Empty) {
+        if proof.proof.len() != self.height + 1 || proof.proof.len() != traversal_path.len() {
+            return Err(MerkleTreeError::InconsistentStructureError(
+                ark_std::format!(
+                    "Malformatted proof: len={}, height={}, len traversal path={}",
+                    proof.proof.len(),
+                    self.height,
+                    traversal_path.len()
+                ),
+            ));
+        };
+
+        if matches!(proof.proof.first(), Some(MerkleNode::Empty)) {
             let empty_value = T::default();
             let mut path_values = vec![empty_value];
             traversal_path
