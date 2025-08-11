@@ -1,0 +1,274 @@
+---
+source: merkle_tree/tests/serialization_snapshot.rs
+expression: non_membership_proofs
+---
+[
+  [
+    5,
+    {
+      "pos": "FIELD~BQAAAAAAAACk",
+      "proof": [
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              "Empty",
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~sxMODZiBHo9AUNdF4sCKlPOgBGoWAIEWQzIrUkdiFFMo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~TiFegCbK5MP5D_OICRbDj0jPqE_5xVn7fMcbaVlU0-xN"
+                }
+              },
+              "Empty"
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~NEtCoAtXGCNOaHliGMmGxdokGcrFnnURx2_gw1CFROw9"
+                }
+              },
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~17fwXoOkZbrFF3xeJVqQ5kZuKcOzttIKoGOcXE23_czL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~TrPLUsOrBYw2RBi0vtuXbXwRs6ccvZA8m8NgXV53IMN0"
+                }
+              },
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~qCXjCpUedH1Qkb8-_YzFTHFDjRsTtxTVQKjPkAe_Rg3I"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~uR_8pG2z_CuhrpMZtN3kN8iS3LrjCcLE7Rvw7n08E0hg"
+                }
+              },
+              "Empty"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  [
+    15,
+    {
+      "pos": "FIELD~DwAAAAAAAAAa",
+      "proof": [
+        "Empty",
+        "Empty",
+        "Empty",
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~2gXwwxdDPT7Y7DLX7ifg3UCStRE2QQGvSmCptJLuaXJO"
+                }
+              },
+              "Empty"
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              "Empty",
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~sxMODZiBHo9AUNdF4sCKlPOgBGoWAIEWQzIrUkdiFFMo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~TiFegCbK5MP5D_OICRbDj0jPqE_5xVn7fMcbaVlU0-xN"
+                }
+              },
+              "Empty"
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~NEtCoAtXGCNOaHliGMmGxdokGcrFnnURx2_gw1CFROw9"
+                }
+              },
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~17fwXoOkZbrFF3xeJVqQ5kZuKcOzttIKoGOcXE23_czL"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~TrPLUsOrBYw2RBi0vtuXbXwRs6ccvZA8m8NgXV53IMN0"
+                }
+              },
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~qCXjCpUedH1Qkb8-_YzFTHFDjRsTtxTVQKjPkAe_Rg3I"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~uR_8pG2z_CuhrpMZtN3kN8iS3LrjCcLE7Rvw7n08E0hg"
+                }
+              },
+              "Empty"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  [
+    75,
+    {
+      "pos": "FIELD~SwAAAAAAAACK",
+      "proof": [
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              "Empty",
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~60dGcldz-ZdD2yp5Cx0MtuWsoDmk2OMk9XLSPpBN8_o8"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~TrPLUsOrBYw2RBi0vtuXbXwRs6ccvZA8m8NgXV53IMN0"
+                }
+              },
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~qCXjCpUedH1Qkb8-_YzFTHFDjRsTtxTVQKjPkAe_Rg3I"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~uR_8pG2z_CuhrpMZtN3kN8iS3LrjCcLE7Rvw7n08E0hg"
+                }
+              },
+              "Empty"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  [
+    200,
+    {
+      "pos": "FIELD~yAAAAAAAAAAA",
+      "proof": [
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        "Empty",
+        {
+          "Branch": {
+            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+            "children": [
+              {
+                "ForgettenSubtree": {
+                  "value": "FIELD~uR_8pG2z_CuhrpMZtN3kN8iS3LrjCcLE7Rvw7n08E0hg"
+                }
+              },
+              "Empty"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+]

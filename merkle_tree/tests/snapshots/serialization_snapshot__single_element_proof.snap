@@ -1,0 +1,76 @@
+---
+source: merkle_tree/tests/serialization_snapshot.rs
+expression: "(0u64, elem, proof)"
+---
+[
+  0,
+  42,
+  {
+    "pos": "FIELD~AAAAAAAAAAD7",
+    "proof": [
+      {
+        "Leaf": {
+          "value": "FIELD~hAb1AtMeAhMdBjp7qBa_vmH_zvbFFqYSysLzLrBJU5ap",
+          "pos": "FIELD~AAAAAAAAAAD7",
+          "elem": "FIELD~KgAAAAAAAAAr"
+        }
+      },
+      {
+        "Branch": {
+          "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+          "children": [
+            {
+              "ForgettenSubtree": {
+                "value": "FIELD~hAb1AtMeAhMdBjp7qBa_vmH_zvbFFqYSysLzLrBJU5ap"
+              }
+            },
+            "Empty",
+            "Empty"
+          ]
+        }
+      },
+      {
+        "Branch": {
+          "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+          "children": [
+            {
+              "ForgettenSubtree": {
+                "value": "FIELD~wzFMrmgUevqlPzKl9PxjCCXhe5n4P0uHOZi-QzYoyTL_"
+              }
+            },
+            "Empty",
+            "Empty"
+          ]
+        }
+      },
+      {
+        "Branch": {
+          "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+          "children": [
+            {
+              "ForgettenSubtree": {
+                "value": "FIELD~w3REYYlXkdZ5_s6hmTRRgM1FVemdHfIoAM8KPVhfRq9S"
+              }
+            },
+            "Empty",
+            "Empty"
+          ]
+        }
+      },
+      {
+        "Branch": {
+          "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
+          "children": [
+            {
+              "ForgettenSubtree": {
+                "value": "FIELD~vbZJu384aAJ1rMPfofd1_4aQSBMPvgS9ra_21hNXgNkT"
+              }
+            },
+            "Empty",
+            "Empty"
+          ]
+        }
+      }
+    ]
+  }
+]
