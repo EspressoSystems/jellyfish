@@ -178,11 +178,12 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
                 let proof = proof.borrow();
                 let traversal_path = pos.borrow().to_traversal_path(self.height);
 
-                if proof.proof.len() != self.height + 1 || proof.proof.len() != traversal_path.len()
+                if proof.proof.len() != self.height.wrapping_add(1)
+                    || proof.proof.len() != traversal_path.len().wrapping_add(1)
                 {
                     return Err(MerkleTreeError::InconsistentStructureError(
                         ark_std::format!(
-                            "Malformatted proof: len={}, height={}, len traversal path={}",
+                            "Malformatted membership proof: len={}, height={}, len traversal path={}",
                             proof.proof.len(),
                             self.height,
                             traversal_path.len()

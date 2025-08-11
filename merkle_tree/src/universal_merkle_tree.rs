@@ -195,10 +195,12 @@ where
     ) -> Result<(), MerkleTreeError> {
         let proof = proof.borrow();
         let traversal_path = pos.to_traversal_path(self.height);
-        if proof.proof.len() != self.height + 1 || proof.proof.len() != traversal_path.len() {
+        if proof.proof.len() != self.height.wrapping_add(1)
+            || proof.proof.len() != traversal_path.len().wrapping_add(1)
+        {
             return Err(MerkleTreeError::InconsistentStructureError(
                 ark_std::format!(
-                    "Malformatted proof: len={}, height={}, len traversal path={}",
+                    "Malformatted non-membership proof: len={}, height={}, len traversal path={}",
                     proof.proof.len(),
                     self.height,
                     traversal_path.len()
@@ -219,6 +221,11 @@ where
                             MerkleNode::Branch { value: _, children } => {
                                 let mut data: Vec<_> =
                                     children.iter().map(|node| node.value()).collect();
+                                if *branch >= data.len() {
+                                    return Err(MerkleTreeError::InconsistentStructureError(
+                                        "Branch index out of bounds".to_string(),
+                                    ));
+                                }
                                 data[*branch] = val;
                                 let digest = H::digest(&data)?;
                                 path_values.push(digest);
