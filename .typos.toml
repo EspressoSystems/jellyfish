@@ -1,3 +1,8 @@
 [default.extend-words]
 # temporary fix for `*_2nd_*`
 nd = "nd"
+
+[files]
+extend-exclude = [
+  "merkle_tree/tests/snapshots/"
+]
