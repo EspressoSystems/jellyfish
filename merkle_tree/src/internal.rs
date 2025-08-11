@@ -962,11 +962,11 @@ where
     where
         H: DigestAlgorithm<E, I, T>,
     {
-        if let MerkleNode::<E, I, T>::Leaf {
+        if let Some(MerkleNode::<E, I, T>::Leaf {
             value: _,
             pos,
             elem,
-        } = &self.proof[0]
+        }) = self.proof.first()
         {
             let init = H::digest_leaf(pos, elem)?;
             let computed_root = self
@@ -979,6 +979,11 @@ where
                         MerkleNode::Branch { value: _, children } => {
                             let mut data =
                                 children.iter().map(|node| node.value()).collect::<Vec<_>>();
+                            if *branch >= data.len() {
+                                return Err(MerkleTreeError::InconsistentStructureError(
+                                    "Branch index out of bounds in corrupted proof".to_string(),
+                                ));
+                            }
                             data[*branch] = val;
                             H::digest(&data)
                         },
@@ -1020,6 +1025,11 @@ where
                         MerkleNode::Branch { value: _, children } => {
                             let mut data =
                                 children.iter().map(|node| node.value()).collect::<Vec<_>>();
+                            if *branch >= data.len() {
+                                return Err(MerkleTreeError::InconsistentStructureError(
+                                    "Branch index out of bounds in corrupted proof".to_string(),
+                                ));
+                            }
                             data[*branch] = val;
                             H::digest(&data)
                         },
