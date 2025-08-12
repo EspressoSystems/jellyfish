@@ -59,6 +59,7 @@
               stableToolchain
               nightlyToolchain
               cargo-sort
+              cargo-insta
               clang-tools_15
               clangStdenv
               llvm_15

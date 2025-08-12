@@ -1,0 +1,5 @@
+---
+source: merkle_tree/tests/serialization_snapshot.rs
+expression: commitment
+---
+MERKLE_COMM~PRoOt2lNkjCQ_w4dOr6K7vOs0OrQn52n6c8E5PCVbrQIAAAAAAAAAAUAAAAAAAAAUg
