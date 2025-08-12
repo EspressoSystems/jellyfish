@@ -26,6 +26,14 @@ type BlockTree = LightWeightSHA3MerkleTree<u64>;
 type FeeTree = UniversalMerkleTree<u64, Sha3Digest, u64, 256, Sha3Node>;
 type RewardsTree = UniversalMerkleTree<u64, Sha3Digest, u64, 2, Sha3Node>;
 
+/// for Sparse Merkle Tree proof, the serialization is too verbose, since we
+/// only need to snapshot to compare changes, we serialize it and base64 encode
+/// it.
+fn encode<T: serde::Serialize>(data: T) -> String {
+    let bytes = bincode::serialize(&data).expect("bincode serialize should succeed");
+    tagged_base64::TaggedBase64::encode_raw(&bytes)
+}
+
 #[test]
 fn test_fee_merkle_tree_serialization() {
     let mut tree = FeeTree::new(8);
@@ -47,7 +55,7 @@ fn test_fee_merkle_tree_serialization() {
     let mut proofs = Vec::new();
     for tx_id in 1u64..=5u64 {
         if let jf_merkle_tree::LookupResult::Ok(elem, proof) = tree.universal_lookup(tx_id) {
-            proofs.push((tx_id, elem, proof));
+            proofs.push((tx_id, elem, encode(proof)));
         }
     }
 
@@ -149,7 +157,7 @@ fn test_fee_tree_non_membership_proofs() {
 
     for &tx_id in &non_member_txs {
         if let jf_merkle_tree::LookupResult::NotFound(proof) = tree.universal_lookup(tx_id) {
-            non_membership_proofs.push((tx_id, proof));
+            non_membership_proofs.push((tx_id, encode(proof)));
         }
     }
 
