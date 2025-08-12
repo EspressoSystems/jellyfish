@@ -2,145 +2,70 @@
 source: merkle_tree/tests/serialization_snapshot.rs
 expression: proofs
 ---
-[
-  [
-    5,
-    15987196962499657728,
-    {
-      "pos": "FIELD~BQAAAAAAAACk",
-      "proof": [
-        {
-          "Leaf": {
-            "value": "FIELD~wtnQ55yy2sfq2cHH-zYWPcjFBPgJP7LHyWBV0ArcFo1m",
-            "pos": "FIELD~BQAAAAAAAACk",
-            "elem": "FIELD~AAD__-7u3d1h"
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~LsIQ1Nld6B28bizg7NocVesQBfrvXeM-NdaX3_t5HUx5"
-                }
-              },
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~finFGrZAx71Gjhj8HXDjMfdt-QDk-ad1ri5pD3pKEDSY"
-                }
-              },
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~wtnQ55yy2sfq2cHH-zYWPcjFBPgJP7LHyWBV0ArcFo1m"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~FqhvjjzucVx9TeXMTptI4mgIsSLDAI9OCozLl-yDIT6v"
-                }
-              },
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~6shsCOgOb8QMFMcyEQ-RbcSIQo0AXoCsnhJDhOEdgI5L"
-                }
-              },
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~icKAhqP7n3gkpHXT5zvPxC1m3IwvudDHpy7uqot9j_hO"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~RFpbFVmm47r1hIOAPp8j6goUSGa7XayPckf4RPd5DFv_"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~o5L6jwgj8tNhtAdQerJW3UIz3-aNo9iHp7YeXxrbKvtd"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~4KfbHEdvkMj-9l051SL1cNBAU_qHWghPNeiWPRw-o23f"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~DeoA5m6QfdLxlnYTJfInLuhrXPy0pu4TKPyFBRNMc4Hu"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        },
-        {
-          "Branch": {
-            "value": "FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-",
-            "children": [
-              {
-                "ForgettenSubtree": {
-                  "value": "FIELD~tz-Qz0tQSAqD4u1tka9jx0m_x7nzzyMBDlOpSk21FbB9"
-                }
-              },
-              "Empty",
-              "Empty"
-            ]
-          }
-        }
-      ]
-    }
-  ]
-]
+- - 5
+  - 15987196962499657728
+  - pos: FIELD~BQAAAAAAAACk
+    proof:
+      - Leaf:
+          value: FIELD~wtnQ55yy2sfq2cHH-zYWPcjFBPgJP7LHyWBV0ArcFo1m
+          pos: FIELD~BQAAAAAAAACk
+          elem: FIELD~AAD__-7u3d1h
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~LsIQ1Nld6B28bizg7NocVesQBfrvXeM-NdaX3_t5HUx5
+            - ForgettenSubtree:
+                value: FIELD~finFGrZAx71Gjhj8HXDjMfdt-QDk-ad1ri5pD3pKEDSY
+            - ForgettenSubtree:
+                value: FIELD~wtnQ55yy2sfq2cHH-zYWPcjFBPgJP7LHyWBV0ArcFo1m
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~FqhvjjzucVx9TeXMTptI4mgIsSLDAI9OCozLl-yDIT6v
+            - ForgettenSubtree:
+                value: FIELD~6shsCOgOb8QMFMcyEQ-RbcSIQo0AXoCsnhJDhOEdgI5L
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~icKAhqP7n3gkpHXT5zvPxC1m3IwvudDHpy7uqot9j_hO
+            - Empty
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~RFpbFVmm47r1hIOAPp8j6goUSGa7XayPckf4RPd5DFv_
+            - Empty
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~o5L6jwgj8tNhtAdQerJW3UIz3-aNo9iHp7YeXxrbKvtd
+            - Empty
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~4KfbHEdvkMj-9l051SL1cNBAU_qHWghPNeiWPRw-o23f
+            - Empty
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~DeoA5m6QfdLxlnYTJfInLuhrXPy0pu4TKPyFBRNMc4Hu
+            - Empty
+            - Empty
+      - Branch:
+          value: FIELD~AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA-
+          children:
+            - ForgettenSubtree:
+                value: FIELD~tz-Qz0tQSAqD4u1tka9jx0m_x7nzzyMBDlOpSk21FbB9
+            - Empty
+            - Empty

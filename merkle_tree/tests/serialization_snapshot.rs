@@ -13,7 +13,7 @@
 //! - reject: `INSTA_UPDATE=no cargo test`
 //! - accept: `INSTA_UPDATE=always cargo test`.
 
-use insta::assert_json_snapshot;
+use insta::assert_yaml_snapshot;
 use jf_merkle_tree::{
     prelude::{LightWeightSHA3MerkleTree, Sha3Digest, Sha3Node},
     universal_merkle_tree::UniversalMerkleTree,
@@ -42,7 +42,7 @@ fn test_fee_merkle_tree_serialization() {
     }
 
     let commitment = tree.commitment();
-    assert_json_snapshot!("fee_tree_commitment", commitment);
+    assert_yaml_snapshot!("fee_tree_commitment", commitment);
 
     let mut proofs = Vec::new();
     for tx_id in 1u64..=5u64 {
@@ -51,7 +51,7 @@ fn test_fee_merkle_tree_serialization() {
         }
     }
 
-    assert_json_snapshot!("fee_membership_proofs", proofs);
+    assert_yaml_snapshot!("fee_membership_proofs", proofs);
 }
 
 #[test]
@@ -72,7 +72,7 @@ fn test_block_merkle_tree_serialization() {
     }
 
     let commitment = tree.commitment();
-    assert_json_snapshot!("block_tree_commitment", commitment);
+    assert_yaml_snapshot!("block_tree_commitment", commitment);
 
     let mut proofs = Vec::new();
     for i in 0..tree.num_leaves() {
@@ -81,7 +81,7 @@ fn test_block_merkle_tree_serialization() {
         }
     }
 
-    assert_json_snapshot!("block_membership_proofs", proofs);
+    assert_yaml_snapshot!("block_membership_proofs", proofs);
 }
 
 #[test]
@@ -100,7 +100,7 @@ fn test_rewards_tree_serialization() {
     }
 
     let commitment = tree.commitment();
-    assert_json_snapshot!("rewards_tree_commitment", commitment);
+    assert_yaml_snapshot!("rewards_tree_commitment", commitment);
 
     let mut proofs = Vec::new();
     for &(account, _reward) in &rewards {
@@ -109,7 +109,7 @@ fn test_rewards_tree_serialization() {
         }
     }
 
-    assert_json_snapshot!("rewards_membership_proofs", proofs);
+    assert_yaml_snapshot!("rewards_membership_proofs", proofs);
 }
 
 #[test]
@@ -131,7 +131,7 @@ fn test_rewards_tree_non_membership_proofs() {
         }
     }
 
-    assert_json_snapshot!("rewards_non_membership_proofs", non_membership_proofs);
+    assert_yaml_snapshot!("rewards_non_membership_proofs", non_membership_proofs);
 }
 
 #[test]
@@ -153,7 +153,7 @@ fn test_fee_tree_non_membership_proofs() {
         }
     }
 
-    assert_json_snapshot!("fee_non_membership_proofs", non_membership_proofs);
+    assert_yaml_snapshot!("fee_non_membership_proofs", non_membership_proofs);
 }
 
 #[test]
@@ -161,7 +161,7 @@ fn test_empty_tree_serialization() {
     let tree = BlockTree::new(8);
     let commitment = tree.commitment();
 
-    assert_json_snapshot!("empty_tree_commitment", commitment);
+    assert_yaml_snapshot!("empty_tree_commitment", commitment);
 }
 
 #[test]
@@ -170,10 +170,10 @@ fn test_single_element_tree_serialization() {
     tree.push(42u64).unwrap();
 
     let commitment = tree.commitment();
-    assert_json_snapshot!("single_element_tree_commitment", commitment);
+    assert_yaml_snapshot!("single_element_tree_commitment", commitment);
 
     if let jf_merkle_tree::LookupResult::Ok(elem, proof) = tree.lookup(0u64) {
-        assert_json_snapshot!("single_element_proof", (0u64, elem, proof));
+        assert_yaml_snapshot!("single_element_proof", (0u64, elem, proof));
     }
 }
 
@@ -186,5 +186,5 @@ fn test_full_tree_serialization() {
     }
 
     let commitment = tree.commitment();
-    assert_json_snapshot!("full_tree_commitment", commitment);
+    assert_yaml_snapshot!("full_tree_commitment", commitment);
 }
