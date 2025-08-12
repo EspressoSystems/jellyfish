@@ -69,3 +69,8 @@ gadgets = [
     "jf-relation", "jf-rescue/gadgets",
 ]
 parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
+
+# See https://insta.rs/docs/quickstart/#optional-faster-runs
+[profile.dev.package]
+insta.opt-level = 3
+similar.opt-level = 3
