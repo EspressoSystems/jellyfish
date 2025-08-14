@@ -11,7 +11,7 @@ use displaydoc::Display;
 use jf_pcs::errors::PCSError;
 use jf_relation::CircuitError;
 
-/// An`enum` specifying the possible failure modes of the Plonk.
+/// An `enum` specifying the possible failure modes of the Plonk.
 #[derive(Display, Debug)]
 pub enum PlonkError {
     /// The index is too large for the universal public parameters
