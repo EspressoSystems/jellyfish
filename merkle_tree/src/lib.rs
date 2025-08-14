@@ -31,7 +31,7 @@ pub mod universal_merkle_tree;
 pub(crate) mod internal;
 
 pub mod prelude;
-pub use crate::errors::MerkleTreeError;
+pub use crate::{errors::MerkleTreeError, internal::MerkleTreeCommitment};
 
 use self::internal::MerkleTreeIter;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
