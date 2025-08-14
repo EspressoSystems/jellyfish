@@ -9,8 +9,9 @@ use super::{
     hash::NamespacedHash, BindNamespace, Element, InnerTree, Namespace, NamespaceProof, Namespaced,
 };
 use crate::{
-    errors::MerkleTreeError, internal::MerkleProof, DigestAlgorithm, MerkleTreeScheme, NodeValue,
-    VerificationResult,
+    errors::MerkleTreeError,
+    internal::{MerkleProof, MerkleTreeCommitment},
+    DigestAlgorithm, MerkleTreeScheme, NodeValue, VerificationResult,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
@@ -108,8 +109,17 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            if <InnerTree<E, H, T, N, ARITY>>::verify(root, boundary_proof.index(), boundary_proof)?
-                .is_err()
+            // Create a commitment from the root hash with proper height calculation
+            let proof_height = boundary_proof.proof.len().checked_sub(1).ok_or_else(|| {
+                MerkleTreeError::InconsistentStructureError("Empty boundary proof".to_string())
+            })?;
+            let commitment = MerkleTreeCommitment::new(*root, proof_height, 0); // size won't be checked
+            if <InnerTree<E, H, T, N, ARITY>>::verify(
+                &commitment,
+                boundary_proof.index(),
+                boundary_proof,
+            )?
+            .is_err()
             {
                 return Ok(Err(()));
             }
@@ -143,8 +153,17 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            if <InnerTree<E, H, T, N, ARITY>>::verify(root, boundary_proof.index(), boundary_proof)?
-                .is_err()
+            // Create a commitment from the root hash with proper height calculation
+            let proof_height = boundary_proof.proof.len().checked_sub(1).ok_or_else(|| {
+                MerkleTreeError::InconsistentStructureError("Empty boundary proof".to_string())
+            })?;
+            let commitment = MerkleTreeCommitment::new(*root, proof_height, 0); // size won't be checked
+            if <InnerTree<E, H, T, N, ARITY>>::verify(
+                &commitment,
+                boundary_proof.index(),
+                boundary_proof,
+            )?
+            .is_err()
             {
                 return Ok(Err(()));
             }
@@ -204,13 +223,32 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proofs
-            if <InnerTree<E, H, T, N, ARITY>>::verify(root, left_proof.index(), left_proof)?
-                .is_err()
+            // Create a commitment from the root hash with proper height calculation
+            let left_proof_height = left_proof.proof.len().checked_sub(1).ok_or_else(|| {
+                MerkleTreeError::InconsistentStructureError("Empty left boundary proof".to_string())
+            })?;
+            let left_commitment = MerkleTreeCommitment::new(*root, left_proof_height, 0);
+            if <InnerTree<E, H, T, N, ARITY>>::verify(
+                &left_commitment,
+                left_proof.index(),
+                left_proof,
+            )?
+            .is_err()
             {
                 return Ok(Err(()));
             }
-            if <InnerTree<E, H, T, N, ARITY>>::verify(root, right_proof.index(), right_proof)?
-                .is_err()
+            let right_proof_height = right_proof.proof.len().checked_sub(1).ok_or_else(|| {
+                MerkleTreeError::InconsistentStructureError(
+                    "Empty right boundary proof".to_string(),
+                )
+            })?;
+            let right_commitment = MerkleTreeCommitment::new(*root, right_proof_height, 0);
+            if <InnerTree<E, H, T, N, ARITY>>::verify(
+                &right_commitment,
+                right_proof.index(),
+                right_proof,
+            )?
+            .is_err()
             {
                 return Ok(Err(()));
             }
@@ -227,7 +265,12 @@ where
         let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
             let leaf_index = self.first_index + idx as u64;
-            if <InnerTree<E, H, T, N, ARITY>>::verify(root, leaf_index, proof)?.is_err() {
+            // Create a commitment from the root hash with proper height calculation
+            let proof_height = proof.proof.len().checked_sub(1).ok_or_else(|| {
+                MerkleTreeError::InconsistentStructureError("Empty proof".to_string())
+            })?;
+            let commitment = MerkleTreeCommitment::new(*root, proof_height, 0);
+            if <InnerTree<E, H, T, N, ARITY>>::verify(&commitment, leaf_index, proof)?.is_err() {
                 return Ok(Err(()));
             }
             if proof

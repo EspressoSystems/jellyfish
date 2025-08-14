@@ -415,8 +415,7 @@ fn test_verify_never_panics<const ARITY: usize>() {
         pos in 0u64..1000,
         proof in arbitrary_proof::<ARITY>(),
     )| {
-        let root = tree.commitment().digest();
-        let _ = TestUniversalMerkleTree::<ARITY>::verify(&root, &pos, &proof);
+        let _ = TestUniversalMerkleTree::<ARITY>::verify(tree.commitment(), &pos, &proof);
     });
 }
 
@@ -426,7 +425,7 @@ fn test_non_membership_verify_never_panics<const ARITY: usize>() {
         pos in 0u64..1000,
         proof in arbitrary_proof::<ARITY>(),
     )| {
-        let _ = tree.non_membership_verify(&pos, &proof);
+        let _ = TestUniversalMerkleTree::<ARITY>::non_membership_verify(tree.commitment(), &pos, &proof);
     });
 }
 
@@ -459,13 +458,13 @@ fn test_corrupted_membership_proofs_handled_safely<const ARITY: usize>() {
         // Skip test if tree is empty
         prop_assume!(!kvs.is_empty());
 
-        let root = tree.commitment().digest();
+        let commitment = tree.commitment();
 
         let (key, _) = &kvs[0];
         match tree.universal_lookup(key) {
             LookupResult::Ok(_, proof) => {
                 let corrupted_proof = corrupt_proof::<ARITY>(proof, corruption_type);
-                let _ = TestUniversalMerkleTree::<ARITY>::verify(&root, key, &corrupted_proof);
+                let _ = TestUniversalMerkleTree::<ARITY>::verify(commitment, key, &corrupted_proof);
             }
             _ => unreachable!()
         }
@@ -485,7 +484,7 @@ fn test_corrupted_non_membership_proofs_handled_safely<const ARITY: usize>() {
             match tree.universal_lookup(&candidate) {
                 LookupResult::NotFound(proof) => {
                     let corrupted_proof = corrupt_proof::<ARITY>(proof, corruption_type);
-                    let _ = tree.non_membership_verify(&candidate, &corrupted_proof);
+                    let _ = TestUniversalMerkleTree::<ARITY>::non_membership_verify(tree.commitment(), &candidate, &corrupted_proof);
                     found_non_member = true;
                     break;
                 }

@@ -223,14 +223,14 @@ pub trait MerkleTreeScheme: Sized {
     ) -> LookupResult<&Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
-    /// * `root` - a merkle tree root, usually obtained from
-    ///   `Self::commitment().digest()`
+    /// * `commitment` - a merkle tree commitment, obtained from
+    ///   `Self::commitment()`
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn verify(
-        root: impl Borrow<Self::NodeValue>,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError>;
@@ -337,12 +337,13 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     ) -> LookupResult<&Self::Element, Self::MembershipProof, Self::NonMembershipProof>;
 
     /// Verify an index is not in this merkle tree
+    /// * `commitment` - a Merkle Commitment
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
     /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
     ///   if the proof is not well structured, E.g. not for this merkle tree.
     fn non_membership_verify(
-        &self,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::NonMembershipProof>,
     ) -> Result<bool, MerkleTreeError>;

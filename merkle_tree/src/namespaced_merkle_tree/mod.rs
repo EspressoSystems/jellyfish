@@ -212,11 +212,11 @@ where
     }
 
     fn verify(
-        root: impl Borrow<Self::NodeValue>,
+        commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError> {
-        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(root, pos, proof)
+        <InnerTree<E, H, T, N, ARITY> as MerkleTreeScheme>::verify(commitment, pos, proof)
     }
 
     fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue> {
