@@ -532,8 +532,23 @@ where
 
         // verify eval proof
         // TODO: check all indices that represents the shares
-        if KzgEvalsMerkleTree::<E, H>::verify(
+        // Create commitment with correct height from the proof
+        let proof_height = share
+            .evals_proof
+            .proof
+            .len()
+            .checked_sub(1)
+            .ok_or_else(|| VidError::Argument("Empty evals proof".to_string()))?;
+
+        // Create a commitment using the public API
+        let evals_commitment = jf_merkle_tree::MerkleTreeCommitment::new(
             common.all_evals_digest,
+            proof_height,
+            share.evals.len() as u64,
+        );
+
+        if KzgEvalsMerkleTree::<E, H>::verify(
+            &evals_commitment,
             &KzgEvalsMerkleTreeIndex::<E, H>::from(share.index as u64),
             &share.evals_proof,
         )

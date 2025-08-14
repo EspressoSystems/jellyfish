@@ -79,14 +79,30 @@ macro_rules! impl_merkle_tree_scheme {
             }
 
             fn verify(
-                root: impl Borrow<Self::NodeValue>,
+                commitment: impl Borrow<Self::Commitment>,
                 pos: impl Borrow<Self::Index>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<VerificationResult, MerkleTreeError> {
-                if *pos.borrow() != proof.borrow().pos {
+                let commitment = commitment.borrow();
+                let pos = pos.borrow();
+                let proof = proof.borrow();
+
+                // Check proof length against commitment height first
+                let proof_height = proof.proof.len().checked_sub(1).ok_or_else(|| {
+                    MerkleTreeError::InconsistentStructureError("Empty proof".to_string())
+                })?;
+
+                if proof_height != commitment.height() {
+                    return Err(MerkleTreeError::InconsistentStructureError(
+                        ark_std::format!("Proof height {} does not match commitment height {}",
+                               proof_height, commitment.height())
+                    ));
+                }
+
+                if *pos != proof.pos {
                     return Ok(Err(())); // invalid proof for the given pos
                 }
-                proof.borrow().verify_membership_proof::<H>(root.borrow())
+                proof.verify_membership_proof::<H>(&commitment.digest())
             }
 
             fn iter(&self) -> MerkleTreeIter<E, I, T> {

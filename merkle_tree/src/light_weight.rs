@@ -188,8 +188,9 @@ mod mt_tests {
         let (elem, proof) = mock_mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, &F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
+        let commitment = mt.commitment();
         assert!(
-            RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &proof)
+            RescueLightWeightMerkleTree::<F>::verify(&commitment, 0, &proof)
                 .unwrap()
                 .is_ok()
         );
@@ -206,7 +207,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 0, &bad_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&commitment, 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -221,7 +222,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueLightWeightMerkleTree::<F>::verify(&mt.root.value(), 2, &forge_proof);
+        let result = RescueLightWeightMerkleTree::<F>::verify(&commitment, 2, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 

@@ -108,6 +108,8 @@ pub struct MerkleTreeCommitment<T: NodeValue> {
 }
 
 impl<T: NodeValue> MerkleTreeCommitment<T> {
+    /// Creates a new merkle tree commitment with the given digest, height and
+    /// number of leaves
     pub fn new(digest: T, height: usize, num_leaves: u64) -> Self {
         MerkleTreeCommitment {
             digest,
