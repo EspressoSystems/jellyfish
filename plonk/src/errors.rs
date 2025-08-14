@@ -11,7 +11,7 @@ use displaydoc::Display;
 use jf_pcs::errors::PCSError;
 use jf_relation::CircuitError;
 
-/// A `enum` specifying the possible failure modes of the Plonk.
+/// An`enum` specifying the possible failure modes of the Plonk.
 #[derive(Display, Debug)]
 pub enum PlonkError {
     /// The index is too large for the universal public parameters
@@ -72,7 +72,7 @@ impl From<jf_rescue::RescueError> for PlonkError {
     }
 }
 
-/// A `enum` specifying the possible failure modes of the underlying SNARK.
+/// An `enum` specifying the possible failure modes of the underlying SNARK.
 #[derive(Display, Debug)]
 pub enum SnarkError {
     #[rustfmt::skip]
@@ -100,7 +100,7 @@ impl From<CircuitError> for PlonkError {
 }
 
 impl From<PlonkError> for CircuitError {
-    // this happen during invocation of Plonk proof system API inside Verifier
+    // this happens during invocation of Plonk proof system API inside Verifier
     // gadget
     fn from(e: PlonkError) -> Self {
         Self::ParameterError(format!("Plonk proof system err: {e:?}"))

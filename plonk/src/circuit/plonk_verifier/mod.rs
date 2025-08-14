@@ -32,7 +32,7 @@ use gadgets::*;
 pub use structs::*;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-/// Represent variable of a Plonk verifying key.
+/// Represents the variables of a Plonk verifying key.
 pub struct VerifyingKeyVar<E: Pairing> {
     /// The variables for the permutation polynomial commitments.
     pub(crate) sigma_comms: Vec<PointVariable>,
@@ -277,7 +277,7 @@ impl<E: Pairing> VerifyingKeyVar<E> {
     }
 }
 
-/// Plonk Circuit that support batch verification
+/// Plonk Circuit that supports batch verification
 pub trait BatchableCircuit<F> {
     /// Aggregate verification keys
     fn aggregate_verify_keys<E, P>(
@@ -290,7 +290,7 @@ pub trait BatchableCircuit<F> {
         P: TEParam<BaseField = F>;
 }
 
-/// Instances batching scheme related gates
+/// Implements gates related to the instance batching scheme.
 impl<F> BatchableCircuit<F> for PlonkCircuit<F>
 where
     F: PrimeField,
