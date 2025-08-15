@@ -95,6 +95,11 @@ pub trait VidScheme {
 
     /// Extract the number of poly evals per share [`VidScheme::Common`].
     fn get_multiplicity(common: &Self::Common) -> u32;
+
+    /// Corrupt the share index, making the index out of bounds.
+    /// This causes `verify_share` to fail with a value of Ok(Err)
+    #[cfg(any(test, feature = "test-srs"))]
+    fn corrupt_share_index(&self, share: Self::Share) -> Self::Share;
 }
 
 /// Convenience struct to aggregate disperse data.
