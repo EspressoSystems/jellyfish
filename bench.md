@@ -5,7 +5,7 @@
 ## Desktop
 - Processor: AMD 5900x 12 core 24 thread at 3.7 GHz
 - Memory: 16 GB 2667 MHz DDR4
-- OS: ubuntu 20.04
+- OS: Ubuntu 20.04
 - rustc 1.56.1 (59eed8a2a 2021-11-01)
 - `RAYON_NUM_THREADS=24 cargo bench`
 
