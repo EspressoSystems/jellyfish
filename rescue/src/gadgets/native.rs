@@ -284,7 +284,7 @@ where
         Ok(RescueStateVar::from(vars))
     }
 
-    /// Return the variable corresponding to the output of the of the Rescue
+    /// Return the variable corresponding to the output of the Rescue
     /// PRP where the rounds keys have already been computed "dynamically"
     /// * `input_var` - variable corresponding to the plain text
     /// * `mds_states` - Rescue MDS matrix

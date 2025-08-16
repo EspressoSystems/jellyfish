@@ -143,7 +143,7 @@ where
     };
     if element.is_some() && proof.iter().any(|v| v.len() != ARITY - 1) {
         // only strictly checking this during membership proof
-        // in non-membership proof, empty leaf/branch node can have empty vector in
+        // in non-membership proof, empty leaf/branch node can have an empty vector in
         // their merkle proof
         return Err(MerkleTreeError::InconsistentStructureError(
             "Malformed proof".to_string(),
