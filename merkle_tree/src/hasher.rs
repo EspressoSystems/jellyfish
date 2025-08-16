@@ -167,7 +167,7 @@ where
     }
 }
 
-/// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
+/// Newtype wrapper for hash output that implements [`NodeValue`](super::NodeValue).
 #[derive(Derivative)]
 #[derivative(
     Clone(bound = ""),
