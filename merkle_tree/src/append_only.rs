@@ -166,11 +166,11 @@ mod mt_tests {
 
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
-        let root = mt.commitment().digest();
+        let commitment = mt.commitment();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
         assert_eq!(elem, &F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, 0u64, &proof)
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 0u64, &proof)
             .unwrap()
             .is_ok());
 
@@ -186,7 +186,7 @@ mod mt_tests {
             unreachable!()
         }
 
-        let result = RescueMerkleTree::<F>::verify(&root, 0, &bad_proof);
+        let result = RescueMerkleTree::<F>::verify(&commitment, 0, &bad_proof);
         assert!(result.unwrap().is_err());
 
         let mut forge_proof = MerkleProof::new(2, proof.proof);
@@ -201,7 +201,7 @@ mod mt_tests {
         } else {
             unreachable!()
         }
-        let result = RescueMerkleTree::<F>::verify(&root, 0, &forge_proof);
+        let result = RescueMerkleTree::<F>::verify(&commitment, 0, &forge_proof);
         assert!(result.unwrap().is_err());
     }
 
@@ -215,7 +215,7 @@ mod mt_tests {
     fn test_mt_forget_remember_helper<F: RescueParameter>() {
         let mut mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
-        let root = mt.commitment().digest();
+        let commitment = mt.commitment();
         let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
         let lookup_elem = *lookup_elem;
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
@@ -223,10 +223,10 @@ mod mt_tests {
         assert_eq!(lookup_proof, proof);
         assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
-        assert!(RescueMerkleTree::<F>::verify(&root, 0, &lookup_proof)
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 0, &lookup_proof)
             .unwrap()
             .is_ok());
-        assert!(RescueMerkleTree::<F>::verify(&root, 0, &proof)
+        assert!(RescueMerkleTree::<F>::verify(&commitment, 0, &proof)
             .unwrap()
             .is_ok());
 
