@@ -125,6 +125,27 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         self.binary_decomposition_gate(a_bits_le.clone(), a)?;
 
+        // edge case: when decomposing a field to exactly MODULUS_BIT_SIZE,
+        // and when MODULUS < 2^MODULUS_BIT_SIZE (e.g. p=17, log2(p) = 5), then we need
+        // to rule out non-canonical representation of field elements (e.g.
+        // avoid bit-wise 18 to represent 1 mod 17) by making sure its always < MODULUS
+        if bit_len == F::MODULUS_BIT_SIZE as usize {
+            let modulus_bits_le = F::MODULUS.to_bits_le();
+            let is_lt_modulus = a_bits_le
+                .iter()
+                .chain(ark_std::iter::repeat(&self.false_var()))
+                .zip(modulus_bits_le.iter())
+                .try_fold(self.false_var(), |cur, (a_bit, p_bit)| {
+                    let not_a = self.logic_neg(*a_bit)?;
+                    if *p_bit {
+                        self.logic_or(cur, not_a)
+                    } else {
+                        self.logic_and(cur, not_a)
+                    }
+                })?;
+            self.enforce_constant(is_lt_modulus.0, F::one())?;
+        }
+
         Ok(a_bits_le)
     }
 

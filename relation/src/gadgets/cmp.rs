@@ -254,12 +254,14 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 mod test {
+    use core::mem::MaybeUninit;
+
     use crate::{BoolVar, Circuit, CircuitError, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_ff::PrimeField;
+    use ark_ff::{BigInt, PrimeField};
     use ark_std::cmp::Ordering;
     use itertools::multizip;
 
@@ -417,6 +419,43 @@ mod test {
         } else {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
         }
+        Ok(())
+    }
+
+    /// Credit: LeastAuthority responsibly reported a critical bug in v0.4.4 of
+    /// jf-relation (as of Aug 30, 2025).
+    #[test]
+    fn non_canonical_field() -> Result<(), CircuitError> {
+        use ark_ff::fields::{Fp64, MontBackend, MontConfig};
+
+        #[derive(MontConfig)]
+        #[modulus = "17"]
+        #[generator = "3"]
+        pub struct F17Config;
+        pub type F17 = Fp64<MontBackend<F17Config, 1>>;
+
+        let mut circuit = PlonkCircuit::<F17>::new_turbo_plonk();
+
+        // a mod p = 1, but non-canonical representation with actual integer value of 18
+        let a: F17 = unsafe {
+            let mut x = MaybeUninit::<F17>::uninit();
+            // directly write the BigInt [18] into the inner field storage
+            ark_std::ptr::write(&mut (*x.as_mut_ptr()).0, BigInt::new([18]));
+            x.assume_init()
+        };
+
+        let a_var = circuit.create_variable(a)?;
+        // now the internal BigInt is literally 18
+        assert_eq!(circuit.witness(a_var)?.0, BigInt::new([18]));
+
+        let b = F17::from(8u64);
+        let b_var = circuit.create_variable(b)?;
+
+        circuit.enforce_lt(a_var, b_var)?;
+        assert!(
+            circuit.check_circuit_satisfiability(&[]).is_err(),
+            "18 < 2! non_canonical field repr in buggy cmp circuit"
+        );
         Ok(())
     }
 }
