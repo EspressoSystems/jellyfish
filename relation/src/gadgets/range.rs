@@ -106,6 +106,11 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         let a_bits_le: Vec<bool> = self.witness(a)?.into_bigint().to_bits_le();
+        // DEMO: non-canonical repr attack
+        // let mut non_canonical_a = self.witness(a)?.into_bigint();
+        // non_canonical_a.add_with_carry(&F::MODULUS);
+        // let a_bits_le: Vec<bool> = non_canonical_a.to_bits_le();
+
         if bit_len > a_bits_le.len() {
             return Err(CircuitError::ParameterError(format!(
                 "Maximum field bit size: {}, requested range upper bound bit len: {}",

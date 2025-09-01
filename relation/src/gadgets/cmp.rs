@@ -254,7 +254,6 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
 #[cfg(test)]
 mod test {
-    use core::mem::MaybeUninit;
 
     use crate::{BoolVar, Circuit, CircuitError, PlonkCircuit};
     use ark_bls12_377::Fq as Fq377;
@@ -424,9 +423,11 @@ mod test {
 
     /// Credit: LeastAuthority responsibly reported a critical bug in v0.4.4 of
     /// jf-relation (as of Aug 30, 2025).
+    #[ignore = "uncomment DEMO lines inside range_gate_internal() before un-ignoring this"]
     #[test]
     fn non_canonical_field() -> Result<(), CircuitError> {
         use ark_ff::fields::{Fp64, MontBackend, MontConfig};
+        use core::mem::MaybeUninit;
 
         #[derive(MontConfig)]
         #[modulus = "17"]
