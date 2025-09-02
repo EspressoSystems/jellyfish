@@ -105,6 +105,12 @@ where
         }
         // Add wire sigma polynomial commitments. The last sigma commitment is excluded.
         let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
+        if num_wire_types == 0 {
+            return Err(ParameterError(format!(
+                "the number of wire types for instance {} must be greater than zero",
+                i
+            )));
+        }
         for &poly_comm in vk.sigma_comms.iter().take(num_wire_types - 1) {
             v_and_uv_basis.push(v_base);
             add_poly_comm_circuit(
@@ -290,6 +296,12 @@ where
             )));
     }
 
+    if verify_keys.is_empty() {
+        return Err(ParameterError(
+            "the number of instances cannot be zero".to_string(),
+        ));
+    }
+
     for (i, (&pub_input, &vk)) in public_inputs.iter().zip(verify_keys.iter()).enumerate() {
         if pub_input.len() != vk.num_inputs {
             return Err(ParameterError(format!(
@@ -437,6 +449,11 @@ fn compute_alpha_basis<F: PrimeField>(
     len: usize,
     non_native_field_info: NonNativeFieldInfo<F>,
 ) -> Result<Vec<FpElemVar<F>>, CircuitError> {
+    if len == 0 {
+        return Err(ParameterError(
+            "the number of instances cannot be zero".to_string(),
+        ));
+    }
     let mut res = Vec::new();
     let mut alpha_base_elem_var = FpElemVar::<F>::one(
         circuit,
