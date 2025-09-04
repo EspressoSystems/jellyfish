@@ -32,12 +32,10 @@ use chacha20poly1305::{
     aead::{Aead, AeadCore, Payload},
     KeyInit, XChaCha20Poly1305, XNonce,
 };
-use derivative::Derivative;
 use displaydoc::Display;
 use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Clone, Eq, Derivative, Serialize, Deserialize)]
-#[derivative(PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Serialize, Deserialize, Hash)]
 /// Public/encryption key for AEAD
 pub struct EncKey(crypto_kx::PublicKey);
 

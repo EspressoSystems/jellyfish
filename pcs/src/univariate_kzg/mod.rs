@@ -112,7 +112,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
-            &plain_coeffs,
+            plain_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -515,7 +515,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         let evals_cm: E::G1Affine = E::G1::msm_bigint(
             &verifier_param.borrow().powers_of_g[num_leading_zeros..],
-            &evals_poly_coeffs,
+            evals_poly_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -538,7 +538,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         let vanish_cm: E::G2Affine = E::G2::msm_bigint(
             &verifier_param.borrow().powers_of_h[num_leading_zeros..],
-            &vanish_poly_coeffs,
+            vanish_poly_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -626,7 +626,7 @@ where
         let mut toep_col = vec![*padded_coeffs
             .last()
             .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
-        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Field>::ZERO);
+        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Zero>::zero());
         let toep_row = padded_coeffs.iter().skip(1).rev().cloned().collect();
         let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
 

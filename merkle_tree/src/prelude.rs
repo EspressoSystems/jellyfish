@@ -25,11 +25,11 @@ use ark_serialize::{
 };
 use ark_std::{fmt, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_crhf::CRHF;
-use jf_poseidon2::{
-    crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2, Poseidon2Params,
-};
+// use jf_poseidon2::{
+//     crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2,
+// Poseidon2Params, };
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
-use nimue::hash::sponge::Sponge;
+// use nimue::hash::sponge::Sponge;
 use sha3::{Digest, Keccak256, Sha3_256};
 
 /// Wrapper for rescue hash function
@@ -78,33 +78,33 @@ pub type RescueSparseMerkleTree<I, F> = UniversalMerkleTree<F, RescueHash<F>, I,
 // Make `FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>` usable as Merkle tree hash
 // for arity INPUT_SIZE - 1. The first input element is used for the domain
 // separation.
-impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
-    for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
-where
-    I: Index,
-    F: PrimeField + From<I> + nimue::Unit,
-    S: Sponge<U = F> + Poseidon2Sponge,
-{
-    fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        let mut input = vec![internal_hash_dom_sep()];
-        input.extend(data.iter());
-        Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
-    }
+// impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
+//     for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
+// where
+//     I: Index,
+//     F: PrimeField + From<I> + nimue::Unit,
+//     S: Sponge<U = F> + Poseidon2Sponge,
+// {
+//     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
+//         let mut input = vec![internal_hash_dom_sep()];
+//         input.extend(data.iter());
+//         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
+//     }
 
-    fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
-        if INPUT_SIZE < 3 {
-            return Err(MerkleTreeError::ParametersError(ark_std::format!(
-                "INPUT_SIZE {} too short",
-                INPUT_SIZE
-            )));
-        }
-        let mut input = vec![F::zero(); INPUT_SIZE];
-        input[0] = leaf_hash_dom_sep();
-        input[INPUT_SIZE - 2] = F::from(pos.clone());
-        input[INPUT_SIZE - 1] = *elem;
-        Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
-    }
-}
+//     fn digest_leaf(pos: &I, elem: &F) -> Result<F, MerkleTreeError> {
+//         if INPUT_SIZE < 3 {
+//             return Err(MerkleTreeError::ParametersError(ark_std::format!(
+//                 "INPUT_SIZE {} too short",
+//                 INPUT_SIZE
+//             )));
+//         }
+//         let mut input = vec![F::zero(); INPUT_SIZE];
+//         input[0] = leaf_hash_dom_sep();
+//         input[INPUT_SIZE - 2] = F::from(pos.clone());
+//         input[INPUT_SIZE - 1] = *elem;
+//         Ok(FixedLenPoseidon2Hash::<F, S, INPUT_SIZE, 1>::evaluate(input)?[0])
+//     }
+// }
 
 /// Implement Internal node type and implement DigestAlgorithm for a hash
 /// function with 32 bytes output size

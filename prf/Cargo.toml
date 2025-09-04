@@ -1,6 +1,6 @@
 [package]
 name = "jf-prf"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pseudorandom function (PRF)"
 authors = { workspace = true }
 edition = { workspace = true }

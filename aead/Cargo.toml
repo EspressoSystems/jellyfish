@@ -1,6 +1,6 @@
 [package]
 name = "jf-aead"
-version = "0.1.0"
+version = "0.2.0"
 description = "Authenticated encryption with associated data (AEAD)."
 authors = { workspace = true }
 edition = { workspace = true }

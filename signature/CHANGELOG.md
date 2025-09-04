@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- [TBD](TBD): Upgrade arkworks dependencies to v0.5.0.
 - [#773](https://github.com/EspressoSystems/jellyfish/pull/773): Add subgroup and on curve check to BLS signatures and public keys
 - [#786](https://github.com/EspressoSystems/jellyfish/pull/786): Debug public key types as TaggedBase64
 

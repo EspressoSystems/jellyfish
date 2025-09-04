@@ -12,11 +12,11 @@ repository = { workspace = true }
 
 [dependencies]
 anyhow = "1.0"
-ark-ec = { workspace = true }
-ark-ff = { workspace = true }
-ark-poly = { workspace = true }
-ark-serialize = { workspace = true }
-ark-std = { workspace = true }
+ark-ec = "0.4"
+ark-ff = "0.4"
+ark-poly = "0.4"
+ark-serialize = "0.4"
+ark-std = "0.4"
 derivative = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
@@ -32,11 +32,11 @@ serde = { workspace = true }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
-ark-bls12-381 = { workspace = true }
-ark-bn254 = { workspace = true }
-ark-ed-on-bls12-377 = "0.4.0"
-ark-ed-on-bls12-381 = "0.4.0"
-ark-ed-on-bn254 = "0.4.0"
+ark-bls12-381 = "0.4"
+ark-bn254 = "0.4"
+ark-ed-on-bls12-377 = "0.4"
+ark-ed-on-bls12-381 = "0.4"
+ark-ed-on-bn254 = "0.4"
 criterion = "0.5.1"
 jf-pcs = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", features = ["test-srs"] }
 sha2 = "0.10"
