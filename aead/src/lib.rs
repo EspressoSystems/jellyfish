@@ -472,7 +472,7 @@ mod test {
             keypair,
             KeyPair::deserialize_compressed(&bytes[..]).unwrap()
         );
-        assert!(KeyPair::deserialize_compressed(&bytes[1..]).is_err());
+        assert!(KeyPair::deserialize_compressed(&bytes[..bytes.len() - 1]).is_err());
 
         let mut bytes = Vec::new();
         CanonicalSerialize::serialize_compressed(&ciphertext, &mut bytes).unwrap();
@@ -480,6 +480,6 @@ mod test {
             ciphertext,
             Ciphertext::deserialize_compressed(&bytes[..]).unwrap()
         );
-        assert!(Ciphertext::deserialize_compressed(&bytes[1..]).is_err());
+        assert!(Ciphertext::deserialize_compressed(&bytes[..bytes.len() - 1]).is_err());
     }
 }
