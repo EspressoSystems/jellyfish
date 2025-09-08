@@ -83,8 +83,6 @@ pub(crate) mod tests {
     use ark_std::vec::Vec;
     use spongefish::codecs::arkworks_algebra::*;
 
-    // inspired by:
-    // <https://github.com/arkworks-rs/nimue/blob/bdec8c446b804930a8375a8d2a3703a6071abf6b/nimue-poseidon/src/tests.rs#L16C4-L16C44>
     pub(crate) fn test_sponge<F: PrimeField + Unit, H: DuplexSpongeInterface<F>>() {
         let io = DomainSeparator::<H, F>::new("test")
             .absorb(1, "in")

@@ -18,8 +18,8 @@ ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
 jf-crhf = { path = "../crhf" }
-spongefish = { workspace = true }
 lazy_static = "1.5.0"
+spongefish = { workspace = true }
 zeroize = { workspace = true }
 
 [dev-dependencies]

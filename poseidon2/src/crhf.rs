@@ -7,8 +7,7 @@ use ark_std::{borrow::Borrow, string::ToString, vec::Vec};
 use jf_crhf::CRHF;
 use spongefish::{
     duplex_sponge::{DuplexSponge, Permutation},
-    DuplexSpongeInterface,
-    Unit,
+    DuplexSpongeInterface, Unit,
 };
 
 use crate::{sponge::Poseidon2Sponge, Poseidon2Error};
