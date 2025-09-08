@@ -1,41 +1,65 @@
 //! Poseidon2 permutation implementation for spongefish
+//!
+//! This follows the pattern established in spongefish-poseidon, providing a
+//! clean interface that directly integrates with DuplexSponge.
 
 use crate::{Poseidon2, Poseidon2Params};
 use ark_ff::PrimeField;
 use ark_std::marker::PhantomData;
-use spongefish::duplex_sponge::Permutation;
-use spongefish::Unit;
+use spongefish::{
+    duplex_sponge::{DuplexSponge, Permutation},
+    Unit,
+};
 use zeroize::Zeroize;
 
-/// A Poseidon2 permutation adaptor for spongefish
-/// 
-/// This struct maintains the sponge state and implements the Permutation trait
-/// required by spongefish's DuplexSponge.
+/// Poseidon2 Permutation for spongefish
+///
+/// Similar to spongefish-poseidon's PoseidonPermutation but for Poseidon2.
+/// Integrates directly with DuplexSponge.
 #[derive(Debug, Clone)]
-pub struct Poseidon2PermutationState<
+pub struct Poseidon2Permutation<
     F: PrimeField + Unit,
     const N: usize,
     const R: usize,
     P: Poseidon2Params<F, N>,
 > {
-    /// Internal state of the sponge
+    /// Permutation state
     pub state: [F; N],
     _params: PhantomData<P>,
 }
 
-impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> Default
-    for Poseidon2PermutationState<F, N, R, P>
+/// Poseidon2 Hash (DuplexSponge wrapper)
+pub type Poseidon2Hash<F, const N: usize, const R: usize, P> =
+    DuplexSponge<Poseidon2Permutation<F, N, R, P>>;
+
+impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> AsRef<[F]>
+    for Poseidon2Permutation<F, N, R, P>
 {
-    fn default() -> Self {
-        Self {
-            state: [F::default(); N],
-            _params: PhantomData,
-        }
+    fn as_ref(&self) -> &[F] {
+        &self.state
     }
 }
 
-impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>>
-    Permutation for Poseidon2PermutationState<F, N, R, P>
+impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> AsMut<[F]>
+    for Poseidon2Permutation<F, N, R, P>
+{
+    fn as_mut(&mut self) -> &mut [F] {
+        &mut self.state
+    }
+}
+
+impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> Zeroize
+    for Poseidon2Permutation<F, N, R, P>
+{
+    fn zeroize(&mut self) {
+        self.state.zeroize();
+    }
+}
+
+impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> Permutation
+    for Poseidon2Permutation<F, N, R, P>
+where
+    Self: Default,
 {
     type U = F;
     const N: usize = N;
@@ -47,13 +71,9 @@ impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F,
         // at least 100 security required
         assert!((N - R) as u32 * <F as PrimeField>::MODULUS_BIT_SIZE >= 200);
 
-        // fill capacity portion with initial vector IV
-        let mut state = [F::default(); N];
-        state[R] = F::from_be_bytes_mod_order(&iv);
-        Self {
-            state,
-            _params: PhantomData,
-        }
+        let mut sponge = Self::default();
+        sponge.state[R] = F::from_be_bytes_mod_order(&iv);
+        sponge
     }
 
     fn permute(&mut self) {
@@ -61,30 +81,13 @@ impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F,
     }
 }
 
-impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> AsRef<[F]>
-    for Poseidon2PermutationState<F, N, R, P>
+impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> Default
+    for Poseidon2Permutation<F, N, R, P>
 {
-    fn as_ref(&self) -> &[F] {
-        &self.state
+    fn default() -> Self {
+        Self {
+            state: [F::zero(); N],
+            _params: PhantomData,
+        }
     }
 }
-
-impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> AsMut<[F]>
-    for Poseidon2PermutationState<F, N, R, P>
-{
-    fn as_mut(&mut self) -> &mut [F] {
-        &mut self.state
-    }
-}
-
-impl<F: PrimeField + Unit, const N: usize, const R: usize, P: Poseidon2Params<F, N>> Zeroize
-    for Poseidon2PermutationState<F, N, R, P>
-{
-    fn zeroize(&mut self) {
-        self.state.zeroize();
-    }
-}
-
-/// Convenience type alias for Poseidon2 permutation state
-pub type Poseidon2Perm<F, const N: usize, const R: usize, P> =
-    Poseidon2PermutationState<F, N, R, P>;

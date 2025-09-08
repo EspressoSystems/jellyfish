@@ -1,17 +1,17 @@
 //! Poseidon2-based Cryptographic Sponge
+//!
+//! This module provides clean type aliases following the spongefish-poseidon
+//! pattern.
 
-use crate::{permutation::Poseidon2PermutationState, Poseidon2Params};
+use crate::{permutation::Poseidon2Permutation, Poseidon2Params};
 use ark_ff::PrimeField;
 use spongefish::Unit;
 
 /// Marker trait for the state of Poseidon2-based Cryptographic Sponge
 pub trait Poseidon2Sponge {}
 
-// Re-export the main types for convenience
-pub use crate::permutation::Poseidon2PermutationState as Poseidon2SpongeState;
-
 /// Implement the marker trait for our permutation state
-impl<F, const N: usize, const R: usize, P> Poseidon2Sponge for Poseidon2PermutationState<F, N, R, P>
+impl<F, const N: usize, const R: usize, P> Poseidon2Sponge for Poseidon2Permutation<F, N, R, P>
 where
     F: PrimeField + Unit,
     P: Poseidon2Params<F, N>,
@@ -27,19 +27,19 @@ pub mod bls12_381 {
     use ark_bls12_381::Fr;
     use spongefish::duplex_sponge::DuplexSponge;
     /// State of a sponge over BLS12-381 scalar field, state_size=2, rate=1.
-    pub type Poseidon2SpongeStateBlsN2R1 = Poseidon2SpongeState<Fr, 2, 1, Poseidon2ParamsBls2>;
+    pub type Poseidon2PermutationBlsN2R1 = Poseidon2Permutation<Fr, 2, 1, Poseidon2ParamsBls2>;
     /// A sponge over BLS12-381 scalar field, state_size=2, rate=1.
-    pub type Poseidon2SpongeBlsN2R1 = DuplexSponge<Poseidon2SpongeStateBlsN2R1>;
+    pub type Poseidon2SpongeBlsN2R1 = DuplexSponge<Poseidon2PermutationBlsN2R1>;
 
     /// State of a sponge over BLS12-381 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeStateBlsN3R1 = Poseidon2SpongeState<Fr, 3, 1, Poseidon2ParamsBls3>;
+    pub type Poseidon2PermutationBlsN3R1 = Poseidon2Permutation<Fr, 3, 1, Poseidon2ParamsBls3>;
     /// A sponge over BLS12-381 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeBlsN3R1 = DuplexSponge<Poseidon2SpongeStateBlsN3R1>;
+    pub type Poseidon2SpongeBlsN3R1 = DuplexSponge<Poseidon2PermutationBlsN3R1>;
 
     /// State of a sponge over BLS12-381 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeStateBlsN3R2 = Poseidon2SpongeState<Fr, 3, 2, Poseidon2ParamsBls3>;
+    pub type Poseidon2PermutationBlsN3R2 = Poseidon2Permutation<Fr, 3, 2, Poseidon2ParamsBls3>;
     /// A sponge over BLS12-381 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeBlsN3R2 = DuplexSponge<Poseidon2SpongeStateBlsN3R2>;
+    pub type Poseidon2SpongeBlsN3R2 = DuplexSponge<Poseidon2PermutationBlsN3R2>;
 
     #[test]
     fn test_bls_sponge() {
@@ -59,14 +59,14 @@ pub mod bn254 {
     use ark_bn254::Fr;
     use spongefish::duplex_sponge::DuplexSponge;
     /// State of a sponge over BN254 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeStateBnN3R1 = Poseidon2SpongeState<Fr, 3, 1, Poseidon2ParamsBn3>;
+    pub type Poseidon2PermutationBnN3R1 = Poseidon2Permutation<Fr, 3, 1, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=1.
-    pub type Poseidon2SpongeBnN3R1 = DuplexSponge<Poseidon2SpongeStateBnN3R1>;
+    pub type Poseidon2SpongeBnN3R1 = DuplexSponge<Poseidon2PermutationBnN3R1>;
 
     /// State of a sponge over BN254 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeStateBnN3R2 = Poseidon2SpongeState<Fr, 3, 2, Poseidon2ParamsBn3>;
+    pub type Poseidon2PermutationBnN3R2 = Poseidon2Permutation<Fr, 3, 2, Poseidon2ParamsBn3>;
     /// A sponge over BN254 scalar field, state_size=3, rate=2.
-    pub type Poseidon2SpongeBnN3R2 = DuplexSponge<Poseidon2SpongeStateBnN3R2>;
+    pub type Poseidon2SpongeBnN3R2 = DuplexSponge<Poseidon2PermutationBnN3R2>;
 
     #[test]
     fn test_bn_sponge() {
