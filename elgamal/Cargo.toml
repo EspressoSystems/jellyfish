@@ -10,6 +10,19 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-ec/std",
+    "ark-ff/std",
+    "ark-serialize/std",
+    "ark-std/std",
+    "jf-rescue/std",
+    "zeroize/std",
+]
+gadgets = ["jf-relation", "jf-rescue/gadgets"]
+parallel = ["jf-relation/parallel", "jf-rescue/parallel", "rayon"]
+
 [dependencies]
 ark-ec = { workspace = true }
 ark-ff = { workspace = true }
@@ -32,12 +45,3 @@ ark-ed-on-bls12-381-bandersnatch = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
 # temporarily using path: jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5" }
 jf-utils = { path = "../utilities" }
-
-[features]
-default = ["parallel"]
-std = [
-    "ark-ec/std", "ark-ff/std", "ark-serialize/std", "ark-std/std",
-    "jf-rescue/std", "zeroize/std",
-]
-gadgets = ["jf-relation", "jf-rescue/gadgets"]
-parallel = ["jf-relation/parallel", "jf-rescue/parallel", "rayon"]

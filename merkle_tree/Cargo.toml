@@ -10,6 +10,25 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-377/std",
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-std/std",
+    "ark-serialize/std",
+    "ark-ff/std",
+    "num-bigint/std",
+    "num-traits/std",
+    "sha3/std",
+    "itertools/use_std",
+    "jf-utils/std",
+    "jf-relation/std",
+]
+gadgets = ["jf-relation", "jf-rescue/gadgets"]
+parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
+
 [dependencies]
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
@@ -55,24 +74,3 @@ sha2 = "0.10"
 [[bench]]
 name = "merkle_path"
 harness = false
-
-[features]
-default = ["parallel"]
-std = [
-        "ark-bls12-377/std",
-        "ark-bls12-381/std",
-        "ark-bn254/std",
-        "ark-std/std",
-        "ark-serialize/std",
-        "ark-ff/std",
-        "num-bigint/std",
-        "num-traits/std",
-        "sha3/std",
-        "itertools/use_std",
-        "jf-utils/std",
-        "jf-relation/std",
-]
-gadgets = [
-    "jf-relation", "jf-rescue/gadgets",
-]
-parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]

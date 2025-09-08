@@ -10,6 +10,27 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-std/std",
+    "ark-serialize/std",
+    "ark-ff/std",
+    "num-bigint/std",
+    "num-traits/std",
+    "sha3/std",
+    "itertools/use_std",
+    "jf-utils/std",
+    "jf-relation/std",
+    "zeroize/std",
+]
+schnorr = []
+bls = []
+gadgets = ["schnorr", "jf-relation", "jf-rescue/gadgets"]
+parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
+
 [dependencies]
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
@@ -58,28 +79,3 @@ name = "bls-signature"
 path = "benches/bls_signature.rs"
 harness = false
 required-features = ["bls"]
-
-[features]
-default = ["parallel"]
-std = [
-        "ark-bls12-381/std",
-        "ark-bn254/std",
-        "ark-std/std",
-        "ark-serialize/std",
-        "ark-ff/std",
-        "num-bigint/std",
-        "num-traits/std",
-        "sha3/std",
-        "itertools/use_std",
-        "jf-utils/std",
-        "jf-relation/std",
-        "zeroize/std",
-]
-schnorr = []
-bls = []
-gadgets = [
-    "schnorr",
-    "jf-relation",
-    "jf-rescue/gadgets",
-]
-parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]

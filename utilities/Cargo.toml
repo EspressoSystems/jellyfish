@@ -7,6 +7,26 @@ edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
 
+[features]
+default = []
+std = [
+    "ark-ff/std",
+    "ark-std/std",
+    "ark-ec/std",
+    "ark-serialize/std",
+    "ark-poly/std",
+    "digest/std",
+    "rand_chacha/std",
+    "serde/std",
+    "sha2/std",
+]
+parallel = [
+    "ark-ff/parallel",
+    "ark-std/parallel",
+    "ark-ec/parallel",
+    "dep:rayon",
+]
+
 [dependencies]
 ark-ec = { workspace = true }
 ark-ed-on-bls12-377 = { workspace = true }
@@ -29,23 +49,3 @@ ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
 criterion = "0.5.1"
-
-[features]
-default = []
-std = [
-    "ark-ff/std",
-    "ark-std/std",
-    "ark-ec/std",
-    "ark-serialize/std",
-    "ark-poly/std",
-    "digest/std",
-    "rand_chacha/std",
-    "serde/std",
-    "sha2/std",
-]
-parallel = [
-    "ark-ff/parallel",
-    "ark-std/parallel",
-    "ark-ec/parallel",
-    "dep:rayon",
-]

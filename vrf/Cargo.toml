@@ -10,6 +10,11 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = ["ark-std/std", "digest/std", "jf-signature/std", "zeroize/std"]
+parallel = ["jf-signature/parallel"]
+
 [dependencies]
 ark-std = { workspace = true }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
@@ -21,10 +26,3 @@ zeroize = { workspace = true }
 
 [dev-dependencies]
 jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-
-[features]
-default = ["parallel"]
-std = [
-    "ark-std/std", "digest/std", "jf-signature/std", "zeroize/std",
-]
-parallel = ["jf-signature/parallel"]

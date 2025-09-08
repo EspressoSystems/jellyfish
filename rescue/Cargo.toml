@@ -10,6 +10,26 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-377/std",
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-bw6-761/std",
+    "ark-std/std",
+    "ark-ff/std",
+    "ark-crypto-primitives/std",
+    "ark-ed-on-bls12-377/std",
+    "ark-ed-on-bls12-381/std",
+    "ark-ed-on-bn254/std",
+    "itertools/use_std",
+    "jf-utils/std",
+    "jf-relation/std",
+]
+gadgets = ["jf-relation"]
+parallel = ["jf-relation/parallel"]
+
 [dependencies]
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
@@ -39,15 +59,3 @@ jf-utils = { path = "../utilities" }
 
 [dev-dependencies]
 ark-ed-on-bls12-381-bandersnatch = { workspace = true }
-
-[features]
-default = ["parallel"]
-std = [
-        "ark-bls12-377/std", "ark-bls12-381/std", "ark-bn254/std",
-        "ark-bw6-761/std", "ark-std/std", "ark-ff/std",
-        "ark-crypto-primitives/std", "ark-ed-on-bls12-377/std",
-        "ark-ed-on-bls12-381/std", "ark-ed-on-bn254/std",
-        "itertools/use_std", "jf-utils/std", "jf-relation/std",
-]
-gadgets = ["jf-relation"]
-parallel = ["jf-relation/parallel"]
