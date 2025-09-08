@@ -35,6 +35,7 @@ rand_chacha = { version = "0.3.1", default-features = false }
 serde = { version = "1.0", default-features = false, features = [ "derive", "rc", "alloc" ] }
 sha2 = { version = "0.10", default-features = false }
 sha3 = { version = "0.10", default-features = false }
+spongefish = { git = "https://github.com/arkworks-rs/spongefish.git", rev = "3ded547f7f56d7f8a1fc4c9a5c0ce965310bba5f", features = ["arkworks-algebra"] }
 itertools = { version = "0.12", default-features = false }
 tagged-base64 = "0.4"
 zeroize = { version = "^1.8" }

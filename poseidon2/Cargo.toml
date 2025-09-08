@@ -11,15 +11,15 @@ documentation = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-ark-bls12-381 = { version = "0.4", optional = true }
-ark-bn254 = { version = "0.4", optional = true }
-ark-ff = "0.4"
-ark-std = "0.4"
+ark-bls12-381 = { workspace = true, optional = true }
+ark-bn254 = { workspace = true, optional = true }
+ark-ff = { workspace = true }
+ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
-jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
+jf-crhf = { path = "../crhf" }
+spongefish = { workspace = true }
 lazy_static = "1.5.0"
-nimue = { version = "=0.1.1", features = ["ark"] }
 zeroize = { workspace = true }
 
 [dev-dependencies]
