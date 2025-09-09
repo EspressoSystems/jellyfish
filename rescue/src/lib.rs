@@ -28,10 +28,10 @@ extern crate std;
 #[doc(hidden)]
 extern crate alloc;
 
-// pub mod commitment;
+pub mod commitment;
 pub mod crhf;
-// #[cfg(feature = "gadgets")]
-// pub mod gadgets;
+#[cfg(feature = "gadgets")]
+pub mod gadgets;
 pub mod permutation;
 pub mod prf;
 mod rescue_constants;

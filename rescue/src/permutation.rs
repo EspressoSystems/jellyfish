@@ -46,7 +46,7 @@ impl<F: RescueParameter, const R: usize> duplex_sponge::Permutation for RescuePe
     fn new(iv: [u8; 32]) -> Self {
         let perm = Permutation::default();
         let mut state = RescueVector::default();
-        state.vec[R] = F::from_be_bytes_mod_order(&iv);
+        state.vec[R] = F::from_le_bytes_mod_order(&iv);
         Self { state, perm }
     }
 

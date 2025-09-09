@@ -33,7 +33,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
         padded.push(F::one());
         pad_with_zeros(&mut padded, CRHF_RATE);
         Self::sponge_no_padding(padded.as_slice(), num_outputs)
-            .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
+            .expect("Bug in JF Primitives : bad padding of input for sponge construction")
     }
 
     /// Similar to [`RescueCRHF::sponge_with_bit_padding`] except we use ["zero
@@ -45,7 +45,7 @@ impl<F: RescueParameter> RescueCRHF<F> {
         let mut padded = input.to_vec();
         pad_with_zeros(&mut padded, CRHF_RATE);
         Self::sponge_no_padding(padded.as_slice(), num_outputs)
-            .expect("Bug in JF Primitives : bad padding of input for FSKS construction")
+            .expect("Bug in JF Primitives : bad padding of input for sponge construction")
     }
 
     /// Sponge hashing based on rescue permutation for RATE 3 and CAPACITY 1. It

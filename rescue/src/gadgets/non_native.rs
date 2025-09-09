@@ -10,7 +10,9 @@
 //! a plonk circuit) to `FpElemVar`s that are non-native to the circuit.
 
 use super::{PermutationGadget, RescueGadget, SpongeStateVar};
-use crate::{Permutation, RescueMatrix, RescueParameter, RescueVector, PRP, ROUNDS, STATE_SIZE};
+use crate::{
+    Permutation, RescueMatrix, RescueParameter, RescueVector, CRHF_RATE, PRP, ROUNDS, STATE_SIZE,
+};
 use ark_ff::{BigInteger, PrimeField};
 use ark_std::{format, string::ToString, vec, vec::Vec};
 use jf_relation::{
@@ -127,14 +129,11 @@ where
         state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
-            state_var = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
-                self,
-                &state_var,
-                &RescueNonNativeStateVar {
-                    state: [block[0], block[1], block[2], zero_var],
-                    modulus,
-                },
-            )?;
+            // Overwrite rate portion (first 3 elements) but keep capacity (4th element)
+            state_var.state[0] = block[0];
+            state_var.state[1] = block[1];
+            state_var.state[2] = block[2];
+            // state_var.state[3] remains as capacity (zero_var)
             state_var = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state_var)?;
         }
         // SQUEEZE PHASE
@@ -154,7 +153,7 @@ where
         Ok(result)
     }
 
-    fn rescue_full_state_keyed_sponge_with_zero_padding(
+    fn rescue_keyed_sponge_with_zero_padding(
         &mut self,
         key: FpElemVar<F>,
         data_vars: &[FpElemVar<F>],
@@ -172,25 +171,23 @@ where
             data_vars,
             vec![
                 zero_var;
-                compute_len_to_next_multiple(data_vars.len(), STATE_SIZE) - data_vars.len()
+                compute_len_to_next_multiple(data_vars.len(), CRHF_RATE) - data_vars.len()
             ]
             .as_ref(),
         ]
         .concat();
 
-        RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
-            self, key, &data_vars,
-        )
+        RescueNonNativeGadget::<T, F>::rescue_keyed_sponge_no_padding(self, key, &data_vars)
     }
 
-    fn rescue_full_state_keyed_sponge_no_padding(
+    fn rescue_keyed_sponge_no_padding(
         &mut self,
         key: FpElemVar<F>,
         data_vars: &[FpElemVar<F>],
     ) -> Result<FpElemVar<F>, CircuitError> {
-        if data_vars.len() % STATE_SIZE != 0 || data_vars.is_empty() {
+        if data_vars.len() % CRHF_RATE != 0 || data_vars.is_empty() {
             return Err(ParameterError(format!(
-                "Bad input length for FSKS circuit: {:}, it must be positive multiple of STATE_SIZE",
+                "Bad input length for keyed sponge circuit: {:}, it must be positive multiple of CRHF_RATE (3)",
                 data_vars.len()
             )));
         }
@@ -207,25 +204,23 @@ where
         let t_modulus = F::from_le_bytes_mod_order(T::MODULUS.to_bytes_le().as_ref());
         let modulus = FpElem::new(&t_modulus, m, two_power_m)?;
 
-        // set key
+        // Initialize sponge with key in capacity (similar to CRHF approach)
         let mut state = RescueNonNativeStateVar {
             state: [zero_var, zero_var, zero_var, key],
             modulus,
         };
 
-        // absorb phase
-        let chunks = data_vars.chunks_exact(STATE_SIZE);
+        // absorb phase - process input in chunks of CRHF_RATE (3)
+        let chunks = data_vars.chunks_exact(CRHF_RATE);
         for chunk in chunks {
-            let chunk_var = RescueNonNativeStateVar {
-                state: [chunk[0], chunk[1], chunk[2], chunk[3]],
-                modulus,
-            };
-            state = PermutationGadget::<RescueNonNativeStateVar<F>, T, F>::add_state(
-                self, &state, &chunk_var,
-            )?;
+            // Overwrite rate portion (first 3 elements) but keep capacity (4th element)
+            state.state[0] = chunk[0];
+            state.state[1] = chunk[1];
+            state.state[2] = chunk[2];
+            // Apply permutation
             state = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state)?;
         }
-        // squeeze phase, but only a single output, can return directly from state
+        // squeeze phase, return first rate element as output
         Ok(state.state[0])
     }
 
@@ -1192,10 +1187,10 @@ mod tests {
     }
 
     #[test]
-    fn test_fsks() {
-        test_fsks_helper::<FqEd377, Fq377>()
+    fn test_keyed_sponge() {
+        test_keyed_sponge_helper::<FqEd377, Fq377>()
     }
-    fn test_fsks_helper<T: RescueParameter, F: PrimeField>() {
+    fn test_keyed_sponge_helper<T: RescueParameter, F: PrimeField>() {
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         // parameter m
@@ -1210,7 +1205,7 @@ mod tests {
         let key_var = FpElemVar::new_from_field_element(&mut circuit, &key_f, m, None).unwrap();
 
         // data
-        let input_len = 8;
+        let input_len = 6; // Multiple of CRHF_RATE (3)
         let data_t: Vec<T> = (0..input_len).map(|_| T::rand(&mut prng)).collect();
         let data_f: Vec<F> = data_t.iter().map(|x| field_switching(x)).collect();
         let data_vars: Vec<FpElemVar<F>> = data_f
@@ -1221,10 +1216,10 @@ mod tests {
             })
             .collect();
 
-        let expected_fsks_output =
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
+        let expected_keyed_sponge_output =
+            RescuePRFCore::keyed_sponge_no_padding(&key_t, &data_t, 1).unwrap();
 
-        let fsks_var = RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+        let keyed_sponge_var = RescueNonNativeGadget::<T, F>::rescue_keyed_sponge_no_padding(
             &mut circuit,
             key_var,
             &data_vars,
@@ -1233,13 +1228,13 @@ mod tests {
 
         // Check prf output consistency
         assert_eq!(
-            field_switching::<T, F>(&expected_fsks_output[0]),
-            fsks_var.witness(&circuit).unwrap()
+            field_switching::<T, F>(&expected_keyed_sponge_output[0]),
+            keyed_sponge_var.witness(&circuit).unwrap()
         );
 
         // Check constraints
         assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-        *circuit.witness_mut(fsks_var.components().0) = F::from(1_u32);
+        *circuit.witness_mut(keyed_sponge_var.components().0) = F::from(1_u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // make data_vars of bad length
@@ -1251,7 +1246,7 @@ mod tests {
         );
         data_vars.push(zero_var);
         assert!(
-            RescueNonNativeGadget::<T, F>::rescue_full_state_keyed_sponge_no_padding(
+            RescueNonNativeGadget::<T, F>::rescue_keyed_sponge_no_padding(
                 &mut circuit,
                 key_var,
                 &data_vars
