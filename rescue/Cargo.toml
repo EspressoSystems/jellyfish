@@ -56,6 +56,8 @@ jf-crhf = { path = "../crhf" }
 jf-prf = { path = "../prf" }
 jf-relation = { path = "../relation", optional = true }
 jf-utils = { path = "../utilities" }
+spongefish = { workspace = true }
+zeroize = { workspace = true }
 
 [dev-dependencies]
 ark-ed-on-bls12-381-bandersnatch = { workspace = true }

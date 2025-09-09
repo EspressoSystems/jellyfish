@@ -6,18 +6,14 @@
 
 //! A rescue CRHF implementation
 
-use crate::{
-    sponge::RescueSponge, Permutation, RescueError, RescueParameter, RescueVector, CRHF_RATE,
-};
-use ark_crypto_primitives::sponge::{
-    CryptographicSponge, FieldBasedCryptographicSponge, SpongeExt,
-};
-use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec::Vec};
+use crate::{Permutation, RescueError, RescueParameter, RescueSponge, RescueVector, CRHF_RATE};
+use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_crhf::CRHF;
 use jf_utils::pad_with_zeros;
+use spongefish::duplex_sponge::DuplexSpongeInterface;
 
 /// CRHF
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RescueCRHF<F: RescueParameter> {
     sponge: RescueSponge<F, CRHF_RATE>,
 }
@@ -64,12 +60,14 @@ impl<F: RescueParameter> RescueCRHF<F> {
         }
         // ABSORB PHASE
         let mut r = Self {
-            sponge: RescueSponge::from_state(RescueVector::zero(), &Permutation::default()),
+            sponge: RescueSponge::default(),
         };
-        r.sponge.absorb(&input);
+        r.sponge.absorb_unchecked(&input);
 
         // SQUEEZE PHASE
-        Ok(r.sponge.squeeze_native_field_elements(num_output))
+        let mut output = vec![F::default(); num_output];
+        r.sponge.squeeze_unchecked(&mut output);
+        Ok(output)
     }
 }
 
