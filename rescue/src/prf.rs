@@ -6,66 +6,80 @@
 
 //! A rescue PRF implementation
 
-use crate::{
-    sponge::RescueSponge, Permutation, RescueError, RescueParameter, RescueVector, STATE_SIZE,
-};
-use ark_crypto_primitives::sponge::{
-    CryptographicSponge, FieldBasedCryptographicSponge, SpongeExt,
-};
-use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec::Vec};
+use crate::{RescueError, RescueParameter, RescueSponge, CRHF_RATE};
+use ark_ff::BigInteger;
+use ark_std::{borrow::Borrow, marker::PhantomData, string::ToString, vec, vec::Vec};
 use jf_prf::PRF;
 use jf_utils::pad_with_zeros;
+use spongefish::duplex_sponge::DuplexSpongeInterface;
 
-/// Rescue PRF
-#[derive(Debug, Clone)]
-pub(crate) struct RescuePRFCore<F: RescueParameter> {
-    sponge: RescueSponge<F, STATE_SIZE>,
-}
+/// Rescue PRF Core Implementation
+///
+/// # Migration Note
+/// This implementation was migrated from ark-sponge (additive absorption) to
+/// spongefish (overwrite absorption). The original implementation used rate=4
+/// (STATE_SIZE) with additive absorption semantics where input elements
+/// were added to the sponge state. The new implementation uses rate=3 with
+/// overwrite absorption semantics where input elements overwrite the rate
+/// portion of the sponge state, maintaining capacity=1 for security.
+///
+/// This change means:
+/// - Input padding and length validation now expect multiples of 3 instead of 4
+/// - The absorption semantics changed from additive (state += input) to
+///   overwrite (state[0..rate] = input)
+/// - PRF outputs may differ from the previous implementation due to these
+///   semantic differences
+#[derive(Clone)]
+pub(crate) struct RescuePRFCore<F: RescueParameter>(PhantomData<F>);
 
 impl<F: RescueParameter> RescuePRFCore<F> {
-    /// Similar to [`Self::full_state_keyed_sponge_with_bit_padding`] except the
-    /// padding scheme are all "0" until the length of padded input is a
-    /// multiple of `STATE_SIZE`
-    pub(crate) fn full_state_keyed_sponge_with_zero_padding(
+    /// Keyed sponge-based pseudorandom function with zero padding.
+    /// The padding scheme adds "0" until the length of padded input is a
+    /// multiple of `CRHF_RATE` (3)
+    pub(crate) fn keyed_sponge_with_zero_padding(
         key: &F,
         input: &[F],
         num_outputs: usize,
     ) -> Result<Vec<F>, RescueError> {
         let mut padded = input.to_vec();
-        pad_with_zeros(&mut padded, STATE_SIZE);
-        Self::full_state_keyed_sponge_no_padding(key, padded.as_slice(), num_outputs)
+        pad_with_zeros(&mut padded, CRHF_RATE); // Rate is CRHF_RATE (3)
+        Self::keyed_sponge_no_padding(key, padded.as_slice(), num_outputs)
     }
 
-    /// Pseudorandom function based on rescue permutation for RATE 4. It allows
-    /// inputs with length that is a multiple of `STATE_SIZE` and returns a
+    /// Keyed sponge-based pseudorandom function using rescue permutation with rate=3.
+    /// It allows inputs with length that is a multiple of `CRHF_RATE` and returns a
     /// vector of `num_outputs` elements.
-    pub(crate) fn full_state_keyed_sponge_no_padding(
+    pub(crate) fn keyed_sponge_no_padding(
         key: &F,
         input: &[F],
         num_outputs: usize,
     ) -> Result<Vec<F>, RescueError> {
-        if input.len() % STATE_SIZE != 0 {
+        if input.len() % CRHF_RATE != 0 {
             return Err(RescueError::ParameterError(
-                "Rescue FSKS PRF Error: input to prf function is not multiple of STATE_SIZE."
+                "Rescue PRF Error: input to prf function is not multiple of CRHF_RATE (3)."
                     .to_string(),
             ));
         }
-        // ABSORB PHASE
-        let mut state = RescueVector::zero();
-        state.vec[STATE_SIZE - 1] = *key;
-        let mut r = Self {
-            sponge: RescueSponge::from_state(state, &Permutation::default()),
-        };
-        r.sponge.absorb(&input);
 
-        // SQUEEZE PHASE
-        Ok(r.sponge.squeeze_native_field_elements(num_outputs))
+        // Convert field element to bytes for spongefish IV
+        let key_bigint_bytes = key.into_bigint().to_bytes_be();
+        let mut key_bytes_be = [0u8; 32];
+        let copy_len = usize::min(32, key_bigint_bytes.len());
+        key_bytes_be[32 - copy_len..]
+            .copy_from_slice(&key_bigint_bytes[key_bigint_bytes.len() - copy_len..]);
+
+        // Use rate=3 (same as CRHF) to ensure capacity=1 for spongefish compatibility
+        let mut sponge = RescueSponge::<F, CRHF_RATE>::new(key_bytes_be);
+        sponge.absorb_unchecked(&input);
+
+        let mut output = vec![F::default(); num_outputs];
+        sponge.squeeze_unchecked(&mut output);
+        Ok(output)
     }
 }
 
 #[derive(Debug, Clone)]
-/// A rescue-based PRF that leverages on Full State Keyed (FSK) sponge
-/// construction
+/// A rescue-based PRF that uses a keyed sponge construction with rate=3
 pub struct RescuePRF<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize>(
     PhantomData<F>,
 );
@@ -83,7 +97,7 @@ impl<F: RescueParameter, const INPUT_LEN: usize, const OUTPUT_LEN: usize> PRF
         input: I,
     ) -> Result<Self::Output, Self::Error> {
         let mut output = [F::zero(); OUTPUT_LEN];
-        output.clone_from_slice(&RescuePRFCore::full_state_keyed_sponge_with_zero_padding(
+        output.clone_from_slice(&RescuePRFCore::keyed_sponge_with_zero_padding(
             seed.borrow(),
             input.borrow(),
             OUTPUT_LEN,
@@ -118,7 +132,7 @@ mod tests {
                 RescuePRF::<$tr, 1, 15>::evaluate(&seed, &input)
                     .unwrap()
                     .to_vec(),
-                RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&seed, &input, 15)
+                RescuePRFCore::keyed_sponge_with_zero_padding(&seed, &input, 15)
                     .unwrap()
             );
         };
@@ -143,28 +157,35 @@ mod tests {
     }
     fn test_fsks_no_padding_errors_helper<F: RescueParameter>() {
         let key = F::rand(&mut jf_utils::test_rng());
-        let input = vec![F::from(9u64); 4];
+
+        // Test inputs that are multiples of 3 (rate) - should succeed
+        let input = vec![F::from(9u64); 3];
         assert!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
         );
         let input = vec![F::from(9u64); 12];
         assert!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
         );
 
-        // test should panic because number of inputs is not multiple of 3
-        let input = vec![F::from(9u64); 10];
+        // Test inputs that are NOT multiples of 3 (rate) - should fail
+        let input = vec![F::from(9u64); 4]; // 4 % 3 != 0
         assert!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
         );
-        let input = vec![F::from(9u64)];
+        let input = vec![F::from(9u64); 10]; // 10 % 3 != 0
         assert!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
+        );
+        let input = vec![F::from(9u64)]; // 1 % 3 != 0
+        assert!(
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_err()
         );
 
+        // Empty input (0 % 3 == 0) should succeed
         let input = vec![];
         assert!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
+            RescuePRFCore::keyed_sponge_no_padding(&key, input.as_slice(), 1).is_ok()
         );
     }
 
@@ -191,63 +212,63 @@ mod tests {
         assert_eq!(RescueCRHF::sponge_no_padding(&input, 10).unwrap().len(), 10);
 
         let key = F::rand(&mut jf_utils::test_rng());
-        let input = [F::zero(), F::one(), F::zero(), F::zero()];
+        let input = [F::zero(), F::one(), F::zero()];
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 0)
+            RescuePRFCore::keyed_sponge_with_zero_padding(&key, &input, 0)
                 .unwrap()
                 .len(),
             0
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 1)
+            RescuePRFCore::keyed_sponge_with_zero_padding(&key, &input, 1)
                 .unwrap()
                 .len(),
             1
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 2)
+            RescuePRFCore::keyed_sponge_with_zero_padding(&key, &input, 2)
                 .unwrap()
                 .len(),
             2
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 4)
+            RescuePRFCore::keyed_sponge_with_zero_padding(&key, &input, 4)
                 .unwrap()
                 .len(),
             4
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_with_zero_padding(&key, &input, 10)
+            RescuePRFCore::keyed_sponge_with_zero_padding(&key, &input, 10)
                 .unwrap()
                 .len(),
             10
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 0)
+            RescuePRFCore::keyed_sponge_no_padding(&key, &input, 0)
                 .unwrap()
                 .len(),
             0
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 1)
+            RescuePRFCore::keyed_sponge_no_padding(&key, &input, 1)
                 .unwrap()
                 .len(),
             1
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 2)
+            RescuePRFCore::keyed_sponge_no_padding(&key, &input, 2)
                 .unwrap()
                 .len(),
             2
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 4)
+            RescuePRFCore::keyed_sponge_no_padding(&key, &input, 4)
                 .unwrap()
                 .len(),
             4
         );
         assert_eq!(
-            RescuePRFCore::full_state_keyed_sponge_no_padding(&key, &input, 10)
+            RescuePRFCore::keyed_sponge_no_padding(&key, &input, 10)
                 .unwrap()
                 .len(),
             10

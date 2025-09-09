@@ -33,7 +33,7 @@ pub mod crhf;
 // #[cfg(feature = "gadgets")]
 // pub mod gadgets;
 pub mod permutation;
-// pub mod prf;
+pub mod prf;
 mod rescue_constants;
 
 use ark_ff::{PrimeField, Zero};
