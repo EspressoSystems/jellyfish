@@ -1,6 +1,6 @@
 [package]
 name = "jf-pcs"
-version = "0.1.0"
+version = "0.2.0"
 description = "Univariate and multilinear KZG polynomial commitment scheme (PCS) implementation."
 authors = { workspace = true }
 edition = { workspace = true }
