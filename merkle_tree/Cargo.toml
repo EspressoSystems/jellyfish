@@ -46,14 +46,14 @@ itertools = { workspace = true, features = ["use_alloc"] }
 # jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 # jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 # jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-crhf = { path = "../crhf" }
 # temporarily by path
 # jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
 # TODO: pin to an updated version/tag next time we release a tag
-jf-poseidon2 = { path = "../poseidon2" }
-jf-relation = { path = "../relation", optional = true }
-jf-rescue = { path = "../rescue" }
-jf-utils = { path = "../utilities" }
+jf-crhf = { path = "../crhf", default-features = false }
+jf-poseidon2 = { path = "../poseidon2", default-features = false }
+jf-relation = { path = "../relation", default-features = false, optional = true }
+jf-rescue = { path = "../rescue", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
 serde = { workspace = true }

@@ -23,7 +23,7 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
-jf-crhf = { path = "../crhf" }
+jf-crhf = { path = "../crhf", default-features = false }
 lazy_static = "1.5.0"
 spongefish = { workspace = true }
 zeroize = { workspace = true }
