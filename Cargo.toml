@@ -13,7 +13,7 @@ members = [
     "rescue",
     "signature",
     "utilities",
-    # "vid",
+    "vid",
     "vrf",
 ]
 resolver = "2"
