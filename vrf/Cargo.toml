@@ -19,10 +19,10 @@ parallel = ["jf-signature/parallel"]
 ark-std = { workspace = true }
 digest = { version = "0.10.1", default-features = false, features = ["alloc"] }
 displaydoc = { workspace = true }
-jf-signature = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-signature-v0.2.0", default-features = false, features = [ "bls" ] }
+jf-signature = { path = "../signature", features = [ "bls" ] }
 serde = { workspace = true }
 sha2 = { workspace = true }
 zeroize = { workspace = true }
 
 [dev-dependencies]
-jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }

@@ -13,7 +13,7 @@ members = [
     "rescue",
     "signature",
     "utilities",
-    "vid",
+    # "vid",
     "vrf",
 ]
 resolver = "2"
@@ -59,3 +59,6 @@ zeroize = { version = "^1.8" }
 [profile.profiling]
 inherits = "release"
 debug = true
+
+[patch.crates-io]
+ark-r1cs-std = { path = "vendor/ark-r1cs-std-dummy" }

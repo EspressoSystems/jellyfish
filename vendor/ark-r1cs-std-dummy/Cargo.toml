@@ -1,0 +1,13 @@
+# rationale: ark-bn254 by default pull the optional ark-r1cs regardless of flags,
+# but ark-r1cs-std@0.5.0 contains vulnerable tracing-subscriber (RUSTSEC-2025-0055):
+# tracing-subscriber 0.2.25
+# └── ark-relations 0.5.1
+#     └── ark-r1cs-std 0.5.0
+
+[package]
+name = "ark-r1cs-std"
+version = "0.5.0"
+edition = "2018"
+
+[features]
+std = []
