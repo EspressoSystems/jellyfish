@@ -23,6 +23,7 @@ std = [
 parallel = [
     "ark-ff/parallel",
     "ark-std/parallel",
+    "ark-poly/parallel",
     "ark-ec/parallel",
     "dep:rayon",
 ]

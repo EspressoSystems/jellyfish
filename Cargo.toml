@@ -13,7 +13,9 @@ members = [
     "rescue",
     "signature",
     "utilities",
-    "vid",
+    # we plan to move this ADVZ specific `vid` out of jellyfish since it got stuck at a historical jf-merkle-tree@v0.4.5,
+    # and cannot evolve and upgrade with the rest of the member crates without causing serialized byte incompatibility downstream
+    # "vid",
     "vrf",
 ]
 resolver = "2"
