@@ -7,31 +7,8 @@ edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
 
-[dependencies]
-ark-ec = { workspace = true }
-ark-ed-on-bls12-377 = { workspace = true }
-ark-ed-on-bls12-381 = { workspace = true }
-ark-ff = { workspace = true }
-ark-poly = { workspace = true }
-ark-serialize = { workspace = true }
-ark-std = { workspace = true }
-digest = { workspace = true }
-displaydoc = { workspace = true }
-rand_chacha = { workspace = true }
-rayon = { version = "1.5.0", optional = true }
-serde = { workspace = true }
-sha2 = { workspace = true }
-tagged-base64 = { workspace = true }
-
-[dev-dependencies]
-ark-bls12-377 = { workspace = true }
-ark-bls12-381 = { workspace = true }
-ark-bn254 = { workspace = true }
-ark-ed-on-bn254 = { workspace = true }
-criterion = "0.5.1"
-
 [features]
-default = []
+default = ["parallel"]
 std = [
     "ark-ff/std",
     "ark-std/std",
@@ -46,6 +23,30 @@ std = [
 parallel = [
     "ark-ff/parallel",
     "ark-std/parallel",
+    "ark-poly/parallel",
     "ark-ec/parallel",
     "dep:rayon",
 ]
+
+[dependencies]
+ark-ec = { workspace = true }
+ark-ed-on-bls12-377 = { workspace = true }
+ark-ed-on-bls12-381 = { workspace = true }
+ark-ff = { workspace = true }
+ark-poly = { workspace = true }
+ark-serialize = { workspace = true }
+ark-std = { workspace = true }
+digest = { workspace = true }
+displaydoc = { workspace = true }
+rand_chacha = { workspace = true }
+rayon = { workspace = true, optional = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+tagged-base64 = { workspace = true }
+
+[dev-dependencies]
+ark-bls12-377 = { workspace = true }
+ark-bls12-381 = { workspace = true }
+ark-bn254 = { workspace = true }
+ark-ed-on-bn254 = { workspace = true }
+criterion = "0.5.1"

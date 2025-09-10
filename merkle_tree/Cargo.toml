@@ -10,6 +10,25 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-377/std",
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-std/std",
+    "ark-serialize/std",
+    "ark-ff/std",
+    "num-bigint/std",
+    "num-traits/std",
+    "sha3/std",
+    "itertools/use_std",
+    "jf-utils/std",
+    "jf-relation/std",
+]
+gadgets = ["jf-relation", "jf-rescue/gadgets"]
+parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
+
 [dependencies]
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
@@ -24,22 +43,22 @@ displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 hex = "0.4.3"
 itertools = { workspace = true, features = ["use_alloc"] }
-# temporarily by path
-# jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
-# TODO: pin to an updated version/tag next time we release a tag
-# jf-poseidon2 = { path = "../poseidon2" }
 # jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
 # jf-rescue = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
 # jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-crhf = { path = "../crhf" }
-jf-relation = { path = "../relation", optional = true }
-jf-rescue = { path = "../rescue" }
-jf-utils = { path = "../utilities" }
-# temporarily removed, only used for poseidon2: nimue = { version = "=0.1.1", features = ["ark"] }
+# temporarily by path
+# jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.1.1" }
+# TODO: pin to an updated version/tag next time we release a tag
+jf-crhf = { path = "../crhf", default-features = false }
+jf-poseidon2 = { path = "../poseidon2", default-features = false }
+jf-relation = { path = "../relation", default-features = false, optional = true }
+jf-rescue = { path = "../rescue", default-features = false }
+jf-utils = { path = "../utilities", default-features = false }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
 serde = { workspace = true }
 sha3 = { workspace = true }
+spongefish = { workspace = true }
 tagged-base64 = { workspace = true }
 
 [dev-dependencies]
@@ -55,24 +74,3 @@ sha2 = "0.10"
 [[bench]]
 name = "merkle_path"
 harness = false
-
-[features]
-default = ["parallel"]
-std = [
-        "ark-bls12-377/std",
-        "ark-bls12-381/std",
-        "ark-bn254/std",
-        "ark-std/std",
-        "ark-serialize/std",
-        "ark-ff/std",
-        "num-bigint/std",
-        "num-traits/std",
-        "sha3/std",
-        "itertools/use_std",
-        "jf-utils/std",
-        "jf-relation/std",
-]
-gadgets = [
-    "jf-relation", "jf-rescue/gadgets",
-]
-parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
