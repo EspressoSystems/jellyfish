@@ -132,7 +132,7 @@ pub(super) fn batch_open_internal<E: Pairing>(
             .rev()
             .map(|poly| poly.evaluate(&domain.element(i)))
             .collect();
-        let mle_eval = merge_poly.evaluate(&point).unwrap();
+        let mle_eval = merge_poly.evaluate(&point);
         if mle_eval != q_x_eval {
             return Err(PCSError::InvalidProver(
                 "Q(omega) does not match W(l(omega))".to_string(),

@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Breaking changes
 
+- **Breaking**: Removed from workspace - VID is no longer a workspace member and must be imported independently
+
 ## Added
 
-## Deprecated
+## Deprecated  
 
 ## Removed
 

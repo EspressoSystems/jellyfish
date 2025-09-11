@@ -32,14 +32,18 @@ pub mod commitment;
 pub mod crhf;
 #[cfg(feature = "gadgets")]
 pub mod gadgets;
+pub mod permutation;
 pub mod prf;
 mod rescue_constants;
-pub mod sponge;
 
-use ark_crypto_primitives::sponge::Absorb;
 use ark_ff::{PrimeField, Zero};
 use ark_std::{string::String, vec, vec::Vec};
 use displaydoc::Display;
+use spongefish::duplex_sponge::Unit;
+use zeroize::Zeroize;
+
+// re-export at the crate top level
+pub use permutation::RescueSponge;
 
 /// Rescue error type
 #[derive(Debug, Display, Eq, PartialEq)]
@@ -99,7 +103,7 @@ pub const CRHF_RATE: usize = 3;
 pub const ROUNDS: usize = 12;
 
 /// This trait defines constants that are used for rescue hash functions.
-pub trait RescueParameter: PrimeField + Absorb {
+pub trait RescueParameter: PrimeField + Unit {
     /// parameter A, a.k.a., alpha
     const A: u64;
     /// parameter A^-1
@@ -114,7 +118,7 @@ pub trait RescueParameter: PrimeField + Absorb {
     const PERMUTATION_ROUND_KEYS: [[&'static [u8]; 4]; 25];
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Copy, Default)]
+#[derive(Clone, Debug, Eq, PartialEq, Copy, Default, Zeroize)]
 /// Data type for rescue prp inputs, keys and internal data
 pub struct RescueVector<F> {
     pub(crate) vec: [F; STATE_SIZE],
@@ -874,11 +878,16 @@ mod test_permutation {
         let output = RescueCRHF::<F>::sponge_no_padding(&input, 1).unwrap()[0];
 
         let zero = RescueVector::zero();
+        // First block: overwrite rate elements with input[0..3]
         let mut state = RescueVector {
             vec: [input[0], input[1], input[2], F::zero()],
         };
         state = rescue_prp.prp(&zero, &state);
-        state.add_assign_elems(&input[3..6]);
+
+        // Second block: overwrite rate elements with input[3..6] (overwrite mode)
+        state.vec[0] = input[3];
+        state.vec[1] = input[4];
+        state.vec[2] = input[5];
         state = rescue_prp.prp(&zero, &state);
         assert_eq!(output, state.vec[0]);
     }

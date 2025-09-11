@@ -16,7 +16,7 @@ use crate::{
 };
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveConfig, CurveGroup, Group,
+    AffineRepr, CurveConfig, CurveGroup, PrimeGroup,
 };
 use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::*;

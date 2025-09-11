@@ -84,7 +84,7 @@ pub trait VidScheme {
     /// [`VidScheme::Commit`].
     ///
     /// TODO conform to nested result pattern like [`VidScheme::verify_share`].
-    /// Unfortunately, `VidResult<()>` is more user-friently.
+    /// Unfortunately, `VidResult<()>` is more user-friendly.
     fn is_consistent(commit: &Self::Commit, common: &Self::Common) -> VidResult<()>;
 
     /// Extract the payload byte length data from a [`VidScheme::Common`].

@@ -16,7 +16,7 @@ use crate::{
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{end_timer, start_timer, vec::Vec};
-use jf_merkle_tree::{MerkleCommitment, MerkleTreeScheme};
+use jf_merkle_tree::MerkleTreeScheme;
 use jf_pcs::{prelude::Commitment, PolynomialCommitmentScheme, UnivariatePCS};
 
 use jf_utils::canonical;

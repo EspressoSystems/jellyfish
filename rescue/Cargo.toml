@@ -1,6 +1,6 @@
 [package]
 name = "jf-rescue"
-version = "0.1.0"
+version = "0.2.0"
 description = "Rescue hash function implementation."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -10,38 +10,50 @@ homepage = { workspace = true }
 documentation = { workspace = true }
 repository = { workspace = true }
 
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-377/std",
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-bw6-761/std",
+    "ark-std/std",
+    "ark-ff/std",
+    "ark-ed-on-bls12-377/std",
+    "ark-ed-on-bls12-381/std",
+    "ark-ed-on-bn254/std",
+    "itertools/use_std",
+    "jf-utils/std",
+    "jf-relation/std",
+]
+gadgets = ["jf-relation"]
+parallel = ["jf-relation/parallel"]
+
 [dependencies]
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
 ark-bw6-761 = { workspace = true }
-ark-crypto-primitives = { version = "0.4.0", default-features = false, features = [
-        "sponge",
-] }
-ark-ed-on-bls12-377 = "0.4.0"
-ark-ed-on-bls12-381 = "0.4.0"
-ark-ed-on-bn254 = "0.4.0"
+ark-ed-on-bls12-377 = { workspace = true }
+ark-ed-on-bls12-381 = { workspace = true }
+ark-ed-on-bn254 = { workspace = true }
 ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 itertools = { workspace = true }
-jf-commitment = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-prf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
-jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+# Following dependencies are temporarily by path
+# jf-commitment = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+# jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+# jf-prf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+# jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
+# jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-commitment = { path = "../commitment", default-features = false }
+jf-crhf = { path = "../crhf", default-features = false }
+jf-prf = { path = "../prf", default-features = false }
+jf-relation = { path = "../relation", default-features = false, optional = true }
+jf-utils = { path = "../utilities", default-features = false }
+spongefish = { workspace = true }
+zeroize = { workspace = true }
 
 [dev-dependencies]
-ark-ed-on-bls12-381-bandersnatch = "0.4.0"
-
-[features]
-default = ["parallel"]
-std = [
-        "ark-bls12-377/std", "ark-bls12-381/std", "ark-bn254/std",
-        "ark-bw6-761/std", "ark-std/std", "ark-ff/std",
-        "ark-crypto-primitives/std", "ark-ed-on-bls12-377/std",
-        "ark-ed-on-bls12-381/std", "ark-ed-on-bn254/std",
-        "itertools/use_std", "jf-utils/std", "jf-relation/std",
-]
-gadgets = ["jf-relation"]
-parallel = ["jf-relation/parallel"]
+ark-ed-on-bls12-381-bandersnatch = { workspace = true }
