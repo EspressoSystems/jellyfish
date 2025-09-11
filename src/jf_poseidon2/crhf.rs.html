@@ -5,9 +5,9 @@
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>ark_ff::{Field, PrimeField};
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span>ark_std::{borrow::Borrow, string::ToString, vec::Vec};
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span>jf_crhf::CRHF;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>nimue::{
-<a href=#9 id=9 data-nosnippet>9</a>    hash::sponge::{DuplexSponge, Sponge},
-<a href=#10 id=10 data-nosnippet>10</a>    DuplexHash, Unit,
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>spongefish::{
+<a href=#9 id=9 data-nosnippet>9</a>    duplex_sponge::{DuplexSponge, Permutation},
+<a href=#10 id=10 data-nosnippet>10</a>    DuplexSpongeInterface, Unit,
 <a href=#11 id=11 data-nosnippet>11</a>};
 <a href=#12 id=12 data-nosnippet>12</a>
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use crate</span>::{sponge::Poseidon2Sponge, Poseidon2Error};
@@ -22,7 +22,7 @@
 <a href=#22 id=22 data-nosnippet>22</a></span><span class="kw">pub struct </span>FixedLenPoseidon2Hash&lt;F, S, <span class="kw">const </span>INPUT_SIZE: usize, <span class="kw">const </span>OUTPUT_SIZE: usize&gt;
 <a href=#23 id=23 data-nosnippet>23</a><span class="kw">where
 <a href=#24 id=24 data-nosnippet>24</a>    </span>F: PrimeField + Unit,
-<a href=#25 id=25 data-nosnippet>25</a>    S: Sponge&lt;U = F&gt; + Poseidon2Sponge,
+<a href=#25 id=25 data-nosnippet>25</a>    S: Permutation&lt;U = F&gt; + Poseidon2Sponge,
 <a href=#26 id=26 data-nosnippet>26</a>{
 <a href=#27 id=27 data-nosnippet>27</a>    _field: PhantomData&lt;F&gt;,
 <a href=#28 id=28 data-nosnippet>28</a>    _sponge: PhantomData&lt;S&gt;,
@@ -31,7 +31,7 @@
 <a href=#31 id=31 data-nosnippet>31</a><span class="kw">impl</span>&lt;F, S, <span class="kw">const </span>IN: usize, <span class="kw">const </span>OUT: usize&gt; CRHF <span class="kw">for </span>FixedLenPoseidon2Hash&lt;F, S, IN, OUT&gt;
 <a href=#32 id=32 data-nosnippet>32</a><span class="kw">where
 <a href=#33 id=33 data-nosnippet>33</a>    </span>F: PrimeField + Unit,
-<a href=#34 id=34 data-nosnippet>34</a>    S: Sponge&lt;U = F&gt; + Poseidon2Sponge,
+<a href=#34 id=34 data-nosnippet>34</a>    S: Permutation&lt;U = F&gt; + Poseidon2Sponge,
 <a href=#35 id=35 data-nosnippet>35</a>{
 <a href=#36 id=36 data-nosnippet>36</a>    <span class="kw">type </span>Input = [F]; <span class="comment">// length should be &lt;= IN
 <a href=#37 id=37 data-nosnippet>37</a>    </span><span class="kw">type </span>Output = [F; OUT];
@@ -60,7 +60,7 @@
 <a href=#60 id=60 data-nosnippet>60</a></span><span class="kw">pub struct </span>VariableLenPoseidon2Hash&lt;F, S, <span class="kw">const </span>OUTPUT_SIZE: usize&gt;
 <a href=#61 id=61 data-nosnippet>61</a><span class="kw">where
 <a href=#62 id=62 data-nosnippet>62</a>    </span>F: PrimeField + Unit,
-<a href=#63 id=63 data-nosnippet>63</a>    S: Sponge&lt;U = F&gt;,
+<a href=#63 id=63 data-nosnippet>63</a>    S: Permutation&lt;U = F&gt;,
 <a href=#64 id=64 data-nosnippet>64</a>{
 <a href=#65 id=65 data-nosnippet>65</a>    _field: PhantomData&lt;F&gt;,
 <a href=#66 id=66 data-nosnippet>66</a>    _sponge: PhantomData&lt;S&gt;,
@@ -69,7 +69,7 @@
 <a href=#69 id=69 data-nosnippet>69</a><span class="kw">impl</span>&lt;F, S, <span class="kw">const </span>OUT: usize&gt; CRHF <span class="kw">for </span>VariableLenPoseidon2Hash&lt;F, S, OUT&gt;
 <a href=#70 id=70 data-nosnippet>70</a><span class="kw">where
 <a href=#71 id=71 data-nosnippet>71</a>    </span>F: PrimeField + Unit,
-<a href=#72 id=72 data-nosnippet>72</a>    S: Sponge&lt;U = F&gt;,
+<a href=#72 id=72 data-nosnippet>72</a>    S: Permutation&lt;U = F&gt;,
 <a href=#73 id=73 data-nosnippet>73</a>{
 <a href=#74 id=74 data-nosnippet>74</a>    <span class="kw">type </span>Input = [F];
 <a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">type </span>Output = [F; OUT];

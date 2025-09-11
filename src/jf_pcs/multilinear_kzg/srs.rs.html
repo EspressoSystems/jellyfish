@@ -247,7 +247,7 @@
 <a href=#247 id=247 data-nosnippet>247</a></span><span class="kw">mod </span>tests {
 <a href=#248 id=248 data-nosnippet>248</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <a href=#249 id=249 data-nosnippet>249</a>    <span class="kw">use </span><span class="kw">crate</span>::multilinear_kzg::util::eq_eval;
-<a href=#250 id=250 data-nosnippet>250</a>    <span class="kw">use </span>ark_ec::{scalar_mul::fixed_base::FixedBase, CurveGroup};
+<a href=#250 id=250 data-nosnippet>250</a>    <span class="kw">use </span>ark_ec::{CurveGroup, ScalarMul};
 <a href=#251 id=251 data-nosnippet>251</a>    <span class="kw">use </span>ark_ff::{Field, PrimeField, Zero};
 <a href=#252 id=252 data-nosnippet>252</a>    <span class="kw">use </span>ark_poly::DenseMultilinearExtension;
 <a href=#253 id=253 data-nosnippet>253</a>    <span class="kw">use </span>ark_std::{
@@ -343,68 +343,56 @@
 <a href=#343 id=343 data-nosnippet>343</a>            pp_powers.extend(pp_k_powers);
 <a href=#344 id=344 data-nosnippet>344</a>            total_scalars += <span class="number">1 </span>&lt;&lt; (num_vars - i);
 <a href=#345 id=345 data-nosnippet>345</a>        }
-<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(total_scalars);
-<a href=#347 id=347 data-nosnippet>347</a>        <span class="kw">let </span>g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
-<a href=#348 id=348 data-nosnippet>348</a>
-<a href=#349 id=349 data-nosnippet>349</a>        <span class="kw">let </span>pp_g = E::G1::normalize_batch(<span class="kw-2">&amp;</span>FixedBase::msm(
-<a href=#350 id=350 data-nosnippet>350</a>            scalar_bits,
-<a href=#351 id=351 data-nosnippet>351</a>            window_size,
-<a href=#352 id=352 data-nosnippet>352</a>            <span class="kw-2">&amp;</span>g_table,
-<a href=#353 id=353 data-nosnippet>353</a>            <span class="kw-2">&amp;</span>pp_powers,
-<a href=#354 id=354 data-nosnippet>354</a>        ));
-<a href=#355 id=355 data-nosnippet>355</a>
-<a href=#356 id=356 data-nosnippet>356</a>        <span class="kw">let </span><span class="kw-2">mut </span>start = <span class="number">0</span>;
-<a href=#357 id=357 data-nosnippet>357</a>        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_vars {
-<a href=#358 id=358 data-nosnippet>358</a>            <span class="kw">let </span>size = <span class="number">1 </span>&lt;&lt; (num_vars - i);
-<a href=#359 id=359 data-nosnippet>359</a>            <span class="kw">let </span>pp_k_g = Evaluations {
-<a href=#360 id=360 data-nosnippet>360</a>                evals: pp_g[start..(start + size)].to_vec(),
-<a href=#361 id=361 data-nosnippet>361</a>            };
-<a href=#362 id=362 data-nosnippet>362</a>            <span class="comment">// check correctness of pp_k_g
-<a href=#363 id=363 data-nosnippet>363</a>            </span><span class="kw">let </span>t_eval_0 = eq_eval(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[E::ScalarField::zero(); num_vars - i], <span class="kw-2">&amp;</span>t[i..num_vars])<span class="question-mark">?</span>;
-<a href=#364 id=364 data-nosnippet>364</a>            <span class="macro">assert_eq!</span>((g * t_eval_0).into_affine(), pp_k_g.evals[<span class="number">0</span>]);
+<a href=#346 id=346 data-nosnippet>346</a>        <span class="kw">let </span>pp_g = g.batch_mul(<span class="kw-2">&amp;</span>pp_powers);
+<a href=#347 id=347 data-nosnippet>347</a>
+<a href=#348 id=348 data-nosnippet>348</a>        <span class="kw">let </span><span class="kw-2">mut </span>start = <span class="number">0</span>;
+<a href=#349 id=349 data-nosnippet>349</a>        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..num_vars {
+<a href=#350 id=350 data-nosnippet>350</a>            <span class="kw">let </span>size = <span class="number">1 </span>&lt;&lt; (num_vars - i);
+<a href=#351 id=351 data-nosnippet>351</a>            <span class="kw">let </span>pp_k_g = Evaluations {
+<a href=#352 id=352 data-nosnippet>352</a>                evals: pp_g[start..(start + size)].to_vec(),
+<a href=#353 id=353 data-nosnippet>353</a>            };
+<a href=#354 id=354 data-nosnippet>354</a>            <span class="comment">// check correctness of pp_k_g
+<a href=#355 id=355 data-nosnippet>355</a>            </span><span class="kw">let </span>t_eval_0 = eq_eval(<span class="kw-2">&amp;</span><span class="macro">vec!</span>[E::ScalarField::zero(); num_vars - i], <span class="kw-2">&amp;</span>t[i..num_vars])<span class="question-mark">?</span>;
+<a href=#356 id=356 data-nosnippet>356</a>            <span class="macro">assert_eq!</span>((g * t_eval_0).into_affine(), pp_k_g.evals[<span class="number">0</span>]);
+<a href=#357 id=357 data-nosnippet>357</a>
+<a href=#358 id=358 data-nosnippet>358</a>            powers_of_g.push(pp_k_g);
+<a href=#359 id=359 data-nosnippet>359</a>            start += size;
+<a href=#360 id=360 data-nosnippet>360</a>        }
+<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">let </span>gg = Evaluations {
+<a href=#362 id=362 data-nosnippet>362</a>            evals: [g.into_affine()].to_vec(),
+<a href=#363 id=363 data-nosnippet>363</a>        };
+<a href=#364 id=364 data-nosnippet>364</a>        powers_of_g.push(gg);
 <a href=#365 id=365 data-nosnippet>365</a>
-<a href=#366 id=366 data-nosnippet>366</a>            powers_of_g.push(pp_k_g);
-<a href=#367 id=367 data-nosnippet>367</a>            start += size;
-<a href=#368 id=368 data-nosnippet>368</a>        }
-<a href=#369 id=369 data-nosnippet>369</a>        <span class="kw">let </span>gg = Evaluations {
-<a href=#370 id=370 data-nosnippet>370</a>            evals: [g.into_affine()].to_vec(),
+<a href=#366 id=366 data-nosnippet>366</a>        <span class="kw">let </span>pp = MultilinearProverParam {
+<a href=#367 id=367 data-nosnippet>367</a>            num_vars,
+<a href=#368 id=368 data-nosnippet>368</a>            g: g.into_affine(),
+<a href=#369 id=369 data-nosnippet>369</a>            h: h.into_affine(),
+<a href=#370 id=370 data-nosnippet>370</a>            powers_of_g,
 <a href=#371 id=371 data-nosnippet>371</a>        };
-<a href=#372 id=372 data-nosnippet>372</a>        powers_of_g.push(gg);
-<a href=#373 id=373 data-nosnippet>373</a>
-<a href=#374 id=374 data-nosnippet>374</a>        <span class="kw">let </span>pp = MultilinearProverParam {
-<a href=#375 id=375 data-nosnippet>375</a>            num_vars,
-<a href=#376 id=376 data-nosnippet>376</a>            g: g.into_affine(),
-<a href=#377 id=377 data-nosnippet>377</a>            h: h.into_affine(),
-<a href=#378 id=378 data-nosnippet>378</a>            powers_of_g,
-<a href=#379 id=379 data-nosnippet>379</a>        };
-<a href=#380 id=380 data-nosnippet>380</a>
-<a href=#381 id=381 data-nosnippet>381</a>        <span class="macro">end_timer!</span>(pp_generation_timer);
-<a href=#382 id=382 data-nosnippet>382</a>
-<a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let </span>vp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">"VP generation"</span>);
-<a href=#384 id=384 data-nosnippet>384</a>        <span class="kw">let </span>h_mask = {
-<a href=#385 id=385 data-nosnippet>385</a>            <span class="kw">let </span>window_size = FixedBase::get_mul_window_size(num_vars);
-<a href=#386 id=386 data-nosnippet>386</a>            <span class="kw">let </span>h_table = FixedBase::get_window_table(scalar_bits, window_size, h);
-<a href=#387 id=387 data-nosnippet>387</a>            E::G2::normalize_batch(<span class="kw-2">&amp;</span>FixedBase::msm(scalar_bits, window_size, <span class="kw-2">&amp;</span>h_table, <span class="kw-2">&amp;</span>t))
-<a href=#388 id=388 data-nosnippet>388</a>        };
-<a href=#389 id=389 data-nosnippet>389</a>        <span class="macro">end_timer!</span>(vp_generation_timer);
-<a href=#390 id=390 data-nosnippet>390</a>        <span class="macro">end_timer!</span>(total_timer);
-<a href=#391 id=391 data-nosnippet>391</a>        <span class="prelude-val">Ok</span>(MultilinearUniversalParams {
-<a href=#392 id=392 data-nosnippet>392</a>            prover_param: pp,
-<a href=#393 id=393 data-nosnippet>393</a>            h_mask,
-<a href=#394 id=394 data-nosnippet>394</a>        })
-<a href=#395 id=395 data-nosnippet>395</a>    }
-<a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>    <span class="attr">#[test]
-<a href=#398 id=398 data-nosnippet>398</a>    </span><span class="kw">fn </span>test_srs_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
-<a href=#399 id=399 data-nosnippet>399</a>        <span class="kw">use </span>ark_bls12_381::Bls12_381;
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">use </span>jf_utils::test_rng;
-<a href=#401 id=401 data-nosnippet>401</a>        <span class="kw">type </span>E = Bls12_381;
-<a href=#402 id=402 data-nosnippet>402</a>
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
-<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw">for </span>nv <span class="kw">in </span><span class="number">4</span>..<span class="number">10 </span>{
-<a href=#405 id=405 data-nosnippet>405</a>            <span class="kw">let _ </span>= MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, nv)<span class="question-mark">?</span>;
-<a href=#406 id=406 data-nosnippet>406</a>        }
-<a href=#407 id=407 data-nosnippet>407</a>
-<a href=#408 id=408 data-nosnippet>408</a>        <span class="prelude-val">Ok</span>(())
-<a href=#409 id=409 data-nosnippet>409</a>    }
-<a href=#410 id=410 data-nosnippet>410</a>}</code></pre></div></section></main></body></html>
+<a href=#372 id=372 data-nosnippet>372</a>
+<a href=#373 id=373 data-nosnippet>373</a>        <span class="macro">end_timer!</span>(pp_generation_timer);
+<a href=#374 id=374 data-nosnippet>374</a>
+<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>vp_generation_timer = <span class="macro">start_timer!</span>(|| <span class="string">"VP generation"</span>);
+<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>h_mask = h.batch_mul(<span class="kw-2">&amp;</span>t);
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="macro">end_timer!</span>(vp_generation_timer);
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="macro">end_timer!</span>(total_timer);
+<a href=#379 id=379 data-nosnippet>379</a>        <span class="prelude-val">Ok</span>(MultilinearUniversalParams {
+<a href=#380 id=380 data-nosnippet>380</a>            prover_param: pp,
+<a href=#381 id=381 data-nosnippet>381</a>            h_mask,
+<a href=#382 id=382 data-nosnippet>382</a>        })
+<a href=#383 id=383 data-nosnippet>383</a>    }
+<a href=#384 id=384 data-nosnippet>384</a>
+<a href=#385 id=385 data-nosnippet>385</a>    <span class="attr">#[test]
+<a href=#386 id=386 data-nosnippet>386</a>    </span><span class="kw">fn </span>test_srs_gen() -&gt; <span class="prelude-ty">Result</span>&lt;(), PCSError&gt; {
+<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">use </span>ark_bls12_381::Bls12_381;
+<a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">use </span>jf_utils::test_rng;
+<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">type </span>E = Bls12_381;
+<a href=#390 id=390 data-nosnippet>390</a>
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = test_rng();
+<a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">for </span>nv <span class="kw">in </span><span class="number">4</span>..<span class="number">10 </span>{
+<a href=#393 id=393 data-nosnippet>393</a>            <span class="kw">let _ </span>= MultilinearUniversalParams::&lt;E&gt;::gen_srs_for_testing(<span class="kw-2">&amp;mut </span>rng, nv)<span class="question-mark">?</span>;
+<a href=#394 id=394 data-nosnippet>394</a>        }
+<a href=#395 id=395 data-nosnippet>395</a>
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="prelude-val">Ok</span>(())
+<a href=#397 id=397 data-nosnippet>397</a>    }
+<a href=#398 id=398 data-nosnippet>398</a>}</code></pre></div></section></main></body></html>

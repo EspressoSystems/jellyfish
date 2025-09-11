@@ -29,8 +29,8 @@
 <a href=#29 id=29 data-nosnippet>29</a>    crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2, Poseidon2Params,
 <a href=#30 id=30 data-nosnippet>30</a>};
 <a href=#31 id=31 data-nosnippet>31</a><span class="kw">use </span>jf_rescue::{crhf::RescueCRHF, RescueParameter};
-<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use </span>nimue::hash::sponge::Sponge;
-<a href=#33 id=33 data-nosnippet>33</a><span class="kw">use </span>sha3::{Digest, Keccak256, Sha3_256};
+<a href=#32 id=32 data-nosnippet>32</a><span class="kw">use </span>sha3::{Digest, Keccak256, Sha3_256};
+<a href=#33 id=33 data-nosnippet>33</a><span class="kw">use </span>spongefish::{duplex_sponge::Permutation, Unit};
 <a href=#34 id=34 data-nosnippet>34</a>
 <a href=#35 id=35 data-nosnippet>35</a><span class="doccomment">/// Wrapper for rescue hash function
 <a href=#36 id=36 data-nosnippet>36</a></span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,8 +82,8 @@
 <a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">for </span>FixedLenPoseidon2Hash&lt;F, S, INPUT_SIZE, <span class="number">1</span>&gt;
 <a href=#83 id=83 data-nosnippet>83</a><span class="kw">where
 <a href=#84 id=84 data-nosnippet>84</a>    </span>I: Index,
-<a href=#85 id=85 data-nosnippet>85</a>    F: PrimeField + From&lt;I&gt; + nimue::Unit,
-<a href=#86 id=86 data-nosnippet>86</a>    S: Sponge&lt;U = F&gt; + Poseidon2Sponge,
+<a href=#85 id=85 data-nosnippet>85</a>    F: PrimeField + From&lt;I&gt; + Unit,
+<a href=#86 id=86 data-nosnippet>86</a>    S: Permutation&lt;U = F&gt; + Poseidon2Sponge,
 <a href=#87 id=87 data-nosnippet>87</a>{
 <a href=#88 id=88 data-nosnippet>88</a>    <span class="kw">fn </span>digest(data: <span class="kw-2">&amp;</span>[F]) -&gt; <span class="prelude-ty">Result</span>&lt;F, MerkleTreeError&gt; {
 <a href=#89 id=89 data-nosnippet>89</a>        <span class="kw">let </span><span class="kw-2">mut </span>input = <span class="macro">vec!</span>[internal_hash_dom_sep()];

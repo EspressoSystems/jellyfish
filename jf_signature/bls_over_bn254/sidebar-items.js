@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["hash_to_curve"],"struct":["BLSOverBN254CurveSignatureScheme","KeyPair","SignKey","Signature","VerKey"]};

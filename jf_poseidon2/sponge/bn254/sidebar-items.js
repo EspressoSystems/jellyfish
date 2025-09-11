@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"type":["Poseidon2PermutationBnN3R1","Poseidon2PermutationBnN3R2","Poseidon2SpongeBnN3R1","Poseidon2SpongeBnN3R2"]};

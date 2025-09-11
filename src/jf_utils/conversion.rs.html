@@ -5,7 +5,7 @@
 <a href=#5 id=5 data-nosnippet>5</a>// along with the Jellyfish library. If not, see &lt;https://mit-license.org/&gt;.
 <a href=#6 id=6 data-nosnippet>6</a>
 <a href=#7 id=7 data-nosnippet>7</a></span><span class="kw">use </span>ark_ec::CurveConfig;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>ark_ff::{BigInteger, Field, PrimeField};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span>ark_ff::{BigInteger, Field, PrimeField, Zero};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>ark_std::{
 <a href=#10 id=10 data-nosnippet>10</a>    borrow::Borrow,
 <a href=#11 id=11 data-nosnippet>11</a>    cmp::min,
@@ -151,10 +151,10 @@
 <a href=#151 id=151 data-nosnippet>151</a>    <span class="kw">let </span>result = once(F::from(bytes.len() <span class="kw">as </span>u64)) <span class="comment">// the first field element encodes the bytes length as u64
 <a href=#152 id=152 data-nosnippet>152</a>        </span>.chain(bytes.chunks(field_bytes_len).map(|field_elem_bytes| {
 <a href=#153 id=153 data-nosnippet>153</a>            F::from_base_prime_field_elems(
-<a href=#154 id=154 data-nosnippet>154</a>                <span class="kw-2">&amp;</span>field_elem_bytes.chunks(primefield_bytes_len)
+<a href=#154 id=154 data-nosnippet>154</a>                field_elem_bytes.chunks(primefield_bytes_len)
 <a href=#155 id=155 data-nosnippet>155</a>                .map(F::BasePrimeField::from_le_bytes_mod_order)
 <a href=#156 id=156 data-nosnippet>156</a>                <span class="comment">// not enough prime field elems? fill remaining elems with zero
-<a href=#157 id=157 data-nosnippet>157</a>                </span>.chain(repeat(F::BasePrimeField::ZERO).take(
+<a href=#157 id=157 data-nosnippet>157</a>                </span>.chain(repeat(F::BasePrimeField::zero()).take(
 <a href=#158 id=158 data-nosnippet>158</a>                    extension_degree - (field_elem_bytes.len()-<span class="number">1</span>) / primefield_bytes_len - <span class="number">1</span>)
 <a href=#159 id=159 data-nosnippet>159</a>                )
 <a href=#160 id=160 data-nosnippet>160</a>                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),

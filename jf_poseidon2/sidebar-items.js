@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Poseidon2Error"],"macro":["define_poseidon2_params"],"mod":["constants","crhf","sponge"],"struct":["Poseidon2"],"trait":["Poseidon2Params"]};
+window.SIDEBAR_ITEMS = {"enum":["Poseidon2Error"],"macro":["define_poseidon2_params"],"mod":["constants","crhf","permutation","sponge"],"struct":["Poseidon2"],"trait":["Poseidon2Params"]};

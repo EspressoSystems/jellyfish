@@ -132,7 +132,7 @@
 <a href=#132 id=132 data-nosnippet>132</a>            .rev()
 <a href=#133 id=133 data-nosnippet>133</a>            .map(|poly| poly.evaluate(<span class="kw-2">&amp;</span>domain.element(i)))
 <a href=#134 id=134 data-nosnippet>134</a>            .collect();
-<a href=#135 id=135 data-nosnippet>135</a>        <span class="kw">let </span>mle_eval = merge_poly.evaluate(<span class="kw-2">&amp;</span>point).unwrap();
+<a href=#135 id=135 data-nosnippet>135</a>        <span class="kw">let </span>mle_eval = merge_poly.evaluate(<span class="kw-2">&amp;</span>point);
 <a href=#136 id=136 data-nosnippet>136</a>        <span class="kw">if </span>mle_eval != q_x_eval {
 <a href=#137 id=137 data-nosnippet>137</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(PCSError::InvalidProver(
 <a href=#138 id=138 data-nosnippet>138</a>                <span class="string">"Q(omega) does not match W(l(omega))"</span>.to_string(),
