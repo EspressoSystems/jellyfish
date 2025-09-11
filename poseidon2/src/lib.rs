@@ -27,6 +27,7 @@ pub mod constants;
 pub mod crhf;
 mod external;
 mod internal;
+pub mod permutation;
 pub mod sponge;
 
 /// Parameters required for a Poseidon2 permutation instance.

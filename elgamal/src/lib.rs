@@ -25,7 +25,7 @@ pub mod gadgets;
 
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveGroup, Group,
+    AffineRepr, CurveGroup, PrimeGroup,
 };
 use ark_ff::{Field, UniformRand};
 use ark_serialize::*;

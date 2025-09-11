@@ -47,11 +47,11 @@ use ark_bn254::{
 use ark_ec::{
     bn::{Bn, G1Prepared, G2Prepared},
     pairing::Pairing,
-    AffineRepr, CurveGroup, Group,
+    AffineRepr, CurveGroup, PrimeGroup,
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    BigInteger, Field, PrimeField,
+    AdditiveGroup, BigInteger, Field, PrimeField,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, *};
 use ark_std::{
@@ -64,7 +64,7 @@ use ark_std::{
     One, UniformRand,
 };
 use derivative::Derivative;
-use digest::DynDigest;
+use digest::{DynDigest, FixedOutputReset};
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
@@ -392,7 +392,9 @@ impl PartialEq for Signature {
 /// * `msg` - input message
 /// * `returns` - A group element in G1
 #[allow(non_snake_case)]
-pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
+pub fn hash_to_curve<H: Default + DynDigest + Clone + FixedOutputReset>(
+    msg: &[u8],
+) -> G1Projective {
     let hasher_init = &[1u8];
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
 
@@ -400,7 +402,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     // For BN254 we have a=0 and b=3 so we only use b
     let coeff_b: BaseField = BaseField::from(3);
 
-    let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
+    let mut x: BaseField = hasher.hash_to_field::<1>(msg)[0];
     let mut Y: BaseField = x * x * x + coeff_b;
 
     // Loop until we find a quadratic residue

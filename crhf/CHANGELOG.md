@@ -10,4 +10,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.1.0
 
 - Initial release.
-- ElGamal cryptosystems based on Rescue.
+- Trait definition for Collision-Resistant Hash Functions(CRHF).

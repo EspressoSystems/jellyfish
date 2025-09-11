@@ -29,8 +29,8 @@ use jf_poseidon2::{
     crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2, Poseidon2Params,
 };
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
-use nimue::hash::sponge::Sponge;
 use sha3::{Digest, Keccak256, Sha3_256};
+use spongefish::{duplex_sponge::Permutation, Unit};
 
 /// Wrapper for rescue hash function
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,8 +82,8 @@ impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
     for FixedLenPoseidon2Hash<F, S, INPUT_SIZE, 1>
 where
     I: Index,
-    F: PrimeField + From<I> + nimue::Unit,
-    S: Sponge<U = F> + Poseidon2Sponge,
+    F: PrimeField + From<I> + Unit,
+    S: Permutation<U = F> + Poseidon2Sponge,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         let mut input = vec![internal_hash_dom_sep()];
