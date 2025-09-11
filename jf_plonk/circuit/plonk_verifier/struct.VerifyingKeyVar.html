@@ -17,7 +17,7 @@
     blinding_factor: Variable,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.89.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(PointVariable, PointVariable), CircuitError&gt;<div class="where">where
     E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
-    F: RescueParameter + SWToTEConParam,
+    F: <a class="trait" href="../../../jf_rescue/trait.RescueParameter.html" title="trait jf_rescue::RescueParameter">RescueParameter</a> + SWToTEConParam,
     P: SWParam&lt;BaseField = F&gt; + TEParam,</div></h4></section></summary><div class="docblock"><p>Circuit for partially verifying a batched proof without performing the
 pairing. Return the variables for the two group elements used in the
 final pairing.
