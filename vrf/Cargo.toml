@@ -25,4 +25,4 @@ sha2 = { workspace = true }
 zeroize = { workspace = true }
 
 [dev-dependencies]
-jf-utils = { path = "../utilities", default-features = false }
+jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }

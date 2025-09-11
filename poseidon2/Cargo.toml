@@ -1,6 +1,6 @@
 [package]
 name = "jf-poseidon2"
-version = "0.1.0"
+version = "0.2.0"
 description = "Poseidon2 algebraic hash functions implementation."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -23,7 +23,7 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
-jf-crhf = { path = "../crhf", default-features = false }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
 lazy_static = "1.5.0"
 spongefish = { workspace = true }
 zeroize = { workspace = true }
