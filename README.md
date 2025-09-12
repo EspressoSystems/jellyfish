@@ -28,8 +28,9 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 - [`jf-aead`](aead): authenticated encryption with associated data (AEAD) implementation.
 - [`jf-merkle-tree`](merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
 - [`jf-pcs`](pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
-- [`jf-vid`](vid): verifiable information dispersal (VID) trait definition and implementation.
 - [`jf-poseidon2`](poseidon2): Poseidon2 permutation, and Sponge, CRHF, derived from this permutation.
+
+The `jf-vid` crate is now moved to another repo [`jf-advz`](https://github.com/EspressoSystems/jellyfish-compat/tree/main/advz).
 
 ### Plonk
 - [`jf-relation`](relation): Jellyfish constraint system for PLONK.
