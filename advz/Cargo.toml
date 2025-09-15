@@ -65,7 +65,7 @@ ark-bn254 = { workspace = true }
 ark-ed-on-bls12-377 = { workspace = true }
 ark-ed-on-bls12-381 = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
-criterion = "0.5.1"
+criterion = "0.7.0"
 jf-pcs = { workspace = true, features = ["test-srs"] }
 sha2 = { workspace = true }
 
