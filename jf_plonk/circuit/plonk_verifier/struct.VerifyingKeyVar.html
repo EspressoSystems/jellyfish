@@ -17,7 +17,7 @@
     blinding_factor: <a class="type" href="../../../jf_relation/constraint_system/type.Variable.html" title="type jf_relation::constraint_system::Variable">Variable</a>,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.89.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(<a class="struct" href="../../../jf_relation/gadgets/ecc/struct.PointVariable.html" title="struct jf_relation::gadgets::ecc::PointVariable">PointVariable</a>, <a class="struct" href="../../../jf_relation/gadgets/ecc/struct.PointVariable.html" title="struct jf_relation::gadgets::ecc::PointVariable">PointVariable</a>), <a class="enum" href="../../../jf_relation/enum.CircuitError.html" title="enum jf_relation::CircuitError">CircuitError</a>&gt;<div class="where">where
     E: Pairing&lt;BaseField = F, G1Affine = Affine&lt;P&gt;&gt;,
-    F: RescueParameter + <a class="trait" href="../../../jf_relation/gadgets/ecc/conversion/trait.SWToTEConParam.html" title="trait jf_relation::gadgets::ecc::conversion::SWToTEConParam">SWToTEConParam</a>,
+    F: <a class="trait" href="../../../jf_rescue/trait.RescueParameter.html" title="trait jf_rescue::RescueParameter">RescueParameter</a> + <a class="trait" href="../../../jf_relation/gadgets/ecc/conversion/trait.SWToTEConParam.html" title="trait jf_relation::gadgets::ecc::conversion::SWToTEConParam">SWToTEConParam</a>,
     P: SWParam&lt;BaseField = F&gt; + TEParam,</div></h4></section></summary><div class="docblock"><p>Circuit for partially verifying a batched proof without performing the
 pairing. Return the variables for the two group elements used in the
 final pairing.
