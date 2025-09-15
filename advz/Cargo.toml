@@ -1,6 +1,6 @@
 [package]
 name = "jf-advz"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Verifiable information dispersal (VID) scheme."
 authors = { workspace = true }
 edition = { workspace = true }

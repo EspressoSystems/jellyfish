@@ -291,6 +291,11 @@ where
     index: u32,
 
     #[serde(with = "canonical")]
+    // This is add here for backward compatibility in espresso-network.
+    // It has nothing meaningful.
+    evals: Vec<KzgEval<E>>,
+
+    #[serde(with = "canonical")]
     // aggregate_proofs.len() equals multiplicity
     // TODO further aggregate into a single KZG proof.
     aggregate_proofs: Vec<KzgProof<E>>,
@@ -818,14 +823,19 @@ where
             .into_iter()
             .enumerate()
             .map(|(i, aggregate_proofs)| {
+                let evals_proof = all_evals_commit
+                    .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
+                    .expect_ok()
+                    .map_err(vid)?
+                    .1;
                 Ok(Share {
                     index: u32::try_from(i).map_err(vid)?,
                     aggregate_proofs,
-                    evals_proof: all_evals_commit
-                        .lookup(KzgEvalsMerkleTreeIndex::<E, H>::from(i as u64))
-                        .expect_ok()
-                        .map_err(vid)?
-                        .1,
+                    evals: evals_proof
+                        .elem()
+                        .cloned()
+                        .ok_or_else(|| VidError::Internal(anyhow::anyhow!("empty merkle proof")))?,
+                    evals_proof,
                 })
             })
             .collect::<VidResult<Vec<_>>>()?;

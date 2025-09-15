@@ -3,24 +3,13 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Unreleased
+# 0.2.1 (2025-09-15)
 
 ## Breaking changes
 
 - **Breaking**: moved to `jellyfish-compat` crate.
 - **Breaking**: renamed to `jf-advz`.
-
-## Added
-
-## Deprecated  
-
-## Removed
-
-## Fixed
-
-## Performance
-
-## Security
+- [#9](https://github.com/EspressoSystems/jellyfish-compat/pull/9): add `evals` back to ADVZShare for backward compatibility in espresso-network.
 
 # 0.2.0 (2024-09-11)
 
