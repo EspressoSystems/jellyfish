@@ -24,21 +24,24 @@ where
     F: RescueParameter,
 {
     fn eval_prf(&mut self, key: Variable, input: &[Variable]) -> Result<Variable, CircuitError> {
-        RescueNativeGadget::<F>::rescue_full_state_keyed_sponge_with_zero_padding(self, key, input)
+        RescueNativeGadget::<F>::rescue_keyed_sponge_with_zero_padding(self, key, input)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::PRFGadget;
-    use crate::prf::RescuePRF;
+    use crate::{
+        gadgets::native::RescueNativeGadget,
+        prf::{RescuePRF, RescuePRFCore},
+    };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
     use ark_ff::UniformRand;
-    use ark_std::vec::Vec;
+    use ark_std::{vec::Vec, Zero};
     use jf_prf::PRF;
     use jf_relation::{Circuit, PlonkCircuit, Variable};
 
@@ -78,6 +81,7 @@ mod tests {
         test_prf_circuit!(FqEd377);
         test_prf_circuit!(FqEd381);
         test_prf_circuit!(FqEd381b);
-        test_prf_circuit!(Fq377);
+        // >256 bit field rescue circuit not supported yet, see https://github.com/arkworks-rs/spongefish/issues/66
+        // test_prf_circuit!(Fq377);
     }
 }

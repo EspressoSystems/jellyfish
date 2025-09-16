@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
   pull_request:
+    branches: ["main", "jf-*-v*.*.*"]
   schedule:
     - cron: "0 0 * * 1"
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
           access_token: ${{ github.token }}
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -37,7 +37,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly-2024-06-25
+          toolchain: nightly-2025-09-04
           override: false
           default: false
           components: rustfmt
@@ -46,10 +46,10 @@ jobs:
         name: Enable Rust Caching
 
       - name: Spell Check
-        uses: crate-ci/typos@v1.31.2
+        uses: crate-ci/typos@v1.36.2
 
       - name: Format Check
-        run: cargo +nightly-2024-06-25 fmt -- --check
+        run: cargo +nightly-2025-09-04 fmt -- --check
 
       - name: Clippy
         uses: actions-rs/clippy-check@v1

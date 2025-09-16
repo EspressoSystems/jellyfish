@@ -1,11 +1,36 @@
 [package]
 name = "jf-relation"
 description = "Jellyfish constraint system for PLONK"
-version = "0.4.4"
+version = "0.5.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
+
+[features]
+default = ["parallel"]
+std = [
+    "ark-bls12-377/std",
+    "ark-bls12-381/std",
+    "ark-bn254/std",
+    "ark-bw6-761/std",
+    "ark-std/std",
+    "ark-serialize/std",
+    "ark-ff/std",
+    "ark-ec/std",
+    "ark-poly/std",
+    "downcast-rs/std",
+    "jf-utils/std",
+    "num-bigint/std",
+    "rand_chacha/std",
+]
+parallel = [
+    "ark-ff/parallel",
+    "ark-ec/parallel",
+    "ark-poly/parallel",
+    "jf-utils/parallel",
+    "dep:rayon",
+]
 
 [dependencies]
 ark-bls12-377 = { workspace = true }
@@ -23,22 +48,13 @@ downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
 hashbrown = { workspace = true }
 itertools = { workspace = true }
-jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
+jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 num-bigint = { workspace = true }
 rand_chacha = { workspace = true }
-rayon = { version = "1.5.0", optional = true }
+rayon = { workspace = true, optional = true }
 
 [dev-dependencies]
-ark-ed-on-bls12-377 = "0.4.0"
-ark-ed-on-bls12-381 = "0.4.0"
-ark-ed-on-bls12-381-bandersnatch = "0.4.0"
-ark-ed-on-bn254 = "0.4.0"
-
-[features]
-default = ["parallel"]
-std = ["ark-bls12-377/std", "ark-bls12-381/std", "ark-bn254/std", "ark-bw6-761/std",
-        "ark-std/std", "ark-serialize/std", "ark-ff/std", "ark-ec/std", 
-        "ark-poly/std", "downcast-rs/std", "jf-utils/std", "num-bigint/std",
-        "rand_chacha/std"]
-parallel = ["ark-ff/parallel", "ark-ec/parallel", "ark-poly/parallel", 
-            "jf-utils/parallel", "dep:rayon" ]
+ark-ed-on-bls12-377 = { workspace = true }
+ark-ed-on-bls12-381 = { workspace = true }
+ark-ed-on-bls12-381-bandersnatch = { workspace = true }
+ark-ed-on-bn254 = { workspace = true }
