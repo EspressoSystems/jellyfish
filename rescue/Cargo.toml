@@ -41,17 +41,11 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 itertools = { workspace = true }
-# Following dependencies are temporarily by path
-# jf-commitment = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-# jf-crhf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-# jf-prf = { version = "0.1.0", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-# jf-relation = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", optional = true, default-features = false }
-# jf-utils = { version = "0.4.4", git = "https://github.com/EspressoSystems/jellyfish", tag = "0.4.5", default-features = false }
-jf-commitment = { path = "../commitment", default-features = false }
-jf-crhf = { path = "../crhf", default-features = false }
-jf-prf = { path = "../prf", default-features = false }
-jf-relation = { path = "../relation", default-features = false, optional = true }
-jf-utils = { path = "../utilities", default-features = false }
+jf-commitment = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-commitment-v0.2.0", default-features = false }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
+jf-prf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-prf-v0.2.0", default-features = false }
+jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", optional = true, default-features = false }
+jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 spongefish = { workspace = true }
 zeroize = { workspace = true }
 
