@@ -259,7 +259,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
         // perform integer division
         let (z, y) = div_rem(&sum_x, &p);
-        let z_range = F::from(range_size as u32);
+        let z_range = F::from(range_size as u64);
         if z >= z_range {
             return Err(ParameterError(format!(
                 "z = {z} is out of range, the sum of variable values = {sum_x} might be too large for modulus = {p}",
@@ -393,7 +393,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let sum = self.witness(x_var)? + y_f;
         let (divisor, remainder) = div_rem(&sum, &p_f);
 
-        let divisor_range = F::from(range_size as u32);
+        let divisor_range = F::from(range_size as u64);
         if divisor >= divisor_range {
             return Err(ParameterError(format!(
               "divisor = {divisor} is out of range, the sum of variable values = {sum} might be too large for modulus = {p_f}",
