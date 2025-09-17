@@ -806,7 +806,7 @@ impl<F: FftField> PlonkCircuit<F> {
             return Err(IndexError);
         }
         let range_size = self.range_size()?;
-        if self.witness[self.wire_variables[RANGE_WIRE_ID][idx]] >= F::from(range_size as u32) {
+        if self.witness[self.wire_variables[RANGE_WIRE_ID][idx]] >= F::from(range_size as u64) {
             return Err(GateCheckFailure(
                 idx,
                 format!(
@@ -1639,7 +1639,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
                 range_size
             )));
         }
-        let mut range_table: Vec<F> = (0..range_size).map(|i| F::from(i as u32)).collect();
+        let mut range_table: Vec<F> = (0..range_size).map(|i| F::from(i as u64)).collect();
         range_table.resize(domain.size(), F::zero());
         Ok(range_table)
     }
