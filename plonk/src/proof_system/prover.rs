@@ -506,25 +506,25 @@ impl<E: Pairing> Prover<E> {
         let m = self.quot_domain.size();
         let domain_size_ratio = m / n;
         // Compute 1/Z_H(w^i).
-        let z_h_inv: Vec<E::ScalarField> = (0..domain_size_ratio)
+        let z_h_inv: Result<Vec<E::ScalarField>, PlonkError> = (0..domain_size_ratio)
             .map(|i| {
                 ((E::ScalarField::GENERATOR * self.quot_domain.element(i)).pow([n as u64])
                     - E::ScalarField::one())
                 .inverse()
-                .unwrap()
+                .ok_or(PlonkError::DivisionError)
             })
             .collect();
+        let z_h_inv = z_h_inv?;
 
         // Compute coset evaluations of the quotient polynomial.
         let mut quot_poly_coset_evals_sum = vec![E::ScalarField::zero(); m];
         let mut alpha_base = E::ScalarField::one();
         let alpha_3 = challenges.alpha.square() * challenges.alpha;
         let alpha_7 = alpha_3.square() * challenges.alpha;
-        // TODO: figure out if the unwrap is safe/map error?
         let coset = self
             .quot_domain
             .get_coset(E::ScalarField::GENERATOR)
-            .unwrap();
+            .ok_or(PlonkError::DomainCreationError)?;
         // enumerate proving instances
         for (oracles, pk) in online_oracles.iter().zip(pks.iter()) {
             // lookup_flag = 1 if support Plookup argument.
