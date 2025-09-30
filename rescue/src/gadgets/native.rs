@@ -156,11 +156,10 @@ where
         state_var = RescueNativeGadget::<F>::rescue_permutation(self, state_var)?;
 
         for block in data_vars[rate..].chunks_exact(rate) {
-            // Overwrite rate portion (first 3 elements) but keep capacity (4th element)
-            state_var.0[0] = block[0];
-            state_var.0[1] = block[1];
-            state_var.0[2] = block[2];
-            // state_var.0[3] remains as capacity (zero_var)
+            state_var = self.add_state(
+                &state_var,
+                &RescueStateVar::from([block[0], block[1], block[2], zero_var]),
+            )?;
             state_var = self.rescue_permutation(state_var)?;
         }
 
@@ -225,12 +224,8 @@ where
         // absorb phase - process input in chunks of CRHF_RATE (3)
         let chunks = data_vars.chunks_exact(CRHF_RATE);
         for chunk in chunks {
-            // Create state var with input chunk in rate positions and preserve capacity
-            let chunk_var = RescueStateVar::from([chunk[0], chunk[1], chunk[2], state.0[3]]);
-            // Overwrite rate portion (first 3 elements) but keep capacity (4th element)
-            state.0[0] = chunk_var.0[0];
-            state.0[1] = chunk_var.0[1];
-            state.0[2] = chunk_var.0[2];
+            let chunk_var = RescueStateVar::from([chunk[0], chunk[1], chunk[2], chunk[3]]);
+            state = self.add_state(&state, &chunk_var)?;
             // Apply permutation
             state = RescueNativeGadget::<F>::rescue_permutation(self, state)?;
         }
