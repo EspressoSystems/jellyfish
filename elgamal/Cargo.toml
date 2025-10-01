@@ -1,6 +1,6 @@
 [package]
 name = "jf-elgamal"
-version = "0.2.0"
+version = "0.3.0"
 description = "ElGamal cryptosystem based on Rescue."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -31,7 +31,7 @@ ark-std = { workspace = true }
 derivative = { workspace = true }
 displaydoc = { workspace = true }
 jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", optional = true, default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.2.0", default-features = false }
+jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.3.0", default-features = false }
 rayon = { workspace = true, optional = true }
 zeroize = { workspace = true }
 
