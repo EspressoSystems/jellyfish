@@ -1,0 +1,9 @@
+[advisories]
+ignore = [
+    # WARNING: crate `derivative` unmaintained.
+    "RUSTSEC-2024-0388",
+    # WARNING: crate `paste` unmaintained.
+    "RUSTSEC-2024-0436",
+    # `tracing-subscriber` doesn't rule out poisoning logs. But we are not using it.
+    "RUSTSEC-2025-0055",
+]
