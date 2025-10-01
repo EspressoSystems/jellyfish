@@ -5,7 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.3.0
 
-- [TBD](TBD) Revert the `spongefish` migration.
+- [#839](https://github.com/EspressoSystems/jellyfish/pull/839) Revert the `spongefish` migration.
 
 ## 0.2.0
 
