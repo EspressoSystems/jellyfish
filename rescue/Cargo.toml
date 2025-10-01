@@ -1,6 +1,6 @@
 [package]
 name = "jf-rescue"
-version = "0.2.0"
+version = "0.3.0"
 description = "Rescue hash function implementation."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -30,6 +30,7 @@ gadgets = ["jf-relation"]
 parallel = ["jf-relation/parallel"]
 
 [dependencies]
+ark-crypto-primitives = { version = "0.5", features = ["sponge"] }
 ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
