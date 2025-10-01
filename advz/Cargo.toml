@@ -1,6 +1,6 @@
 [package]
 name = "jf-advz"
-version = "0.2.1"
+version = "0.2.2"
 description = "A Verifiable information dispersal (VID) scheme."
 authors = { workspace = true }
 edition = { workspace = true }
@@ -52,7 +52,7 @@ displaydoc = { workspace = true }
 # inherited from digest-v0.10.7->crypto_common->generic-array
 generic-array = { version = "0.14.6", features = ["more_lengths", "serde"] }
 itertools = { workspace = true, features = ["use_alloc"] }
-jf-merkle-tree-compat = { git = "https://github.com/EspressoSystems/jellyfish-compat", tag = "jf-merkle-tree-compat-v0.1.0", default-features = false }
+jf-merkle-tree-compat = { git = "https://github.com/EspressoSystems/jellyfish-compat", tag = "jf-merkle-tree-compat-v0.2.0", default-features = false }
 jf-pcs = { workspace = true }
 jf-utils = { workspace = true }
 rayon = { workspace = true, optional = true }
