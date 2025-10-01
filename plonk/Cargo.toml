@@ -1,7 +1,7 @@
 [package]
 name = "jf-plonk"
 description = "TurboPlonk and UntraPlonk implementation."
-version = "0.6.0"
+version = "0.7.0"
 authors = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -54,7 +54,7 @@ itertools = { workspace = true }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
 jf-pcs = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-pcs-v0.3.0", default-features = false }
 jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.2.0", default-features = false, features = ["gadgets"] }
+jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.3.0", default-features = false, features = ["gadgets"] }
 jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
