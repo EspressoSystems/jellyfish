@@ -45,7 +45,7 @@ itertools = { workspace = true }
 jf-commitment = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-commitment-v0.2.0", default-features = false }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
 jf-prf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-prf-v0.2.0", default-features = false }
-jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", optional = true, default-features = false }
+jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", branch = "jf-relation-v0.5.0-compat", optional = true, default-features = false }
 jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 spongefish = { workspace = true }
 zeroize = { workspace = true }

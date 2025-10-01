@@ -53,8 +53,8 @@ hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
 jf-pcs = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-pcs-v0.3.0", default-features = false }
-jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.3.0", default-features = false, features = ["gadgets"] }
+jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", branch = "jf-relation-v0.5.0-compat", default-features = false }
+jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", branch = "jf-relation-v0.5.0-compat", default-features = false, features = ["gadgets"] }
 jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 merlin = { workspace = true }
 num-bigint = { workspace = true }
