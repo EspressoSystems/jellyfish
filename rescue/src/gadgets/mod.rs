@@ -70,20 +70,19 @@ where
         num_output: usize,
     ) -> Result<Vec<R::Var>, CircuitError>;
 
-    /// Keyed sponge with rate=3 and a single output
+    /// Full-State-Keyed-Sponge with a single output
     /// * `key` - key variable
-    /// * `input` - input variables, length must be multiple of CRHF_RATE (3)
+    /// * `input` - input variables,
     /// * `returns` a variable that refers to the output
-    fn rescue_keyed_sponge_no_padding(
+    fn rescue_full_state_keyed_sponge_no_padding(
         &mut self,
         key: R::Var,
         data_vars: &[R::Var],
     ) -> Result<R::Var, CircuitError>;
 
-    /// Similar to [`Self::rescue_keyed_sponge_no_padding`] except
-    /// `data_var` are padded with "zero_var" to make length multiple of
-    /// CRHF_RATE (3)
-    fn rescue_keyed_sponge_with_zero_padding(
+    /// Similar to [`Self::rescue_full_state_keyed_sponge_no_padding`] except
+    /// `data_var` are padded with "zero_var"
+    fn rescue_full_state_keyed_sponge_with_zero_padding(
         &mut self,
         key: R::Var,
         data_vars: &[R::Var],
