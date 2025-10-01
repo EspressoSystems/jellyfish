@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["CRHF_RATE","ROUNDS","STATE_SIZE"],"enum":["RescueError"],"mod":["commitment","crhf","permutation","prf"],"struct":["PRP","Permutation","RescueMatrix","RescueVector"],"trait":["RescueParameter"]};
+window.SIDEBAR_ITEMS = {"constant":["CRHF_RATE","ROUNDS","STATE_SIZE"],"enum":["RescueError"],"mod":["commitment","crhf","prf","sponge"],"struct":["PRP","Permutation","RescueMatrix","RescueVector"],"trait":["RescueParameter"]};
