@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Untracked
+
+### Changed
+
+- [#842](https://github.com/EspressoSystems/jellyfish/pull/842): `jf-rescue` is now optional for the crate.
+
 ## 0.4.0
 
 ### Breaking Changes
