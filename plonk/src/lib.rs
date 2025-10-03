@@ -11,9 +11,6 @@
 #[cfg(test)]
 extern crate std;
 
-#[macro_use]
-extern crate derivative;
-
 /// Customized circuit
 pub mod circuit;
 pub mod constants;

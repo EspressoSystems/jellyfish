@@ -13,9 +13,6 @@
 #[cfg(test)]
 extern crate std;
 
-#[macro_use]
-extern crate derivative;
-
 #[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
 #[doc(hidden)]
 extern crate alloc;
