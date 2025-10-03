@@ -49,7 +49,7 @@ use ark_serialize::{
     Write,
 };
 use ark_std::string::ToString;
-use derivative::Derivative;
+use derive_where::derive_where;
 use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
@@ -168,18 +168,10 @@ where
 }
 
 /// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Copy(bound = "<<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy"),
-    Debug(bound = ""),
-    Default(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    Ord(bound = ""),
-    PartialEq(bound = ""),
-    PartialOrd(bound = "")
+#[derive_where(
+    Copy; <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy
 )]
+#[derive_where(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[tagged("HASH")]
 pub struct HasherNode<H>(Output<H>)
 where

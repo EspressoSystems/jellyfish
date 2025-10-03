@@ -63,7 +63,6 @@ use ark_std::{
     vec::Vec,
     One, UniformRand,
 };
-use derivative::Derivative;
 use digest::{DynDigest, FixedOutputReset};
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;

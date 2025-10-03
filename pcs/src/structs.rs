@@ -7,11 +7,10 @@
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::Vec;
+use derive_where::derive_where;
 
-#[derive(
-    Derivative, Clone, Copy, Debug, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize,
-)]
-#[derivative(Default, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Default, Hash)]
 /// A commitment is an Affine point.
 pub struct Commitment<E: Pairing>(
     /// the actual commitment is an affine point.

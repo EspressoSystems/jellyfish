@@ -28,6 +28,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use derive_where::derive_where;
 use jf_crhf::CRHF;
 use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
@@ -174,12 +175,8 @@ impl<F: PrimeField> TryFrom<TaggedBase64> for SignKey<F> {
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
 #[tagged(tag::SCHNORR_VER_KEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Default, Eq, Clone; P: Config)]
 pub struct VerKey<P>(pub(crate) Projective<P>)
 where
     P: Config;
@@ -244,13 +241,7 @@ impl<P: Config> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[derive(Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config")
-)]
+#[derive_where(Debug, Default, Clone, PartialEq; P: Config)]
 pub struct KeyPair<P>
 where
     P: Config,
@@ -265,13 +256,8 @@ where
 
 /// The signature of Schnorr signature scheme
 #[tagged(tag::SCHNORR_SIG)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Debug, Default, Eq, Clone; P: Config)]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where

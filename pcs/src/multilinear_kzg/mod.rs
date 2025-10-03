@@ -35,6 +35,7 @@ use ark_std::{
     One, Zero,
 };
 use batching::{batch_open_internal, batch_verify_internal};
+use derive_where::derive_where;
 use srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 use util::merge_polynomials;
 
@@ -49,8 +50,8 @@ pub struct MultilinearKzgPCS<E: Pairing> {
     phantom: PhantomData<E>,
 }
 
-#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
-#[derivative(Hash)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive_where(Hash)]
 /// proof of opening
 pub struct MultilinearKzgProof<E: Pairing> {
     /// Evaluation of quotients

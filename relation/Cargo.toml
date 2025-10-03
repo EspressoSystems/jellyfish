@@ -42,7 +42,7 @@ ark-ff = { workspace = true }
 ark-poly = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-derivative = { workspace = true }
+derive-where = { workspace = true }
 displaydoc = { workspace = true }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"

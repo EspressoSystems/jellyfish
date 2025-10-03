@@ -1,6 +1,6 @@
 [advisories]
 ignore = [
-    # WARNING: crate `derivative` unmaintained.
+    # WARNING: crate `derivative` unmaintained, still resides in `ark-crypto-primitives`.
     "RUSTSEC-2024-0388",
     # WARNING: crate `paste` unmaintained.
     "RUSTSEC-2024-0436",

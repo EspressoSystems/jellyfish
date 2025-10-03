@@ -39,7 +39,7 @@ ark-ff = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
 blst = { version = "0.3.13", default-features = false }
-derivative = { workspace = true }
+derive-where = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }

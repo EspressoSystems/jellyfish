@@ -9,7 +9,6 @@ use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FA
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
-use derivative::Derivative;
 use itertools::Itertools;
 use jf_utils::canonical;
 use num_bigint::BigUint;
