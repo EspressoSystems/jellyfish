@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - [#842](https://github.com/EspressoSystems/jellyfish/pull/842): `jf-rescue` is now optional for the crate.
-- [TBD](TBD): replace unmaintained `derivative` with `derive_where`.
+- [#843](https://github.com/EspressoSystems/jellyfish/pull/843): replace unmaintained `derivative` with `derive_where`.
 
 ## 0.4.0
 
