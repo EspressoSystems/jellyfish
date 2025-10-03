@@ -5,12 +5,12 @@ use core::marker::PhantomData;
 use ark_ff::{Field, PrimeField};
 use ark_std::{borrow::Borrow, string::ToString, vec::Vec};
 use jf_crhf::CRHF;
-use nimue::{
-    hash::sponge::{DuplexSponge, Sponge},
-    DuplexHash, Unit,
+use spongefish::{
+    duplex_sponge::{DuplexSponge, Permutation},
+    DuplexSpongeInterface, Unit,
 };
 
-use crate::Poseidon2Error;
+use crate::{sponge::Poseidon2Sponge, Poseidon2Error};
 
 /// Sponge-based CRHF where the Sponge uses Poseidon2 permutation
 /// Input length is fixed: the actual input can be shorter, but will internally
@@ -22,7 +22,7 @@ use crate::Poseidon2Error;
 pub struct FixedLenPoseidon2Hash<F, S, const INPUT_SIZE: usize, const OUTPUT_SIZE: usize>
 where
     F: PrimeField + Unit,
-    S: Sponge<U = F>,
+    S: Permutation<U = F> + Poseidon2Sponge,
 {
     _field: PhantomData<F>,
     _sponge: PhantomData<S>,
@@ -31,7 +31,7 @@ where
 impl<F, S, const IN: usize, const OUT: usize> CRHF for FixedLenPoseidon2Hash<F, S, IN, OUT>
 where
     F: PrimeField + Unit,
-    S: Sponge<U = F>,
+    S: Permutation<U = F> + Poseidon2Sponge,
 {
     type Input = [F]; // length should be <= IN
     type Output = [F; OUT];
@@ -60,7 +60,7 @@ where
 pub struct VariableLenPoseidon2Hash<F, S, const OUTPUT_SIZE: usize>
 where
     F: PrimeField + Unit,
-    S: Sponge<U = F>,
+    S: Permutation<U = F>,
 {
     _field: PhantomData<F>,
     _sponge: PhantomData<S>,
@@ -69,7 +69,7 @@ where
 impl<F, S, const OUT: usize> CRHF for VariableLenPoseidon2Hash<F, S, OUT>
 where
     F: PrimeField + Unit,
-    S: Sponge<U = F>,
+    S: Permutation<U = F>,
 {
     type Input = [F];
     type Output = [F; OUT];

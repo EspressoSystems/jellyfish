@@ -346,7 +346,7 @@ mod tests {
     use ark_bn254::{g1::Config as Param254, Fq as Fq254, Fr as Fr254};
     use ark_ec::{
         short_weierstrass::{Projective, SWCurveConfig},
-        CurveGroup, Group,
+        CurveGroup, PrimeGroup,
     };
     use ark_ff::{MontFp, PrimeField};
     use ark_std::{UniformRand, Zero};

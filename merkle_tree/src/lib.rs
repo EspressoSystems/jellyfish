@@ -117,6 +117,8 @@ impl<T> NodeValue for T where
 }
 
 /// Merkle tree hash function
+/// WARN: it's important to domain separate the two digest functions. Otherwise,
+/// you may suffer from the length extension attack.
 pub trait DigestAlgorithm<E, I, T>
 where
     E: Element,

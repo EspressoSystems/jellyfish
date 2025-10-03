@@ -122,6 +122,33 @@ where
     } else {
         T::default()
     };
+    match element {
+        // only strictly checking this during membership proof
+        // in non-membership proof, empty leaf/branch node can have empty vector in
+        // their merkle proof
+        Some(_) => {
+            if proof.iter().any(|v| v.len() != ARITY - 1) {
+                return Err(MerkleTreeError::InconsistentStructureError(
+                    "Malformed proof".to_string(),
+                ));
+            }
+        },
+        None => {
+            if !proof.iter().all(|v| v.len() == ARITY - 1 || v.is_empty()) {
+                return Err(MerkleTreeError::InconsistentStructureError(
+                    "Malformed proof".to_string(),
+                ));
+            }
+        },
+    };
+    if element.is_some() && proof.iter().any(|v| v.len() != ARITY - 1) {
+        // only strictly checking this during membership proof
+        // in non-membership proof, empty leaf/branch node can have empty vector in
+        // their merkle proof
+        return Err(MerkleTreeError::InconsistentStructureError(
+            "Malformed proof".to_string(),
+        ));
+    }
     let mut data = [T::default(); ARITY];
     let computed_root = pos
         .to_traversal_path(proof.len())

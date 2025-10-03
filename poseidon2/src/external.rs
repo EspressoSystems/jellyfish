@@ -10,6 +10,9 @@ use crate::{add_rcs, s_box};
 /// [ 1 1 2 3 ]
 /// [ 3 1 1 2 ]
 ///
+/// NOTE: we use plonky3's matrix instead of that in the original paper
+/// HorizenLab's ref: <https://github.com/Plonky3/Plonky3/blob/main/poseidon2/src/external.rs#L34>
+///
 /// This requires 7 additions and 2 doubles to compute.
 /// credit: Plonky3
 #[derive(Clone, Default)]
@@ -50,6 +53,10 @@ pub(super) fn matmul_external<F: PrimeField, const T: usize>(state: &mut [F; T])
             state[1] += sum;
             state[2] += sum;
         },
+
+        // NOTE: matching plonky3's behavior, differs from the Horizen Labs reference implementation
+        // and the paper's description (Sec 5.1 of https://eprint.iacr.org/2023/323.pdf), in which for T=4,
+        // the circulant matrix is not applied.
 
         // Given a 4x4 MDS matrix M, we multiply by the `4N x 4N` matrix
         // `[[2M M  ... M], [M  2M ... M], ..., [M  M ... 2M]]`.
