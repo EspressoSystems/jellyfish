@@ -37,7 +37,7 @@ ark-ec = { workspace = true }
 ark-ff = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-derivative = { workspace = true }
+derive-where = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
