@@ -7,8 +7,6 @@
 //! Merkle Tree traits and implementations
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -234,7 +232,7 @@ pub trait MerkleTreeScheme: Sized {
 
     /// Return an iterator that iterates through all element that are not
     /// forgotten
-    fn iter(&self) -> MerkleTreeIter<Self::Element, Self::Index, Self::NodeValue>;
+    fn iter(&'_ self) -> MerkleTreeIter<'_, Self::Element, Self::Index, Self::NodeValue>;
 }
 
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for

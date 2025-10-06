@@ -84,10 +84,10 @@ macro_rules! impl_merkle_tree_scheme {
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<VerificationResult, MerkleTreeError> {
-                crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow().path_values())
+                $crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow().path_values())
             }
 
-            fn iter(&self) -> MerkleTreeIter<E, I, T> {
+            fn iter(&'_ self) -> MerkleTreeIter<'_, E, I, T> {
                 MerkleTreeIter::new(&self.root)
             }
         }

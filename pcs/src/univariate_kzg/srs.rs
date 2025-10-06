@@ -163,10 +163,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
 mod tests {
     use super::UnivariateUniversalParams;
     use crate::PCSError;
-    use ark_ec::{
-        pairing::Pairing, scalar_mul::BatchMulPreprocessing, AffineRepr, CurveGroup, ScalarMul,
-    };
-    use ark_ff::PrimeField;
+    use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, ScalarMul};
     use ark_std::{
         end_timer,
         rand::{CryptoRng, RngCore},

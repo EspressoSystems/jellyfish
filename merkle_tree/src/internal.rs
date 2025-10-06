@@ -5,10 +5,10 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue, ToTraversalPath};
-use crate::{errors::MerkleTreeError, prelude::MerkleTree, VerificationResult, FAIL, SUCCESS};
+use crate::{errors::MerkleTreeError, VerificationResult, FAIL, SUCCESS};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{borrow::Borrow, format, iter::Peekable, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, iter::Peekable, string::ToString, vec, vec::Vec};
 use itertools::Itertools;
 use jf_utils::canonical;
 use num_bigint::BigUint;
@@ -156,7 +156,7 @@ where
         .try_fold(
             init,
             |val, (branch, values)| -> Result<T, MerkleTreeError> {
-                if values.len() == 0 {
+                if values.is_empty() {
                     Ok(T::default())
                 } else {
                     data[..*branch].copy_from_slice(&values[..*branch]);
@@ -444,7 +444,11 @@ where
                     },
                 }
             },
-            MerkleNode::Leaf { value, pos, elem } => (
+            MerkleNode::Leaf {
+                value,
+                pos: _,
+                elem,
+            } => (
                 Arc::new(MerkleNode::ForgottenSubtree { value: *value }),
                 LookupResult::Ok(elem.clone(), MerkleTreeProof(vec![])),
             ),
@@ -467,11 +471,7 @@ where
     {
         match self {
             MerkleNode::Empty => Ok(Arc::new(self.clone())),
-            MerkleNode::Leaf {
-                value,
-                pos: leaf_pos,
-                elem,
-            } => {
+            MerkleNode::Leaf { .. } => {
                 if height != 0 {
                     // Reach a leaf before it should
                     Err(MerkleTreeError::InconsistentStructureError(

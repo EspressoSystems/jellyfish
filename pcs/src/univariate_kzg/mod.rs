@@ -13,7 +13,7 @@ use crate::{
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
-use ark_ff::{FftField, Field, PrimeField};
+use ark_ff::{FftField, PrimeField};
 #[cfg(not(feature = "seq-fk-23"))]
 use ark_poly::EvaluationDomain;
 use ark_poly::{
