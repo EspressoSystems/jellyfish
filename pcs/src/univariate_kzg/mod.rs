@@ -32,6 +32,7 @@ use ark_std::{
     vec::Vec,
     One, UniformRand, Zero,
 };
+use derive_where::derive_where;
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -45,8 +46,8 @@ pub struct UnivariateKzgPCS<E> {
     phantom: PhantomData<E>,
 }
 
-#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
-#[derivative(Hash)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive_where(Hash)]
 /// proof of opening
 pub struct UnivariateKzgProof<E: Pairing> {
     /// Evaluation of quotients

@@ -88,11 +88,10 @@ use ark_std::{
     rand::{CryptoRng, RngCore},
 };
 use blst::{min_sig::*, BLST_ERROR};
-use derivative::Derivative;
 use tagged_base64::{tagged, TaggedBase64, Tb64Error};
 use zeroize::{Zeroize, Zeroizing};
 
-#[derive(Clone, Derivative, Zeroize)]
+#[derive(Clone, Zeroize)]
 #[zeroize(drop)]
 /// A BLS Secret Key (Signing Key). We intentionally omit the implementation of
 /// `serde::Serializable` so that it won't be unnoticably serialized or printed
