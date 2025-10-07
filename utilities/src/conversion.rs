@@ -269,7 +269,7 @@ where
 /// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
 /// 2. The extension degree of the [`Field`].
 /// 3. The total byte length of a single [`Field`] element under the constraint
-/// that   each [`BasePrimeField`] element fits into only P bytes.
+///    that each [`BasePrimeField`] element fits into only P bytes.
 ///
 /// # Panics
 ///

@@ -97,7 +97,7 @@ where
         if self.is_zero() {
             0
         } else {
-            assert!(self.coeffs.last().map_or(false, |coeff| !coeff.is_zero()));
+            assert!(self.coeffs.last().is_some_and(|coeff| !coeff.is_zero()));
             self.coeffs.len() - 1
         }
     }
@@ -161,7 +161,7 @@ where
     F: Field,
 {
     fn truncate_leading_zeros(&mut self) {
-        while self.coeffs.last().map_or(false, |c| c.is_zero()) {
+        while self.coeffs.last().is_some_and(|c| c.is_zero()) {
             self.coeffs.pop();
         }
     }

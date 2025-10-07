@@ -671,7 +671,7 @@ mod tests {
                 let msg = vec![$base_field::rand(&mut rng)];
                 let sig = keypair.sign(&msg, CS_ID_SCHNORR);
 
-                let mut ser_bytes: Vec<u8> = sk.to_bytes();
+                let ser_bytes: Vec<u8> = sk.to_bytes();
                 let de = SignKey::<$scalar_field>::from_bytes(&ser_bytes);
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
 
@@ -679,7 +679,7 @@ mod tests {
                 let de: SignKey<$scalar_field> = tagged_blob.try_into().unwrap();
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
 
-                let mut ser_bytes: Vec<u8> = keypair.to_bytes();
+                let ser_bytes: Vec<u8> = keypair.to_bytes();
                 let de = KeyPair::<$curve_param>::from_bytes(&ser_bytes);
                 assert_eq!(de, keypair);
 

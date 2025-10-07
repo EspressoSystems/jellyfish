@@ -75,7 +75,7 @@ use super::SignatureScheme;
 use crate::{
     constants::{
         tag, BLS_SIG_COMPRESSED_PK_SIZE, BLS_SIG_COMPRESSED_SIGNATURE_SIZE, BLS_SIG_PK_SIZE,
-        BLS_SIG_SIGNATURE_SIZE, BLS_SIG_SK_SIZE,
+        BLS_SIG_SIGNATURE_SIZE,
     },
     SignatureError,
 };
@@ -116,7 +116,7 @@ impl BLSSignKey {
 
     /// Deserialize `SignKey` from bytes.
     pub fn from_bytes(bytes: &[u8; 32]) -> Result<BLSSignKey, BLST_ERROR> {
-        SecretKey::from_bytes(bytes).map(|sk| BLSSignKey(sk))
+        SecretKey::from_bytes(bytes).map(BLSSignKey)
     }
 
     /// Explicit calls to serialize a `SignKey` into `TaggedBase64`.
@@ -133,8 +133,8 @@ impl<'a> TryFrom<&'a TaggedBase64> for BLSSignKey {
             return Err(Tb64Error::InvalidTag);
         }
         SecretKey::from_bytes(tb.as_ref())
-            .map(|sk| BLSSignKey(sk))
-            .map_err(|err| Tb64Error::InvalidData)
+            .map(BLSSignKey)
+            .map_err(|_| Tb64Error::InvalidData)
     }
 }
 
@@ -146,8 +146,8 @@ impl TryFrom<TaggedBase64> for BLSSignKey {
             return Err(Tb64Error::InvalidTag);
         }
         SecretKey::from_bytes(tb.as_ref())
-            .map(|sk| BLSSignKey(sk))
-            .map_err(|err| Tb64Error::InvalidData)
+            .map(BLSSignKey)
+            .map_err(|_| Tb64Error::InvalidData)
     }
 }
 
@@ -434,7 +434,7 @@ impl BLSSignatureScheme {
 mod test {
     use super::*;
     use crate::tests::{failed_verification, sign_and_verify};
-    use ark_std::{fmt::Debug, rand::Rng, vec};
+    use ark_std::{fmt::Debug, vec};
 
     #[test]
     fn test_bls_sig() {

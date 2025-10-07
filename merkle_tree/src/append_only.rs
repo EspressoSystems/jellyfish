@@ -18,7 +18,7 @@ use crate::{
     VerificationResult,
 };
 use alloc::sync::Arc;
-use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
@@ -106,7 +106,6 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueMerkleTree, RescueSparseMerkleTree},
         *,
     };
