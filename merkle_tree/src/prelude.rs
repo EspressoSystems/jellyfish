@@ -23,11 +23,9 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
-use ark_std::{fmt, marker::PhantomData, string::ToString, vec, vec::Vec};
+use ark_std::{fmt, marker::PhantomData, vec, vec::Vec};
 use jf_crhf::CRHF;
-use jf_poseidon2::{
-    crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge, Poseidon2, Poseidon2Params,
-};
+use jf_poseidon2::{crhf::FixedLenPoseidon2Hash, sponge::Poseidon2Sponge};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use sha3::{Digest, Keccak256, Sha3_256};
 use spongefish::{duplex_sponge::Permutation, Unit};
@@ -49,9 +47,9 @@ fn internal_hash_dom_sep<F: PrimeField>() -> F {
 }
 
 /// domain separator of byte-oriented hash, for the leaf node
-pub(crate) const LEAF_HASH_DOM_SEP: &'static [u8; 1] = b"1";
+pub(crate) const LEAF_HASH_DOM_SEP: &[u8; 1] = b"1";
 /// domain separator of byte-oriented hash, for the internal node
-pub(crate) const INTERNAL_HASH_DOM_SEP: &'static [u8; 1] = b"0";
+pub(crate) const INTERNAL_HASH_DOM_SEP: &[u8; 1] = b"0";
 
 impl<I: Index, F: RescueParameter + From<I>> DigestAlgorithm<F, I, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
