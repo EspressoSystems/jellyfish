@@ -84,10 +84,10 @@
 <a href=#84 id=84 data-nosnippet>84</a>                element: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::Element&gt;,
 <a href=#85 id=85 data-nosnippet>85</a>                proof: <span class="kw">impl </span>Borrow&lt;<span class="self">Self</span>::MembershipProof&gt;,
 <a href=#86 id=86 data-nosnippet>86</a>            ) -&gt; <span class="prelude-ty">Result</span>&lt;VerificationResult, MerkleTreeError&gt; {
-<a href=#87 id=87 data-nosnippet>87</a>                <span class="kw">crate</span>::internal::verify_merkle_proof::&lt;E, H, I, ARITY, T&gt;(commitment.borrow(), pos.borrow(), <span class="prelude-val">Some</span>(element.borrow()), proof.borrow().path_values())
+<a href=#87 id=87 data-nosnippet>87</a>                <span class="macro-nonterminal">$crate::internal::verify_merkle_proof</span>::&lt;E, H, I, ARITY, T&gt;(commitment.borrow(), pos.borrow(), <span class="prelude-val">Some</span>(element.borrow()), proof.borrow().path_values())
 <a href=#88 id=88 data-nosnippet>88</a>            }
 <a href=#89 id=89 data-nosnippet>89</a>
-<a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MerkleTreeIter&lt;E, I, T&gt; {
+<a href=#90 id=90 data-nosnippet>90</a>            <span class="kw">fn </span>iter(<span class="kw-2">&amp;</span><span class="lifetime">'_ </span><span class="self">self</span>) -&gt; MerkleTreeIter&lt;<span class="lifetime">'_</span>, E, I, T&gt; {
 <a href=#91 id=91 data-nosnippet>91</a>                MerkleTreeIter::new(<span class="kw-2">&amp;</span><span class="self">self</span>.root)
 <a href=#92 id=92 data-nosnippet>92</a>            }
 <a href=#93 id=93 data-nosnippet>93</a>        }

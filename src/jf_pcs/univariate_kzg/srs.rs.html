@@ -163,67 +163,64 @@
 <a href=#163 id=163 data-nosnippet>163</a></span><span class="kw">mod </span>tests {
 <a href=#164 id=164 data-nosnippet>164</a>    <span class="kw">use </span><span class="kw">super</span>::UnivariateUniversalParams;
 <a href=#165 id=165 data-nosnippet>165</a>    <span class="kw">use </span><span class="kw">crate</span>::PCSError;
-<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">use </span>ark_ec::{
-<a href=#167 id=167 data-nosnippet>167</a>        pairing::Pairing, scalar_mul::BatchMulPreprocessing, AffineRepr, CurveGroup, ScalarMul,
-<a href=#168 id=168 data-nosnippet>168</a>    };
-<a href=#169 id=169 data-nosnippet>169</a>    <span class="kw">use </span>ark_ff::PrimeField;
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">use </span>ark_std::{
-<a href=#171 id=171 data-nosnippet>171</a>        end_timer,
-<a href=#172 id=172 data-nosnippet>172</a>        rand::{CryptoRng, RngCore},
-<a href=#173 id=173 data-nosnippet>173</a>        start_timer, vec,
-<a href=#174 id=174 data-nosnippet>174</a>        vec::Vec,
-<a href=#175 id=175 data-nosnippet>175</a>        One, UniformRand,
-<a href=#176 id=176 data-nosnippet>176</a>    };
-<a href=#177 id=177 data-nosnippet>177</a>
-<a href=#178 id=178 data-nosnippet>178</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gen_srs_for_testing&lt;E: Pairing, R: RngCore + CryptoRng&gt;(
-<a href=#179 id=179 data-nosnippet>179</a>        rng: <span class="kw-2">&amp;mut </span>R,
-<a href=#180 id=180 data-nosnippet>180</a>        prover_degree: usize,
-<a href=#181 id=181 data-nosnippet>181</a>        verifier_degree: usize,
-<a href=#182 id=182 data-nosnippet>182</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;UnivariateUniversalParams&lt;E&gt;, PCSError&gt; {
-<a href=#183 id=183 data-nosnippet>183</a>        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
-<a href=#184 id=184 data-nosnippet>184</a>            <span class="string">"KZG10::Setup with prover degree {} and verifier degree {}"</span>,
-<a href=#185 id=185 data-nosnippet>185</a>            prover_degree,
-<a href=#186 id=186 data-nosnippet>186</a>            verifier_degree
-<a href=#187 id=187 data-nosnippet>187</a>        ));
-<a href=#188 id=188 data-nosnippet>188</a>        <span class="kw">let </span>beta = E::ScalarField::rand(rng);
-<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">let </span>g = E::G1::rand(rng);
-<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span>h = E::G2::rand(rng);
-<a href=#191 id=191 data-nosnippet>191</a>
-<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw">let </span><span class="kw-2">mut </span>powers_of_beta = <span class="macro">vec!</span>[E::ScalarField::one()];
-<a href=#193 id=193 data-nosnippet>193</a>
-<a href=#194 id=194 data-nosnippet>194</a>        <span class="kw">let </span><span class="kw-2">mut </span>cur = beta;
-<a href=#195 id=195 data-nosnippet>195</a>        <span class="kw">let </span>max_degree = ark_std::cmp::max(prover_degree, verifier_degree);
-<a href=#196 id=196 data-nosnippet>196</a>        <span class="kw">for _ in </span><span class="number">0</span>..max_degree {
-<a href=#197 id=197 data-nosnippet>197</a>            powers_of_beta.push(cur);
-<a href=#198 id=198 data-nosnippet>198</a>            cur <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>beta;
-<a href=#199 id=199 data-nosnippet>199</a>        }
-<a href=#200 id=200 data-nosnippet>200</a>
-<a href=#201 id=201 data-nosnippet>201</a>        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">"Generating powers of G"</span>);
-<a href=#202 id=202 data-nosnippet>202</a>        <span class="kw">let </span>powers_of_g = g
-<a href=#203 id=203 data-nosnippet>203</a>            .batch_mul(<span class="kw-2">&amp;</span>powers_of_beta)
-<a href=#204 id=204 data-nosnippet>204</a>            .into_iter()
-<a href=#205 id=205 data-nosnippet>205</a>            .map(|p| p.into_group())
-<a href=#206 id=206 data-nosnippet>206</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#207 id=207 data-nosnippet>207</a>        <span class="macro">end_timer!</span>(g_time);
-<a href=#208 id=208 data-nosnippet>208</a>
-<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">let </span>powers_of_g = E::G1::normalize_batch(<span class="kw-2">&amp;</span>powers_of_g);
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">use </span>ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, ScalarMul};
+<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">use </span>ark_std::{
+<a href=#168 id=168 data-nosnippet>168</a>        end_timer,
+<a href=#169 id=169 data-nosnippet>169</a>        rand::{CryptoRng, RngCore},
+<a href=#170 id=170 data-nosnippet>170</a>        start_timer, vec,
+<a href=#171 id=171 data-nosnippet>171</a>        vec::Vec,
+<a href=#172 id=172 data-nosnippet>172</a>        One, UniformRand,
+<a href=#173 id=173 data-nosnippet>173</a>    };
+<a href=#174 id=174 data-nosnippet>174</a>
+<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>gen_srs_for_testing&lt;E: Pairing, R: RngCore + CryptoRng&gt;(
+<a href=#176 id=176 data-nosnippet>176</a>        rng: <span class="kw-2">&amp;mut </span>R,
+<a href=#177 id=177 data-nosnippet>177</a>        prover_degree: usize,
+<a href=#178 id=178 data-nosnippet>178</a>        verifier_degree: usize,
+<a href=#179 id=179 data-nosnippet>179</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;UnivariateUniversalParams&lt;E&gt;, PCSError&gt; {
+<a href=#180 id=180 data-nosnippet>180</a>        <span class="kw">let </span>setup_time = <span class="macro">start_timer!</span>(|| <span class="macro">ark_std::format!</span>(
+<a href=#181 id=181 data-nosnippet>181</a>            <span class="string">"KZG10::Setup with prover degree {} and verifier degree {}"</span>,
+<a href=#182 id=182 data-nosnippet>182</a>            prover_degree,
+<a href=#183 id=183 data-nosnippet>183</a>            verifier_degree
+<a href=#184 id=184 data-nosnippet>184</a>        ));
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span>beta = E::ScalarField::rand(rng);
+<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw">let </span>g = E::G1::rand(rng);
+<a href=#187 id=187 data-nosnippet>187</a>        <span class="kw">let </span>h = E::G2::rand(rng);
+<a href=#188 id=188 data-nosnippet>188</a>
+<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">let </span><span class="kw-2">mut </span>powers_of_beta = <span class="macro">vec!</span>[E::ScalarField::one()];
+<a href=#190 id=190 data-nosnippet>190</a>
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="kw">let </span><span class="kw-2">mut </span>cur = beta;
+<a href=#192 id=192 data-nosnippet>192</a>        <span class="kw">let </span>max_degree = ark_std::cmp::max(prover_degree, verifier_degree);
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="kw">for _ in </span><span class="number">0</span>..max_degree {
+<a href=#194 id=194 data-nosnippet>194</a>            powers_of_beta.push(cur);
+<a href=#195 id=195 data-nosnippet>195</a>            cur <span class="kw-2">*</span>= <span class="kw-2">&amp;</span>beta;
+<a href=#196 id=196 data-nosnippet>196</a>        }
+<a href=#197 id=197 data-nosnippet>197</a>
+<a href=#198 id=198 data-nosnippet>198</a>        <span class="kw">let </span>g_time = <span class="macro">start_timer!</span>(|| <span class="string">"Generating powers of G"</span>);
+<a href=#199 id=199 data-nosnippet>199</a>        <span class="kw">let </span>powers_of_g = g
+<a href=#200 id=200 data-nosnippet>200</a>            .batch_mul(<span class="kw-2">&amp;</span>powers_of_beta)
+<a href=#201 id=201 data-nosnippet>201</a>            .into_iter()
+<a href=#202 id=202 data-nosnippet>202</a>            .map(|p| p.into_group())
+<a href=#203 id=203 data-nosnippet>203</a>            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#204 id=204 data-nosnippet>204</a>        <span class="macro">end_timer!</span>(g_time);
+<a href=#205 id=205 data-nosnippet>205</a>
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="kw">let </span>powers_of_g = E::G1::normalize_batch(<span class="kw-2">&amp;</span>powers_of_g);
+<a href=#207 id=207 data-nosnippet>207</a>
+<a href=#208 id=208 data-nosnippet>208</a>        <span class="kw">let </span>h = h.into_affine();
+<a href=#209 id=209 data-nosnippet>209</a>        <span class="kw">let </span>beta_h = (h * beta).into_affine();
 <a href=#210 id=210 data-nosnippet>210</a>
-<a href=#211 id=211 data-nosnippet>211</a>        <span class="kw">let </span>h = h.into_affine();
-<a href=#212 id=212 data-nosnippet>212</a>        <span class="kw">let </span>beta_h = (h * beta).into_affine();
-<a href=#213 id=213 data-nosnippet>213</a>
-<a href=#214 id=214 data-nosnippet>214</a>        <span class="kw">let </span>powers_of_h = powers_of_beta
-<a href=#215 id=215 data-nosnippet>215</a>            .iter()
-<a href=#216 id=216 data-nosnippet>216</a>            .take(verifier_degree + <span class="number">1</span>)
-<a href=#217 id=217 data-nosnippet>217</a>            .map(|x| (h * x).into_affine())
-<a href=#218 id=218 data-nosnippet>218</a>            .collect();
-<a href=#219 id=219 data-nosnippet>219</a>
-<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span>pp = UnivariateUniversalParams {
-<a href=#221 id=221 data-nosnippet>221</a>            powers_of_g,
-<a href=#222 id=222 data-nosnippet>222</a>            h,
-<a href=#223 id=223 data-nosnippet>223</a>            beta_h,
-<a href=#224 id=224 data-nosnippet>224</a>            powers_of_h,
-<a href=#225 id=225 data-nosnippet>225</a>        };
-<a href=#226 id=226 data-nosnippet>226</a>        <span class="macro">end_timer!</span>(setup_time);
-<a href=#227 id=227 data-nosnippet>227</a>        <span class="prelude-val">Ok</span>(pp)
-<a href=#228 id=228 data-nosnippet>228</a>    }
-<a href=#229 id=229 data-nosnippet>229</a>}</code></pre></div></section></main></body></html>
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="kw">let </span>powers_of_h = powers_of_beta
+<a href=#212 id=212 data-nosnippet>212</a>            .iter()
+<a href=#213 id=213 data-nosnippet>213</a>            .take(verifier_degree + <span class="number">1</span>)
+<a href=#214 id=214 data-nosnippet>214</a>            .map(|x| (h * x).into_affine())
+<a href=#215 id=215 data-nosnippet>215</a>            .collect();
+<a href=#216 id=216 data-nosnippet>216</a>
+<a href=#217 id=217 data-nosnippet>217</a>        <span class="kw">let </span>pp = UnivariateUniversalParams {
+<a href=#218 id=218 data-nosnippet>218</a>            powers_of_g,
+<a href=#219 id=219 data-nosnippet>219</a>            h,
+<a href=#220 id=220 data-nosnippet>220</a>            beta_h,
+<a href=#221 id=221 data-nosnippet>221</a>            powers_of_h,
+<a href=#222 id=222 data-nosnippet>222</a>        };
+<a href=#223 id=223 data-nosnippet>223</a>        <span class="macro">end_timer!</span>(setup_time);
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="prelude-val">Ok</span>(pp)
+<a href=#225 id=225 data-nosnippet>225</a>    }
+<a href=#226 id=226 data-nosnippet>226</a>}</code></pre></div></section></main></body></html>

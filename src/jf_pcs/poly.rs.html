@@ -97,7 +97,7 @@
 <a href=#97 id=97 data-nosnippet>97</a>        <span class="kw">if </span><span class="self">self</span>.is_zero() {
 <a href=#98 id=98 data-nosnippet>98</a>            <span class="number">0
 <a href=#99 id=99 data-nosnippet>99</a>        </span>} <span class="kw">else </span>{
-<a href=#100 id=100 data-nosnippet>100</a>            <span class="macro">assert!</span>(<span class="self">self</span>.coeffs.last().map_or(<span class="bool-val">false</span>, |coeff| !coeff.is_zero()));
+<a href=#100 id=100 data-nosnippet>100</a>            <span class="macro">assert!</span>(<span class="self">self</span>.coeffs.last().is_some_and(|coeff| !coeff.is_zero()));
 <a href=#101 id=101 data-nosnippet>101</a>            <span class="self">self</span>.coeffs.len() - <span class="number">1
 <a href=#102 id=102 data-nosnippet>102</a>        </span>}
 <a href=#103 id=103 data-nosnippet>103</a>    }
@@ -161,7 +161,7 @@
 <a href=#161 id=161 data-nosnippet>161</a>    F: Field,
 <a href=#162 id=162 data-nosnippet>162</a>{
 <a href=#163 id=163 data-nosnippet>163</a>    <span class="kw">fn </span>truncate_leading_zeros(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">while </span><span class="self">self</span>.coeffs.last().map_or(<span class="bool-val">false</span>, |c| c.is_zero()) {
+<a href=#164 id=164 data-nosnippet>164</a>        <span class="kw">while </span><span class="self">self</span>.coeffs.last().is_some_and(|c| c.is_zero()) {
 <a href=#165 id=165 data-nosnippet>165</a>            <span class="self">self</span>.coeffs.pop();
 <a href=#166 id=166 data-nosnippet>166</a>        }
 <a href=#167 id=167 data-nosnippet>167</a>    }

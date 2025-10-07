@@ -196,8 +196,8 @@
 <a href=#196 id=196 data-nosnippet>196</a>    /// - the prover parameters for multilinear KZG,
 <a href=#197 id=197 data-nosnippet>197</a>    /// - a list of polynomials,
 <a href=#198 id=198 data-nosnippet>198</a>    /// - a (batch) commitment to all polynomials,
-<a href=#199 id=199 data-nosnippet>199</a>    /// - and the same number of points,
-<a href=#200 id=200 data-nosnippet>200</a>    /// compute a batch opening for all the polynomials.
+<a href=#199 id=199 data-nosnippet>199</a>    /// - and the same number of points, compute a batch opening for all the
+<a href=#200 id=200 data-nosnippet>200</a>    ///   polynomials.
 <a href=#201 id=201 data-nosnippet>201</a>    ///
 <a href=#202 id=202 data-nosnippet>202</a>    /// For simplicity, this API requires each MLE to have only one point. If
 <a href=#203 id=203 data-nosnippet>203</a>    /// the caller wish to use more than one point per MLE, it should be
@@ -212,11 +212,11 @@
 <a href=#212 id=212 data-nosnippet>212</a>    ///
 <a href=#213 id=213 data-nosnippet>213</a>    /// Steps:
 <a href=#214 id=214 data-nosnippet>214</a>    /// 1. build `l(points)` which is a list of univariate polynomials that goes
-<a href=#215 id=215 data-nosnippet>215</a>    /// through the points
+<a href=#215 id=215 data-nosnippet>215</a>    ///    through the points
 <a href=#216 id=216 data-nosnippet>216</a>    /// 2. build MLE `w` which is the merge of all MLEs.
 <a href=#217 id=217 data-nosnippet>217</a>    /// 3. build `q(x)` which is a univariate polynomial `W circ l`
-<a href=#218 id=218 data-nosnippet>218</a>    /// 4. commit to q(x) and sample r from transcript
-<a href=#219 id=219 data-nosnippet>219</a>    /// transcript contains: w commitment, points, q(x)'s commitment
+<a href=#218 id=218 data-nosnippet>218</a>    /// 4. commit to q(x) and sample r from transcript transcript contains: w
+<a href=#219 id=219 data-nosnippet>219</a>    ///    commitment, points, q(x)'s commitment
 <a href=#220 id=220 data-nosnippet>220</a>    /// 5. build q(omega^i) and their openings
 <a href=#221 id=221 data-nosnippet>221</a>    /// 6. build q(r) and its opening
 <a href=#222 id=222 data-nosnippet>222</a>    /// 7. get a point `p := l(r)`
@@ -261,7 +261,7 @@
 <a href=#261 id=261 data-nosnippet>261</a>    /// 2. sample `r` from transcript
 <a href=#262 id=262 data-nosnippet>262</a>    /// 3. check `q(r) == value`
 <a href=#263 id=263 data-nosnippet>263</a>    /// 4. build `l(points)` which is a list of univariate polynomials that goes
-<a href=#264 id=264 data-nosnippet>264</a>    /// through the points
+<a href=#264 id=264 data-nosnippet>264</a>    ///    through the points
 <a href=#265 id=265 data-nosnippet>265</a>    /// 5. get a point `p := l(r)`
 <a href=#266 id=266 data-nosnippet>266</a>    /// 6. verifies `p` is verifies against proof
 <a href=#267 id=267 data-nosnippet>267</a>    </span><span class="kw">fn </span>batch_verify&lt;R: RngCore + CryptoRng&gt;(
@@ -383,7 +383,7 @@
 <a href=#383 id=383 data-nosnippet>383</a>
 <a href=#384 id=384 data-nosnippet>384</a>    <span class="kw">let </span>prepare_inputs_timer = <span class="macro">start_timer!</span>(|| <span class="string">"prepare pairing inputs"</span>);
 <a href=#385 id=385 data-nosnippet>385</a>
-<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">let </span>h_mul = verifier_param.h.clone().into_group().batch_mul(<span class="kw-2">&amp;</span>point);
+<a href=#386 id=386 data-nosnippet>386</a>    <span class="kw">let </span>h_mul = verifier_param.h.into_group().batch_mul(point);
 <a href=#387 id=387 data-nosnippet>387</a>
 <a href=#388 id=388 data-nosnippet>388</a>    <span class="comment">// the first `ignored` G2 parameters are unused
 <a href=#389 id=389 data-nosnippet>389</a>    </span><span class="kw">let </span>ignored = verifier_param.num_vars - num_var;
