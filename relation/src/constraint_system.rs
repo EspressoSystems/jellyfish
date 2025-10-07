@@ -251,14 +251,14 @@ pub trait Arithmetization<F: FftField>: Circuit<F> {
     }
 
     /// Compute and return the polynomial that interpolates the table domain
-    /// sepration ids. Return an error if the circuit does not support
+    /// separation ids. Return an error if the circuit does not support
     /// lookup or has not been finalized.
     fn compute_table_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
         Err(CircuitError::LookupUnsupported)
     }
 
     /// Compute and return the polynomial that interpolates the lookup domain
-    /// sepration selectors for the lookup gates. Return an error if the
+    /// separation selectors for the lookup gates. Return an error if the
     /// circuit does not support lookup or has not been finalized.
     fn compute_q_dom_sep_polynomial(&self) -> Result<DensePolynomial<F>, CircuitError> {
         Err(CircuitError::LookupUnsupported)
@@ -822,10 +822,10 @@ impl<F: FftField> PlonkCircuit<F> {
         self.eval_domain.size() != 1
     }
 
-    /// Re-arrange the order of the gates so that
+    /// Re-arrange the order of the gates so that:
     /// 1. io gates are in the front.
     /// 2. variable table lookup gate are at the rear so that they do not affect
-    /// the range gates when merging the lookup tables.
+    ///    the range gates when merging the lookup tables.
     ///
     /// Remember to pad gates before calling the method.
     fn rearrange_gates(&mut self) -> Result<(), CircuitError> {

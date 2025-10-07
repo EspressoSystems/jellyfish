@@ -190,11 +190,12 @@ where
 
     /// Batchly verify multiple (aggregated) PCS opening proofs.
     ///
-    /// We need to verify that
+    /// We need to verify that:
     /// - `e(Ai, [x]2) = e(Bi, [1]2) for i \in {0, .., m-1}`, where
     /// - `Ai = [open_proof_i] + u_i * [shifted_open_proof_i]` and
     /// - `Bi = eval_point_i * [open_proof_i] + u_i * next_eval_point_i *
     ///   [shifted_open_proof_i] + comm_i - eval_i * [1]1`.
+    ///
     /// By Schwartz-Zippel lemma, it's equivalent to check that for a random r:
     /// - `e(A0 + ... + r^{m-1} * Am, [x]2) = e(B0 + ... + r^{m-1} * Bm, [1]2)`.
     pub(crate) fn batch_verify_opening_proofs<T>(
@@ -214,9 +215,9 @@ where
             // protocol transcript. This approach is more secure as `r` depends not only
             // on the proofs, but also the list of public inputs and verifying keys.
             for pcs_info in pcs_infos {
-                transcript.append_challenge::<E>(b"u", &pcs_info.u)?;
+                transcript.append_field_elem::<E>(b"u", &pcs_info.u)?;
             }
-            transcript.get_and_append_challenge::<E>(b"r")?
+            transcript.get_challenge::<E>(b"r")?
         };
 
         // Compute A := A0 + r * A1 + ... + r^{m-1} * Am
@@ -287,7 +288,7 @@ where
             transcript.append_commitments(b"witness_poly_comms", wires_poly_comms)?;
         }
         let tau = if verify_keys.iter().any(|vk| vk.plookup_vk.is_some()) {
-            Some(transcript.get_and_append_challenge::<E>(b"tau")?)
+            Some(transcript.get_challenge::<E>(b"tau")?)
         } else {
             None
         };
@@ -298,8 +299,8 @@ where
             }
         }
 
-        let beta = transcript.get_and_append_challenge::<E>(b"beta")?;
-        let gamma = transcript.get_and_append_challenge::<E>(b"gamma")?;
+        let beta = transcript.get_challenge::<E>(b"beta")?;
+        let gamma = transcript.get_challenge::<E>(b"gamma")?;
         for prod_perm_poly_comm in batch_proof.prod_perm_poly_comms_vec.iter() {
             transcript.append_commitment(b"perm_poly_comms", prod_perm_poly_comm)?;
         }
@@ -310,9 +311,9 @@ where
             }
         }
 
-        let alpha = transcript.get_and_append_challenge::<E>(b"alpha")?;
+        let alpha = transcript.get_challenge::<E>(b"alpha")?;
         transcript.append_commitments(b"quot_poly_comms", &batch_proof.split_quot_poly_comms)?;
-        let zeta = transcript.get_and_append_challenge::<E>(b"zeta")?;
+        let zeta = transcript.get_challenge::<E>(b"zeta")?;
         for poly_evals in batch_proof.poly_evals_vec.iter() {
             transcript.append_proof_evaluations::<E>(poly_evals)?;
         }
@@ -322,10 +323,10 @@ where
             }
         }
 
-        let v = transcript.get_and_append_challenge::<E>(b"v")?;
+        let v = transcript.get_challenge::<E>(b"v")?;
         transcript.append_commitment(b"open_proof", &batch_proof.opening_proof)?;
         transcript.append_commitment(b"shifted_open_proof", &batch_proof.shifted_opening_proof)?;
-        let u = transcript.get_and_append_challenge::<E>(b"u")?;
+        let u = transcript.get_challenge::<E>(b"u")?;
         Ok(Challenges {
             tau,
             alpha,

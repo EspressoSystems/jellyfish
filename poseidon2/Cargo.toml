@@ -1,0 +1,36 @@
+[package]
+name = "jf-poseidon2"
+version = "0.2.0"
+description = "Poseidon2 algebraic hash functions implementation."
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+homepage = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+
+[features]
+default = ["bls12-381", "bn254"]
+# curve-named features contains constants for scalar fields of that curve
+bls12-381 = ["dep:ark-bls12-381"]
+bn254 = ["dep:ark-bn254"]
+
+[dependencies]
+ark-bls12-381 = { workspace = true, optional = true }
+ark-bn254 = { workspace = true, optional = true }
+ark-ff = { workspace = true }
+ark-std = { workspace = true }
+displaydoc = { workspace = true }
+hex = "0.4.3"
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
+lazy_static = "1.5.0"
+spongefish = { workspace = true }
+zeroize = { workspace = true }
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "p2_native"
+harness = false

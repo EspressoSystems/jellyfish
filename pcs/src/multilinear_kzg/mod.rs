@@ -18,12 +18,10 @@ use crate::{
 #[cfg(target_has_atomic = "ptr")]
 use alloc::sync::Arc;
 use ark_ec::{
-    pairing::Pairing,
-    scalar_mul::{fixed_base::FixedBase, variable_base::VariableBaseMSM},
-    AffineRepr, CurveGroup,
+    pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup, ScalarMul,
 };
 use ark_ff::PrimeField;
-use ark_poly::{DenseMultilinearExtension, MultilinearExtension};
+use ark_poly::{DenseMultilinearExtension, MultilinearExtension, Polynomial};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     borrow::Borrow,
@@ -37,6 +35,7 @@ use ark_std::{
     One, Zero,
 };
 use batching::{batch_open_internal, batch_verify_internal};
+use derive_where::derive_where;
 use srs::{MultilinearProverParam, MultilinearUniversalParams, MultilinearVerifierParam};
 use util::merge_polynomials;
 
@@ -51,8 +50,8 @@ pub struct MultilinearKzgPCS<E: Pairing> {
     phantom: PhantomData<E>,
 }
 
-#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
-#[derivative(Hash)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive_where(Hash)]
 /// proof of opening
 pub struct MultilinearKzgProof<E: Pairing> {
     /// Evaluation of quotients
@@ -181,7 +180,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     ///
     /// This function takes 2^{num_var +1} number of scalar multiplications over
     /// G1:
-    /// - it prodceeds with `num_var` number of rounds,
+    /// - it proceeds with `num_var` number of rounds,
     /// - at round i, we compute an MSM for `2^{num_var - i + 1}` number of G2
     ///   elements.
     fn open(
@@ -197,11 +196,11 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     /// - the prover parameters for multilinear KZG,
     /// - a list of polynomials,
     /// - a (batch) commitment to all polynomials,
-    /// - and a same number of points,
-    /// compute a batch opening for all the polynomials.
+    /// - and the same number of points, compute a batch opening for all the
+    ///   polynomials.
     ///
     /// For simplicity, this API requires each MLE to have only one point. If
-    /// the caller wish to use more than one points per MLE, it should be
+    /// the caller wish to use more than one point per MLE, it should be
     /// handled at the caller layer.
     ///
     /// Returns an error if the lengths do not match.
@@ -213,11 +212,11 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     ///
     /// Steps:
     /// 1. build `l(points)` which is a list of univariate polynomials that goes
-    /// through the points
+    ///    through the points
     /// 2. build MLE `w` which is the merge of all MLEs.
     /// 3. build `q(x)` which is a univariate polynomial `W circ l`
-    /// 4. commit to q(x) and sample r from transcript
-    /// transcript contains: w commitment, points, q(x)'s commitment
+    /// 4. commit to q(x) and sample r from transcript transcript contains: w
+    ///    commitment, points, q(x)'s commitment
     /// 5. build q(omega^i) and their openings
     /// 6. build q(r) and its opening
     /// 7. get a point `p := l(r)`
@@ -262,7 +261,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
     /// 2. sample `r` from transcript
     /// 3. check `q(r) == value`
     /// 4. build `l(points)` which is a list of univariate polynomials that goes
-    /// through the points
+    ///    through the points
     /// 5. get a point `p := l(r)`
     /// 6. verifies `p` is verifies against proof
     fn batch_verify<R: RngCore + CryptoRng>(
@@ -295,7 +294,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for MultilinearKzgPCS<E> {
 fn open_internal<E: Pairing>(
     prover_param: &MultilinearProverParam<E>,
     polynomial: &DenseMultilinearExtension<E::ScalarField>,
-    point: &[E::ScalarField],
+    point: &Vec<E::ScalarField>,
 ) -> Result<(MultilinearKzgProof<E>, E::ScalarField), PCSError> {
     let open_timer = start_timer!(|| format!("open mle with {} variable", polynomial.num_vars));
 
@@ -354,9 +353,7 @@ fn open_internal<E: Pairing>(
 
         end_timer!(ith_round);
     }
-    let eval = polynomial
-        .evaluate(point)
-        .ok_or_else(|| PCSError::InvalidParameters("fail to eval poly at the point".to_string()))?;
+    let eval = polynomial.evaluate(point);
     end_timer!(open_timer);
     Ok((MultilinearKzgProof { proofs }, eval))
 }
@@ -386,12 +383,7 @@ fn verify_internal<E: Pairing>(
 
     let prepare_inputs_timer = start_timer!(|| "prepare pairing inputs");
 
-    let scalar_size = E::ScalarField::MODULUS_BIT_SIZE as usize;
-    let window_size = FixedBase::get_mul_window_size(num_var);
-
-    let h_table =
-        FixedBase::get_window_table(scalar_size, window_size, verifier_param.h.into_group());
-    let h_mul: Vec<E::G2> = FixedBase::msm(scalar_size, window_size, &h_table, point);
+    let h_mul = verifier_param.h.into_group().batch_mul(point);
 
     // the first `ignored` G2 parameters are unused
     let ignored = verifier_param.num_vars - num_var;

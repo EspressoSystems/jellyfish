@@ -11,12 +11,13 @@ use ark_ff::PrimeField;
 use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 
 mod universal_merkle_tree;
-use ark_std::{string::ToString, vec::Vec};
+use ark_std::{string::ToString, vec, vec::Vec};
 
 use crate::{
-    internal::{MerkleNode, MerklePath, MerkleProof},
+    internal::{MerkleNode, MerkleTreeProof},
     prelude::RescueMerkleTree,
-    Element, Index, MerkleTreeScheme, NodeValue, ToTraversalPath, UniversalMerkleTreeScheme,
+    Element, Index, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    UniversalMerkleTreeScheme,
 };
 use jf_rescue::RescueParameter;
 type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
@@ -30,35 +31,39 @@ use jf_rescue::gadgets::RescueNativeGadget;
 /// use ark_bls12_377::Fq;
 /// use jf_merkle_tree::gadgets::MerkleTreeGadget;
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme, MerkleCommitment};
+/// use jf_merkle_tree::{prelude::RescueMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 ///
 /// let mut circuit = PlonkCircuit::<Fq>::new_turbo_plonk();
 /// // Create a 3-ary MT, instantiated with a Rescue-based hash, of height 1.
 /// let elements = vec![Fq::from(1_u64), Fq::from(2_u64), Fq::from(100_u64)];
 /// let mt = RescueMerkleTree::<Fq>::from_elems(Some(1), elements).unwrap();
-/// let expected_root = mt.commitment().digest();
+/// let commitment = mt.commitment();
 /// // Get a proof for the element in position 2
-/// let (_, proof) = mt.lookup(2).expect_ok().unwrap();
+/// let (elem, proof) = mt.lookup(2).expect_ok().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let elem_idx = circuit.create_variable(2_u64.into()).unwrap();
+/// let pos = 2_u64;
+/// let elem_idx = circuit.create_variable(pos.into()).unwrap();
+/// let elem_var = circuit.create_variable(*elem).unwrap();
 /// let proof_var =
 ///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_membership_proof_variable(
 ///         &mut circuit,
+///         &pos,
 ///         &proof
 ///     )
 ///     .unwrap();
-/// let root_var =
-///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_root_variable(
+/// let commitment_var =
+///     MerkleTreeGadget::<RescueMerkleTree<Fq>>::create_commitment_variable(
 ///         &mut circuit,
-///         expected_root
+///         &commitment
 ///     )
 ///     .unwrap();
 /// MerkleTreeGadget::<RescueMerkleTree<Fq>>::enforce_membership_proof(
 ///     &mut circuit,
 ///     elem_idx,
-///     proof_var,
-///     root_var
+///     elem_var,
+///     &proof_var,
+///     commitment_var
 /// )
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -79,31 +84,38 @@ where
     /// Allocate a variable for the membership proof.
     fn create_membership_proof_variable(
         &mut self,
+        pos: &M::Index,
         membership_proof: &M::MembershipProof,
     ) -> Result<Self::MembershipProofVar, CircuitError>;
 
     /// Allocate a variable for the merkle root.
-    fn create_root_variable(&mut self, root: M::NodeValue) -> Result<Variable, CircuitError>;
+    fn create_commitment_variable(
+        &mut self,
+        commitment: &M::Commitment,
+    ) -> Result<Variable, CircuitError>;
 
     /// Given variables representing:
     /// * an element index
+    /// * the element itself
     /// * its merkle proof
-    /// * root
+    /// * Merkle commitment
     /// * return `BoolVar` indicating the correctness of its membership proof.
     fn is_member(
         &mut self,
         elem_idx_var: Variable,
-        proof_var: Self::MembershipProofVar,
-        root_var: Variable,
+        elem_var: Variable,
+        proof_var: &Self::MembershipProofVar,
+        commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
     /// Enforce correct `proof_var` for the `elem_idx_var` against
-    /// `expected_root_var`.
+    /// `commitment_var`.
     fn enforce_membership_proof(
         &mut self,
         elem_idx_var: Variable,
-        proof_var: Self::MembershipProofVar,
-        expected_root_var: Variable,
+        elem_var: Variable,
+        proof_var: &Self::MembershipProofVar,
+        commitment_var: Variable,
     ) -> Result<(), CircuitError>;
 }
 
@@ -115,7 +127,7 @@ where
 /// use ark_bls12_377::Fq;
 /// use jf_merkle_tree::gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget};
 /// use jf_relation::{Circuit, PlonkCircuit};
-/// use jf_merkle_tree::{MerkleTreeScheme, MerkleCommitment, UniversalMerkleTreeScheme,
+/// use jf_merkle_tree::{MerkleTreeScheme, UniversalMerkleTreeScheme,
 ///     prelude::RescueSparseMerkleTree};
 /// use hashbrown::HashMap;
 /// use num_bigint::BigUint;
@@ -128,30 +140,32 @@ where
 /// hashmap.insert(BigUint::from(2u64), Fq::from(2u64));
 /// hashmap.insert(BigUint::from(1u64), Fq::from(3u64));
 /// let mt = SparseMerkleTree::<Fq>::from_kv_set(2, &hashmap).unwrap();
-/// let expected_root = mt.commitment().digest();
-/// // Get a proof for the element in position 2
-/// let proof = mt.universal_lookup(&BigUint::from(3u64)).expect_not_found().unwrap();
+/// let commitment = mt.commitment();
+/// // Get a proof for the element in position 3
+/// let pos = BigUint::from(3u64);
+/// let proof = mt.universal_lookup(&pos).expect_not_found().unwrap();
 ///
 /// // Circuit computation with a MT
-/// let non_elem_idx_var = circuit.create_variable(BigUint::from(3u64).into()).unwrap();
+/// let non_elem_idx_var = circuit.create_variable(pos.clone().into()).unwrap();
 ///
 /// let proof_var =
 ///     UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::create_non_membership_proof_variable(
 ///         &mut circuit,
+///         &pos,
 ///         &proof
 ///     )
 ///     .unwrap();
-/// let root_var =
-///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_root_variable(
+/// let commitment_var =
+///     MerkleTreeGadget::<SparseMerkleTree<Fq>>::create_commitment_variable(
 ///         &mut circuit,
-///         expected_root
+///         &commitment
 ///     )
 ///     .unwrap();
 /// UniversalMerkleTreeGadget::<SparseMerkleTree<Fq>>::enforce_non_membership_proof(
 ///     &mut circuit,
 ///     non_elem_idx_var,
-///     proof_var,
-///     root_var
+///     &proof_var,
+///     commitment_var
 /// )
 /// .unwrap();
 /// assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
@@ -169,24 +183,25 @@ where
     /// Allocate a variable for the membership proof.
     fn create_non_membership_proof_variable(
         &mut self,
-        membership_proof: &M::NonMembershipProof,
+        pos: &M::Index,
+        non_membership_proof: &M::NonMembershipProof,
     ) -> Result<Self::NonMembershipProofVar, CircuitError>;
 
     /// checking non-membership proof
     fn is_non_member(
         &mut self,
         non_elem_idx_var: Variable,
-        proof_var: Self::NonMembershipProofVar,
-        root_var: Variable,
+        proof_var: &Self::NonMembershipProofVar,
+        commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError>;
 
     /// Enforce correct `proof_var` for the empty elem `empty_elem_idx_var`
-    /// against `expected_root_var`.
+    /// against `expected_commitment_var`.
     fn enforce_non_membership_proof(
         &mut self,
         non_elem_idx_var: Variable,
-        proof_var: Self::NonMembershipProofVar,
-        expected_root_var: Variable,
+        proof_var: &Self::NonMembershipProofVar,
+        expected_commitment_var: Variable,
     ) -> Result<(), CircuitError>;
 }
 
@@ -232,24 +247,12 @@ pub struct Merkle3AryNodeVar {
     is_right_child: BoolVar,
 }
 
-/// Circuit variable for a Merkle non-membership proof of a 3-ary Merkle tree.
-/// Contains:
-/// * a list of node variables in the path,
-/// * a variable correseponsing to the position of the element.
-#[derive(Debug, Clone)]
-pub struct Merkle3AryNonMembershipProofVar {
-    node_vars: Vec<Merkle3AryNodeVar>,
-    pos_var: Variable,
-}
-
 /// Circuit variable for a Merkle proof of a 3-ary Merkle tree.
 /// Contains:
 /// * a list of node variables in the path,
-/// * a variable correseponsing to the value of the element.
 #[derive(Debug, Clone)]
-pub struct Merkle3AryMembershipProofVar {
+pub struct Merkle3AryProofVar {
     node_vars: Vec<Merkle3AryNodeVar>,
-    elem_var: Variable,
 }
 /// Circuit counterpart to DigestAlgorithm
 pub trait DigestAlgorithmGadget<F>
@@ -272,7 +275,12 @@ pub struct RescueDigestGadget {}
 
 impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
     fn digest(circuit: &mut PlonkCircuit<F>, data: &[Variable]) -> Result<Variable, CircuitError> {
-        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, data, 1)?[0])
+        let zero = circuit.zero();
+        let mut input = vec![zero];
+        input.extend(data.iter());
+        let len = jf_utils::compute_len_to_next_multiple(input.len(), jf_rescue::CRHF_RATE);
+        input.resize(len, zero);
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &input, 1)?[0])
     }
 
     fn digest_leaf(
@@ -280,91 +288,39 @@ impl<F: RescueParameter> DigestAlgorithmGadget<F> for RescueDigestGadget {
         pos: Variable,
         elem: Variable,
     ) -> Result<Variable, CircuitError> {
+        let one = circuit.one();
         let zero = circuit.zero();
-        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &[zero, pos, elem], 1)?[0])
+        let mut input = vec![one, pos, elem];
+        let len = jf_utils::compute_len_to_next_multiple(input.len(), jf_rescue::CRHF_RATE);
+        input.resize(len, zero);
+        Ok(RescueNativeGadget::<F>::rescue_sponge_no_padding(circuit, &input, 1)?[0])
     }
 }
 
-/// Proof of membership
-pub trait MembershipProof<E, I, T>
+impl<T, F> MerkleTreeGadget<T> for PlonkCircuit<F>
 where
-    E: Element,
-    I: Index,
-    T: NodeValue,
-{
-    /// Get the tree height
-    fn tree_height(&self) -> usize;
-    /// Get index of element
-    fn index(&self) -> &I;
-    /// Get the element
-    fn elem(&self) -> Option<&E>;
-    /// Get the merkle path to the element
-    fn merkle_path(&self) -> &MerklePath<E, I, T>;
-}
-
-impl<E, I, T, const ARITY: usize> MembershipProof<E, I, T> for MerkleProof<E, I, T, ARITY>
-where
-    E: Element,
-    I: Index,
-    T: NodeValue,
-{
-    fn tree_height(&self) -> usize {
-        self.tree_height()
-    }
-    fn index(&self) -> &I {
-        self.index()
-    }
-    fn elem(&self) -> Option<&E> {
-        self.elem()
-    }
-    fn merkle_path(&self) -> &MerklePath<E, I, T> {
-        &self.proof
-    }
-}
-
-impl<T> MerkleTreeGadget<T> for PlonkCircuit<T::NodeValue>
-where
-    T: MerkleTreeScheme,
-    T::MembershipProof: MembershipProof<T::NodeValue, T::Index, T::NodeValue>,
-    T::NodeValue: PrimeField + RescueParameter,
+    T: MerkleTreeScheme<NodeValue = F, Commitment = F>,
+    F: PrimeField + RescueParameter,
     T::Index: ToTraversalPath<3>,
 {
-    type MembershipProofVar = Merkle3AryMembershipProofVar;
+    type MembershipProofVar = Merkle3AryProofVar;
 
     type DigestGadget = RescueDigestGadget;
 
     fn create_membership_proof_variable(
         &mut self,
+        pos: &<T as MerkleTreeScheme>::Index,
         merkle_proof: &<T as MerkleTreeScheme>::MembershipProof,
-    ) -> Result<Merkle3AryMembershipProofVar, CircuitError> {
-        let path = merkle_proof
-            .index()
-            .to_traversal_path(merkle_proof.tree_height() - 1);
-
-        let elem = match merkle_proof.elem() {
-            Some(elem) => elem,
-            None => {
-                return Err(CircuitError::InternalError(
-                    "The proof doesn't contain a leaf element".to_string(),
-                ))
-            },
-        };
-
-        let elem_var = self.create_variable(*elem)?;
+    ) -> Result<Merkle3AryProofVar, CircuitError> {
+        let path = pos.to_traversal_path(merkle_proof.height());
 
         let nodes = path
             .iter()
-            .zip(merkle_proof.merkle_path().iter().skip(1))
-            .filter_map(|(branch, node)| match node {
-                MerkleNode::Branch { value: _, children } => Some((children, branch)),
-                _ => None,
-            })
-            .map(|(children, branch)| {
-                let sib_branch1 = if branch == &0 { 1 } else { 0 };
-                let sib_branch2 = if branch == &2 { 1 } else { 2 };
+            .zip(merkle_proof.path_values())
+            .map(|(branch, siblings)| {
                 Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(children[sib_branch1].value())?,
-                    sibling2: self.create_variable(children[sib_branch2].value())?,
+                    sibling1: self.create_variable(siblings[0])?,
+                    sibling2: self.create_variable(siblings[1])?,
                     is_left_child: self.create_boolean_variable(branch == &0)?,
                     is_right_child: self.create_boolean_variable(branch == &2)?,
                 })
@@ -381,31 +337,26 @@ where
             self.enforce_bool(left_plus_right)?;
         }
 
-        Ok(Merkle3AryMembershipProofVar {
-            node_vars: nodes,
-            elem_var,
-        })
+        Ok(Merkle3AryProofVar { node_vars: nodes })
     }
 
-    fn create_root_variable(
+    fn create_commitment_variable(
         &mut self,
-        root: NodeVal<T::NodeValue>,
+        commitment: &<T as MerkleTreeScheme>::Commitment,
     ) -> Result<Variable, CircuitError> {
-        self.create_variable(root)
+        self.create_variable(*commitment)
     }
 
     fn is_member(
         &mut self,
         elem_idx_var: Variable,
-        proof_var: Merkle3AryMembershipProofVar,
-        root_var: Variable,
+        elem_var: Variable,
+        proof_var: &Merkle3AryProofVar,
+        commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        let computed_root_var = {
-            let proof_var = &proof_var;
-
+        let computed_commitment_var = {
             // elem label = H(0, uid, elem)
-            let mut cur_label =
-                Self::DigestGadget::digest_leaf(self, elem_idx_var, proof_var.elem_var)?;
+            let mut cur_label = Self::DigestGadget::digest_leaf(self, elem_idx_var, elem_var)?;
             for cur_node in proof_var.node_vars.iter() {
                 let input_labels = constrain_sibling_order(
                     self,
@@ -421,17 +372,23 @@ where
             }
             Ok(cur_label)
         }?;
-        self.is_equal(root_var, computed_root_var)
+        self.is_equal(commitment_var, computed_commitment_var)
     }
 
     fn enforce_membership_proof(
         &mut self,
         elem_idx_var: Variable,
-        proof_var: Merkle3AryMembershipProofVar,
-        expected_root_var: Variable,
+        elem_var: Variable,
+        proof_var: &Merkle3AryProofVar,
+        commitment_var: Variable,
     ) -> Result<(), CircuitError> {
-        let bool_val =
-            MerkleTreeGadget::<T>::is_member(self, elem_idx_var, proof_var, expected_root_var)?;
+        let bool_val = MerkleTreeGadget::<T>::is_member(
+            self,
+            elem_idx_var,
+            elem_var,
+            proof_var,
+            commitment_var,
+        )?;
         self.enforce_true(bool_val.into())
     }
 }
@@ -439,10 +396,10 @@ where
 #[cfg(test)]
 mod test {
     use crate::{
-        gadgets::{constrain_sibling_order, Merkle3AryMembershipProofVar, MerkleTreeGadget},
+        gadgets::{constrain_sibling_order, Merkle3AryProofVar, MerkleTreeGadget},
         internal::MerkleNode,
         prelude::RescueMerkleTree,
-        MerkleCommitment, MerkleTreeScheme,
+        MerkleTreeScheme,
     };
     use alloc::sync::Arc;
     use ark_bls12_377::Fq as Fq377;
@@ -560,36 +517,40 @@ mod test {
             let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
             let mut elements = (1u64..=9u64).map(|x| F::from(x)).collect::<Vec<_>>();
             elements[uid as usize] = elem;
-            let mt = RescueMerkleTree::<F>::from_elems(Some(2), elements).unwrap();
-            let expected_root = mt.commitment().digest();
+            let mt = RescueMerkleTree::<F>::from_elems(Some(2), &elements).unwrap();
+            let commitment = mt.commitment();
             let (retrieved_elem, proof) = mt.lookup(uid).expect_ok().unwrap();
             assert_eq!(retrieved_elem, &elem);
 
             // Happy path
             // Circuit computation with a MT
             let elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
-            let proof_var: Merkle3AryMembershipProofVar =
+            let elem_var: Variable = circuit.create_variable(elements[uid as usize]).unwrap();
+            let proof_var =
                 MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
                     &mut circuit,
+                    &uid,
                     &proof,
                 )
                 .unwrap();
-            let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
-                &mut circuit,
-                expected_root,
-            )
-            .unwrap();
+            let commitment_var =
+                MerkleTreeGadget::<RescueMerkleTree<F>>::create_commitment_variable(
+                    &mut circuit,
+                    &commitment,
+                )
+                .unwrap();
 
             MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
                 &mut circuit,
                 elem_idx_var,
-                proof_var,
-                root_var,
+                elem_var,
+                &proof_var,
+                commitment_var,
             )
             .unwrap();
 
             assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
-            *circuit.witness_mut(root_var) = F::zero();
+            *circuit.witness_mut(commitment_var) = F::zero();
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
             // Bad path:
@@ -599,28 +560,28 @@ mod test {
             let elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
 
             let mut bad_proof = proof.clone();
+            bad_proof.0[1][0] = F::zero();
 
-            if let MerkleNode::Branch { value: _, children } = &mut bad_proof.proof[1] {
-                let left_sib = if uid % 3 == 0 { 1 } else { 0 };
-                children[left_sib] = Arc::new(MerkleNode::ForgettenSubtree { value: F::zero() });
-            }
-            let path_vars: Merkle3AryMembershipProofVar =
+            let proof_var =
                 MerkleTreeGadget::<RescueMerkleTree<F>>::create_membership_proof_variable(
                     &mut circuit,
+                    &uid,
                     &bad_proof,
                 )
                 .unwrap();
-            let root_var = MerkleTreeGadget::<RescueMerkleTree<F>>::create_root_variable(
-                &mut circuit,
-                expected_root,
-            )
-            .unwrap();
+            let commitment_var =
+                MerkleTreeGadget::<RescueMerkleTree<F>>::create_commitment_variable(
+                    &mut circuit,
+                    &commitment,
+                )
+                .unwrap();
 
             MerkleTreeGadget::<RescueMerkleTree<F>>::enforce_membership_proof(
                 &mut circuit,
                 elem_idx_var,
-                path_vars,
-                root_var,
+                elem_var,
+                &proof_var,
+                commitment_var,
             )
             .unwrap();
 

@@ -11,8 +11,6 @@
 //! independent of RustCrypto's upstream changes.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -23,7 +21,7 @@ extern crate alloc;
 
 use ark_serialize::*;
 use ark_std::{
-    fmt, format,
+    fmt,
     ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
     vec::Vec,
@@ -32,12 +30,10 @@ use chacha20poly1305::{
     aead::{Aead, AeadCore, Payload},
     KeyInit, XChaCha20Poly1305, XNonce,
 };
-use derivative::Derivative;
 use displaydoc::Display;
 use serde::{Deserialize, Deserializer, Serialize};
 
-#[derive(Clone, Eq, Derivative, Serialize, Deserialize)]
-#[derivative(PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Serialize, Deserialize, Hash)]
 /// Public/encryption key for AEAD
 pub struct EncKey(crypto_kx::PublicKey);
 
@@ -95,7 +91,7 @@ impl EncKey {
         // generate an ephemeral key pair as the virtual sender to derive the crypto box
         let ephemeral_keypair = crypto_kx::Keypair::generate(&mut rng);
         // `crypto_kx` generates a pair of shared secrets, see <https://libsodium.gitbook.io/doc/key_exchange>
-        // we use the transimission key of the ephemeral sender (equals to the receiving
+        // we use the transmission key of the ephemeral sender (equals to the receiving
         // key of the server) as the shared secret.
         let shared_secret = ephemeral_keypair.session_keys_to(&self.0).tx;
         let cipher = XChaCha20Poly1305::new(shared_secret.as_ref().into());
@@ -474,7 +470,7 @@ mod test {
             keypair,
             KeyPair::deserialize_compressed(&bytes[..]).unwrap()
         );
-        assert!(KeyPair::deserialize_compressed(&bytes[1..]).is_err());
+        assert!(KeyPair::deserialize_compressed(&bytes[..bytes.len() - 1]).is_err());
 
         let mut bytes = Vec::new();
         CanonicalSerialize::serialize_compressed(&ciphertext, &mut bytes).unwrap();
@@ -482,6 +478,6 @@ mod test {
             ciphertext,
             Ciphertext::deserialize_compressed(&bytes[..]).unwrap()
         );
-        assert!(Ciphertext::deserialize_compressed(&bytes[1..]).is_err());
+        assert!(Ciphertext::deserialize_compressed(&bytes[..bytes.len() - 1]).is_err());
     }
 }

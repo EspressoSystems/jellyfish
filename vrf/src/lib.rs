@@ -7,8 +7,6 @@
 //! Verifiable random functions (VRF).
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -40,15 +38,7 @@ pub trait Vrf {
         + Eq;
 
     /// VRF secret key.
-    type SecretKey: Debug
-        + Clone
-        + Send
-        + Sync
-        + Zeroize
-        + for<'a> Deserialize<'a>
-        + Serialize
-        + PartialEq
-        + Eq;
+    type SecretKey: Debug + Clone + Send + Sync + Zeroize + PartialEq + Eq;
 
     /// VRF signature.
     type Proof: Debug + Clone + Send + Sync + for<'a> Deserialize<'a> + Serialize + PartialEq + Eq;
@@ -67,7 +57,7 @@ pub trait Vrf {
     // FIXME: the API looks a bit strange when the default generator is used.
     // For example:
     //   `S::param_gen::<StdRng>(None)`
-    // wheere `StdRng` is redundant.
+    // where `StdRng` is redundant.
     fn param_gen<R: CryptoRng + RngCore>(
         &self,
         prng: Option<&mut R>,

@@ -18,22 +18,23 @@ For general discussions on Jellyfish PLONK, please join our [Discord channel](ht
 - ['jf-utils'](utilities): utilities and helper functions.
 
 ### Primitives
-- ['jf-prf'](prf): trait definitions for pesudorandom function (PRF).
-- ['jf-crhf'](crhf): trait definitions for collision-resistant hash function (CRHF).
-- ['jf-commitment'](commitment): trait definitions for cryptographic commitment scheme.
-- ['jf-rescue'](rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
-- ['jf-elgamal'](elgamal): a Rescue-based ElGamal encryption scheme implementation.
-- ['jf-signature'](signature): signature scheme trait definition, and BLS/Schnorr signature scheme implementations.
-- ['jf-vrf'](vrf): verifiable random function trait definition and BLS-based implementation.
-- ['jf-aead'](aead): authenticated encryption with associated data (AEAD) implementation.
-- ['jf-merkle-tree'](merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
-- ['jf-pcs'](pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
-- ['jf-vdf'](vdf): verifiable delay function (VDF) trait definitions and (non-verifiable) MinRoot implementation.
-- ['jf-vid'](vid): verifiable information dispersal (VID) trait definition and implementation.
+- [`jf-prf`](prf): trait definitions for pseudorandom function (PRF).
+- [`jf-crhf`](crhf): trait definitions for collision-resistant hash function (CRHF).
+- [`jf-commitment`](commitment): trait definitions for cryptographic commitment scheme.
+- [`jf-rescue`](rescue): Rescue hash function, and its subsequent PRF, CRHF, commitment scheme implementations.
+- [`jf-elgamal`](elgamal): a Rescue-based ElGamal encryption scheme implementation.
+- [`jf-signature`](signature): signature scheme trait definition, and BLS/Schnorr signature scheme implementations.
+- [`jf-vrf`](vrf): verifiable random function trait definition and BLS-based implementation.
+- [`jf-aead`](aead): authenticated encryption with associated data (AEAD) implementation.
+- [`jf-merkle-tree`](merkle_tree): various (vanilla, sparse, namespaced) Merkle tree trait definitions and implementations.
+- [`jf-pcs`](pcs): polynomial commitment scheme (PCS) trait definitions and univariate/multilinear KZG-PCS implementations.
+- [`jf-poseidon2`](poseidon2): Poseidon2 permutation, and Sponge, CRHF, derived from this permutation.
+
+The `jf-vid` crate is now moved to another repo [`jf-advz`](https://github.com/EspressoSystems/jellyfish-compat/tree/main/advz).
 
 ### Plonk
-- ['jf-relation'](relation): Jellyfish constraint system for PLONK.
-- ['jf-plonk'](plonk): KZG-PCS based TurboPlonk and UltraPlonk implementations.
+- [`jf-relation`](relation): Jellyfish constraint system for PLONK.
+- [`jf-plonk`](plonk): KZG-PCS based TurboPlonk and UltraPlonk implementations.
 
 ## Development environment setup
 

@@ -6,15 +6,9 @@
 //! Module for signature primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
-
-#[cfg(any(test, feature = "schnorr"))]
-#[macro_use]
-extern crate derivative;
 
 #[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
 #[doc(hidden)]
@@ -47,6 +41,13 @@ use zeroize::Zeroize;
 pub enum SignatureError {
     /// Bad parameter in function call, {0}
     ParameterError(String),
+    /// Value is not in the right subgroup
+    FailedSubgroupCheck,
+    /// Value is not on the right elliptic curve
+    FailedOnCurveCheck,
+    // union over `FailedSubgroupCheck` and `FailedOnCurveCheck`
+    /// Value is not valid (possible cause: not on curve, in wrong subgroup,)
+    FailedValidityCheck,
     /// Verification failed, {0}
     VerificationError(String),
 }
@@ -74,15 +75,7 @@ pub trait SignatureScheme: Clone + Send + Sync + 'static {
     const CS_ID: &'static str;
 
     /// Signing key.
-    type SigningKey: Debug
-        + Clone
-        + Send
-        + Sync
-        + Zeroize
-        + for<'a> Deserialize<'a>
-        + Serialize
-        + PartialEq
-        + Eq;
+    type SigningKey: Debug + Clone + Send + Sync + Zeroize + PartialEq + Eq;
 
     /// Verification key
     type VerificationKey: Debug

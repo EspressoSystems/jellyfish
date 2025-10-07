@@ -10,7 +10,7 @@
 use super::{append_only::MerkleTree, prelude::RescueHash, DigestAlgorithm};
 use crate::errors::MerkleTreeError;
 use ark_ff::Field;
-use ark_std::format;
+use ark_std::{format, vec};
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 
 /// Element type for interval merkle tree
@@ -20,12 +20,14 @@ pub struct Interval<F: Field>(pub F, pub F);
 
 impl<F: RescueParameter> DigestAlgorithm<Interval<F>, u64, F> for RescueHash<F> {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
-        Ok(RescueCRHF::<F>::sponge_no_padding(data, 1)
+        let mut input = vec![F::zero()];
+        input.extend(data.iter());
+        Ok(RescueCRHF::<F>::sponge_no_padding(&input, 1)
             .map_err(|err| MerkleTreeError::DigestError(format!("{}", err)))?[0])
     }
 
     fn digest_leaf(pos: &u64, elem: &Interval<F>) -> Result<F, MerkleTreeError> {
-        let data = [F::from(*pos), elem.0, elem.1];
+        let data = [F::one(), F::from(*pos), elem.0, elem.1];
         Ok(RescueCRHF::<F>::sponge_no_padding(&data, 1)
             .map_err(|err| MerkleTreeError::DigestError(format!("{}", err)))?[0])
     }

@@ -7,6 +7,7 @@
 
 use ark_std::string::String;
 use displaydoc::Display;
+use jf_poseidon2::Poseidon2Error;
 use jf_rescue::RescueError;
 
 /// Error type for Merkle tree
@@ -32,6 +33,12 @@ impl ark_std::error::Error for MerkleTreeError {}
 
 impl From<RescueError> for MerkleTreeError {
     fn from(err: RescueError) -> Self {
+        MerkleTreeError::DigestError(ark_std::format!("{}", err))
+    }
+}
+
+impl From<Poseidon2Error> for MerkleTreeError {
+    fn from(err: Poseidon2Error) -> Self {
         MerkleTreeError::DigestError(ark_std::format!("{}", err))
     }
 }

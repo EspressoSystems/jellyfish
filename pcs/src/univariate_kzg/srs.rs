@@ -10,6 +10,7 @@ use crate::{PCSError, StructuredReferenceString};
 use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
+use derive_where::derive_where;
 
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
 // Adapted from
@@ -44,8 +45,8 @@ pub struct UnivariateProverParam<E: Pairing> {
 
 /// `UnivariateVerifierParam` is used to check evaluation proofs for a given
 /// commitment.
-#[derive(Derivative, Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
-#[derivative(Default)]
+#[derive(Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
+#[derive_where(Default)]
 pub struct UnivariateVerifierParam<E: Pairing> {
     /// TODO: remove g, h and beta_h
     /// The generator of G1.
@@ -162,12 +163,13 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
 mod tests {
     use super::UnivariateUniversalParams;
     use crate::PCSError;
-    use ark_ec::{pairing::Pairing, scalar_mul::fixed_base::FixedBase, CurveGroup};
-    use ark_ff::PrimeField;
+    use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, ScalarMul};
     use ark_std::{
         end_timer,
         rand::{CryptoRng, RngCore},
-        start_timer, vec, One, UniformRand,
+        start_timer, vec,
+        vec::Vec,
+        One, UniformRand,
     };
 
     pub(crate) fn gen_srs_for_testing<E: Pairing, R: RngCore + CryptoRng>(
@@ -193,14 +195,12 @@ mod tests {
             cur *= &beta;
         }
 
-        let window_size = FixedBase::get_mul_window_size(prover_degree + 1);
-
-        let scalar_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
         let g_time = start_timer!(|| "Generating powers of G");
-        // TODO: parallelization
-        let g_table = FixedBase::get_window_table(scalar_bits, window_size, g);
-        let powers_of_g =
-            FixedBase::msm::<E::G1>(scalar_bits, window_size, &g_table, &powers_of_beta);
+        let powers_of_g = g
+            .batch_mul(&powers_of_beta)
+            .into_iter()
+            .map(|p| p.into_group())
+            .collect::<Vec<_>>();
         end_timer!(g_time);
 
         let powers_of_g = E::G1::normalize_batch(&powers_of_g);

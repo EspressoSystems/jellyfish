@@ -63,9 +63,8 @@
               clangStdenv
               llvm_15
               typos
-              grcov
-            ] ++ lib.optionals stdenv.isDarwin
-              [ darwin.apple_sdk.frameworks.Security ];
+              # grcov # TODO uncomment this line after https://github.com/mozilla/grcov/issues/1187#issuecomment-2252214718
+            ];
 
             CARGO_TARGET_DIR = "target/nix_rustc";
 
@@ -88,11 +87,10 @@
               # by default choose u64_backend
               export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
             ''
-            # install pre-commit hooks
-            + self.check.${system}.pre-commit-check.shellHook;
+              # install pre-commit hooks
+              + self.check.${system}.pre-commit-check.shellHook;
           };
-      in
-      with pkgs; {
+      in with pkgs; {
         check = {
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;
@@ -144,7 +142,6 @@
                 ++ [ cmake cudatoolkit util-linux gcc11 ];
               # CXX is overridden to use gcc as icicle-curves's build scripts need them
               shellHook = oldAttrs.shellHook + ''
-
                 export PATH="${pkgs.gcc11}/bin:${cudatoolkit}/bin:${cudatoolkit}/nvvm/bin:$PATH"
                 export LD_LIBRARY_PATH=${cudatoolkit}/lib
                 export CUDA_PATH=${cudatoolkit}

@@ -22,6 +22,7 @@ use ark_ff::{FftField, Field, Fp2, Fp2Config, PrimeField, Zero};
 use ark_poly::univariate::DensePolynomial;
 use ark_serialize::*;
 use ark_std::{format, string::ToString, vec, vec::Vec};
+use derive_where::derive_where;
 use espresso_systems_common::jellyfish::tag;
 use hashbrown::HashMap;
 use jf_pcs::prelude::{
@@ -48,8 +49,8 @@ pub type OpenKey<E> = UnivariateVerifierParam<E>;
 
 /// A Plonk SNARK proof.
 #[tagged(tag::PROOF)]
-#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Hash; E: Pairing)]
 pub struct Proof<E: Pairing> {
     /// Wire witness polynomials commitments.
     pub wires_poly_comms: Vec<Commitment<E>>,
@@ -205,8 +206,8 @@ where
 }
 
 /// A Plookup argument proof.
-#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Hash; E: Pairing)]
 pub struct PlookupProof<E: Pairing> {
     /// The commitments for the polynomials that interpolate the sorted
     /// concatenation of the lookup table and the witnesses in the lookup gates.
@@ -221,8 +222,8 @@ pub struct PlookupProof<E: Pairing> {
 
 /// An aggregated SNARK proof that batchly proving multiple instances.
 #[tagged(tag::BATCHPROOF)]
-#[derive(Debug, Clone, Eq, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(PartialEq, Hash(bound = "E:Pairing"))]
+#[derive(Debug, Clone, Eq, PartialEq, CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Hash; E: Pairing)]
 pub struct BatchProof<E: Pairing> {
     /// The list of wire witness polynomials commitments.
     pub(crate) wires_poly_comms_vec: Vec<Vec<Commitment<E>>>,
@@ -289,7 +290,6 @@ impl<T: PrimeField> ProofEvaluations<T> {
     /// create variables for the ProofEvaluations who's field
     /// is smaller than plonk circuit field.
     /// The output wires are in the FpElemVar form.
-
     pub(crate) fn create_variables<F>(
         &self,
         circuit: &mut PlonkCircuit<F>,

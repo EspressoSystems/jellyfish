@@ -7,6 +7,8 @@
 //! This module implements the Schnorr signature over the various Edwards
 //! curves.
 
+use core::fmt::Debug;
+
 use super::SignatureScheme;
 use crate::{
     constants::{tag, CS_ID_SCHNORR},
@@ -14,9 +16,9 @@ use crate::{
 };
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveConfig, CurveGroup, Group,
+    AffineRepr, CurveConfig, CurveGroup, PrimeGroup,
 };
-use ark_ff::PrimeField;
+use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::*;
 use ark_std::{
     hash::{Hash, Hasher},
@@ -26,10 +28,11 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use derive_where::derive_where;
 use jf_crhf::CRHF;
 use jf_rescue::{crhf::VariableLengthRescueCRHF, RescueParameter};
 use jf_utils::{fq_to_fr, fq_to_fr_with_mask, fr_to_fq};
-use tagged_base64::tagged;
+use tagged_base64::{tagged, TaggedBase64, Tb64Error};
 use zeroize::Zeroize;
 
 /// Schnorr signature scheme.
@@ -101,21 +104,19 @@ where
 // =====================================================
 // Signing key
 // =====================================================
-#[tagged(tag::SCHNORR_SIGNING_KEY)]
-#[derive(
-    Clone,
-    Hash,
-    Default,
-    Zeroize,
-    Eq,
-    PartialEq,
-    CanonicalSerialize,
-    CanonicalDeserialize,
-    Derivative,
-)]
-#[derivative(Debug)]
-/// Signing key for Schnorr signature.
-pub struct SignKey<F: PrimeField>(#[derivative(Debug = "ignore")] pub(crate) F);
+#[derive(Clone, Hash, Default, Zeroize, Eq, PartialEq)]
+/// Signing key for Schnorr signature. We intentionally omit the implementation
+/// of `serde::Serializable` so that it won't be unnoticably serialized or
+/// printed out through outer structs. However, users could manually serialize
+/// it into bytes by calling `to_bytes()` or `to_tagged_base64()` and exercise
+/// with self-cautions.
+pub struct SignKey<F: PrimeField>(pub(crate) F);
+
+impl<F: PrimeField> core::fmt::Debug for SignKey<F> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("<SchnorrSignKey>").finish()
+    }
+}
 
 impl<F: PrimeField> Drop for SignKey<F> {
     fn drop(&mut self) {
@@ -128,6 +129,43 @@ impl<F: PrimeField> SignKey<F> {
     fn randomize_with(&self, randomizer: &F) -> Self {
         Self(self.0 + randomizer)
     }
+
+    /// Explicit calls to serialize a `SignKey` into bytes.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.into_bigint().to_bytes_le()
+    }
+
+    /// Deserialize `SignKey` from bytes.
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self(F::from_le_bytes_mod_order(bytes))
+    }
+
+    /// Explicit calls to serialize a `SignKey` into `TaggedBase64`.
+    pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
+        TaggedBase64::new(tag::SCHNORR_SIGNING_KEY, &self.to_bytes())
+    }
+}
+
+impl<'a, F: PrimeField> TryFrom<&'a TaggedBase64> for SignKey<F> {
+    type Error = Tb64Error;
+
+    fn try_from(tb: &'a TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::SCHNORR_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(SignKey::from_bytes(tb.as_ref()))
+    }
+}
+
+impl<F: PrimeField> TryFrom<TaggedBase64> for SignKey<F> {
+    type Error = Tb64Error;
+
+    fn try_from(tb: TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::SCHNORR_SIGNING_KEY {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(SignKey::from_bytes(tb.as_ref()))
+    }
 }
 
 // =====================================================
@@ -137,13 +175,8 @@ impl<F: PrimeField> SignKey<F> {
 /// Signature public verification key
 // derive zeroize here so that keypair can be zeroized
 #[tagged(tag::SCHNORR_VER_KEY)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Default, Eq, Clone; P: Config)]
 pub struct VerKey<P>(pub(crate) Projective<P>)
 where
     P: Config;
@@ -157,6 +190,14 @@ impl<P: Config> VerKey<P> {
     {
         // VK = g^k, VK' = g^(k+r) = g^k * g^r
         Self(Projective::<P>::generator() * randomizer + self.0)
+    }
+}
+
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64
+// format
+impl<P: Config> Debug for VerKey<P> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -200,14 +241,7 @@ impl<P: Config> VerKey<P> {
 
 /// Signature secret key pair used to sign messages
 // make sure sk can be zeroized
-#[tagged(tag::SCHNORR_KEY_PAIR)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config")
-)]
+#[derive_where(Debug, Default, Clone, PartialEq; P: Config)]
 pub struct KeyPair<P>
 where
     P: Config,
@@ -222,13 +256,8 @@ where
 
 /// The signature of Schnorr signature scheme
 #[tagged(tag::SCHNORR_SIG)]
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Default(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Clone(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Debug, Default, Eq, Clone; P: Config)]
 #[allow(non_snake_case)]
 pub struct Signature<P>
 where
@@ -332,6 +361,51 @@ where
             sk: randomized_sk,
             vk: randomized_vk,
         }
+    }
+
+    /// Explicit calls to serialize a `KeyPair` into bytes.
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.sk.to_bytes()
+    }
+
+    /// Deserialize `KeyPair` from bytes.
+    pub fn from_bytes(bytes: &[u8]) -> Self {
+        Self::generate_with_sign_key(P::ScalarField::from_le_bytes_mod_order(bytes))
+    }
+
+    /// Explicit calls to serialize a `SignKey` into `TaggedBase64`.
+    pub fn to_tagged_base64(&self) -> Result<TaggedBase64, Tb64Error> {
+        TaggedBase64::new(tag::SCHNORR_KEY_PAIR, &self.to_bytes())
+    }
+}
+
+impl<'a, F, P> TryFrom<&'a TaggedBase64> for KeyPair<P>
+where
+    F: RescueParameter,
+    P: Config<BaseField = F>,
+{
+    type Error = Tb64Error;
+
+    fn try_from(tb: &'a TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::SCHNORR_KEY_PAIR {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(KeyPair::from_bytes(tb.as_ref()))
+    }
+}
+
+impl<F, P> TryFrom<TaggedBase64> for KeyPair<P>
+where
+    F: RescueParameter,
+    P: Config<BaseField = F>,
+{
+    type Error = Tb64Error;
+
+    fn try_from(tb: TaggedBase64) -> Result<Self, Self::Error> {
+        if tb.tag() != tag::SCHNORR_KEY_PAIR {
+            return Err(Tb64Error::InvalidTag);
+        }
+        Ok(KeyPair::from_bytes(tb.as_ref()))
     }
 }
 
@@ -597,18 +671,21 @@ mod tests {
                 let msg = vec![$base_field::rand(&mut rng)];
                 let sig = keypair.sign(&msg, CS_ID_SCHNORR);
 
-                let mut ser_bytes: Vec<u8> = Vec::new();
-                keypair.serialize_compressed(&mut ser_bytes).unwrap();
-                let de: KeyPair<$curve_param> =
-                    KeyPair::deserialize_compressed(&ser_bytes[..]).unwrap();
-                assert_eq!(de.ver_key_ref(), keypair.ver_key_ref());
-                assert_eq!(de.ver_key_ref(), &VerKey::from(&de.sk));
-
-                let mut ser_bytes: Vec<u8> = Vec::new();
-                sk.serialize_compressed(&mut ser_bytes).unwrap();
-                let de: SignKey<$scalar_field> =
-                    SignKey::deserialize_compressed(&ser_bytes[..]).unwrap();
+                let ser_bytes: Vec<u8> = sk.to_bytes();
+                let de = SignKey::<$scalar_field>::from_bytes(&ser_bytes);
                 assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
+
+                let tagged_blob = sk.to_tagged_base64().unwrap();
+                let de: SignKey<$scalar_field> = tagged_blob.try_into().unwrap();
+                assert_eq!(VerKey::<$curve_param>::from(&de), VerKey::from(&sk));
+
+                let ser_bytes: Vec<u8> = keypair.to_bytes();
+                let de = KeyPair::<$curve_param>::from_bytes(&ser_bytes);
+                assert_eq!(de, keypair);
+
+                let tagged_blob = keypair.to_tagged_base64().unwrap();
+                let de: KeyPair<$curve_param> = tagged_blob.try_into().unwrap();
+                assert_eq!(de, keypair);
 
                 let mut ser_bytes: Vec<u8> = Vec::new();
                 vk.serialize_compressed(&mut ser_bytes).unwrap();

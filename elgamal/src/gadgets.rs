@@ -58,7 +58,7 @@ where
     /// in each call, and the nonce is initialized to zero.
     /// * `key_var` - variables corresponding to the symmetric key
     /// * `data_vars` - the variables for the data to be encrypted. The format
-    ///   of this input is a list of variable of arbitrary length
+    ///   of this input is a list of variables of arbitrary length
     /// * `returns` - the variables that map to the ciphertext contents. The
     ///   output size is the same as the length of data_vars
     fn apply_counter_mode_stream(
@@ -166,7 +166,7 @@ where
     F: PrimeField,
     P: TECurveConfig<BaseField = F>,
 {
-    /// Compute the gadget that check a correct Elgamal encryption
+    /// Compute the gadget that checks a correct Elgamal encryption
     /// * `pk_vars` - variables corresponding to the encryption public key
     /// * `data_vars` - variables corresponding to the plaintext. Can be of
     ///   arbitrary length.

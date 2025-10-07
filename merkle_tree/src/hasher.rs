@@ -8,7 +8,7 @@
 //!
 //! ```
 //! # use jf_merkle_tree::errors::MerkleTreeError;
-//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleCommitment, MerkleTreeScheme};
+//! use jf_merkle_tree::{hasher::HasherMerkleTree, AppendableMerkleTreeScheme, MerkleTreeScheme};
 //! use sha2::Sha256;
 //!
 //! # fn main() -> Result<(), MerkleTreeError> {
@@ -17,10 +17,10 @@
 //! // payload type is `usize`, hash function is `Sha256`.
 //! let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), &my_data)?;
 //!
-//! let root = mt.commitment().digest();
+//! let commitment = mt.commitment();
 //! let (val, proof) = mt.lookup(2).expect_ok()?;
 //! assert_eq!(val, &3);
-//! assert!(HasherMerkleTree::<Sha256, usize>::verify(root, 2, proof)?.is_ok());
+//! assert!(HasherMerkleTree::<Sha256, usize>::verify(commitment, 2, val, proof)?.is_ok());
 //! # Ok(())
 //! # }
 //! ```
@@ -40,13 +40,16 @@
 #![allow(clippy::non_canonical_partial_ord_impl)]
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
-use crate::errors::MerkleTreeError;
+use crate::{
+    errors::MerkleTreeError,
+    prelude::{INTERNAL_HASH_DOM_SEP, LEAF_HASH_DOM_SEP},
+};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
 use ark_std::string::ToString;
-use derivative::Derivative;
+use derive_where::derive_where;
 use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
@@ -73,7 +76,7 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 
 /// Convenience trait and blanket impl for downstream trait bounds.
 ///
-/// Useful for downstream code that's generic offer [`Digest`] hasher `H`.
+/// Useful for downstream code that's generic over [`Digest`] hasher `H`.
 ///
 /// # Example
 ///
@@ -120,19 +123,19 @@ pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
 ///     let mt = HasherMerkleTree::<H, usize>::from_elems(None, &my_data).unwrap();
 /// }
 /// ```
-pub trait HasherDigest: Digest<OutputSize = Self::Foo> + Write + Send + Sync {
-    /// Associated type needed to express trait bounds.
-    type Foo: ArrayLength<u8, ArrayType = Self::Bar>;
-    /// Associated type needed to express trait bounds.
-    type Bar: Copy;
+pub trait HasherDigest: Digest<OutputSize = Self::OutSize> + Write + Send + Sync {
+    /// Type for the output size
+    type OutSize: ArrayLength<u8, ArrayType = Self::ArrayType>;
+    /// Type for the array
+    type ArrayType: Copy;
 }
 impl<T> HasherDigest for T
 where
     T: Digest + Write + Send + Sync,
     <T::OutputSize as ArrayLength<u8>>::ArrayType: Copy,
 {
-    type Foo = T::OutputSize;
-    type Bar = <<T as HasherDigest>::Foo as ArrayLength<u8>>::ArrayType;
+    type OutSize = T::OutputSize;
+    type ArrayType = <<T as HasherDigest>::OutSize as ArrayLength<u8>>::ArrayType;
 }
 
 /// A struct that impls [`DigestAlgorithm`] for use with [`MerkleTree`].
@@ -146,6 +149,7 @@ where
 {
     fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(INTERNAL_HASH_DOM_SEP);
         for value in data {
             hasher.update(value.as_ref());
         }
@@ -154,6 +158,7 @@ where
 
     fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(LEAF_HASH_DOM_SEP);
         pos.serialize_uncompressed(&mut hasher)
             .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
         elem.serialize_uncompressed(&mut hasher)
@@ -163,18 +168,10 @@ where
 }
 
 /// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Copy(bound = "<<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy"),
-    Debug(bound = ""),
-    Default(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    Ord(bound = ""),
-    PartialEq(bound = ""),
-    PartialOrd(bound = "")
+#[derive_where(
+    Copy; <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy
 )]
+#[derive_where(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[tagged("HASH")]
 pub struct HasherNode<H>(Output<H>)
 where

@@ -13,7 +13,7 @@ use crate::{
 use ark_ec::{
     pairing::Pairing, scalar_mul::variable_base::VariableBaseMSM, AffineRepr, CurveGroup,
 };
-use ark_ff::{FftField, Field, PrimeField};
+use ark_ff::{FftField, PrimeField};
 #[cfg(not(feature = "seq-fk-23"))]
 use ark_poly::EvaluationDomain;
 use ark_poly::{
@@ -32,6 +32,7 @@ use ark_std::{
     vec::Vec,
     One, UniformRand, Zero,
 };
+use derive_where::derive_where;
 use jf_utils::par_utils::parallelizable_slice_iter;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -45,8 +46,8 @@ pub struct UnivariateKzgPCS<E> {
     phantom: PhantomData<E>,
 }
 
-#[derive(Derivative, CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
-#[derivative(Hash)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Clone, Debug, PartialEq, Eq)]
+#[derive_where(Hash)]
 /// proof of opening
 pub struct UnivariateKzgProof<E: Pairing> {
     /// Evaluation of quotients
@@ -112,7 +113,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         let commitment = E::G1::msm_bigint(
             &prover_param.powers_of_g[num_leading_zeros..],
-            &plain_coeffs,
+            plain_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -178,7 +179,7 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         Ok((Self::Proof { proof }, eval))
     }
 
-    /// Input a list of polynomials, and a same number of points,
+    /// Input a list of polynomials, and the same number of points,
     /// compute a multi-opening for all the polynomials.
     // This is a naive approach
     // TODO: to implement the more efficient batch opening algorithm
@@ -515,7 +516,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         let evals_cm: E::G1Affine = E::G1::msm_bigint(
             &verifier_param.borrow().powers_of_g[num_leading_zeros..],
-            &evals_poly_coeffs,
+            evals_poly_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -538,7 +539,7 @@ impl<E: Pairing> UnivariatePCS for UnivariateKzgPCS<E> {
 
         let vanish_cm: E::G2Affine = E::G2::msm_bigint(
             &verifier_param.borrow().powers_of_h[num_leading_zeros..],
-            &vanish_poly_coeffs,
+            vanish_poly_coeffs.as_ref(),
         )
         .into_affine();
 
@@ -626,7 +627,7 @@ where
         let mut toep_col = vec![*padded_coeffs
             .last()
             .ok_or_else(|| PCSError::InvalidParameters("poly degree should >= 1".to_string()))?];
-        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Field>::ZERO);
+        toep_col.resize(padded_degree, <<E as Pairing>::ScalarField as Zero>::zero());
         let toep_row = padded_coeffs.iter().skip(1).rev().cloned().collect();
         let poly_coeff_matrix = ToeplitzMatrix::new(toep_col, toep_row)?;
 

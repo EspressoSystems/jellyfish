@@ -26,8 +26,8 @@ use ark_std::{end_timer, format, start_timer, string::ToString, vec, vec::Vec};
 /// - the prover parameters for multilinear KZG,
 /// - a list of MLEs,
 /// - a batch commitment to all MLEs
-/// - and a same number of points,
-/// compute a batch opening for all the polynomials.
+/// - and a same number of points, compute a batch opening for all the
+///   polynomials.
 ///
 /// For simplicity, this API requires each MLE to have only one point. If
 /// the caller wish to use more than one points per MLE, it should be
@@ -42,11 +42,11 @@ use ark_std::{end_timer, format, start_timer, string::ToString, vec, vec::Vec};
 ///
 /// Steps:
 /// 1. build `l(points)` which is a list of univariate polynomials that goes
-/// through the points
+///    through the points
 /// 2. build MLE `w` which is the merge of all MLEs.
 /// 3. build `q(x)` which is a univariate polynomial `W circ l`
-/// 4. commit to q(x) and sample r from transcript
-/// transcript contains: w commitment, points, q(x)'s commitment
+/// 4. commit to q(x) and sample r from transcript transcript contains: w
+///    commitment, points, q(x)'s commitment
 /// 5. build q(omega^i) and their openings
 /// 6. build q(r) and its opening
 /// 7. get a point `p := l(r)`
@@ -132,7 +132,7 @@ pub(super) fn batch_open_internal<E: Pairing>(
             .rev()
             .map(|poly| poly.evaluate(&domain.element(i)))
             .collect();
-        let mle_eval = merge_poly.evaluate(&point).unwrap();
+        let mle_eval = merge_poly.evaluate(&point);
         if mle_eval != q_x_eval {
             return Err(PCSError::InvalidProver(
                 "Q(omega) does not match W(l(omega))".to_string(),
@@ -181,10 +181,10 @@ pub(super) fn batch_open_internal<E: Pairing>(
 ///
 /// 1. push w, points and q_com into transcript
 /// 2. sample `r` from transcript
-/// 3. check `q(r) == batch_proof.q_x_value.last` and
-/// `q(omega^i) == batch_proof.q_x_value[i]`
-/// 4. build `l(points)` which is a list of univariate
-/// polynomials that goes through the points
+/// 3. check `q(r) == batch_proof.q_x_value.last` and `q(omega^i) ==
+///    batch_proof.q_x_value[i]`
+/// 4. build `l(points)` which is a list of univariate polynomials that goes
+///    through the points
 /// 5. get a point `p := l(r)`
 /// 6. verifies `p` is valid against multilinear KZG proof
 pub(super) fn batch_verify_internal<E: Pairing>(
@@ -253,8 +253,8 @@ pub(super) fn batch_verify_internal<E: Pairing>(
             value,
             &batch_proof.q_x_opens[i],
         )? {
-            #[cfg(debug_assertion)]
-            println!("q(omega^{}) verification failed", i);
+            #[cfg(debug_assertions)]
+            ark_std::println!("q(omega^{}) verification failed", i);
             return Ok(false);
         }
     }
@@ -266,8 +266,8 @@ pub(super) fn batch_verify_internal<E: Pairing>(
         &values[points_len],
         &batch_proof.q_x_opens[points_len],
     )? {
-        #[cfg(debug_assertion)]
-        println!("q(r) verification failed");
+        #[cfg(debug_assertions)]
+        ark_std::println!("q(r) verification failed");
         return Ok(false);
     }
 
@@ -287,9 +287,9 @@ pub(super) fn batch_verify_internal<E: Pairing>(
         &batch_proof.proof,
     )?;
 
-    #[cfg(debug_assertion)]
+    #[cfg(debug_assertions)]
     if !res {
-        println!("multilinear KZG verification failed");
+        ark_std::println!("multilinear KZG verification failed");
     }
 
     end_timer!(verify_timer);
