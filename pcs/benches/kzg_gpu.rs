@@ -56,7 +56,7 @@ where
     let supported_degree = 2usize.pow(MAX_LOG_DEGREE as u32);
     let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(&mut rng, supported_degree).unwrap();
     let (full_ck, _vk) = pp.trim(supported_degree).unwrap();
-    let mut srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
+    let srs_on_gpu = <UnivariateKzgPCS<E> as GPUCommittable<E>>::load_prover_param_to_gpu(
         full_ck,
         supported_degree,
     )
@@ -75,7 +75,7 @@ where
             |b, _log_degree| {
                 b.iter(|| {
                     <UnivariateKzgPCS<E> as GPUCommittable<E>>::gpu_commit_with_loaded_prover_param(
-                        &mut srs_on_gpu,
+                        &srs_on_gpu,
                         &p,
                         &stream,
                     )
