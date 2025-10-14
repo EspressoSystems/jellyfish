@@ -59,11 +59,9 @@ use ark_std::{
     hash::{Hash, Hasher},
     rand::{CryptoRng, RngCore},
     string::ToString,
-    vec,
     vec::Vec,
     One, UniformRand,
 };
-use derivative::Derivative;
 use digest::{DynDigest, FixedOutputReset};
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
@@ -383,8 +381,9 @@ impl PartialEq for Signature {
 /// The hashing algorithm consists of the following steps:
 ///   1. Hash the bytes to a field element `x`.
 ///   2. Compute `Y = x^3 + 3`. (Note: the equation of the BN curve is
-/// y^2=x^3+3)   3. Check if `Y` is a quadratic residue (QR), in which case
-/// return `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a QR.
+///      y^2=x^3+3)   3. Check if `Y` is a quadratic residue (QR), in which case
+///      return `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a
+///      QR.
 ///   4. Return `P=(x,y)`
 ///
 ///  In the future we may switch to a constant time algorithm such as Fouque-Tibouchi <https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf>
@@ -564,7 +563,7 @@ mod tests {
     use ark_ec::AffineRepr;
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use ark_std::{rand::Rng, vec::Vec, UniformRand};
+    use ark_std::{vec::Vec, UniformRand};
 
     #[test]
     fn test_bls_signature_internals() {
@@ -636,7 +635,7 @@ mod tests {
         let msg = vec![87u8];
         let sig = keypair.sign(&msg, CS_ID_BLS_BN254);
 
-        let mut ser_bytes: Vec<u8> = keypair.to_bytes();
+        let ser_bytes: Vec<u8> = keypair.to_bytes();
         let de = KeyPair::from_bytes(&ser_bytes);
         assert_eq!(de, keypair);
 
@@ -644,7 +643,7 @@ mod tests {
         let de: KeyPair = tagged_blob.try_into().unwrap();
         assert_eq!(de, keypair);
 
-        let mut ser_bytes: Vec<u8> = sk.to_bytes();
+        let ser_bytes: Vec<u8> = sk.to_bytes();
         let de = SignKey::from_bytes(&ser_bytes);
         assert_eq!(VerKey::from(&de), VerKey::from(&sk));
 

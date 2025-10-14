@@ -6,15 +6,9 @@
 //! Module for signature primitives.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
-
-#[cfg(any(test, feature = "schnorr"))]
-#[macro_use]
-extern crate derivative;
 
 #[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
 #[doc(hidden)]

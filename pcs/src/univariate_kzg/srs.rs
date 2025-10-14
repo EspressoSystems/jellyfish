@@ -10,6 +10,7 @@ use crate::{PCSError, StructuredReferenceString};
 use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{string::ToString, vec::Vec};
+use derive_where::derive_where;
 
 /// `UniversalParams` are the universal parameters for the KZG10 scheme.
 // Adapted from
@@ -44,8 +45,8 @@ pub struct UnivariateProverParam<E: Pairing> {
 
 /// `UnivariateVerifierParam` is used to check evaluation proofs for a given
 /// commitment.
-#[derive(Derivative, Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
-#[derivative(Default)]
+#[derive(Clone, Debug, Eq, CanonicalSerialize, CanonicalDeserialize, PartialEq)]
+#[derive_where(Default)]
 pub struct UnivariateVerifierParam<E: Pairing> {
     /// TODO: remove g, h and beta_h
     /// The generator of G1.
@@ -162,10 +163,7 @@ impl<E: Pairing> StructuredReferenceString for UnivariateUniversalParams<E> {
 mod tests {
     use super::UnivariateUniversalParams;
     use crate::PCSError;
-    use ark_ec::{
-        pairing::Pairing, scalar_mul::BatchMulPreprocessing, AffineRepr, CurveGroup, ScalarMul,
-    };
-    use ark_ff::PrimeField;
+    use ark_ec::{pairing::Pairing, AffineRepr, CurveGroup, ScalarMul};
     use ark_std::{
         end_timer,
         rand::{CryptoRng, RngCore},

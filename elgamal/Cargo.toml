@@ -28,7 +28,7 @@ ark-ec = { workspace = true }
 ark-ff = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-derivative = { workspace = true }
+derive-where = { workspace = true }
 displaydoc = { workspace = true }
 jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-relation-v0.5.0", optional = true, default-features = false }
 jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-rescue-v0.3.0", default-features = false }

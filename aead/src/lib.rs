@@ -11,8 +11,6 @@
 //! independent of RustCrypto's upstream changes.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
@@ -23,7 +21,7 @@ extern crate alloc;
 
 use ark_serialize::*;
 use ark_std::{
-    fmt, format,
+    fmt,
     ops::{Deref, DerefMut},
     rand::{CryptoRng, RngCore},
     vec::Vec,
