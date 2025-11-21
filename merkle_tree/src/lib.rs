@@ -235,6 +235,44 @@ pub trait MerkleTreeScheme: Sized {
     fn iter(&'_ self) -> MerkleTreeIter<'_, Self::Element, Self::Index, Self::NodeValue>;
 }
 
+/// Merkle tree that supports generating range proofs
+pub trait RangeProofMerkleTreeScheme: MerkleTreeScheme {
+    /// Range proof for a given range
+    type RangeMembershipProof;
+
+    /// Generate a range proof for leaves in [start, end], inclusive.
+    /// * `start` - zero-based start index of the range (inclusive)
+    /// * `end` - zero-based end index of the range (inclusive)
+    /// * `returns` - Indexed leaf values in the range along with a range
+    ///   membership proof.
+    ///
+    /// NOTE: this interface will return `NotInMemory` or `NotFound` if any
+    /// of the leaves in the range are not in memory or not found.
+    #[allow(clippy::type_complexity)]
+    fn range_lookup(
+        &self,
+        start: impl Borrow<Self::Index>,
+        end: impl Borrow<Self::Index>,
+    ) -> LookupResult<(Vec<Self::Index>, Vec<Self::Element>), Self::RangeMembershipProof, ()>;
+
+    /// Verify a range proof for leaves in [start, end], inclusive.
+    /// * `commitment` - a merkle tree commitment
+    /// * `indices` - zero-based indices of the leaves in the tree
+    /// * `elements` - the leaf values in the range
+    /// * `proof` - a range membership proof for the given range
+    /// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err()
+    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    ///
+    /// NOTE: all indices are needed here because we cannot generate them from
+    /// [start, end] under the current Index trait bound.
+    fn verify_range_proof(
+        commitment: impl Borrow<Self::Commitment>,
+        indices: &[impl Borrow<Self::Index>],
+        elements: &[impl Borrow<Self::Element>],
+        proof: impl Borrow<Self::RangeMembershipProof>,
+    ) -> Result<VerificationResult, MerkleTreeError>;
+}
+
 /// Merkle tree that allows insertion at back. Abstracted as a commitment for
 /// append-only vector.
 pub trait AppendableMerkleTreeScheme: MerkleTreeScheme<Index = u64> {

@@ -7,15 +7,13 @@
 //! Implementation of a typical append only merkle tree
 
 use super::{
-    internal::{
-        build_tree_internal, MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof,
-    },
-    AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    internal::{build_tree_internal, MerkleNode},
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleProof,
+    MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{
     errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
-    VerificationResult,
+    impl_range_proof_merkle_tree_scheme, VerificationResult,
 };
 use alloc::sync::Arc;
 use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString};
@@ -24,6 +22,7 @@ use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 
 impl_merkle_tree_scheme!(MerkleTree);
+impl_range_proof_merkle_tree_scheme!(MerkleTree);
 impl_forgetable_merkle_tree_scheme!(MerkleTree);
 
 impl<E, H, I, const ARITY: usize, T> MerkleTree<E, H, I, ARITY, T>
@@ -192,6 +191,65 @@ mod mt_tests {
                 .unwrap()
                 .is_err()
         );
+    }
+
+    #[test]
+    fn test_mt_range_lookup() {
+        test_mt_range_lookup_helper::<Fr254>();
+        test_mt_range_lookup_helper::<Fr377>();
+        test_mt_range_lookup_helper::<Fr381>();
+    }
+
+    fn test_mt_range_lookup_helper<F: RescueParameter>() {
+        let elems = (0..9).map(|i| F::from(i)).collect::<Vec<_>>();
+        let mt = RescueMerkleTree::<F>::from_elems(Some(2), &elems).unwrap();
+        let commitment = mt.commitment();
+
+        // Note that `range_lookup` is inclusive of the end
+        let ((indices, mut elements), mut proof) = mt.range_lookup(2, 5).expect_ok().unwrap();
+        assert_eq!(indices, vec![2, 3, 4, 5]);
+        assert_eq!(
+            elements,
+            vec![F::from(2), F::from(3), F::from(4), F::from(5)]
+        );
+        assert!(RescueMerkleTree::<F>::verify_range_proof(
+            &commitment,
+            &indices,
+            &elements,
+            &proof
+        )
+        .unwrap()
+        .is_ok());
+        // Not enough elements, should fail
+        assert!(RescueMerkleTree::<F>::verify_range_proof(
+            &commitment,
+            &indices[..3],
+            &elements[..3],
+            &proof
+        )
+        .is_err());
+        // Wrong element, should fail
+        elements[0] = F::from(1u64);
+        assert!(RescueMerkleTree::<F>::verify_range_proof(
+            &commitment,
+            &indices,
+            &elements,
+            &proof
+        )
+        .unwrap()
+        .is_err());
+        elements[0] = F::from(2u64);
+
+        // Wrong proof, should fail
+        proof.lbound[0][0] = F::one();
+        assert!(RescueMerkleTree::<F>::verify_range_proof(
+            &commitment,
+            &indices,
+            &elements,
+            &proof
+        )
+        .unwrap()
+        .is_err());
     }
 
     #[test]

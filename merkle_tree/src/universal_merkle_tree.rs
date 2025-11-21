@@ -5,15 +5,13 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementation of a typical Sparse Merkle Tree.
-use super::{
-    internal::{MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof},
-    DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleProof, MerkleTreeScheme, NodeValue,
-    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
-};
 use crate::{
-    errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
-    VerificationResult,
+    errors::MerkleTreeError,
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+    internal::{MerkleNode, MerkleTreeProof},
+    DigestAlgorithm, Element, ForgetableUniversalMerkleTreeScheme, Index, LookupResult,
+    MerkleProof, MerkleTreeScheme, NodeValue, PersistentUniversalMerkleTreeScheme, ToTraversalPath,
+    UniversalMerkleTreeScheme, VerificationResult,
 };
 use alloc::sync::Arc;
 use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString};
@@ -100,7 +98,7 @@ where
             commitment.borrow(),
             pos.borrow(),
             None,
-            proof.borrow().path_values(),
+            proof.borrow(),
         )
     }
 
