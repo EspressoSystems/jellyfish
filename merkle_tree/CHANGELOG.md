@@ -3,11 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Untracked
+## 0.4.1
 
 ### Changes
 
 - [#843](https://github.com/EspressoSystems/jellyfish/pull/843): replace unmaintained `derivative` with `derive_where`.
+- [#853](https://github.com/EspressoSystems/jellyfish/pull/853): add range membership proof APIs to `MerkleTreeScheme`.
 
 ## 0.4.0
 
