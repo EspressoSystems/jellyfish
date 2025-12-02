@@ -102,8 +102,8 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
 /// * `pos` - zero-based index of the leaf in the tree
 /// * `element` - the leaf value, None if verifying a non-membership proof
 /// * `proof` - a membership proof for `element` at given `pos`
-/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err() if
-///   the proof is not well structured, E.g. not for this merkle tree.
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
+///   if the proof is not well structured, E.g. not for this merkle tree.
 pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
     commitment: &T,
     pos: &I,
@@ -197,8 +197,8 @@ pub struct MerkleTreeRangeProof<T: NodeValue> {
 /// * `indices` - zero-based indices of the leaves in the tree
 /// * `element` - the leaf values in the range
 /// * `proof` - a range proof for `[start, end]`
-/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err() if
-///   the proof is not well structured, E.g. not for this merkle tree.
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
+///   if the proof is not well structured, E.g. not for this merkle tree.
 pub fn verify_merkle_range_proof<E, H, I, const ARITY: usize, T>(
     commitment: &T,
     indices: &[impl Borrow<I>],

@@ -214,8 +214,9 @@ pub trait MerkleTreeScheme: Sized {
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `element` - the leaf value
     /// * `proof` - a membership proof for `element` at given `pos`
-    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
-    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not.
+    ///   Err() if the proof is not well structured, E.g. not for this merkle
+    ///   tree.
     fn verify(
         commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
@@ -260,8 +261,9 @@ pub trait RangeProofMerkleTreeScheme: MerkleTreeScheme {
     /// * `indices` - zero-based indices of the leaves in the tree
     /// * `elements` - the leaf values in the range
     /// * `proof` - a range membership proof for the given range
-    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
-    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not.
+    ///   Err() if the proof is not well structured, E.g. not for this merkle
+    ///   tree.
     ///
     /// NOTE: all indices are needed here because we cannot generate them from
     /// [start, end] under the current Index trait bound.
@@ -365,8 +367,9 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     /// Verify an index is not in this merkle tree
     /// * `pos` - zero-based index of the leaf in the tree
     /// * `proof` - a merkle tree proof
-    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
-    ///   if the proof is not well structured, E.g. not for this merkle tree.
+    /// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not.
+    ///   Err() if the proof is not well structured, E.g. not for this merkle
+    ///   tree.
     fn non_membership_verify(
         commitment: impl Borrow<Self::Commitment>,
         pos: impl Borrow<Self::Index>,
