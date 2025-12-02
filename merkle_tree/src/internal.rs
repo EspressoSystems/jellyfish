@@ -102,7 +102,7 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
 /// * `pos` - zero-based index of the leaf in the tree
 /// * `element` - the leaf value, None if verifying a non-membership proof
 /// * `proof` - a membership proof for `element` at given `pos`
-/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err() if
 ///   the proof is not well structured, E.g. not for this merkle tree.
 pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
     commitment: &T,
@@ -196,8 +196,8 @@ pub struct MerkleTreeRangeProof<T: NodeValue> {
 /// * `commitment` - a merkle tree commitment
 /// * `indices` - zero-based indices of the leaves in the tree
 /// * `element` - the leaf values in the range
-/// * `proof` - a range proof for `[start, end)`
-/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
+/// * `proof` - a range proof for `[start, end]`
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err() if
 ///   the proof is not well structured, E.g. not for this merkle tree.
 pub fn verify_merkle_range_proof<E, H, I, const ARITY: usize, T>(
     commitment: &T,
@@ -681,10 +681,9 @@ where
                 } else {
                     children.len() - 1
                 };
-                // Cargo clippy forces me to write this instead of
-                // for i in l..=r
-                for (i, child) in children.iter().enumerate().take(r + 1).skip(l) {
-                    match child.range_lookup_internal(
+                #[allow(clippy::needless_range_loop)]
+                for i in l..=r {
+                    match children[i].range_lookup_internal(
                         height - 1,
                         lbound,
                         rbound,
