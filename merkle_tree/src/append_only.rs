@@ -250,6 +250,19 @@ mod mt_tests {
         )
         .unwrap()
         .is_err());
+
+        // degenerated case, as a singleton proof
+        let ((indices, elements), proof) = mt.range_lookup(2, 2).expect_ok().unwrap();
+        assert_eq!(indices, vec![2]);
+        assert_eq!(elements, vec![F::from(2)]);
+        assert!(RescueMerkleTree::<F>::verify_range_proof(
+            &commitment,
+            &indices,
+            &elements,
+            &proof
+        )
+        .unwrap()
+        .is_ok());
     }
 
     #[test]
