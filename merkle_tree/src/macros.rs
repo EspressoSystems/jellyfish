@@ -18,29 +18,29 @@ macro_rules! impl_merkle_tree_scheme {
         )]
         pub struct $name<E, H, I, const ARITY: usize, T>
         where
-            E: Element,
-            H: DigestAlgorithm<E, I, T>,
-            I: Index,
-            T: NodeValue,
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index,
+            T: $crate::NodeValue,
         {
-            root: Arc<MerkleNode<E, I, T>>,
+            root: Arc<$crate::internal::MerkleNode<E, I, T>>,
             height: usize,
             num_leaves: u64,
 
             _phantom: PhantomData<H>,
         }
 
-        impl<E, H, I, const ARITY: usize, T> MerkleTreeScheme for $name<E, H, I, ARITY, T>
+        impl<E, H, I, const ARITY: usize, T> $crate::MerkleTreeScheme for $name<E, H, I, ARITY, T>
         where
-            E: Element,
-            H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<ARITY>,
-            T: NodeValue,
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
         {
             type Element = E;
             type Index = I;
             type NodeValue = T;
-            type MembershipProof = MerkleTreeProof<T>;
+            type MembershipProof = $crate::internal::MerkleTreeProof<T>;
             // TODO(Chengyu): implement batch membership proof
             type BatchMembershipProof = ();
             type Commitment = T;
@@ -84,46 +84,97 @@ macro_rules! impl_merkle_tree_scheme {
                 element: impl Borrow<Self::Element>,
                 proof: impl Borrow<Self::MembershipProof>,
             ) -> Result<VerificationResult, MerkleTreeError> {
-                $crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow().path_values())
+                $crate::internal::verify_merkle_proof::<E, H, I, ARITY, T>(commitment.borrow(), pos.borrow(), Some(element.borrow()), proof.borrow())
             }
 
-            fn iter(&'_ self) -> MerkleTreeIter<'_, E, I, T> {
-                MerkleTreeIter::new(&self.root)
+            fn iter(&'_ self) -> $crate::MerkleTreeIter<'_, E, I, T> {
+                $crate::MerkleTreeIter::new(&self.root)
             }
         }
 
         impl<'a, E, H, I, const ARITY: usize, T> IntoIterator for &'a $name<E, H, I, ARITY, T>
         where
-            E: Element,
-            H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<ARITY>,
-            T: NodeValue,
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
         {
             type Item = (&'a I, &'a E);
 
-            type IntoIter = MerkleTreeIter<'a, E, I, T>;
+            type IntoIter = $crate::internal::MerkleTreeIter<'a, E, I, T>;
 
             fn into_iter(self) -> Self::IntoIter {
-                MerkleTreeIter::new(&self.root)
+                $crate::internal::MerkleTreeIter::new(&self.root)
             }
         }
 
         impl<E, H, I, const ARITY: usize, T> IntoIterator for $name<E, H, I, ARITY, T>
         where
-            E: Element,
-            H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<ARITY>,
-            T: NodeValue,
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
         {
             type Item = (I, E);
 
-            type IntoIter = MerkleTreeIntoIter<E, I, T>;
+            type IntoIter = $crate::internal::MerkleTreeIntoIter<E, I, T>;
 
             fn into_iter(self) -> Self::IntoIter {
-                MerkleTreeIntoIter::new(self.root)
+                $crate::internal::MerkleTreeIntoIter::new(self.root)
             }
         }
 
+    };
+}
+
+/// Macro for generating the range proof implementation
+#[macro_export]
+macro_rules! impl_range_proof_merkle_tree_scheme {
+    ($name: ident) => {
+        impl<E, H, I, const ARITY: usize, T> $crate::RangeProofMerkleTreeScheme
+            for $name<E, H, I, ARITY, T>
+        where
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
+        {
+            type RangeMembershipProof = $crate::internal::MerkleTreeRangeProof<T>;
+
+            fn range_lookup(
+                &self,
+                start: impl Borrow<Self::Index>,
+                end: impl Borrow<Self::Index>,
+            ) -> LookupResult<
+                (
+                    ark_std::vec::Vec<Self::Index>,
+                    ark_std::vec::Vec<Self::Element>,
+                ),
+                Self::RangeMembershipProof,
+                (),
+            > {
+                let start = start.borrow();
+                let end = end.borrow();
+                let start_path = start.to_traversal_path(self.height);
+                let end_path = end.to_traversal_path(self.height);
+                self.root
+                    .range_lookup_internal(self.height, &start_path, &end_path, true, true)
+            }
+
+            fn verify_range_proof(
+                commitment: impl Borrow<Self::Commitment>,
+                indices: &[impl Borrow<Self::Index>],
+                elements: &[impl Borrow<Self::Element>],
+                proof: impl Borrow<Self::RangeMembershipProof>,
+            ) -> Result<VerificationResult, MerkleTreeError> {
+                $crate::internal::verify_merkle_range_proof::<E, H, I, ARITY, T>(
+                    commitment.borrow(),
+                    indices,
+                    elements,
+                    proof.borrow(),
+                )
+            }
+        }
     };
 }
 
@@ -131,12 +182,13 @@ macro_rules! impl_merkle_tree_scheme {
 #[macro_export]
 macro_rules! impl_forgetable_merkle_tree_scheme {
     ($name: ident) => {
-        impl<E, H, I, const ARITY: usize, T> ForgetableMerkleTreeScheme for $name<E, H, I, ARITY, T>
+        impl<E, H, I, const ARITY: usize, T> $crate::ForgetableMerkleTreeScheme
+            for $name<E, H, I, ARITY, T>
         where
-            E: Element,
-            H: DigestAlgorithm<E, I, T>,
-            I: Index + ToTraversalPath<ARITY>,
-            T: NodeValue,
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
         {
             fn from_commitment(
                 com: impl Borrow<Self::Commitment>,
@@ -145,7 +197,9 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
             ) -> Self {
                 let com = com.borrow();
                 $name {
-                    root: Arc::new(MerkleNode::ForgottenSubtree { value: com.clone() }),
+                    root: Arc::new($crate::internal::MerkleNode::ForgottenSubtree {
+                        value: com.clone(),
+                    }),
                     height,
                     num_leaves,
                     _phantom: PhantomData,
@@ -200,7 +254,7 @@ macro_rules! impl_forgetable_merkle_tree_scheme {
 #[macro_export]
 macro_rules! impl_to_traversal_path_primitives {
     ($t: ty) => {
-        impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
+        impl<const ARITY: usize> $crate::ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
                 let mut pos = *self as u64;
                 let mut ret = vec![];
@@ -218,7 +272,7 @@ macro_rules! impl_to_traversal_path_primitives {
 #[macro_export]
 macro_rules! impl_to_traversal_path_biguint {
     ($t: ty) => {
-        impl<const ARITY: usize> ToTraversalPath<ARITY> for $t {
+        impl<const ARITY: usize> $crate::ToTraversalPath<ARITY> for $t {
             fn to_traversal_path(&self, height: usize) -> Vec<usize> {
                 let mut pos: BigUint = <Self as Into<BigUint>>::into(self.clone());
                 let mut ret = vec![];
