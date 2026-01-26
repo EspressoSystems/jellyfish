@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/constraint_system.rs`."><title>constraint_system.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_relation/</div>constraint_system.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `relation/src/constraint_system.rs`."><title>constraint_system.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_relation" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_relation/</div>constraint_system.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 <a href=#2 id=2 data-nosnippet>2</a>// This file is part of the Jellyfish library.
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a>// You should have received a copy of the MIT License
@@ -529,7 +529,7 @@
 <a href=#529 id=529 data-nosnippet>529</a>
 <a href=#530 id=530 data-nosnippet>530</a>    <span class="doccomment">/// The bit length of UltraPlonk range gates.
 <a href=#531 id=531 data-nosnippet>531</a>    </span><span class="kw">pub fn </span>range_bit_len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;usize, CircuitError&gt; {
-<a href=#532 id=532 data-nosnippet>532</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.plonk_type != PlonkType::UltraPlonk {
+<a href=#532 id=532 data-nosnippet>532</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.<span class="macro">plonk_type !</span>= PlonkType::UltraPlonk {
 <a href=#533 id=533 data-nosnippet>533</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#534 id=534 data-nosnippet>534</a>                <span class="string">"call range_bit_len() with non-ultraplonk circuit"</span>.to_string(),
 <a href=#535 id=535 data-nosnippet>535</a>            ));
@@ -621,7 +621,7 @@
 <a href=#621 id=621 data-nosnippet>621</a>                .zip(table_key_vec.iter())
 <a href=#622 id=622 data-nosnippet>622</a>                .enumerate()
 <a href=#623 id=623 data-nosnippet>623</a>            {
-<a href=#624 id=624 data-nosnippet>624</a>                <span class="kw">if </span>q_lookup != F::zero() {
+<a href=#624 id=624 data-nosnippet>624</a>                <span class="kw">if </span><span class="macro">q_lookup !</span>= F::zero() {
 <a href=#625 id=625 data-nosnippet>625</a>                    <span class="kw">let </span>val0 = <span class="self">self</span>.witness(<span class="self">self</span>.wire_variable(TABLE_VAL_1_WIRE_ID, gate_id))<span class="question-mark">?</span>;
 <a href=#626 id=626 data-nosnippet>626</a>                    <span class="kw">let </span>val1 = <span class="self">self</span>.witness(<span class="self">self</span>.wire_variable(TABLE_VAL_2_WIRE_ID, gate_id))<span class="question-mark">?</span>;
 <a href=#627 id=627 data-nosnippet>627</a>                    key_val_table.insert((table_dom_sep, table_key, val0, val1));
@@ -631,7 +631,7 @@
 <a href=#631 id=631 data-nosnippet>631</a>            </span><span class="kw">for </span>(gate_id, (<span class="kw-2">&amp;</span>q_lookup, <span class="kw-2">&amp;</span>q_dom_sep)) <span class="kw">in
 <a href=#632 id=632 data-nosnippet>632</a>                </span>q_lookup_vec.iter().zip(q_dom_sep_vec.iter()).enumerate()
 <a href=#633 id=633 data-nosnippet>633</a>            {
-<a href=#634 id=634 data-nosnippet>634</a>                <span class="kw">if </span>q_lookup != F::zero() {
+<a href=#634 id=634 data-nosnippet>634</a>                <span class="kw">if </span><span class="macro">q_lookup !</span>= F::zero() {
 <a href=#635 id=635 data-nosnippet>635</a>                    <span class="kw">let </span>key = <span class="self">self</span>.witness(<span class="self">self</span>.wire_variable(LOOKUP_KEY_WIRE_ID, gate_id))<span class="question-mark">?</span>;
 <a href=#636 id=636 data-nosnippet>636</a>                    <span class="kw">let </span>val0 = <span class="self">self</span>.witness(<span class="self">self</span>.wire_variable(LOOKUP_VAL_1_WIRE_ID, gate_id))<span class="question-mark">?</span>;
 <a href=#637 id=637 data-nosnippet>637</a>                    <span class="kw">let </span>val1 = <span class="self">self</span>.witness(<span class="self">self</span>.wire_variable(LOOKUP_VAL_2_WIRE_ID, gate_id))<span class="question-mark">?</span>;
@@ -920,7 +920,7 @@
 <a href=#920 id=920 data-nosnippet>920</a>            + q_hash[<span class="number">3</span>] * w_vals[<span class="number">3</span>].pow([<span class="number">5</span>])
 <a href=#921 id=921 data-nosnippet>921</a>            + q_c;
 <a href=#922 id=922 data-nosnippet>922</a>        <span class="kw">let </span>gate_output = q_o * w_vals[<span class="number">4</span>];
-<a href=#923 id=923 data-nosnippet>923</a>        <span class="kw">if </span>expected_gate_output != gate_output {
+<a href=#923 id=923 data-nosnippet>923</a>        <span class="kw">if </span><span class="macro">expected_gate_output !</span>= gate_output {
 <a href=#924 id=924 data-nosnippet>924</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(
 <a href=#925 id=925 data-nosnippet>925</a>                GateCheckFailure(
 <a href=#926 id=926 data-nosnippet>926</a>                    gate_id,
@@ -997,7 +997,7 @@
 <a href=#997 id=997 data-nosnippet>997</a>    // not.
 <a href=#998 id=998 data-nosnippet>998</a>    </span><span class="attr">#[inline]
 <a href=#999 id=999 data-nosnippet>999</a>    </span><span class="kw">fn </span>check_plonk_type(<span class="kw-2">&amp;</span><span class="self">self</span>, expect_type: PlonkType) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-<a href=#1000 id=1000 data-nosnippet>1000</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.plonk_type != expect_type {
+<a href=#1000 id=1000 data-nosnippet>1000</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.<span class="macro">plonk_type !</span>= expect_type {
 <a href=#1001 id=1001 data-nosnippet>1001</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(WrongPlonkType);
 <a href=#1002 id=1002 data-nosnippet>1002</a>        }
 <a href=#1003 id=1003 data-nosnippet>1003</a>        <span class="prelude-val">Ok</span>(())
@@ -1193,7 +1193,7 @@
 <a href=#1193 id=1193 data-nosnippet>1193</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#1194 id=1194 data-nosnippet>1194</a>        circuit_type: MergeableCircuitType,
 <a href=#1195 id=1195 data-nosnippet>1195</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), CircuitError&gt; {
-<a href=#1196 id=1196 data-nosnippet>1196</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.plonk_type != PlonkType::TurboPlonk {
+<a href=#1196 id=1196 data-nosnippet>1196</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.<span class="macro">plonk_type !</span>= PlonkType::TurboPlonk {
 <a href=#1197 id=1197 data-nosnippet>1197</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(WrongPlonkType);
 <a href=#1198 id=1198 data-nosnippet>1198</a>        }
 <a href=#1199 id=1199 data-nosnippet>1199</a>        <span class="self">self</span>.finalize_for_arithmetization()<span class="question-mark">?</span>;
@@ -1257,8 +1257,8 @@
 <a href=#1257 id=1257 data-nosnippet>1257</a>                other.eval_domain_size()<span class="question-mark">?
 <a href=#1258 id=1258 data-nosnippet>1258</a>            </span>)));
 <a href=#1259 id=1259 data-nosnippet>1259</a>        }
-<a href=#1260 id=1260 data-nosnippet>1260</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.plonk_type != PlonkType::TurboPlonk
-<a href=#1261 id=1261 data-nosnippet>1261</a>            || other.plonk_params.plonk_type != PlonkType::TurboPlonk
+<a href=#1260 id=1260 data-nosnippet>1260</a>        <span class="kw">if </span><span class="self">self</span>.plonk_params.<span class="macro">plonk_type !</span>= PlonkType::TurboPlonk
+<a href=#1261 id=1261 data-nosnippet>1261</a>            || other.plonk_params.<span class="macro">plonk_type !</span>= PlonkType::TurboPlonk
 <a href=#1262 id=1262 data-nosnippet>1262</a>        {
 <a href=#1263 id=1263 data-nosnippet>1263</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#1264 id=1264 data-nosnippet>1264</a>                <span class="string">"do not support merging non-TurboPlonk circuits."</span>.to_string(),
@@ -1525,13 +1525,13 @@
 <a href=#1525 id=1525 data-nosnippet>1525</a>        <span class="self">self</span>.check_finalize_flag(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
 <a href=#1526 id=1526 data-nosnippet>1526</a>        <span class="kw">let </span>domain = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
 <a href=#1527 id=1527 data-nosnippet>1527</a>        <span class="kw">let </span>n = domain.size();
-<a href=#1528 id=1528 data-nosnippet>1528</a>        <span class="kw">if </span>n != <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
+<a href=#1528 id=1528 data-nosnippet>1528</a>        <span class="kw">if </span><span class="macro">n !</span>= <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
 <a href=#1529 id=1529 data-nosnippet>1529</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#1530 id=1530 data-nosnippet>1530</a>                <span class="string">"Domain size should match the size of the padded lookup variables vector"
 <a href=#1531 id=1531 data-nosnippet>1531</a>                    </span>.to_string(),
 <a href=#1532 id=1532 data-nosnippet>1532</a>            ));
 <a href=#1533 id=1533 data-nosnippet>1533</a>        }
-<a href=#1534 id=1534 data-nosnippet>1534</a>        <span class="kw">if </span>n != merged_lookup_table.len() {
+<a href=#1534 id=1534 data-nosnippet>1534</a>        <span class="kw">if </span><span class="macro">n !</span>= merged_lookup_table.len() {
 <a href=#1535 id=1535 data-nosnippet>1535</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#1536 id=1536 data-nosnippet>1536</a>                <span class="string">"Domain size should match the size of the padded lookup table"</span>.to_string(),
 <a href=#1537 id=1537 data-nosnippet>1537</a>            ));
@@ -1583,13 +1583,13 @@
 <a href=#1583 id=1583 data-nosnippet>1583</a>        <span class="self">self</span>.check_finalize_flag(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
 <a href=#1584 id=1584 data-nosnippet>1584</a>        <span class="kw">let </span>domain = <span class="kw-2">&amp;</span><span class="self">self</span>.eval_domain;
 <a href=#1585 id=1585 data-nosnippet>1585</a>        <span class="kw">let </span>n = domain.size();
-<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="kw">if </span>n != <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
+<a href=#1586 id=1586 data-nosnippet>1586</a>        <span class="kw">if </span><span class="macro">n !</span>= <span class="self">self</span>.wire_variables[RANGE_WIRE_ID].len() {
 <a href=#1587 id=1587 data-nosnippet>1587</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#1588 id=1588 data-nosnippet>1588</a>                <span class="string">"Domain size should match the size of the padded lookup variables vector"
 <a href=#1589 id=1589 data-nosnippet>1589</a>                    </span>.to_string(),
 <a href=#1590 id=1590 data-nosnippet>1590</a>            ));
 <a href=#1591 id=1591 data-nosnippet>1591</a>        }
-<a href=#1592 id=1592 data-nosnippet>1592</a>        <span class="kw">if </span>n != merged_lookup_table.len() {
+<a href=#1592 id=1592 data-nosnippet>1592</a>        <span class="kw">if </span><span class="macro">n !</span>= merged_lookup_table.len() {
 <a href=#1593 id=1593 data-nosnippet>1593</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(ParameterError(
 <a href=#1594 id=1594 data-nosnippet>1594</a>                <span class="string">"Domain size should match the size of the padded lookup table"</span>.to_string(),
 <a href=#1595 id=1595 data-nosnippet>1595</a>            ));
@@ -2417,4 +2417,5 @@
 <a href=#2417 id=2417 data-nosnippet>2417</a>
 <a href=#2418 id=2418 data-nosnippet>2418</a>        <span class="prelude-val">Ok</span>(())
 <a href=#2419 id=2419 data-nosnippet>2419</a>    }
-<a href=#2420 id=2420 data-nosnippet>2420</a>}</code></pre></div></section></main></body></html>
+<a href=#2420 id=2420 data-nosnippet>2420</a>}
+</code></pre></div></section></main></body></html>

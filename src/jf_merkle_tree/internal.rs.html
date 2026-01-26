@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `merkle_tree/src/internal.rs`."><title>internal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_merkle_tree" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0 (ded5c06cf 2025-12-08)" data-channel="1.92.0" data-search-js="search-d69d8955.js" data-stringdex-js="stringdex-c3e638e9.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-ce535bd0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_merkle_tree/</div>internal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `merkle_tree/src/internal.rs`."><title>internal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-ca0dd0c4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_merkle_tree" data-themes="" data-resource-suffix="" data-rustdoc-version="1.93.0 (254b59607 2026-01-19)" data-channel="1.93.0" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-a410ff4d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">jf_merkle_tree/</div>internal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 <a href=#2 id=2 data-nosnippet>2</a>// This file is part of the Jellyfish library.
 <a href=#3 id=3 data-nosnippet>3</a>
 <a href=#4 id=4 data-nosnippet>4</a>// You should have received a copy of the MIT License
@@ -223,7 +223,7 @@
 <a href=#223 id=223 data-nosnippet>223</a>        .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>;
 <a href=#224 id=224 data-nosnippet>224</a>    <span class="kw">for </span>(l, r) <span class="kw">in </span>proof.lbound.iter().zip(proof.rbound.iter()) {
 <a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">let </span>to_digest = [l.clone(), values, r.clone()].concat();
-<a href=#226 id=226 data-nosnippet>226</a>        <span class="kw">if </span>to_digest.len() % ARITY != <span class="number">0 </span>{
+<a href=#226 id=226 data-nosnippet>226</a>        <span class="kw">if </span>to_digest.len() % <span class="macro">ARITY !</span>= <span class="number">0 </span>{
 <a href=#227 id=227 data-nosnippet>227</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
 <a href=#228 id=228 data-nosnippet>228</a>                <span class="string">"Malformed proof"</span>.to_string(),
 <a href=#229 id=229 data-nosnippet>229</a>            ));
@@ -472,7 +472,7 @@
 <a href=#472 id=472 data-nosnippet>472</a>                            children
 <a href=#473 id=473 data-nosnippet>473</a>                                .iter()
 <a href=#474 id=474 data-nosnippet>474</a>                                .enumerate()
-<a href=#475 id=475 data-nosnippet>475</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span>id != traversal_path[height - <span class="number">1</span>])
+<a href=#475 id=475 data-nosnippet>475</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span><span class="macro">id !</span>= traversal_path[height - <span class="number">1</span>])
 <a href=#476 id=476 data-nosnippet>476</a>                                .map(|(<span class="kw">_</span>, child)| child.value())
 <a href=#477 id=477 data-nosnippet>477</a>                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
 <a href=#478 id=478 data-nosnippet>478</a>                        );
@@ -505,7 +505,7 @@
 <a href=#505 id=505 data-nosnippet>505</a>                            children
 <a href=#506 id=506 data-nosnippet>506</a>                                .iter()
 <a href=#507 id=507 data-nosnippet>507</a>                                .enumerate()
-<a href=#508 id=508 data-nosnippet>508</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span>id != traversal_path[height - <span class="number">1</span>])
+<a href=#508 id=508 data-nosnippet>508</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span><span class="macro">id !</span>= traversal_path[height - <span class="number">1</span>])
 <a href=#509 id=509 data-nosnippet>509</a>                                .map(|(<span class="kw">_</span>, child)| child.value())
 <a href=#510 id=510 data-nosnippet>510</a>                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
 <a href=#511 id=511 data-nosnippet>511</a>                        );
@@ -544,7 +544,7 @@
 <a href=#544 id=544 data-nosnippet>544</a>        <span class="kw">match </span><span class="self">self </span>{
 <a href=#545 id=545 data-nosnippet>545</a>            MerkleNode::Empty =&gt; <span class="prelude-val">Ok</span>(Arc::new(<span class="self">self</span>.clone())),
 <a href=#546 id=546 data-nosnippet>546</a>            MerkleNode::Leaf { .. } =&gt; {
-<a href=#547 id=547 data-nosnippet>547</a>                <span class="kw">if </span>height != <span class="number">0 </span>{
+<a href=#547 id=547 data-nosnippet>547</a>                <span class="kw">if </span><span class="macro">height !</span>= <span class="number">0 </span>{
 <a href=#548 id=548 data-nosnippet>548</a>                    <span class="comment">// Reach a leaf before it should
 <a href=#549 id=549 data-nosnippet>549</a>                    </span><span class="prelude-val">Err</span>(MerkleTreeError::InconsistentStructureError(
 <a href=#550 id=550 data-nosnippet>550</a>                        <span class="string">"Malformed Merkle tree or proof"</span>.to_string(),
@@ -629,7 +629,7 @@
 <a href=#629 id=629 data-nosnippet>629</a>                            children
 <a href=#630 id=630 data-nosnippet>630</a>                                .iter()
 <a href=#631 id=631 data-nosnippet>631</a>                                .enumerate()
-<a href=#632 id=632 data-nosnippet>632</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span>id != traversal_path[height - <span class="number">1</span>])
+<a href=#632 id=632 data-nosnippet>632</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span><span class="macro">id !</span>= traversal_path[height - <span class="number">1</span>])
 <a href=#633 id=633 data-nosnippet>633</a>                                .map(|(<span class="kw">_</span>, child)| child.value())
 <a href=#634 id=634 data-nosnippet>634</a>                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
 <a href=#635 id=635 data-nosnippet>635</a>                        );
@@ -641,7 +641,7 @@
 <a href=#641 id=641 data-nosnippet>641</a>                            children
 <a href=#642 id=642 data-nosnippet>642</a>                                .iter()
 <a href=#643 id=643 data-nosnippet>643</a>                                .enumerate()
-<a href=#644 id=644 data-nosnippet>644</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span>id != traversal_path[height - <span class="number">1</span>])
+<a href=#644 id=644 data-nosnippet>644</a>                                .filter(|(id, <span class="kw">_</span>)| <span class="kw-2">*</span><span class="macro">id !</span>= traversal_path[height - <span class="number">1</span>])
 <a href=#645 id=645 data-nosnippet>645</a>                                .map(|(<span class="kw">_</span>, child)| child.value())
 <a href=#646 id=646 data-nosnippet>646</a>                                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(),
 <a href=#647 id=647 data-nosnippet>647</a>                        );
@@ -1156,4 +1156,5 @@
 <a href=#1156 id=1156 data-nosnippet>1156</a>        }
 <a href=#1157 id=1157 data-nosnippet>1157</a>        <span class="prelude-val">None
 <a href=#1158 id=1158 data-nosnippet>1158</a>    </span>}
-<a href=#1159 id=1159 data-nosnippet>1159</a>}</code></pre></div></section></main></body></html>
+<a href=#1159 id=1159 data-nosnippet>1159</a>}
+</code></pre></div></section></main></body></html>
