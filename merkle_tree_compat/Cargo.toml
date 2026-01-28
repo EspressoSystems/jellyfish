@@ -1,6 +1,6 @@
 [package]
 name = "jf-merkle-tree-compat"
-version = "0.2.0"
+version = "0.3.0"
 description = "Various Merkle tree implementations."
 authors = { workspace = true }
 edition = { workspace = true }
