@@ -220,7 +220,7 @@ pub trait MerkleTreeScheme: Sized {
     fn lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> LookupResult<&Self::Element, Self::MembershipProof, ()>;
+    ) -> LookupResult<Self::Element, Self::MembershipProof, ()>;
 
     /// Verify an element is a leaf of a Merkle tree given the proof
     /// * `commitment` - a merkle tree commitment, obtained from
@@ -334,7 +334,7 @@ pub trait UniversalMerkleTreeScheme: MerkleTreeScheme {
     fn universal_lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> LookupResult<&Self::Element, Self::MembershipProof, Self::NonMembershipProof>;
+    ) -> LookupResult<Self::Element, Self::MembershipProof, Self::NonMembershipProof>;
 
     /// Verify an index is not in this merkle tree
     /// * `commitment` - a Merkle Commitment

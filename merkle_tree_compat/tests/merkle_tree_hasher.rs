@@ -9,7 +9,7 @@ fn doctest_example() -> Result<(), MerkleTreeError> {
     let mt = HasherMerkleTree::<Sha256, usize>::from_elems(Some(2), my_data)?;
 
     let (val, proof) = mt.lookup(2).expect_ok()?;
-    assert_eq!(val, &3);
+    assert_eq!(val, 3);
     assert!(HasherMerkleTree::<Sha256, usize>::verify(mt.commitment(), 2, proof)?.is_ok());
     Ok(())
 }

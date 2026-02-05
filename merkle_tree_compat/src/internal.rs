@@ -870,7 +870,7 @@ where
         &self,
         height: usize,
         traversal_path: &[usize],
-    ) -> LookupResult<&E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
+    ) -> LookupResult<E, MerklePath<E, I, T>, MerklePath<E, I, T>> {
         match self {
             MerkleNode::Empty => {
                 LookupResult::NotFound(vec![MerkleNode::<E, I, T>::Empty; height + 1])
@@ -922,7 +922,7 @@ where
                 elem,
                 value: _,
                 pos: _,
-            } => LookupResult::Ok(elem, vec![self.clone()]),
+            } => LookupResult::Ok(elem.clone(), vec![self.clone()]),
             _ => LookupResult::NotInMemory,
         }
     }

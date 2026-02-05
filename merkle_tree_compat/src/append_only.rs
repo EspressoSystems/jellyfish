@@ -162,13 +162,13 @@ mod mt_tests {
         // singleton merkle tree test (#499)
         let mt = RescueMerkleTree::<F>::from_elems(None, [F::from(0u64)]).unwrap();
         let (elem, _) = mt.lookup(0).expect_ok().unwrap();
-        assert_eq!(elem, &F::from(0u64));
+        assert_eq!(elem, F::from(0u64));
 
         let mt =
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let commitment = mt.commitment();
         let (elem, proof) = mt.lookup(0).expect_ok().unwrap();
-        assert_eq!(elem, &F::from(3u64));
+        assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         assert!(RescueMerkleTree::<F>::verify(&commitment, 0u64, &proof)
             .unwrap()
@@ -217,7 +217,6 @@ mod mt_tests {
             RescueMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)]).unwrap();
         let commitment = mt.commitment();
         let (lookup_elem, lookup_proof) = mt.lookup(0).expect_ok().unwrap();
-        let lookup_elem = *lookup_elem;
         let (elem, proof) = mt.forget(0).expect_ok().unwrap();
         assert_eq!(lookup_elem, elem);
         assert_eq!(lookup_proof, proof);

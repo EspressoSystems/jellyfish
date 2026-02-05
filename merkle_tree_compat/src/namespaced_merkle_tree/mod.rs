@@ -207,7 +207,7 @@ where
     fn lookup(
         &self,
         pos: impl Borrow<Self::Index>,
-    ) -> super::LookupResult<&Self::Element, Self::MembershipProof, ()> {
+    ) -> super::LookupResult<Self::Element, Self::MembershipProof, ()> {
         self.inner.lookup(pos)
     }
 
@@ -267,7 +267,7 @@ where
     }
 
     /// Helper function to return an iterator over the leaves in the tree
-    pub fn leaves(&self) -> impl ExactSizeIterator<Item = &E> + '_ {
+    pub fn leaves(&self) -> impl ExactSizeIterator<Item = E> + '_ {
         (0..self.num_leaves() as usize).map(|idx| match self.inner.lookup(idx as u64) {
             LookupResult::Ok(elem, _) => elem,
             _ => panic!("NMT variant violated: every leaf in the tree should be occupied"),
@@ -499,7 +499,7 @@ mod nmt_tests {
         let mut internal_proof = tree.get_namespace_proof(internal_ns);
 
         // Check all of the leaves
-        let fetched_leaves = tree.leaves().cloned().collect::<Vec<Leaf>>();
+        let fetched_leaves = tree.leaves().collect::<Vec<Leaf>>();
         assert_eq!(fetched_leaves, leaves);
 
         // Check namespace proof on the left boundary

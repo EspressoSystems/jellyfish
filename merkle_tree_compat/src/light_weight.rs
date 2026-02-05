@@ -170,7 +170,7 @@ mod mt_tests {
         // singleton merkle tree test (#499)
         let mt = RescueLightWeightMerkleTree::<F>::from_elems(None, [F::from(0u64)]).unwrap();
         let (elem, _) = mt.lookup(0).expect_ok().unwrap();
-        assert_eq!(elem, &F::from(0u64));
+        assert_eq!(elem, F::from(0u64));
 
         let mut mt =
             RescueLightWeightMerkleTree::<F>::from_elems(Some(2), [F::from(3u64), F::from(1u64)])
@@ -186,7 +186,7 @@ mod mt_tests {
         assert!(mt.lookup(2).expect_not_in_memory().is_ok());
         assert!(mt.lookup(3).expect_ok().is_ok());
         let (elem, proof) = mock_mt.lookup(0).expect_ok().unwrap();
-        assert_eq!(elem, &F::from(3u64));
+        assert_eq!(elem, F::from(3u64));
         assert_eq!(proof.tree_height(), 3);
         let commitment = mt.commitment();
         assert!(
