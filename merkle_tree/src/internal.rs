@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use super::{DigestAlgorithm, Element, Index, LookupResult, NodeValue, ToTraversalPath};
-use crate::{errors::MerkleTreeError, VerificationResult, FAIL, SUCCESS};
+use crate::{errors::MerkleTreeError, MerkleProof, VerificationResult, FAIL, SUCCESS};
 use alloc::sync::Arc;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{borrow::Borrow, iter::Peekable, string::ToString, vec, vec::Vec};
@@ -102,13 +102,13 @@ impl<T: NodeValue> super::MerkleProof<T> for MerkleTreeProof<T> {
 /// * `pos` - zero-based index of the leaf in the tree
 /// * `element` - the leaf value, None if verifying a non-membership proof
 /// * `proof` - a membership proof for `element` at given `pos`
-/// * `returns` - Ok(true) if the proof is accepted, Ok(false) if not. Err() if
-///   the proof is not well structured, E.g. not for this merkle tree.
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
+///   if the proof is not well structured, E.g. not for this merkle tree.
 pub(crate) fn verify_merkle_proof<E, H, I, const ARITY: usize, T>(
     commitment: &T,
     pos: &I,
     element: Option<&E>,
-    proof: &[Vec<T>],
+    proof: &MerkleTreeProof<T>,
 ) -> Result<VerificationResult, MerkleTreeError>
 where
     E: Element,
@@ -121,6 +121,7 @@ where
     } else {
         T::default()
     };
+    let proof = proof.path_values();
     match element {
         // only strictly checking this during membership proof
         // in non-membership proof, empty leaf/branch node can have empty vector in
@@ -167,6 +168,77 @@ where
             },
         )?;
     if computed_root == *commitment {
+        Ok(SUCCESS)
+    } else {
+        Ok(FAIL)
+    }
+}
+
+#[derive(
+    Clone,
+    Debug,
+    Hash,
+    Default,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    CanonicalSerialize,
+    CanonicalDeserialize,
+)]
+#[tagged("MERKLE_RANGE_PROOF")]
+pub struct MerkleTreeRangeProof<T: NodeValue> {
+    pub lbound: Vec<Vec<T>>,
+    pub rbound: Vec<Vec<T>>,
+}
+
+/// Verify a merkle range proof
+/// * `commitment` - a merkle tree commitment
+/// * `indices` - zero-based indices of the leaves in the tree
+/// * `element` - the leaf values in the range
+/// * `proof` - a range proof for `[start, end]`
+/// * `returns` - Ok(SUCCESS) if the proof is accepted, Ok(FAIL) if not. Err()
+///   if the proof is not well structured, E.g. not for this merkle tree.
+pub fn verify_merkle_range_proof<E, H, I, const ARITY: usize, T>(
+    commitment: &T,
+    indices: &[impl Borrow<I>],
+    elements: &[impl Borrow<E>],
+    proof: &MerkleTreeRangeProof<T>,
+) -> Result<VerificationResult, MerkleTreeError>
+where
+    E: Element,
+    I: Index + ToTraversalPath<ARITY>,
+    T: NodeValue,
+    H: DigestAlgorithm<E, I, T>,
+{
+    if indices.len() != elements.len() {
+        return Err(MerkleTreeError::ParametersError(
+            "Indices and elements must have the same length".to_string(),
+        ));
+    }
+    let mut values = indices
+        .iter()
+        .zip(elements.iter())
+        .map(|(index, element)| H::digest_leaf(index.borrow(), element.borrow()))
+        .collect::<Result<Vec<_>, _>>()?;
+    for (l, r) in proof.lbound.iter().zip(proof.rbound.iter()) {
+        let to_digest = [l.clone(), values, r.clone()].concat();
+        if to_digest.len() % ARITY != 0 {
+            return Err(MerkleTreeError::InconsistentStructureError(
+                "Malformed proof".to_string(),
+            ));
+        }
+        values = to_digest
+            .chunks(ARITY)
+            .map(|chunk| H::digest(chunk))
+            .collect::<Result<Vec<_>, _>>()?;
+    }
+    if values.len() != 1 {
+        return Err(MerkleTreeError::InconsistentStructureError(
+            "Malformed proof".to_string(),
+        ));
+    }
+    if values[0] == *commitment {
         Ok(SUCCESS)
     } else {
         Ok(FAIL)
@@ -583,6 +655,77 @@ where
                 pos: _,
             } => LookupResult::Ok(elem, MerkleTreeProof(vec![])),
             _ => LookupResult::NotInMemory,
+        }
+    }
+
+    /// Make a range query on the given tree, returns the list of indices and
+    /// elements in the range, as well as the range proof. Returns `NotInMemory`
+    /// or `NotFound` if any indices in the range are not presented in the tree.
+    pub(crate) fn range_lookup_internal(
+        &self,
+        height: usize,
+        lbound: &[usize],
+        rbound: &[usize],
+        l_on_boundary: bool,
+        r_on_boundary: bool,
+    ) -> LookupResult<(Vec<I>, Vec<E>), MerkleTreeRangeProof<T>, ()> {
+        match self {
+            MerkleNode::Empty => LookupResult::NotFound(()),
+            MerkleNode::Branch { value: _, children } => {
+                let mut proof = MerkleTreeRangeProof::default();
+                let mut indices = Vec::new();
+                let mut elements = Vec::new();
+                let l = if l_on_boundary { lbound[height - 1] } else { 0 };
+                let r = if r_on_boundary {
+                    rbound[height - 1]
+                } else {
+                    children.len() - 1
+                };
+                #[allow(clippy::needless_range_loop)]
+                for i in l..=r {
+                    match children[i].range_lookup_internal(
+                        height - 1,
+                        lbound,
+                        rbound,
+                        l_on_boundary && i == l,
+                        r_on_boundary && i == r,
+                    ) {
+                        LookupResult::Ok((id, elem), p) => {
+                            indices.extend(id);
+                            elements.extend(elem);
+                            if l_on_boundary && i == l {
+                                proof.lbound = p.lbound;
+                            }
+                            if r_on_boundary && i == r {
+                                proof.rbound = p.rbound;
+                            }
+                        },
+                        LookupResult::NotInMemory => return LookupResult::NotInMemory,
+                        LookupResult::NotFound(_) => return LookupResult::NotFound(()),
+                    }
+                }
+                if l_on_boundary {
+                    proof
+                        .lbound
+                        .push(children[..l].iter().map(|c| c.value()).collect());
+                }
+                if r_on_boundary {
+                    proof
+                        .rbound
+                        .push(children[r + 1..].iter().map(|c| c.value()).collect());
+                }
+
+                LookupResult::Ok((indices, elements), proof)
+            },
+            MerkleNode::Leaf {
+                value: _,
+                pos,
+                elem,
+            } => LookupResult::Ok(
+                (vec![pos.clone()], vec![elem.clone()]),
+                MerkleTreeRangeProof::default(),
+            ),
+            MerkleNode::ForgottenSubtree { .. } => LookupResult::NotInMemory,
         }
     }
 
