@@ -8,7 +8,6 @@
 //! with a Rescue hash function.
 
 use crate::{
-    internal::MerkleNode,
     prelude::{MerkleTreeProof, RescueSparseMerkleTree},
     MerkleProof, MerkleTreeScheme, ToTraversalPath,
 };
@@ -35,6 +34,19 @@ where
         proof_var: &Merkle3AryProofVar,
         commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
+        // First check that if the input index is consistent with the proof branches
+        let mut base = F::from(1u64);
+        let mut cumulative = self.zero();
+        for node_var in &proof_var.node_vars {
+            let coef = self.sub(self.one(), node_var.is_left_child.into())?;
+            let coef = self.add(coef, node_var.is_right_child.into())?;
+            let to_add = self.mul_constant(coef, &base)?;
+            cumulative = self.add(cumulative, to_add)?;
+            base = base + base + base;
+        }
+        let index_check = self.is_equal(cumulative, non_elem_idx_var)?;
+        // Compute the commitment from the proof and check if it matches the expected
+        // commitment.
         let computed_commitment_var = {
             let mut cur_label = self.zero();
             for cur_node in proof_var.node_vars.iter() {
@@ -51,11 +63,15 @@ where
                     self.is_zero(input_labels[1])?,
                     self.is_zero(input_labels[2])?,
                 ];
+                let all_zero = self.logic_and_all(&is_zero_vars)?;
                 cur_label = Self::DigestGadget::digest(self, &input_labels)?;
+                // Current label remains zero if all input labels are zero
+                cur_label = self.conditional_select(all_zero, cur_label, self.zero())?;
             }
             Ok(cur_label)
         }?;
-        self.is_equal(computed_commitment_var, commitment_var)
+        let commitment_check = self.is_equal(computed_commitment_var, commitment_var)?;
+        self.logic_and(index_check, commitment_check)
     }
 
     fn enforce_non_membership_proof(
@@ -73,16 +89,24 @@ where
         pos: &<SparseMerkleTree<F> as MerkleTreeScheme>::Index,
         merkle_proof: &MerkleTreeProof<F>,
     ) -> Result<Merkle3AryProofVar, CircuitError> {
-        let path = <BigUint as ToTraversalPath<3>>::to_traversal_path(&pos, merkle_proof.height());
+        let path = <BigUint as ToTraversalPath<3>>::to_traversal_path(pos, merkle_proof.height());
 
         let nodes = path
             .iter()
             .zip(merkle_proof.path_values().iter())
-            .filter(|(_, v)| v.len() > 0)
             .map(|(branch, siblings)| {
+                let is_empty = siblings.is_empty();
                 Ok(Merkle3AryNodeVar {
-                    sibling1: self.create_variable(siblings[0])?,
-                    sibling2: self.create_variable(siblings[1])?,
+                    sibling1: if is_empty {
+                        self.zero()
+                    } else {
+                        self.create_variable(siblings[0])?
+                    },
+                    sibling2: if is_empty {
+                        self.zero()
+                    } else {
+                        self.create_variable(siblings[1])?
+                    },
                     is_left_child: self.create_boolean_variable(branch == &0)?,
                     is_right_child: self.create_boolean_variable(branch == &2)?,
                 })
@@ -150,12 +174,18 @@ mod test {
         // proof of non-membership
         let proof = mt.universal_lookup(&uid).expect_not_found().unwrap();
 
+        assert!(
+            SparseMerkleTree::<F>::non_membership_verify(commitment, &uid, &proof)
+                .unwrap()
+                .is_ok()
+        );
+
         // Circuit computation with a MT
         let non_elem_idx_var = circuit.create_variable(uid.clone().into()).unwrap();
         let proof_var =
             UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
                 &mut circuit,
-                &uid.into(),
+                &uid,
                 &proof,
             )
             .unwrap();
