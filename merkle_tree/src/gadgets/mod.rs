@@ -11,17 +11,10 @@ use ark_ff::PrimeField;
 use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
 
 mod universal_merkle_tree;
-use ark_std::{string::ToString, vec, vec::Vec};
+use ark_std::{vec, vec::Vec};
 
-use crate::{
-    internal::{MerkleNode, MerkleTreeProof},
-    prelude::RescueMerkleTree,
-    Element, Index, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
-    UniversalMerkleTreeScheme,
-};
-use jf_rescue::RescueParameter;
-type NodeVal<F> = <RescueMerkleTree<F> as MerkleTreeScheme>::NodeValue;
-use jf_rescue::gadgets::RescueNativeGadget;
+use crate::{MerkleProof, MerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme};
+use jf_rescue::{gadgets::RescueNativeGadget, RescueParameter};
 
 /// Gadget for a Merkle tree
 ///
@@ -396,12 +389,10 @@ where
 #[cfg(test)]
 mod test {
     use crate::{
-        gadgets::{constrain_sibling_order, Merkle3AryProofVar, MerkleTreeGadget},
-        internal::MerkleNode,
+        gadgets::{constrain_sibling_order, MerkleTreeGadget},
         prelude::RescueMerkleTree,
         MerkleTreeScheme,
     };
-    use alloc::sync::Arc;
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;

@@ -13,12 +13,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install nightly toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          default: false
+        uses: dtolnay/rust-toolchain@nightly
 
       - name: Run cargo-udeps
         uses: aig787/cargo-udeps-action@v1

@@ -18,6 +18,7 @@ pub trait CommitmentGadget {
     /// * `input` - input variables,
     /// * `blinding` - blinding variable
     /// * `returns` a variable that refers to the commitment value
+    ///
     /// The underlying the commitment instance is bound to a specific length.
     /// Hence input length must match it.
     fn commit(&mut self, input: &[Variable], blinding: Variable) -> Result<Variable, CircuitError>;
