@@ -7,14 +7,9 @@
 //! Polynomial Commitment Scheme
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
-
-#[macro_use]
-extern crate derivative;
 
 #[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
 #[doc(hidden)]
@@ -184,8 +179,7 @@ pub trait PolynomialCommitmentScheme {
         Ok(points
             .iter()
             .map(|point| Self::open(prover_param.borrow(), polynomial, point))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(PCSError::from)?
+            .collect::<Result<Vec<_>, _>>()?
             .into_iter()
             .unzip())
     }

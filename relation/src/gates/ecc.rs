@@ -14,7 +14,7 @@ use crate::{
 };
 use ark_ec::twisted_edwards::TECurveConfig as Config;
 use ark_ff::PrimeField;
-use derivative::Derivative;
+use derive_where::derive_where;
 
 #[inline]
 fn edwards_coeff_d<P: Config>() -> P::BaseField {
@@ -22,8 +22,7 @@ fn edwards_coeff_d<P: Config>() -> P::BaseField {
 }
 
 /// A gate for checking a point conforming the twisted Edwards curve equation
-#[derive(Derivative)]
-#[derivative(Clone(bound = "P: Config"))]
+#[derive_where(Clone; P: Config)]
 pub struct EdwardsCurveEquationGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }
@@ -51,8 +50,7 @@ where
 }
 
 /// A gate for point addition on x-coordinate between two Curve Points
-#[derive(Derivative)]
-#[derivative(Clone(bound = "P: Config"))]
+#[derive_where(Clone; P: Config)]
 pub struct CurvePointXAdditionGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }
@@ -78,8 +76,7 @@ where
 }
 
 /// A gate for point addition on y-coordinate between two Curve Points
-#[derive(Derivative)]
-#[derivative(Clone(bound = "P: Config"))]
+#[derive_where(Clone; P: Config)]
 pub struct CurvePointYAdditionGate<P: Config> {
     pub(crate) _phantom: PhantomData<P>,
 }

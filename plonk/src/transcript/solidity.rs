@@ -63,7 +63,7 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
         let zero = F::zero();
         let (x, y) = if comm.0.is_zero() {
             // this is solidity precompile representation of Points of Infinity
-            (&zero, &zero)
+            (zero, zero)
         } else {
             comm.0.xy().unwrap()
         };

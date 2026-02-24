@@ -106,6 +106,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         }
 
         let a_bits_le: Vec<bool> = self.witness(a)?.into_bigint().to_bits_le();
+
         if bit_len > a_bits_le.len() {
             return Err(CircuitError::ParameterError(format!(
                 "Maximum field bit size: {}, requested range upper bound bit len: {}",
@@ -123,9 +124,43 @@ impl<F: PrimeField> PlonkCircuit<F> {
             })
             .collect::<Result<Vec<_>, CircuitError>>()?;
 
-        self.binary_decomposition_gate(a_bits_le.clone(), a)?;
+        // edge case: when decomposing a field to exactly MODULUS_BIT_SIZE,
+        // and when MODULUS < 2^MODULUS_BIT_SIZE (e.g. p=17, log2(p) = 5), then we need
+        // to rule out non-canonical representation of field elements (e.g.
+        // avoid bit-wise 18 to represent 1 mod 17) by making sure its always < MODULUS
+        if bit_len == F::MODULUS_BIT_SIZE as usize {
+            self.binary_decomposition_gate_with_canonical_check(a_bits_le.clone(), a)?;
+        } else {
+            self.binary_decomposition_gate(a_bits_le.clone(), a)?;
+        }
 
         Ok(a_bits_le)
+    }
+
+    fn binary_decomposition_gate_with_canonical_check(
+        &mut self,
+        a_bits_le: Vec<BoolVar>,
+        a: Variable,
+    ) -> Result<(), CircuitError> {
+        self.binary_decomposition_gate(a_bits_le.clone(), a)?;
+
+        // making sure a < modulus in binary format,
+        // namely it's in canonical representation
+        let modulus_bits_le = F::MODULUS.to_bits_le();
+        let is_lt_modulus = a_bits_le
+            .iter()
+            .chain(ark_std::iter::repeat(&self.false_var()))
+            .zip(modulus_bits_le.iter())
+            .try_fold(self.false_var(), |cur, (a_bit, p_bit)| {
+                let not_a = self.logic_neg(*a_bit)?;
+                if *p_bit {
+                    self.logic_or(cur, not_a)
+                } else {
+                    self.logic_and(cur, not_a)
+                }
+            })?;
+        self.enforce_constant(is_lt_modulus.0, F::one())?;
+        Ok(())
     }
 
     fn binary_decomposition_gate(
@@ -142,14 +177,19 @@ impl<F: PrimeField> PlonkCircuit<F> {
 #[cfg(test)]
 mod test {
     use crate::{
-        gadgets::test_utils::test_variable_independence_for_circuit, Circuit, CircuitError,
-        PlonkCircuit,
+        gadgets::test_utils::test_variable_independence_for_circuit, BoolVar, Circuit,
+        CircuitError, PlonkCircuit, Variable,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bn254::Fq as FqEd254;
-    use ark_ff::PrimeField;
+    use ark_ff::{
+        fields::{Fp64, MontBackend, MontConfig},
+        BigInt, BigInteger, PrimeField,
+    };
+    use ark_std::vec::Vec;
+    use core::mem::MaybeUninit;
 
     #[test]
     fn test_unpack() -> Result<(), CircuitError> {
@@ -263,5 +303,100 @@ mod test {
         circuit.is_in_range(a_var, 10)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
+    }
+
+    // A F17 finite field for test
+    #[derive(MontConfig)]
+    #[modulus = "17"]
+    #[generator = "3"]
+    pub struct F17Config;
+    pub type F17 = Fp64<MontBackend<F17Config, 1>>;
+
+    impl PlonkCircuit<F17> {
+        /// exactly the same gates as the old vulnerable `unpack()` except
+        /// when we create wire variables for the bit representation of `a`, we
+        /// directly take the raw representation of `a`, instead of
+        /// `.into_bigint(). to_bits_le()` which will canonicalize the
+        /// repr. So that if `a` is manipulated to be in non-canonical
+        /// form, the `a_bits_le` will also be in non-canonical form.
+        fn old_unpack(
+            &mut self,
+            a: Variable,
+            bit_len: usize,
+        ) -> Result<Vec<BoolVar>, CircuitError> {
+            self.check_var_bound(a)?;
+            // DIFF: this is only diff, directly accessing `.0` of Fp which avoid the
+            // canonicalization during `.into_bigint()`
+            let a_bits_le: Vec<bool> = self.witness(a)?.0.to_bits_le();
+            let a_bits_le: Vec<BoolVar> = a_bits_le
+                .iter()
+                .take(bit_len)
+                .map(|&b| self.create_boolean_variable(b))
+                .collect::<Result<Vec<_>, CircuitError>>()?;
+
+            self.binary_decomposition_gate(a_bits_le.clone(), a)?;
+            Ok(a_bits_le)
+        }
+
+        // fixing the vulnerable unpack by using a the gate `_with_canonical_check`
+        fn fixed_unpack(
+            &mut self,
+            a: Variable,
+            bit_len: usize,
+        ) -> Result<Vec<BoolVar>, CircuitError> {
+            self.check_var_bound(a)?;
+            let a_bits_le: Vec<bool> = self.witness(a)?.0.to_bits_le();
+            let a_bits_le: Vec<BoolVar> = a_bits_le
+                .iter()
+                .take(bit_len)
+                .map(|&b| self.create_boolean_variable(b))
+                .collect::<Result<Vec<_>, CircuitError>>()?;
+
+            self.binary_decomposition_gate_with_canonical_check(a_bits_le.clone(), a)?;
+            Ok(a_bits_le)
+        }
+    }
+
+    /// Credit: LeastAuthority responsibly reported a critical bug in v0.4.4 of
+    /// jf-relation (as of Aug 30, 2025).
+    #[test]
+    fn non_canonical_field() -> Result<(), CircuitError> {
+        // showcasing the vulnerability
+        let mut circuit = PlonkCircuit::<F17>::new_turbo_plonk();
+
+        // a mod p = 1, but non-canonical representation with actual integer value of 18
+        let a: F17 = unsafe {
+            let mut x = MaybeUninit::<F17>::uninit();
+            // directly write the BigInt [18] into the inner field storage
+            ark_std::ptr::write(&mut (*x.as_mut_ptr()).0, BigInt::new([18]));
+            x.assume_init()
+        };
+        let a_var = circuit.create_variable(a)?;
+        assert_eq!(circuit.witness(a_var)?.0, BigInt::new([18]));
+
+        let a_bits_le = circuit.old_unpack(a_var, F17::MODULUS_BIT_SIZE as usize)?;
+        let recomposed = a_bits_le.iter().enumerate().fold(0u64, |acc, (i, b_var)| {
+            acc | (circuit.witness(b_var.0).unwrap().0 .0[0] << i)
+        });
+
+        // non_canonical field repr would pass vulnerable `unpack()` gadget
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        assert!(recomposed > 17);
+
+        // verifying the fix
+        let mut circuit = PlonkCircuit::<F17>::new_turbo_plonk();
+        let a: F17 = unsafe {
+            let mut x = MaybeUninit::<F17>::uninit();
+            ark_std::ptr::write(&mut (*x.as_mut_ptr()).0, BigInt::new([18]));
+            x.assume_init()
+        };
+        let a_var = circuit.create_variable(a)?;
+        let _ = circuit.fixed_unpack(a_var, F17::MODULUS_BIT_SIZE as usize)?;
+        assert!(
+            circuit.check_circuit_satisfiability(&[]).is_err(),
+            "non_canonical field repr still fool fixed `unpack()` gadget"
+        );
+
+        Ok(())
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "jf-crhf"
-version = "0.1.1"
+version = "0.2.0"
 description = "Collision-resistant hash function (CRHF)"
 authors = { workspace = true }
 edition = { workspace = true }

@@ -218,6 +218,7 @@ where
         for chunk in chunks {
             let chunk_var = RescueStateVar::from([chunk[0], chunk[1], chunk[2], chunk[3]]);
             state = self.add_state(&state, &chunk_var)?;
+            // Apply permutation
             state = RescueNativeGadget::<F>::rescue_permutation(self, state)?;
         }
         // squeeze phase, but only a single output, can return directly from state

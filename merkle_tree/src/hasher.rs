@@ -40,13 +40,16 @@
 #![allow(clippy::non_canonical_partial_ord_impl)]
 
 use super::{append_only::MerkleTree, DigestAlgorithm, Element, Index};
-use crate::errors::MerkleTreeError;
+use crate::{
+    errors::MerkleTreeError,
+    prelude::{INTERNAL_HASH_DOM_SEP, LEAF_HASH_DOM_SEP},
+};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, Read, SerializationError, Valid, Validate,
     Write,
 };
 use ark_std::string::ToString;
-use derivative::Derivative;
+use derive_where::derive_where;
 use digest::{
     crypto_common::{generic_array::ArrayLength, Output},
     Digest, OutputSizeUser,
@@ -146,6 +149,7 @@ where
 {
     fn digest(data: &[HasherNode<H>]) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(INTERNAL_HASH_DOM_SEP);
         for value in data {
             hasher.update(value.as_ref());
         }
@@ -154,6 +158,7 @@ where
 
     fn digest_leaf(pos: &I, elem: &E) -> Result<HasherNode<H>, MerkleTreeError> {
         let mut hasher = H::new();
+        hasher.update(LEAF_HASH_DOM_SEP);
         pos.serialize_uncompressed(&mut hasher)
             .map_err(|_| MerkleTreeError::DigestError("Failed serializing pos".to_string()))?;
         elem.serialize_uncompressed(&mut hasher)
@@ -163,18 +168,10 @@ where
 }
 
 /// Newtype wrapper for hash output that impls [`NodeValue`](super::NodeValue).
-#[derive(Derivative)]
-#[derivative(
-    Clone(bound = ""),
-    Copy(bound = "<<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy"),
-    Debug(bound = ""),
-    Default(bound = ""),
-    Eq(bound = ""),
-    Hash(bound = ""),
-    Ord(bound = ""),
-    PartialEq(bound = ""),
-    PartialOrd(bound = "")
+#[derive_where(
+    Copy; <<H as OutputSizeUser>::OutputSize as ArrayLength<u8>>::ArrayType: Copy
 )]
+#[derive_where(Clone, Debug, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[tagged("HASH")]
 pub struct HasherNode<H>(Output<H>)
 where

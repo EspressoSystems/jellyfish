@@ -8,24 +8,22 @@
 //! frontier -- the right-most path.
 
 use super::{
-    internal::{
-        build_light_weight_tree_internal, MerkleNode, MerkleTreeIntoIter, MerkleTreeIter,
-        MerkleTreeProof,
-    },
-    AppendableMerkleTreeScheme, DigestAlgorithm, Element, ForgetableMerkleTreeScheme, Index,
-    LookupResult, MerkleProof, MerkleTreeScheme, NodeValue, ToTraversalPath,
+    internal::{build_light_weight_tree_internal, MerkleNode},
+    AppendableMerkleTreeScheme, DigestAlgorithm, Element, Index, LookupResult, MerkleProof,
+    MerkleTreeScheme, NodeValue, ToTraversalPath,
 };
 use crate::{
     errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
-    VerificationResult,
+    impl_range_proof_merkle_tree_scheme, VerificationResult,
 };
 use alloc::sync::Arc;
-use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
 
 impl_merkle_tree_scheme!(LightWeightMerkleTree);
+impl_range_proof_merkle_tree_scheme!(LightWeightMerkleTree);
 impl_forgetable_merkle_tree_scheme!(LightWeightMerkleTree);
 
 impl<E, H, I, const ARITY: usize, T> LightWeightMerkleTree<E, H, I, ARITY, T>
@@ -110,7 +108,6 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::MerkleNode,
         prelude::{RescueLightWeightMerkleTree, RescueMerkleTree},
         *,
     };

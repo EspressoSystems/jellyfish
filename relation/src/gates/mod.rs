@@ -76,7 +76,7 @@ impl<F: Field> Clone for Box<dyn Gate<F>> {
     }
 }
 
-impl<F: Field> fmt::Debug for (dyn Gate<F> + 'static) {
+impl<F: Field> fmt::Debug for dyn Gate<F> + 'static {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // TODO: (alex) add more context for debug
         f.write_str(self.name())

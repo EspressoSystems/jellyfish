@@ -5,18 +5,16 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 //! Implementation of a typical Sparse Merkle Tree.
-use super::{
-    internal::{MerkleNode, MerkleTreeIntoIter, MerkleTreeIter, MerkleTreeProof},
-    DigestAlgorithm, Element, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme,
-    Index, LookupResult, MerkleProof, MerkleTreeScheme, NodeValue,
-    PersistentUniversalMerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
-};
 use crate::{
-    errors::MerkleTreeError, impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
-    VerificationResult,
+    errors::MerkleTreeError,
+    impl_forgetable_merkle_tree_scheme, impl_merkle_tree_scheme,
+    internal::{MerkleNode, MerkleTreeProof},
+    DigestAlgorithm, Element, ForgetableUniversalMerkleTreeScheme, Index, LookupResult,
+    MerkleProof, MerkleTreeScheme, NodeValue, PersistentUniversalMerkleTreeScheme, ToTraversalPath,
+    UniversalMerkleTreeScheme, VerificationResult,
 };
 use alloc::sync::Arc;
-use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString, vec, vec::Vec};
+use ark_std::{borrow::Borrow, fmt::Debug, marker::PhantomData, string::ToString};
 use num_bigint::BigUint;
 use num_traits::pow::pow;
 use serde::{Deserialize, Serialize};
@@ -100,7 +98,7 @@ where
             commitment.borrow(),
             pos.borrow(),
             None,
-            proof.borrow().path_values(),
+            proof.borrow(),
         )
     }
 
@@ -192,7 +190,6 @@ where
 #[cfg(test)]
 mod mt_tests {
     use crate::{
-        internal::{MerkleNode, MerkleTreeProof},
         prelude::{RescueHash, RescueSparseMerkleTree},
         DigestAlgorithm, ForgetableMerkleTreeScheme, ForgetableUniversalMerkleTreeScheme, Index,
         LookupResult, MerkleProof, MerkleTreeScheme, PersistentUniversalMerkleTreeScheme,
@@ -245,7 +242,7 @@ mod mt_tests {
 
         let commitment = mt.commitment();
 
-        let mut proof = mt
+        let proof = mt
             .universal_lookup(BigUint::from(3u64))
             .expect_not_found()
             .unwrap();

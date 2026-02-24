@@ -34,6 +34,8 @@
 //! [eip196]: https://eips.ethereum.org/EIPS/eip-196
 //! [eip197]: https://eips.ethereum.org/EIPS/eip-197
 
+use core::fmt::Debug;
+
 use super::{AggregateableSignatureSchemes, SignatureScheme};
 use crate::{
     constants::{tag, CS_ID_BLS_BN254},
@@ -45,11 +47,11 @@ use ark_bn254::{
 use ark_ec::{
     bn::{Bn, G1Prepared, G2Prepared},
     pairing::Pairing,
-    AffineRepr, CurveGroup, Group,
+    AffineRepr, CurveGroup, PrimeGroup,
 };
 use ark_ff::{
     field_hashers::{DefaultFieldHasher, HashToField},
-    BigInteger, Field, PrimeField,
+    AdditiveGroup, BigInteger, Field, PrimeField,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, *};
 use ark_std::{
@@ -57,12 +59,10 @@ use ark_std::{
     hash::{Hash, Hasher},
     rand::{CryptoRng, RngCore},
     string::ToString,
-    vec,
     vec::Vec,
     One, UniformRand,
 };
-use derivative::Derivative;
-use digest::DynDigest;
+use digest::{DynDigest, FixedOutputReset};
 use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
@@ -171,11 +171,15 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 msgs.len(),
             )));
         }
-        // subgroup check
-        // TODO: for BN we don't need a subgroup check
-        sig.sigma.check().map_err(|_e| {
-            SignatureError::ParameterError("signature subgroup check failed".to_string())
-        })?;
+        // both oncurve check and subgroup check for verification keys
+        vks.iter()
+            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
+
         // verify
         let mut m_points: Vec<G1Prepared<_>> = msgs
             .iter()
@@ -215,6 +219,15 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
                 "no verification key for signature verification".to_string(),
             ));
         }
+        // both oncurve check and subgroup check for verification keys
+        vks.iter()
+            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
+
         let mut agg_vk = vks[0].0;
         for vk in vks.iter().skip(1) {
             agg_vk += vk.0;
@@ -292,9 +305,7 @@ impl TryFrom<TaggedBase64> for SignKey {
 
 /// Signature public verification key
 #[tagged(tag::BLS_VER_KEY)]
-#[derive(
-    CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, PartialEq, Clone, Debug, Copy, Hash,
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct VerKey(pub(crate) G2Projective);
 
 // An arbitrary comparison for VerKey.
@@ -307,6 +318,14 @@ impl PartialOrd for VerKey {
 impl Ord for VerKey {
     fn cmp(&self, other: &Self) -> core::cmp::Ordering {
         self.0.into_affine().xy().cmp(&other.0.into_affine().xy())
+    }
+}
+
+// Override the Debug implementation to print the [`VerKey`] in TaggedBase64
+// format
+impl Debug for VerKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
     }
 }
 
@@ -362,8 +381,9 @@ impl PartialEq for Signature {
 /// The hashing algorithm consists of the following steps:
 ///   1. Hash the bytes to a field element `x`.
 ///   2. Compute `Y = x^3 + 3`. (Note: the equation of the BN curve is
-/// y^2=x^3+3)   3. Check if `Y` is a quadratic residue (QR), in which case
-/// return `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a QR.
+///      y^2=x^3+3)   3. Check if `Y` is a quadratic residue (QR), in which case
+///      return `y=sqrt(Y)` otherwise try with `x+1, x+2` etc... until `Y` is a
+///      QR.
 ///   4. Return `P=(x,y)`
 ///
 ///  In the future we may switch to a constant time algorithm such as Fouque-Tibouchi <https://www.di.ens.fr/~fouque/pub/latincrypt12.pdf>
@@ -371,7 +391,9 @@ impl PartialEq for Signature {
 /// * `msg` - input message
 /// * `returns` - A group element in G1
 #[allow(non_snake_case)]
-pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective {
+pub fn hash_to_curve<H: Default + DynDigest + Clone + FixedOutputReset>(
+    msg: &[u8],
+) -> G1Projective {
     let hasher_init = &[1u8];
     let hasher = <DefaultFieldHasher<H> as HashToField<BaseField>>::new(hasher_init);
 
@@ -379,7 +401,7 @@ pub fn hash_to_curve<H: Default + DynDigest + Clone>(msg: &[u8]) -> G1Projective
     // For BN254 we have a=0 and b=3 so we only use b
     let coeff_b: BaseField = BaseField::from(3);
 
-    let mut x: BaseField = hasher.hash_to_field(msg, 1)[0];
+    let mut x: BaseField = hasher.hash_to_field::<1>(msg)[0];
     let mut Y: BaseField = x * x * x + coeff_b;
 
     // Loop until we find a quadratic residue
@@ -510,6 +532,11 @@ impl VerKey {
         sig: &Signature,
         csid: B,
     ) -> Result<(), SignatureError> {
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
         let msg_input = [msg, csid.as_ref()].concat();
         let group_elem = hash_to_curve::<Keccak256>(&msg_input);
         let g2 = G2Projective::generator();
@@ -530,7 +557,10 @@ mod tests {
         bls_over_bn254::{BLSOverBN254CurveSignatureScheme, KeyPair, SignKey, Signature, VerKey},
         constants::CS_ID_BLS_BN254,
         tests::{agg_sign_and_verify, failed_verification, sign_and_verify},
+        AggregateableSignatureSchemes, SignatureError,
     };
+    use ark_bn254::{Fq, G1Affine};
+    use ark_ec::AffineRepr;
     use ark_ff::vec;
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
     use ark_std::{vec::Vec, UniformRand};
@@ -605,7 +635,7 @@ mod tests {
         let msg = vec![87u8];
         let sig = keypair.sign(&msg, CS_ID_BLS_BN254);
 
-        let mut ser_bytes: Vec<u8> = keypair.to_bytes();
+        let ser_bytes: Vec<u8> = keypair.to_bytes();
         let de = KeyPair::from_bytes(&ser_bytes);
         assert_eq!(de, keypair);
 
@@ -613,7 +643,7 @@ mod tests {
         let de: KeyPair = tagged_blob.try_into().unwrap();
         assert_eq!(de, keypair);
 
-        let mut ser_bytes: Vec<u8> = sk.to_bytes();
+        let ser_bytes: Vec<u8> = sk.to_bytes();
         let de = SignKey::from_bytes(&ser_bytes);
         assert_eq!(VerKey::from(&de), VerKey::from(&sk));
 
@@ -660,5 +690,69 @@ mod tests {
             assert_eq!(vk.cmp(&vk_copy), ark_std::cmp::Ordering::Equal);
             assert_eq!(vk, vk_copy);
         }
+    }
+
+    #[test]
+    fn test_malformed_signature() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let vk = keypair.ver_key();
+        let msg = b"hello";
+
+        let bad_sig = Signature {
+            sigma: G1Affine::new_unchecked(Fq::rand(&mut rng), Fq::rand(&mut rng)).into_group(),
+        };
+        assert_eq!(
+            vk.verify(msg.as_slice(), &bad_sig, CS_ID_BLS_BN254),
+            Result::Err(SignatureError::FailedOnCurveCheck)
+        );
+        assert_eq!(
+            BLSOverBN254CurveSignatureScheme::multi_sig_verify(
+                &(),
+                &[vk],
+                msg.as_slice(),
+                &bad_sig
+            ),
+            Result::Err(SignatureError::FailedOnCurveCheck)
+        );
+        assert_eq!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify(
+                &(),
+                &[vk],
+                &[msg.as_slice()],
+                &bad_sig
+            ),
+            Result::Err(SignatureError::FailedOnCurveCheck)
+        );
+    }
+
+    #[test]
+    fn test_malformed_vk() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let msg = b"hello";
+        let sig = keypair.sign(msg.as_slice(), CS_ID_BLS_BN254);
+
+        let mut bad_vk = keypair.ver_key();
+        bad_vk.0.x.c0 += Fq::rand(&mut rng);
+
+        assert_eq!(
+            BLSOverBN254CurveSignatureScheme::multi_sig_verify(
+                &(),
+                &[bad_vk],
+                msg.as_slice(),
+                &sig
+            ),
+            Result::Err(SignatureError::FailedValidityCheck),
+        );
+        assert_eq!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify(
+                &(),
+                &[bad_vk],
+                &[msg.as_slice()],
+                &sig
+            ),
+            Result::Err(SignatureError::FailedValidityCheck),
+        );
     }
 }

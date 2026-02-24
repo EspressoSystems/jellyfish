@@ -12,7 +12,7 @@ use ark_ec::{
     twisted_edwards::{Projective, TECurveConfig as Config},
     CurveConfig,
 };
-use ark_ff::{BigInteger, PrimeField};
+use ark_ff::PrimeField;
 use ark_std::{format, vec, vec::Vec};
 use jf_utils::fq_to_fr;
 
@@ -325,7 +325,7 @@ where
             let scalar_u64 = scalar_val.as_ref()[0] % (1 << c);
             // We right-shift by c bits, thus getting rid of the
             // lower bits.
-            scalar_val.divn(c as u32);
+            scalar_val >>= c as u32;
             circuit.create_variable(F::from(scalar_u64))
         })
         .collect::<Result<Vec<_>, _>>()?;

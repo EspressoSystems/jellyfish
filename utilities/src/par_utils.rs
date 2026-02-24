@@ -18,7 +18,7 @@
 /// #[cfg(not(feature = "parallel"))]
 /// let sum = v.iter().sum();
 #[cfg(feature = "parallel")]
-pub fn parallelizable_slice_iter<T: Sync>(data: &[T]) -> rayon::slice::Iter<T> {
+pub fn parallelizable_slice_iter<T: Sync>(data: &'_ [T]) -> rayon::slice::Iter<'_, T> {
     use rayon::iter::IntoParallelIterator;
     data.into_par_iter()
 }
@@ -29,7 +29,10 @@ pub fn parallelizable_slice_iter<T>(data: &[T]) -> ark_std::slice::Iter<T> {
 }
 
 #[cfg(feature = "parallel")]
-pub fn parallelizable_chunks<T: Sync>(data: &[T], chunk_size: usize) -> rayon::slice::Chunks<T> {
+pub fn parallelizable_chunks<T: Sync>(
+    data: &'_ [T],
+    chunk_size: usize,
+) -> rayon::slice::Chunks<'_, T> {
     use rayon::slice::ParallelSlice;
     data.par_chunks(chunk_size)
 }

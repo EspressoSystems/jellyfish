@@ -7,14 +7,9 @@
 //! Implements the ElGamal encryption scheme.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #![deny(missing_docs)]
 #[cfg(test)]
 extern crate std;
-
-#[macro_use]
-extern crate derivative;
 
 #[cfg(any(not(feature = "std"), target_has_atomic = "ptr"))]
 #[doc(hidden)]
@@ -25,7 +20,7 @@ pub mod gadgets;
 
 use ark_ec::{
     twisted_edwards::{Affine, Projective, TECurveConfig as Config},
-    AffineRepr, CurveGroup, Group,
+    AffineRepr, CurveGroup, PrimeGroup,
 };
 use ark_ff::{Field, UniformRand};
 use ark_serialize::*;
@@ -36,6 +31,7 @@ use ark_std::{
     vec,
     vec::Vec,
 };
+use derive_where::derive_where;
 use displaydoc::Display;
 use jf_rescue::{Permutation, RescueParameter, RescueVector, PRP, STATE_SIZE};
 #[cfg(feature = "parallel")]
@@ -50,13 +46,8 @@ pub struct ParameterError(String);
 // encrypt key
 // =====================================================
 /// Encryption key for encryption scheme
-#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Default(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize, Zeroize)]
+#[derive_where(Debug, Clone, Eq, Default; P: Config)]
 pub struct EncKey<P>
 where
     P: Config,
@@ -90,12 +81,8 @@ where
 // decrypt key
 // =====================================================
 /// Decryption key for encryption scheme
-#[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config")
-)]
+#[derive(Zeroize, CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Debug, Clone, PartialEq; P: Config)]
 pub(crate) struct DecKey<P>
 where
     P: Config,
@@ -113,12 +100,8 @@ impl<P: Config> Drop for DecKey<P> {
 // key pair
 // =====================================================
 
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Debug, Clone, PartialEq; P: Config)]
 /// KeyPair structure for encryption scheme
 pub struct KeyPair<P>
 where
@@ -132,14 +115,8 @@ where
 // ciphertext
 // =====================================================
 /// Public encryption cipher text
-#[derive(CanonicalSerialize, CanonicalDeserialize, Derivative)]
-#[derivative(
-    Debug(bound = "P: Config"),
-    Clone(bound = "P: Config"),
-    PartialEq(bound = "P: Config"),
-    Eq(bound = "P: Config"),
-    Hash(bound = "P: Config")
-)]
+#[derive(CanonicalSerialize, CanonicalDeserialize)]
+#[derive_where(Debug, Clone, PartialEq, Eq, Hash; P:Config)]
 pub struct Ciphertext<P>
 where
     P: Config,

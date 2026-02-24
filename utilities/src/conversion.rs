@@ -5,7 +5,7 @@
 // along with the Jellyfish library. If not, see <https://mit-license.org/>.
 
 use ark_ec::CurveConfig;
-use ark_ff::{BigInteger, Field, PrimeField};
+use ark_ff::{BigInteger, Field, PrimeField, Zero};
 use ark_std::{
     borrow::Borrow,
     cmp::min,
@@ -151,10 +151,10 @@ where
     let result = once(F::from(bytes.len() as u64)) // the first field element encodes the bytes length as u64
         .chain(bytes.chunks(field_bytes_len).map(|field_elem_bytes| {
             F::from_base_prime_field_elems(
-                &field_elem_bytes.chunks(primefield_bytes_len)
+                field_elem_bytes.chunks(primefield_bytes_len)
                 .map(F::BasePrimeField::from_le_bytes_mod_order)
                 // not enough prime field elems? fill remaining elems with zero
-                .chain(repeat(F::BasePrimeField::ZERO).take(
+                .chain(repeat(F::BasePrimeField::zero()).take(
                     extension_degree - (field_elem_bytes.len()-1) / primefield_bytes_len - 1)
                 )
                 .collect::<Vec<_>>(),
@@ -269,7 +269,7 @@ where
 /// 1. The byte length P of the [`BasePrimeField`] modulus minus 1.
 /// 2. The extension degree of the [`Field`].
 /// 3. The total byte length of a single [`Field`] element under the constraint
-/// that   each [`BasePrimeField`] element fits into only P bytes.
+///    that each [`BasePrimeField`] element fits into only P bytes.
 ///
 /// # Panics
 ///

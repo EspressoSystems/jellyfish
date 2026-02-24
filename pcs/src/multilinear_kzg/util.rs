@@ -113,7 +113,7 @@ pub(crate) fn compute_w_circ_l<F: PrimeField>(
         // we reverse the order here because the coefficient vec are stored in
         // bit-reversed order
         let l_eval: Vec<F> = l.iter().rev().map(|x| x.evaluate(&point)).collect();
-        res_eval.push(w.evaluate(l_eval.as_ref()).unwrap())
+        res_eval.push(w.evaluate(l_eval.as_ref()))
     }
     let evaluation = Evaluations::from_vec_and_domain(res_eval, domain);
     let res = evaluation.interpolate();
@@ -218,7 +218,7 @@ pub(crate) fn generate_evaluations<F: PrimeField>(
             .map(|poly| poly.evaluate(&domain.element(i)))
             .collect();
 
-        let mle_value = merge_poly.evaluate(&point).unwrap();
+        let mle_value = merge_poly.evaluate(&point);
         mle_values.push(mle_value)
     }
     Ok(mle_values)
@@ -609,11 +609,7 @@ mod test {
 
             let point: Vec<Fr> = l.iter().rev().map(|poly| poly.evaluate(&r)).collect();
 
-            assert_eq!(
-                q_x.evaluate(&r),
-                w.evaluate(&point).unwrap(),
-                "q(r) != w(l(r))"
-            );
+            assert_eq!(q_x.evaluate(&r), w.evaluate(&point), "q(r) != w(l(r))");
         }
 
         {
@@ -668,11 +664,7 @@ mod test {
                     "42675783400755005965526147011103024780845819057955866345013183657072368533932"
                 ),
             );
-            assert_eq!(
-                q_x.evaluate(&r),
-                w.evaluate(&point).unwrap(),
-                "q(r) != w(l(r))"
-            );
+            assert_eq!(q_x.evaluate(&r), w.evaluate(&point), "q(r) != w(l(r))");
         }
         Ok(())
     }

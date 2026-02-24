@@ -6,8 +6,6 @@
 //! Jellyfish utilities library.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// Temporarily allow warning for nightly compilation with [`displaydoc`].
-#![allow(warnings)]
 #[cfg(test)]
 extern crate std;
 
@@ -22,7 +20,6 @@ pub mod par_utils;
 pub mod reed_solomon_code;
 mod serialize;
 
-use ark_ec::twisted_edwards::TECurveConfig as Config;
 use ark_ff::{Field, PrimeField};
 use ark_std::{
     ops::Mul,
@@ -39,7 +36,7 @@ pub use serialize::*;
 
 #[inline]
 pub fn field_byte_len<F: PrimeField>() -> usize {
-    ((F::MODULUS_BIT_SIZE + 7) / 8) as usize
+    F::MODULUS_BIT_SIZE.div_ceil(8) as usize
 }
 
 #[inline]
