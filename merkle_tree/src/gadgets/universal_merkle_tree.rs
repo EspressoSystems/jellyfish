@@ -240,4 +240,85 @@ mod test {
         // Circuit does not verify because a left node value is 0
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
     }
+
+    /// Regression test for the index-forgery soundness bug fixed in PR #862.
+    ///
+    /// The original `is_non_member` accepted `non_elem_idx_var` as a parameter
+    /// but never used it in any constraint.  That meant an adversary could take
+    /// a valid non-membership proof for an *absent* index A and present it
+    /// in-circuit as a non-membership proof for a *present* index B: the
+    /// commitment check passed (the proof for A is valid), while B was
+    /// actually in the tree.
+    ///
+    /// The fix added an index-consistency check that reconstructs the leaf
+    /// index from the proof path's branch indicators and asserts it equals
+    /// `non_elem_idx_var`, closing the forgery.
+    #[test]
+    fn test_non_membership_proof_index_forgery() {
+        test_index_forgery_helper::<FqEd254>();
+        test_index_forgery_helper::<FqEd377>();
+        test_index_forgery_helper::<FqEd381>();
+        test_index_forgery_helper::<FqEd381b>();
+        test_index_forgery_helper::<Fq377>();
+    }
+
+    fn test_index_forgery_helper<F: RescueParameter>() {
+        // Build a height-2 arity-3 tree that contains an element at index 1.
+        // In base-3 the paths are:
+        //   index 1 → [1, 0]  (level-0 middle branch, level-1 left branch)
+        //   index 5 → [2, 1]  (level-0 right  branch, level-1 middle branch)
+        let present = BigUint::from(1u64); // IS in the tree
+        let absent = BigUint::from(5u64); // is NOT in the tree
+
+        let mut hashmap = HashMap::new();
+        hashmap.insert(present.clone(), F::from(42u64));
+        let mt = SparseMerkleTree::<F>::from_kv_set(2, &hashmap).unwrap();
+        let commitment = mt.commitment();
+
+        // Sanity check: index 1 is a member, index 5 is not.
+        assert!(mt.universal_lookup(&present).expect_ok().is_ok());
+        let proof_for_absent = mt.universal_lookup(&absent).expect_not_found().unwrap();
+        assert!(
+            SparseMerkleTree::<F>::non_membership_verify(commitment, &absent, &proof_for_absent)
+                .unwrap()
+                .is_ok(),
+            "native non-membership verify must accept a valid proof"
+        );
+
+        // Forgery attempt: build the circuit proof variable correctly for the
+        // *absent* index (so the commitment check inside the circuit will pass),
+        // but set `non_elem_idx_var` to the *present* index.  This would have
+        // been accepted by the original code because `non_elem_idx_var` was
+        // ignored; the fixed code must reject it.
+        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+        let forged_idx_var = circuit.create_variable(present.clone().into()).unwrap();
+        let proof_var =
+            UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
+                &mut circuit,
+                &absent, // proof path is for index 5
+                &proof_for_absent,
+            )
+            .unwrap();
+        let commitment_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_commitment_variable(
+            &mut circuit,
+            &commitment,
+        )
+        .unwrap();
+
+        UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
+            &mut circuit,
+            forged_idx_var, // claims index 1 (present) is absent …
+            &proof_var,     // … using a proof that is valid only for index 5
+            commitment_var,
+        )
+        .unwrap();
+
+        // Must NOT satisfy: the proof path encodes index 5, but the claimed
+        // index is 1.  The original buggy code would have satisfied this
+        // circuit because it never checked non_elem_idx_var.
+        assert!(
+            circuit.check_circuit_satisfiability(&[]).is_err(),
+            "forged non-membership proof must not satisfy the circuit"
+        );
+    }
 }
