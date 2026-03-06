@@ -34,7 +34,7 @@ where
         proof_var: &Merkle3AryProofVar,
         commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        // First check that if the input index is consistent with the proof branches
+        // First check that the input index is consistent with the proof branches
         let mut base = F::from(1u64);
         let mut cumulative = self.zero();
         for node_var in &proof_var.node_vars {
