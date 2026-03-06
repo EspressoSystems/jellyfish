@@ -130,21 +130,99 @@ where
 #[cfg(test)]
 mod test {
     use crate::{
-        gadgets::{MerkleTreeGadget, UniversalMerkleTreeGadget},
+        gadgets::{
+            DigestAlgorithmGadget, Merkle3AryNodeVar, Merkle3AryProofVar, MerkleTreeGadget,
+            RescueDigestGadget, UniversalMerkleTreeGadget,
+        },
+        internal::MerkleTreeProof,
         prelude::RescueSparseMerkleTree,
-        MerkleTreeScheme, UniversalMerkleTreeScheme,
+        MerkleProof, MerkleTreeScheme, ToTraversalPath, UniversalMerkleTreeScheme,
     };
     use ark_bls12_377::Fq as Fq377;
     use ark_ed_on_bls12_377::Fq as FqEd377;
     use ark_ed_on_bls12_381::Fq as FqEd381;
     use ark_ed_on_bls12_381_bandersnatch::Fq as FqEd381b;
     use ark_ed_on_bn254::Fq as FqEd254;
+    use ark_std::vec::Vec;
     use hashbrown::HashMap;
-    use jf_relation::{Circuit, PlonkCircuit};
+    use jf_relation::{BoolVar, Circuit, CircuitError, PlonkCircuit, Variable};
     use jf_rescue::RescueParameter;
     use num_bigint::BigUint;
 
     type SparseMerkleTree<F> = RescueSparseMerkleTree<BigUint, F>;
+
+    // -----------------------------------------------------------------------
+    // Verbatim copy of the two functions as they existed before PR #862.
+    // Kept here so the regression test can directly demonstrate the bug:
+    // the old `buggy_is_non_member` ignored `non_elem_idx_var` entirely, and
+    // `buggy_create_non_membership_proof_variable` silently dropped path levels
+    // whose sibling array was empty (early-termination in sparse proofs).
+    // -----------------------------------------------------------------------
+
+    /// Old `is_non_member` — `non_elem_idx_var` is accepted but never used.
+    fn buggy_is_non_member<F: RescueParameter>(
+        circuit: &mut PlonkCircuit<F>,
+        _non_elem_idx_var: Variable, // BUG: intentionally ignored
+        proof_var: &Merkle3AryProofVar,
+        commitment_var: Variable,
+    ) -> Result<BoolVar, CircuitError> {
+        let computed_commitment_var = {
+            let mut cur_label = circuit.zero();
+            for cur_node in proof_var.node_vars.iter() {
+                let input_labels = super::super::constrain_sibling_order(
+                    circuit,
+                    cur_label,
+                    cur_node.sibling1,
+                    cur_node.sibling2,
+                    cur_node.is_left_child,
+                    cur_node.is_right_child,
+                )?;
+                // BUG: is_zero_vars computed but never used — all-zero subtrees
+                // are not handled and the index is never checked.
+                let _is_zero_vars = [
+                    circuit.is_zero(input_labels[0])?,
+                    circuit.is_zero(input_labels[1])?,
+                    circuit.is_zero(input_labels[2])?,
+                ];
+                cur_label = RescueDigestGadget::digest(circuit, &input_labels)?;
+            }
+            Ok(cur_label)
+        }?;
+        circuit.is_equal(computed_commitment_var, commitment_var)
+    }
+
+    /// Old `create_non_membership_proof_variable` — filters out path levels
+    /// where all siblings are empty (the absent-subtree shortcut), which
+    /// shortens the proof and breaks the index reconstruction added by the fix.
+    fn buggy_create_non_membership_proof_variable<F: RescueParameter>(
+        circuit: &mut PlonkCircuit<F>,
+        pos: &BigUint,
+        merkle_proof: &MerkleTreeProof<F>,
+    ) -> Result<Merkle3AryProofVar, CircuitError> {
+        let path = <BigUint as ToTraversalPath<3>>::to_traversal_path(pos, merkle_proof.height());
+
+        let nodes = path
+            .iter()
+            .zip(merkle_proof.path_values().iter())
+            .filter(|(_, v)| !v.is_empty()) // BUG: drops empty-sibling levels
+            .map(|(branch, siblings)| {
+                Ok(Merkle3AryNodeVar {
+                    sibling1: circuit.create_variable(siblings[0])?,
+                    sibling2: circuit.create_variable(siblings[1])?,
+                    is_left_child: circuit.create_boolean_variable(branch == &0)?,
+                    is_right_child: circuit.create_boolean_variable(branch == &2)?,
+                })
+            })
+            .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
+
+        for node in nodes.iter() {
+            let left_plus_right =
+                circuit.add(node.is_left_child.into(), node.is_right_child.into())?;
+            circuit.enforce_bool(left_plus_right)?;
+        }
+
+        Ok(Merkle3AryProofVar { node_vars: nodes })
+    }
 
     #[test]
     fn test_universal_mt_gadget() {
@@ -243,16 +321,22 @@ mod test {
 
     /// Regression test for the index-forgery soundness bug fixed in PR #862.
     ///
-    /// The original `is_non_member` accepted `non_elem_idx_var` as a parameter
-    /// but never used it in any constraint.  That meant an adversary could take
-    /// a valid non-membership proof for an *absent* index A and present it
-    /// in-circuit as a non-membership proof for a *present* index B: the
-    /// commitment check passed (the proof for A is valid), while B was
-    /// actually in the tree.
+    /// Setup: a height-2 arity-3 tree holds one element at index 1.
+    ///   index 1 → base-3 path [1, 0]  (present in tree)
+    ///   index 5 → base-3 path [2, 1]  (absent from tree)
     ///
-    /// The fix added an index-consistency check that reconstructs the leaf
-    /// index from the proof path's branch indicators and asserts it equals
-    /// `non_elem_idx_var`, closing the forgery.
+    /// The attack: take the valid non-membership proof for absent index 5 and
+    /// present it in-circuit as a non-membership proof for present index 1.
+    /// The commitment check passes (the proof for index 5 is structurally
+    /// valid), so the old code accepted it — falsely "proving" that an element
+    /// which IS in the tree is absent.
+    ///
+    /// The test has two halves:
+    ///  1. Runs the forgery through `buggy_is_non_member` (the old impl) and
+    ///     asserts the circuit IS satisfied — confirming the bug existed.
+    ///  2. Runs the same forgery through the fixed
+    ///     `enforce_non_membership_proof` and asserts the circuit is NOT
+    ///     satisfied — confirming the fix works.
     #[test]
     fn test_non_membership_proof_index_forgery() {
         test_index_forgery_helper::<FqEd254>();
@@ -263,10 +347,6 @@ mod test {
     }
 
     fn test_index_forgery_helper<F: RescueParameter>() {
-        // Build a height-2 arity-3 tree that contains an element at index 1.
-        // In base-3 the paths are:
-        //   index 1 → [1, 0]  (level-0 middle branch, level-1 left branch)
-        //   index 5 → [2, 1]  (level-0 right  branch, level-1 middle branch)
         let present = BigUint::from(1u64); // IS in the tree
         let absent = BigUint::from(5u64); // is NOT in the tree
 
@@ -275,7 +355,7 @@ mod test {
         let mt = SparseMerkleTree::<F>::from_kv_set(2, &hashmap).unwrap();
         let commitment = mt.commitment();
 
-        // Sanity check: index 1 is a member, index 5 is not.
+        // Confirm the native layer is correct.
         assert!(mt.universal_lookup(&present).expect_ok().is_ok());
         let proof_for_absent = mt.universal_lookup(&absent).expect_not_found().unwrap();
         assert!(
@@ -285,40 +365,71 @@ mod test {
             "native non-membership verify must accept a valid proof"
         );
 
-        // Forgery attempt: build the circuit proof variable correctly for the
-        // *absent* index (so the commitment check inside the circuit will pass),
-        // but set `non_elem_idx_var` to the *present* index.  This would have
-        // been accepted by the original code because `non_elem_idx_var` was
-        // ignored; the fixed code must reject it.
-        let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
-        let forged_idx_var = circuit.create_variable(present.clone().into()).unwrap();
-        let proof_var =
-            UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
+        // ── Half 1: old (buggy) implementation ──────────────────────────────
+        // Use `buggy_create_non_membership_proof_variable` (drops empty-sibling
+        // levels) and `buggy_is_non_member` (ignores non_elem_idx_var).
+        // The commitment check alone passes because the proof for index 5 is
+        // structurally valid.  The circuit should be satisfiable — that is the
+        // bug we are documenting.
+        {
+            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+            let forged_idx_var = circuit.create_variable(present.clone().into()).unwrap();
+            let proof_var = buggy_create_non_membership_proof_variable(
                 &mut circuit,
-                &absent, // proof path is for index 5
+                &absent,
                 &proof_for_absent,
             )
             .unwrap();
-        let commitment_var = MerkleTreeGadget::<SparseMerkleTree<F>>::create_commitment_variable(
-            &mut circuit,
-            &commitment,
-        )
-        .unwrap();
+            let commitment_var =
+                MerkleTreeGadget::<SparseMerkleTree<F>>::create_commitment_variable(
+                    &mut circuit,
+                    &commitment,
+                )
+                .unwrap();
 
-        UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
-            &mut circuit,
-            forged_idx_var, // claims index 1 (present) is absent …
-            &proof_var,     // … using a proof that is valid only for index 5
-            commitment_var,
-        )
-        .unwrap();
+            let result =
+                buggy_is_non_member(&mut circuit, forged_idx_var, &proof_var, commitment_var)
+                    .unwrap();
+            circuit.enforce_true(result.into()).unwrap();
 
-        // Must NOT satisfy: the proof path encodes index 5, but the claimed
-        // index is 1.  The original buggy code would have satisfied this
-        // circuit because it never checked non_elem_idx_var.
-        assert!(
-            circuit.check_circuit_satisfiability(&[]).is_err(),
-            "forged non-membership proof must not satisfy the circuit"
-        );
+            assert!(
+                circuit.check_circuit_satisfiability(&[]).is_ok(),
+                "buggy implementation must incorrectly accept the index forgery"
+            );
+        }
+
+        // ── Half 2: fixed implementation ────────────────────────────────────
+        // Same forgery attempt, but through the fixed trait implementation.
+        // The index-consistency check reconstructs base-3(path) = 5 and
+        // compares it with non_elem_idx_var = 1 → mismatch → circuit fails.
+        {
+            let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
+            let forged_idx_var = circuit.create_variable(present.clone().into()).unwrap();
+            let proof_var = UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::create_non_membership_proof_variable(
+                &mut circuit,
+                &absent,
+                &proof_for_absent,
+            )
+            .unwrap();
+            let commitment_var =
+                MerkleTreeGadget::<SparseMerkleTree<F>>::create_commitment_variable(
+                    &mut circuit,
+                    &commitment,
+                )
+                .unwrap();
+
+            UniversalMerkleTreeGadget::<SparseMerkleTree<F>>::enforce_non_membership_proof(
+                &mut circuit,
+                forged_idx_var,
+                &proof_var,
+                commitment_var,
+            )
+            .unwrap();
+
+            assert!(
+                circuit.check_circuit_satisfiability(&[]).is_err(),
+                "fixed implementation must reject the index forgery"
+            );
+        }
     }
 }
