@@ -108,17 +108,17 @@ impl<E: Pairing> ScalarsAndBases<E> {
 pub struct PcsInfo<E: Pairing> {
     /// TODO: change back these visibilities
     pub u: E::ScalarField,
-    ///
+    /// TODO: change back these visibilities
     pub eval_point: E::ScalarField,
-    ///
+    /// TODO: change back these visibilities
     pub next_eval_point: E::ScalarField,
-    ///
+    /// TODO: change back these visibilities
     pub eval: E::ScalarField,
-    ///
+    /// TODO: change back these visibilities
     pub comm_scalars_and_bases: ScalarsAndBases<E>,
-    ///
+    /// TODO: change back these visibilities
     pub opening_proof: Commitment<E>,
-    ///
+    /// TODO: change back these visibilities
     pub shifted_opening_proof: Commitment<E>,
 }
 
@@ -232,6 +232,7 @@ where
     /// Returns:
     /// `(vanish_eval, lagrange_1_eval, lagrange_n_eval, pi_eval)` on challenge
     /// point `zeta`.
+    #[allow(clippy::type_complexity)]
     pub fn compute_poly_evals_for_pcs_info(
         &self,
         zeta: &E::ScalarField,
@@ -283,18 +284,16 @@ where
     ) -> Result<E::ScalarField, PlonkError> {
         let tmp: verifier::Verifier<E> = (*self).clone().into();
         let challenges: structs::Challenges<E::ScalarField> = (*challenges).into();
-        Ok(tmp
-            .compute_lin_poly_constant_term(
-                &challenges,
-                verify_keys,
-                public_inputs,
-                batch_proof,
-                lagrange_1_eval,
-                lagrange_n_eval,
-                alpha_powers,
-                alpha_bases,
-            )?
-            .into())
+        tmp.compute_lin_poly_constant_term(
+            &challenges,
+            verify_keys,
+            public_inputs,
+            batch_proof,
+            lagrange_1_eval,
+            lagrange_n_eval,
+            alpha_powers,
+            alpha_bases,
+        )
     }
 
     /// Aggregate polynomial commitments into a single commitment (in the
@@ -386,6 +385,6 @@ impl SolidityTranscript {
 
     /// Returns the internal states
     pub fn internal(&self) -> ([u8; KECCAK256_STATE_SIZE], Vec<u8>) {
-        (self.state.clone(), self.transcript.clone())
+        (self.state, self.transcript.clone())
     }
 }

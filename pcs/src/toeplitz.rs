@@ -238,6 +238,7 @@ mod tests {
         fn full_matrix<const N: usize>(self) -> Matrix<F, N, N> {
             assert_eq!(self.col.len(), N);
             let mut matrix = [[F::zero(); N]; N];
+            #[allow(clippy::needless_range_loop)]
             for i in 0..N {
                 matrix[i][0] = self.col[i];
                 matrix[0][i] = self.row[i];
