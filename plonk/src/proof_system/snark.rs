@@ -1720,6 +1720,62 @@ pub mod test {
         Ok(())
     }
 
+    #[test]
+    fn test_plookup_transcript_binding() -> Result<(), PlonkError> {
+        test_plookup_transcript_binding_helper::<Bn254, Fq254, _, StandardTranscript>()?;
+        test_plookup_transcript_binding_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>()?;
+        Ok(())
+    }
+
+    fn test_plookup_transcript_binding_helper<E, F, P, T>() -> Result<(), PlonkError>
+    where
+        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
+        F: RescueParameter + SWToTEConParam,
+        P: SWCurveConfig<BaseField = F>,
+        T: PlonkTranscript<F>,
+    {
+        let rng = &mut test_rng();
+        let n = 64;
+        let max_degree = n + 2;
+        let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
+
+        let circuit = gen_circuit_for_test(2, 1, PlonkType::UltraPlonk)?;
+        let (pk, vk) = PlonkKzgSnark::<E>::preprocess(&srs, &circuit)?;
+        let pub_input = circuit.public_input()?;
+
+        let proof = PlonkKzgSnark::<E>::prove::<_, _, T>(rng, &circuit, &pk, None)?;
+        assert!(
+            PlonkKzgSnark::<E>::verify::<T>(&vk, &pub_input, &proof, None).is_ok(),
+            "Valid UltraPlonk proof should verify"
+        );
+
+        let mut bad_proof = proof.clone();
+        let plookup_proof = bad_proof.plookup_proof.as_mut().unwrap();
+        plookup_proof.poly_evals.key_table_eval += E::ScalarField::one();
+        assert!(
+            PlonkKzgSnark::<E>::verify::<T>(&vk, &pub_input, &bad_proof, None).is_err(),
+            "Tampered key_table_eval (previously unbound) must be rejected"
+        );
+
+        let mut bad_proof = proof.clone();
+        let plookup_proof = bad_proof.plookup_proof.as_mut().unwrap();
+        plookup_proof.poly_evals.w_3_next_eval += E::ScalarField::one();
+        assert!(
+            PlonkKzgSnark::<E>::verify::<T>(&vk, &pub_input, &bad_proof, None).is_err(),
+            "Tampered w_3_next_eval (previously unbound) must be rejected"
+        );
+
+        let mut bad_proof = proof;
+        let plookup_proof = bad_proof.plookup_proof.as_mut().unwrap();
+        plookup_proof.poly_evals.q_dom_sep_eval += E::ScalarField::one();
+        assert!(
+            PlonkKzgSnark::<E>::verify::<T>(&vk, &pub_input, &bad_proof, None).is_err(),
+            "Tampered q_dom_sep_eval (previously unbound) must be rejected"
+        );
+
+        Ok(())
+    }
+
     fn gen_mergeable_circuit<F: PrimeField>(
         m: usize,
         a0: usize,

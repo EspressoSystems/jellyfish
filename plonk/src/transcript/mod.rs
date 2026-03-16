@@ -157,12 +157,8 @@ pub trait PlonkTranscript<F> {
         &mut self,
         evals: &PlookupEvaluations<E::ScalarField>,
     ) -> Result<(), PlonkError> {
-        self.append_field_elem::<E>(b"lookup_table_eval", &evals.range_table_eval)?;
-        self.append_field_elem::<E>(b"h_1_eval", &evals.h_1_eval)?;
-        self.append_field_elem::<E>(b"prod_next_eval", &evals.prod_next_eval)?;
-        self.append_field_elem::<E>(b"lookup_table_next_eval", &evals.range_table_next_eval)?;
-        self.append_field_elem::<E>(b"h_1_next_eval", &evals.h_1_next_eval)?;
-        self.append_field_elem::<E>(b"h_2_next_eval", &evals.h_2_next_eval)
+        self.append_field_elems::<E>(b"plookup_evals", &evals.evals_vec())?;
+        self.append_field_elems::<E>(b"plookup_next_evals", &evals.next_evals_vec())
     }
 
     /// Generate a single challenge for the current round
