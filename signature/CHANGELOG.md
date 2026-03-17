@@ -3,10 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Untracked
+## 0.4.1
 
 ### Changed
 
+- [#868](https://github.com/EspressoSystems/jellyfish/pull/868): add interfaces for `bls_over_bn254` that support verifying signatures without key validity check.
 - [#842](https://github.com/EspressoSystems/jellyfish/pull/842): `jf-rescue` is now optional for the crate.
 - [#843](https://github.com/EspressoSystems/jellyfish/pull/843): replace unmaintained `derivative` with `derive_where`.
 

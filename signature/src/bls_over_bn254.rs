@@ -180,7 +180,44 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
             return Err(SignatureError::FailedOnCurveCheck);
         }
 
-        // verify
+        Self::aggregate_verify_internal(vks, msgs, sig)
+    }
+
+    /// Verify a multisignature w.r.t. a single message and a list of public
+    /// keys. It is user's responsibility to ensure that the public keys are
+    /// validated.
+    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify>
+    fn multi_sig_verify(
+        _pp: &Self::PublicParameter,
+        vks: &[Self::VerificationKey],
+        msg: &[Self::MessageUnit],
+        sig: &Self::Signature,
+    ) -> Result<(), SignatureError> {
+        if vks.is_empty() {
+            return Err(ParameterError(
+                "no verification key for signature verification".to_string(),
+            ));
+        }
+        // both oncurve check and subgroup check for verification keys
+        vks.iter()
+            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
+        // thus only conducting on_curve check
+        if !sig.sigma.into_affine().is_on_curve() {
+            return Err(SignatureError::FailedOnCurveCheck);
+        }
+
+        Self::multi_sig_verify_internal(vks, msg, sig)
+    }
+}
+
+impl BLSOverBN254CurveSignatureScheme {
+    /// Core aggregate verification logic (no validation checks).
+    fn aggregate_verify_internal<M: AsRef<[u8]>>(
+        vks: &[VerKey],
+        msgs: &[M],
+        sig: &Signature,
+    ) -> Result<(), SignatureError> {
         let mut m_points: Vec<G1Prepared<_>> = msgs
             .iter()
             .map(|msg| {
@@ -204,35 +241,58 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         }
     }
 
-    /// Verify a multisignature w.r.t. a single message and a list of public
-    /// keys. It is user's responsibility to ensure that the public keys are
-    /// validated.
-    /// Follow the instantiation from <https://www.ietf.org/archive/id/draft-irtf-cfrg-bls-signature-05.html#name-fastaggregateverify>
-    fn multi_sig_verify(
-        pp: &Self::PublicParameter,
-        vks: &[Self::VerificationKey],
-        msg: &[Self::MessageUnit],
-        sig: &Self::Signature,
+    /// Core multi-sig verification logic (no validation checks).
+    fn multi_sig_verify_internal(
+        vks: &[VerKey],
+        msg: &[u8],
+        sig: &Signature,
+    ) -> Result<(), SignatureError> {
+        let agg_vk = vks.iter().map(|vk| vk.0).sum();
+        VerKey(agg_vk).verify_internal(msg, sig, Self::CS_ID)
+    }
+
+    /// Verify an aggregate signature, skipping validation of keys and
+    /// signature.
+    ///
+    /// # Safety
+    /// The caller must ensure that all verification keys and the signature
+    /// were already validated (e.g., deserialized with `Validate::Yes`).
+    pub fn aggregate_verify_unchecked<M: AsRef<[u8]>>(
+        vks: &[VerKey],
+        msgs: &[M],
+        sig: &Signature,
     ) -> Result<(), SignatureError> {
         if vks.is_empty() {
             return Err(ParameterError(
                 "no verification key for signature verification".to_string(),
             ));
         }
-        // both oncurve check and subgroup check for verification keys
-        vks.iter()
-            .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
-        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
-        // thus only conducting on_curve check
-        if !sig.sigma.into_affine().is_on_curve() {
-            return Err(SignatureError::FailedOnCurveCheck);
+        if vks.len() != msgs.len() {
+            return Err(ParameterError(format!(
+                "vks.len = {}; msgs.len = {}",
+                vks.len(),
+                msgs.len(),
+            )));
         }
+        Self::aggregate_verify_internal(vks, msgs, sig)
+    }
 
-        let mut agg_vk = vks[0].0;
-        for vk in vks.iter().skip(1) {
-            agg_vk += vk.0;
+    /// Verify a multisignature, skipping validation of keys and signature.
+    ///
+    /// # Safety
+    /// The caller must ensure that all verification keys and the signature
+    /// were already validated (e.g., deserialized with `Validate::Yes`).
+    pub fn multi_sig_verify_unchecked(
+        vks: &[VerKey],
+        msg: &[u8],
+        sig: &Signature,
+    ) -> Result<(), SignatureError> {
+        if vks.is_empty() {
+            return Err(ParameterError(
+                "no verification key for signature verification".to_string(),
+            ));
         }
-        Self::verify(pp, &VerKey(agg_vk), msg, sig)
+        Self::multi_sig_verify_internal(vks, msg, sig)
     }
 }
 // =====================================================
@@ -525,6 +585,24 @@ impl VerKey {
         self.0
     }
 
+    /// Core pairing-based verification (no validation checks).
+    fn verify_internal<B: AsRef<[u8]>>(
+        &self,
+        msg: &[u8],
+        sig: &Signature,
+        csid: B,
+    ) -> Result<(), SignatureError> {
+        let msg_input = [msg, csid.as_ref()].concat();
+        let group_elem = hash_to_curve::<Keccak256>(&msg_input);
+        let g2 = G2Projective::generator();
+
+        let is_sig_valid = Bn254::pairing(sig.sigma, g2) == Bn254::pairing(group_elem, self.0);
+        match is_sig_valid {
+            true => Ok(()),
+            false => Err(VerificationError("Pairing check failed".to_string())),
+        }
+    }
+
     /// Signature verification function
     pub fn verify<B: AsRef<[u8]>>(
         &self,
@@ -537,15 +615,22 @@ impl VerKey {
         if !sig.sigma.into_affine().is_on_curve() {
             return Err(SignatureError::FailedOnCurveCheck);
         }
-        let msg_input = [msg, csid.as_ref()].concat();
-        let group_elem = hash_to_curve::<Keccak256>(&msg_input);
-        let g2 = G2Projective::generator();
+        self.verify_internal(msg, sig, csid)
+    }
 
-        let is_sig_valid = Bn254::pairing(sig.sigma, g2) == Bn254::pairing(group_elem, self.0);
-        match is_sig_valid {
-            true => Ok(()),
-            false => Err(VerificationError("Pairing check failed".to_string())),
-        }
+    /// Signature verification that skips the on-curve check for the signature.
+    ///
+    /// # Safety
+    /// The caller must ensure that the signature was obtained from a trusted
+    /// source or was already validated (e.g., deserialized with
+    /// `CanonicalDeserialize` using `Validate::Yes`).
+    pub fn verify_unchecked<B: AsRef<[u8]>>(
+        &self,
+        msg: &[u8],
+        sig: &Signature,
+        csid: B,
+    ) -> Result<(), SignatureError> {
+        self.verify_internal(msg, sig, csid)
     }
 }
 
@@ -723,6 +808,94 @@ mod tests {
                 &bad_sig
             ),
             Result::Err(SignatureError::FailedOnCurveCheck)
+        );
+    }
+
+    #[test]
+    fn test_verify_unchecked_valid() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let vk = keypair.ver_key();
+        let msg = b"hello";
+        let sig = keypair.sign(msg.as_slice(), CS_ID_BLS_BN254);
+
+        assert!(vk
+            .verify_unchecked(msg.as_slice(), &sig, CS_ID_BLS_BN254)
+            .is_ok());
+    }
+
+    #[test]
+    fn test_verify_unchecked_invalid() {
+        let mut rng = jf_utils::test_rng();
+        let keypair = KeyPair::generate(&mut rng);
+        let vk = keypair.ver_key();
+        let msg = b"hello";
+        let wrong_msg = b"world";
+        let sig = keypair.sign(msg.as_slice(), CS_ID_BLS_BN254);
+
+        assert!(vk
+            .verify_unchecked(wrong_msg.as_slice(), &sig, CS_ID_BLS_BN254)
+            .is_err());
+    }
+
+    #[test]
+    fn test_aggregate_verify_unchecked() {
+        let mut rng = jf_utils::test_rng();
+        let keypair1 = KeyPair::generate(&mut rng);
+        let keypair2 = KeyPair::generate(&mut rng);
+        let vks = [keypair1.ver_key(), keypair2.ver_key()];
+        let m1 = b"msg1";
+        let m2 = b"msg2";
+        let sig1 = keypair1.sign(m1.as_slice(), CS_ID_BLS_BN254);
+        let sig2 = keypair2.sign(m2.as_slice(), CS_ID_BLS_BN254);
+        let agg_sig =
+            BLSOverBN254CurveSignatureScheme::aggregate(&(), &vks, &[sig1, sig2]).unwrap();
+
+        assert!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
+                &vks,
+                &[m1.as_slice(), m2.as_slice()],
+                &agg_sig
+            )
+            .is_ok()
+        );
+
+        // wrong message should fail
+        assert!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
+                &vks,
+                &[m2.as_slice(), m1.as_slice()],
+                &agg_sig
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn test_multi_sig_verify_unchecked() {
+        let mut rng = jf_utils::test_rng();
+        let keypair1 = KeyPair::generate(&mut rng);
+        let keypair2 = KeyPair::generate(&mut rng);
+        let vks = [keypair1.ver_key(), keypair2.ver_key()];
+        let msg = b"shared message";
+        let sig1 = keypair1.sign(msg.as_slice(), CS_ID_BLS_BN254);
+        let sig2 = keypair2.sign(msg.as_slice(), CS_ID_BLS_BN254);
+        let agg_sig =
+            BLSOverBN254CurveSignatureScheme::aggregate(&(), &vks, &[sig1, sig2]).unwrap();
+
+        assert!(
+            BLSOverBN254CurveSignatureScheme::multi_sig_verify_unchecked(
+                &vks,
+                msg.as_slice(),
+                &agg_sig
+            )
+            .is_ok()
+        );
+
+        // wrong message should fail
+        assert!(
+            BLSOverBN254CurveSignatureScheme::multi_sig_verify_unchecked(&vks, b"wrong", &agg_sig)
+                .is_err()
         );
     }
 
