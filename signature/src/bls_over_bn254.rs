@@ -247,10 +247,7 @@ impl BLSOverBN254CurveSignatureScheme {
         msg: &[u8],
         sig: &Signature,
     ) -> Result<(), SignatureError> {
-        let mut agg_vk = vks[0].0;
-        for vk in vks.iter().skip(1) {
-            agg_vk += vk.0;
-        }
+        let agg_vk = vks.iter().map(|vk| vk.0).sum();
         VerKey(agg_vk).verify_internal(msg, sig, Self::CS_ID)
     }
 
