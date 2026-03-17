@@ -221,8 +221,7 @@ impl BLSOverBN254CurveSignatureScheme {
         let mut m_points: Vec<G1Prepared<_>> = msgs
             .iter()
             .map(|msg| {
-                let msg_input: Vec<u8> =
-                    [msg.as_ref(), Self::CS_ID.as_bytes()].concat();
+                let msg_input: Vec<u8> = [msg.as_ref(), Self::CS_ID.as_bytes()].concat();
                 let hash_value: G1Projective = hash_to_curve::<Keccak256>(msg_input.as_ref());
                 G1Prepared::from(hash_value)
             })
@@ -855,20 +854,24 @@ mod tests {
         let agg_sig =
             BLSOverBN254CurveSignatureScheme::aggregate(&(), &vks, &[sig1, sig2]).unwrap();
 
-        assert!(BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
-            &vks,
-            &[m1.as_slice(), m2.as_slice()],
-            &agg_sig
-        )
-        .is_ok());
+        assert!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
+                &vks,
+                &[m1.as_slice(), m2.as_slice()],
+                &agg_sig
+            )
+            .is_ok()
+        );
 
         // wrong message should fail
-        assert!(BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
-            &vks,
-            &[m2.as_slice(), m1.as_slice()],
-            &agg_sig
-        )
-        .is_err());
+        assert!(
+            BLSOverBN254CurveSignatureScheme::aggregate_verify_unchecked(
+                &vks,
+                &[m2.as_slice(), m1.as_slice()],
+                &agg_sig
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -894,12 +897,8 @@ mod tests {
 
         // wrong message should fail
         assert!(
-            BLSOverBN254CurveSignatureScheme::multi_sig_verify_unchecked(
-                &vks,
-                b"wrong",
-                &agg_sig
-            )
-            .is_err()
+            BLSOverBN254CurveSignatureScheme::multi_sig_verify_unchecked(&vks, b"wrong", &agg_sig)
+                .is_err()
         );
     }
 
