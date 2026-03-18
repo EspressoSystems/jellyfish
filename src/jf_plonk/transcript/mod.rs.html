@@ -157,36 +157,32 @@
 <a href=#157 id=157 data-nosnippet>157</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
 <a href=#158 id=158 data-nosnippet>158</a>        evals: <span class="kw-2">&amp;</span>PlookupEvaluations&lt;E::ScalarField&gt;,
 <a href=#159 id=159 data-nosnippet>159</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), PlonkError&gt; {
-<a href=#160 id=160 data-nosnippet>160</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"lookup_table_eval"</span>, <span class="kw-2">&amp;</span>evals.range_table_eval)<span class="question-mark">?</span>;
-<a href=#161 id=161 data-nosnippet>161</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_1_eval"</span>, <span class="kw-2">&amp;</span>evals.h_1_eval)<span class="question-mark">?</span>;
-<a href=#162 id=162 data-nosnippet>162</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"prod_next_eval"</span>, <span class="kw-2">&amp;</span>evals.prod_next_eval)<span class="question-mark">?</span>;
-<a href=#163 id=163 data-nosnippet>163</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"lookup_table_next_eval"</span>, <span class="kw-2">&amp;</span>evals.range_table_next_eval)<span class="question-mark">?</span>;
-<a href=#164 id=164 data-nosnippet>164</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_1_next_eval"</span>, <span class="kw-2">&amp;</span>evals.h_1_next_eval)<span class="question-mark">?</span>;
-<a href=#165 id=165 data-nosnippet>165</a>        <span class="self">self</span>.append_field_elem::&lt;E&gt;(<span class="string">b"h_2_next_eval"</span>, <span class="kw-2">&amp;</span>evals.h_2_next_eval)
-<a href=#166 id=166 data-nosnippet>166</a>    }
-<a href=#167 id=167 data-nosnippet>167</a>
-<a href=#168 id=168 data-nosnippet>168</a>    <span class="doccomment">/// Generate a single challenge for the current round
-<a href=#169 id=169 data-nosnippet>169</a>    </span><span class="kw">fn </span>get_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
-<a href=#170 id=170 data-nosnippet>170</a>    <span class="kw">where
-<a href=#171 id=171 data-nosnippet>171</a>        </span>E: Pairing&lt;BaseField = F&gt;;
-<a href=#172 id=172 data-nosnippet>172</a>
-<a href=#173 id=173 data-nosnippet>173</a>    <span class="doccomment">/// Generate multiple challenges for the current round
-<a href=#174 id=174 data-nosnippet>174</a>    /// Implementers should be careful about domain separation for each
-<a href=#175 id=175 data-nosnippet>175</a>    /// challenge The default implementation assume `self.get_challenge()`
-<a href=#176 id=176 data-nosnippet>176</a>    /// already implements proper domain separation for each challenge
-<a href=#177 id=177 data-nosnippet>177</a>    /// generation, thus simply call it multiple times.
-<a href=#178 id=178 data-nosnippet>178</a>    </span><span class="kw">fn </span>get_n_challenges&lt;E&gt;(
-<a href=#179 id=179 data-nosnippet>179</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#180 id=180 data-nosnippet>180</a>        labels: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]],
-<a href=#181 id=181 data-nosnippet>181</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;E::ScalarField&gt;, PlonkError&gt;
-<a href=#182 id=182 data-nosnippet>182</a>    <span class="kw">where
-<a href=#183 id=183 data-nosnippet>183</a>        </span>E: Pairing&lt;BaseField = F&gt;,
-<a href=#184 id=184 data-nosnippet>184</a>    {
-<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span><span class="kw-2">mut </span>challenges = Vec::new();
-<a href=#186 id=186 data-nosnippet>186</a>        <span class="kw">for </span>label <span class="kw">in </span>labels {
-<a href=#187 id=187 data-nosnippet>187</a>            challenges.push(<span class="self">self</span>.get_challenge::&lt;E&gt;(label)<span class="question-mark">?</span>);
-<a href=#188 id=188 data-nosnippet>188</a>        }
-<a href=#189 id=189 data-nosnippet>189</a>        <span class="prelude-val">Ok</span>(challenges)
-<a href=#190 id=190 data-nosnippet>190</a>    }
-<a href=#191 id=191 data-nosnippet>191</a>}
+<a href=#160 id=160 data-nosnippet>160</a>        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"plookup_evals"</span>, <span class="kw-2">&amp;</span>evals.evals_vec())<span class="question-mark">?</span>;
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="self">self</span>.append_field_elems::&lt;E&gt;(<span class="string">b"plookup_next_evals"</span>, <span class="kw-2">&amp;</span>evals.next_evals_vec())
+<a href=#162 id=162 data-nosnippet>162</a>    }
+<a href=#163 id=163 data-nosnippet>163</a>
+<a href=#164 id=164 data-nosnippet>164</a>    <span class="doccomment">/// Generate a single challenge for the current round
+<a href=#165 id=165 data-nosnippet>165</a>    </span><span class="kw">fn </span>get_challenge&lt;E&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;E::ScalarField, PlonkError&gt;
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">where
+<a href=#167 id=167 data-nosnippet>167</a>        </span>E: Pairing&lt;BaseField = F&gt;;
+<a href=#168 id=168 data-nosnippet>168</a>
+<a href=#169 id=169 data-nosnippet>169</a>    <span class="doccomment">/// Generate multiple challenges for the current round
+<a href=#170 id=170 data-nosnippet>170</a>    /// Implementers should be careful about domain separation for each
+<a href=#171 id=171 data-nosnippet>171</a>    /// challenge The default implementation assume `self.get_challenge()`
+<a href=#172 id=172 data-nosnippet>172</a>    /// already implements proper domain separation for each challenge
+<a href=#173 id=173 data-nosnippet>173</a>    /// generation, thus simply call it multiple times.
+<a href=#174 id=174 data-nosnippet>174</a>    </span><span class="kw">fn </span>get_n_challenges&lt;E&gt;(
+<a href=#175 id=175 data-nosnippet>175</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#176 id=176 data-nosnippet>176</a>        labels: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u8]],
+<a href=#177 id=177 data-nosnippet>177</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;E::ScalarField&gt;, PlonkError&gt;
+<a href=#178 id=178 data-nosnippet>178</a>    <span class="kw">where
+<a href=#179 id=179 data-nosnippet>179</a>        </span>E: Pairing&lt;BaseField = F&gt;,
+<a href=#180 id=180 data-nosnippet>180</a>    {
+<a href=#181 id=181 data-nosnippet>181</a>        <span class="kw">let </span><span class="kw-2">mut </span>challenges = Vec::new();
+<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">for </span>label <span class="kw">in </span>labels {
+<a href=#183 id=183 data-nosnippet>183</a>            challenges.push(<span class="self">self</span>.get_challenge::&lt;E&gt;(label)<span class="question-mark">?</span>);
+<a href=#184 id=184 data-nosnippet>184</a>        }
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="prelude-val">Ok</span>(challenges)
+<a href=#186 id=186 data-nosnippet>186</a>    }
+<a href=#187 id=187 data-nosnippet>187</a>}
 </code></pre></div></section></main></body></html>
