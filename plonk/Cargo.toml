@@ -48,7 +48,7 @@ derive-where = { workspace = true }
 displaydoc = { workspace = true }
 downcast-rs = { version = "1.2.0", default-features = false }
 dyn-clone = "^1.0"
-espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.0" }
+espresso-systems-common = { git = "https://github.com/espressosystems/espresso-systems-common", tag = "0.4.1" }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
 jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
