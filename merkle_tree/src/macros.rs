@@ -134,7 +134,8 @@ macro_rules! impl_merkle_tree_scheme {
             /// A helper function to collect all leaves with their corresponding proofs.
             pub fn collect_leaves_with_proof(&self) -> $crate::Vec<(&I, &E, $crate::internal::MerkleTreeProof<T>)> {
                 let mut collector = $crate::Vec::with_capacity(self.num_leaves() as usize);
-                self.root.collect_all_with_proof(&mut $crate::Vec::with_capacity(self.height()), &mut collector);
+                let mut prealloc = $crate::vec![$crate::vec![T::default(); ARITY - 1]; self.height()];
+                self.root.collect_all_with_proof(self.height(), &mut prealloc, &mut collector);
                 collector
             }
         }

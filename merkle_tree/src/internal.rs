@@ -860,19 +860,17 @@ where
     /// Extract all elements with proof
     pub(crate) fn collect_all_with_proof<'a>(
         &'a self,
+        height: usize,
         current_proof: &mut Vec<Vec<T>>,
         collector: &mut Vec<(&'a I, &'a E, MerkleTreeProof<T>)>,
     ) {
         match self {
             MerkleNode::Branch { value: _, children } => {
                 let cur_values: Vec<T> = children.iter().map(|child| child.value()).collect();
-                let mut values = vec![T::default(); cur_values.len() - 1];
                 for (i, child) in children.iter().enumerate() {
-                    values[..i].copy_from_slice(&cur_values[..i]);
-                    values[i..].copy_from_slice(&cur_values[i + 1..]);
-                    current_proof.push(values.clone());
-                    child.collect_all_with_proof(current_proof, collector);
-                    current_proof.pop();
+                    current_proof[height - 1][..i].copy_from_slice(&cur_values[..i]);
+                    current_proof[height - 1][i..].copy_from_slice(&cur_values[i + 1..]);
+                    child.collect_all_with_proof(height - 1, current_proof, collector);
                 }
             },
             MerkleNode::Leaf {
@@ -880,8 +878,7 @@ where
                 value: _,
                 pos,
             } => {
-                let proof = current_proof.iter().rev().cloned().collect();
-                collector.push((pos, elem, MerkleTreeProof(proof)));
+                collector.push((pos, elem, MerkleTreeProof(current_proof.clone())));
             },
             MerkleNode::Empty | MerkleNode::ForgottenSubtree { .. } => {},
         }
