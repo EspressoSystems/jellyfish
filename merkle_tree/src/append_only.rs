@@ -362,6 +362,39 @@ mod mt_tests {
     }
 
     #[test]
+    fn test_mt_collect_leaves_with_proof() {
+        test_mt_collect_leaves_with_proof_helper::<Fr254>();
+        test_mt_collect_leaves_with_proof_helper::<Fr377>();
+        test_mt_collect_leaves_with_proof_helper::<Fr381>();
+    }
+
+    fn test_mt_collect_leaves_with_proof_helper<F: RescueParameter>() {
+        let elems = (0u64..7).map(F::from).collect::<Vec<_>>();
+        let mt = RescueMerkleTree::<F>::from_elems(Some(2), &elems).unwrap();
+        let commitment = mt.commitment();
+
+        let collected = mt.collect_leaves_with_proof();
+
+        assert_eq!(collected.len(), elems.len());
+
+        let collected_pairs: Vec<_> = collected.iter().map(|(p, e, _)| (*p, *e)).collect();
+        assert_eq!(collected_pairs, mt.iter().collect::<Vec<_>>());
+
+        for (pos, elem, proof) in &collected {
+            assert!(
+                RescueMerkleTree::<F>::verify(&commitment, *pos, *elem, proof)
+                    .unwrap()
+                    .is_ok(),
+                "collected proof for leaf at pos {} did not verify",
+                *pos
+            );
+            let (lookup_elem, lookup_proof) = mt.lookup(*pos).expect_ok().unwrap();
+            assert_eq!(*elem, lookup_elem);
+            assert_eq!(*proof, lookup_proof);
+        }
+    }
+
+    #[test]
     fn test_mt_iter() {
         test_mt_iter_helper::<Fr254>();
         test_mt_iter_helper::<Fr377>();

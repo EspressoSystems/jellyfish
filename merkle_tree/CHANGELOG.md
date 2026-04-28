@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changes
 
+- [#880](https://github.com/EspressoSystems/jellyfish/pull/880): add "collect_leaves_with_proof" helper function.
 - [#862](https://github.com/EspressoSystems/jellyfish/pull/862): fix universal Merkle tree gadget.
 
 ## 0.4.1
