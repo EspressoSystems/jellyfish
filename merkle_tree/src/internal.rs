@@ -880,8 +880,7 @@ where
                 value: _,
                 pos,
             } => {
-                let mut proof = current_proof.clone();
-                proof.reverse();
+                let proof = current_proof.iter().rev().cloned().collect();
                 collector.push((pos, elem, MerkleTreeProof(proof)));
             },
             MerkleNode::Empty | MerkleNode::ForgottenSubtree { .. } => {},
