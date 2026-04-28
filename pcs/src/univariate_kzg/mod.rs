@@ -1266,8 +1266,8 @@ mod tests {
             );
             points
                 .iter()
-                .zip(proofs.into_iter())
-                .zip(evals.into_iter())
+                .zip(proofs)
+                .zip(evals)
                 .for_each(|((point, proof), eval)| {
                     assert_eq!(
                         UnivariateKzgPCS::<E>::open(&ck, &poly, point).unwrap(),
@@ -1287,8 +1287,8 @@ mod tests {
             domain
                 .elements()
                 .take(num_points)
-                .zip(proofs.into_iter())
-                .zip(evals.into_iter())
+                .zip(proofs)
+                .zip(evals)
                 .for_each(|((point, proof), eval)| {
                     assert_eq!(
                         UnivariateKzgPCS::<E>::open(&ck, &poly, &point).unwrap(),
