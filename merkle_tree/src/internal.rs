@@ -856,6 +856,37 @@ where
             MerkleNode::ForgottenSubtree { .. } => Err(MerkleTreeError::ForgottenLeaf),
         }
     }
+
+    /// Extract all elements with proof
+    pub(crate) fn collect_all_with_proof<'a>(
+        &'a self,
+        current_proof: &mut Vec<Vec<T>>,
+        collector: &mut Vec<(&'a I, &'a E, MerkleTreeProof<T>)>,
+    ) {
+        match self {
+            MerkleNode::Branch { value: _, children } => {
+                let cur_values: Vec<T> = children.iter().map(|child| child.value()).collect();
+                let mut values = vec![T::default(); cur_values.len() - 1];
+                for (i, child) in children.iter().enumerate() {
+                    values[..i].copy_from_slice(&cur_values[..i]);
+                    values[i..].copy_from_slice(&cur_values[i + 1..]);
+                    current_proof.push(values.clone());
+                    child.collect_all_with_proof(current_proof, collector);
+                    current_proof.pop();
+                }
+            },
+            MerkleNode::Leaf {
+                elem,
+                value: _,
+                pos,
+            } => {
+                let mut proof = current_proof.clone();
+                proof.reverse();
+                collector.push((pos, elem, MerkleTreeProof(proof)));
+            },
+            MerkleNode::Empty | MerkleNode::ForgottenSubtree { .. } => {},
+        }
+    }
 }
 
 impl<E, T> MerkleNode<E, u64, T>
