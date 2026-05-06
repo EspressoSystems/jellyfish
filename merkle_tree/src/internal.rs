@@ -858,7 +858,7 @@ where
     }
 
     /// Extract all elements with proof
-    pub(crate) fn collect_all_with_proof<'a>(
+    pub(crate) fn collect_all_with_proofs<'a>(
         &'a self,
         height: usize,
         current_proof: &mut Vec<Vec<T>>,
