@@ -326,11 +326,7 @@ mod tests {
             eq_arr.push_front(remove_dummy_variable(&base, i)?);
             if i != 0 {
                 let mul = eq.pop_back().unwrap().evaluations;
-                base = base
-                    .into_iter()
-                    .zip(mul.into_iter())
-                    .map(|(a, b)| a * b)
-                    .collect();
+                base = base.into_iter().zip(mul).map(|(a, b)| a * b).collect();
             }
         }
 

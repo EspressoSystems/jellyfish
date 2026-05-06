@@ -124,6 +124,21 @@ macro_rules! impl_merkle_tree_scheme {
             }
         }
 
+        impl<E, H, I, const ARITY: usize, T> $name<E, H, I, ARITY, T>
+        where
+            E: $crate::Element,
+            H: $crate::DigestAlgorithm<E, I, T>,
+            I: $crate::Index + $crate::ToTraversalPath<ARITY>,
+            T: $crate::NodeValue,
+        {
+            /// A helper function to collect all leaves with their corresponding proofs.
+            pub fn collect_leaves_with_proofs(&self) -> $crate::Vec<(&I, &E, $crate::internal::MerkleTreeProof<T>)> {
+                let mut collector = $crate::Vec::with_capacity(self.num_leaves() as usize);
+                let mut prealloc = $crate::vec![$crate::vec![T::default(); ARITY - 1]; self.height()];
+                self.root.collect_all_with_proofs(self.height(), &mut prealloc, &mut collector);
+                collector
+            }
+        }
     };
 }
 
