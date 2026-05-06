@@ -395,7 +395,7 @@ mod mt_tests {
     }
 
     #[test]
-    fn test_mt_collect_leaves_with_proof_edge_cases() {
+    fn test_mt_collect_leaves_with_proofs_edge_cases() {
         test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr254>();
         test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr377>();
         test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr381>();
