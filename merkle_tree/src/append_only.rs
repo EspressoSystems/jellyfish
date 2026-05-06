@@ -368,7 +368,7 @@ mod mt_tests {
         test_mt_collect_leaves_with_proof_helper::<Fr381>();
     }
 
-    fn test_mt_collect_leaves_with_proof_helper<F: RescueParameter>() {
+    fn test_mt_collect_leaves_with_proofs_helper<F: RescueParameter>() {
         let elems = (0u64..7).map(F::from).collect::<Vec<_>>();
         let mt = RescueMerkleTree::<F>::from_elems(Some(2), &elems).unwrap();
         let commitment = mt.commitment();
