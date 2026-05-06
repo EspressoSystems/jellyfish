@@ -363,9 +363,9 @@ mod mt_tests {
 
     #[test]
     fn test_mt_collect_leaves_with_proofs() {
-        test_mt_collect_leaves_with_proof_helper::<Fr254>();
-        test_mt_collect_leaves_with_proof_helper::<Fr377>();
-        test_mt_collect_leaves_with_proof_helper::<Fr381>();
+        test_mt_collect_leaves_with_proofs_helper::<Fr254>();
+        test_mt_collect_leaves_with_proofs_helper::<Fr377>();
+        test_mt_collect_leaves_with_proofs_helper::<Fr381>();
     }
 
     fn test_mt_collect_leaves_with_proofs_helper<F: RescueParameter>() {
@@ -373,7 +373,7 @@ mod mt_tests {
         let mt = RescueMerkleTree::<F>::from_elems(Some(2), &elems).unwrap();
         let commitment = mt.commitment();
 
-        let collected = mt.collect_leaves_with_proof();
+        let collected = mt.collect_leaves_with_proofs();
 
         assert_eq!(collected.len(), elems.len());
 
@@ -396,9 +396,9 @@ mod mt_tests {
 
     #[test]
     fn test_mt_collect_leaves_with_proofs_edge_cases() {
-        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr254>();
-        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr377>();
-        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr381>();
+        test_mt_collect_leaves_with_proofs_edge_cases_helper::<Fr254>();
+        test_mt_collect_leaves_with_proofs_edge_cases_helper::<Fr377>();
+        test_mt_collect_leaves_with_proofs_edge_cases_helper::<Fr381>();
     }
 
     fn test_mt_collect_leaves_with_proofs_edge_cases_helper<F: RescueParameter>() {
@@ -406,7 +406,7 @@ mod mt_tests {
         let single = [F::from(42u64)];
         let mt = RescueMerkleTree::<F>::from_elems(Some(0), single).unwrap();
         let commitment = mt.commitment();
-        let collected = mt.collect_leaves_with_proof();
+        let collected = mt.collect_leaves_with_proofs();
         assert_eq!(collected.len(), 1);
         let (pos, elem, proof) = &collected[0];
         assert_eq!(**pos, 0u64);
@@ -421,7 +421,7 @@ mod mt_tests {
         // Empty tree at non-zero height: yields no entries.
         let empty: [F; 0] = [];
         let mt = RescueMerkleTree::<F>::from_elems(Some(2), empty).unwrap();
-        assert!(mt.collect_leaves_with_proof().is_empty());
+        assert!(mt.collect_leaves_with_proofs().is_empty());
     }
 
     #[test]

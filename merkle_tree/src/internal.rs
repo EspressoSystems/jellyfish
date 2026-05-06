@@ -870,7 +870,7 @@ where
                 for (i, child) in children.iter().enumerate() {
                     current_proof[height - 1][..i].copy_from_slice(&cur_values[..i]);
                     current_proof[height - 1][i..].copy_from_slice(&cur_values[i + 1..]);
-                    child.collect_all_with_proof(height - 1, current_proof, collector);
+                    child.collect_all_with_proofs(height - 1, current_proof, collector);
                 }
             },
             MerkleNode::Leaf {
