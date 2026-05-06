@@ -362,7 +362,7 @@ mod mt_tests {
     }
 
     #[test]
-    fn test_mt_collect_leaves_with_proof() {
+    fn test_mt_collect_leaves_with_proofs() {
         test_mt_collect_leaves_with_proof_helper::<Fr254>();
         test_mt_collect_leaves_with_proof_helper::<Fr377>();
         test_mt_collect_leaves_with_proof_helper::<Fr381>();
