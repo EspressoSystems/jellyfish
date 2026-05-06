@@ -395,6 +395,36 @@ mod mt_tests {
     }
 
     #[test]
+    fn test_mt_collect_leaves_with_proof_edge_cases() {
+        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr254>();
+        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr377>();
+        test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr381>();
+    }
+
+    fn test_mt_collect_leaves_with_proof_edge_cases_helper<F: RescueParameter>() {
+        // Height-0 tree (single leaf at the root): proof must be empty and verify.
+        let single = [F::from(42u64)];
+        let mt = RescueMerkleTree::<F>::from_elems(Some(0), single).unwrap();
+        let commitment = mt.commitment();
+        let collected = mt.collect_leaves_with_proof();
+        assert_eq!(collected.len(), 1);
+        let (pos, elem, proof) = &collected[0];
+        assert_eq!(**pos, 0u64);
+        assert_eq!(**elem, single[0]);
+        assert!(proof.0.is_empty());
+        assert!(
+            RescueMerkleTree::<F>::verify(&commitment, *pos, *elem, proof)
+                .unwrap()
+                .is_ok()
+        );
+
+        // Empty tree at non-zero height: yields no entries.
+        let empty: [F; 0] = [];
+        let mt = RescueMerkleTree::<F>::from_elems(Some(2), empty).unwrap();
+        assert!(mt.collect_leaves_with_proof().is_empty());
+    }
+
+    #[test]
     fn test_mt_iter() {
         test_mt_iter_helper::<Fr254>();
         test_mt_iter_helper::<Fr377>();
