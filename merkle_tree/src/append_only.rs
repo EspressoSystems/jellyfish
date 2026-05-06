@@ -401,7 +401,7 @@ mod mt_tests {
         test_mt_collect_leaves_with_proof_edge_cases_helper::<Fr381>();
     }
 
-    fn test_mt_collect_leaves_with_proof_edge_cases_helper<F: RescueParameter>() {
+    fn test_mt_collect_leaves_with_proofs_edge_cases_helper<F: RescueParameter>() {
         // Height-0 tree (single leaf at the root): proof must be empty and verify.
         let single = [F::from(42u64)];
         let mt = RescueMerkleTree::<F>::from_elems(Some(0), single).unwrap();
