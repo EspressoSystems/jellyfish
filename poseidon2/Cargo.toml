@@ -29,7 +29,7 @@ spongefish = { workspace = true }
 zeroize = { workspace = true }
 
 [dev-dependencies]
-criterion = "0.5.1"
+criterion = "0.8.2"
 
 [[bench]]
 name = "p2_native"

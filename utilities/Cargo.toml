@@ -49,4 +49,4 @@ ark-bls12-377 = { workspace = true }
 ark-bls12-381 = { workspace = true }
 ark-bn254 = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
-criterion = "0.5.1"
+criterion = "0.8.2"
