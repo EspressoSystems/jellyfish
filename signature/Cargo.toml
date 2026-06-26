@@ -28,6 +28,7 @@ std = [
 ]
 schnorr = ["jf-rescue"]
 bls = []
+bls12-381 = ["blst"]
 gadgets = ["schnorr", "jf-relation", "jf-rescue/gadgets"]
 parallel = ["jf-rescue/parallel", "jf-relation/parallel", "jf-utils/parallel"]
 
@@ -38,7 +39,7 @@ ark-ec = { workspace = true }
 ark-ff = { workspace = true }
 ark-serialize = { workspace = true }
 ark-std = { workspace = true }
-blst = { version = "0.3.13", default-features = false }
+blst = { version = "0.3.13", default-features = false, optional = true }
 derive-where = { workspace = true }
 digest = { workspace = true }
 displaydoc = { workspace = true }

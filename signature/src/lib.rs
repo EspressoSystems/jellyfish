@@ -26,11 +26,7 @@ pub mod gadgets;
 #[cfg(any(test, feature = "schnorr"))]
 pub mod schnorr;
 
-use ark_std::{
-    format,
-    string::{String, ToString},
-};
-use blst::BLST_ERROR;
+use ark_std::string::String;
 use core::fmt::Debug;
 use displaydoc::Display;
 use serde::{Deserialize, Serialize};
@@ -54,14 +50,18 @@ pub enum SignatureError {
 
 impl ark_std::error::Error for SignatureError {}
 
-impl From<BLST_ERROR> for SignatureError {
-    fn from(e: BLST_ERROR) -> Self {
+#[cfg(feature = "bls12-381")]
+impl From<blst::BLST_ERROR> for SignatureError {
+    fn from(e: blst::BLST_ERROR) -> Self {
+        use ark_std::string::ToString;
         match e {
-            BLST_ERROR::BLST_SUCCESS => {
+            blst::BLST_ERROR::BLST_SUCCESS => {
                 Self::ParameterError("Expecting an error, but got a success.".to_string())
             },
-            BLST_ERROR::BLST_VERIFY_FAIL => Self::VerificationError(format!("{e:?}")),
-            _ => Self::ParameterError(format!("{e:?}")),
+            blst::BLST_ERROR::BLST_VERIFY_FAIL => {
+                Self::VerificationError(ark_std::format!("{e:?}"))
+            },
+            _ => Self::ParameterError(ark_std::format!("{e:?}")),
         }
     }
 }
