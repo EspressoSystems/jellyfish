@@ -11,7 +11,7 @@ documentation = { workspace = true }
 repository = { workspace = true }
 
 [features]
-default = ["parallel"]
+default = ["bls12-381", "parallel"]
 std = [
     "ark-bls12-381/std",
     "ark-bn254/std",
