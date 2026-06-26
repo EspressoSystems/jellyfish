@@ -74,4 +74,4 @@ sha2 = "0.10"
 name = "bls-signature"
 path = "benches/bls_signature.rs"
 harness = false
-required-features = ["bls"]
+required-features = ["bls", "bls12-381"]
