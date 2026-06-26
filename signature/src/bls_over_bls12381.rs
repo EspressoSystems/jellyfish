@@ -70,6 +70,7 @@
 //! ```
 //!
 //! [zeroize]: https://github.com/RustCrypto/utils/tree/master/zeroize
+#![cfg(feature = "bls12-381")]
 
 use super::SignatureScheme;
 use crate::{

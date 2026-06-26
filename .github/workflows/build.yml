@@ -52,7 +52,7 @@ jobs:
           token: ${{ github.token }}
 
       - name: Check Bench
-        run: cargo bench --features "test-srs bls schnorr gadgets" --no-run
+        run: cargo bench --features "test-srs bls bls12-381 schnorr gadgets" --no-run
 
       - name: Check all tests and binaries compilation
         run: |
