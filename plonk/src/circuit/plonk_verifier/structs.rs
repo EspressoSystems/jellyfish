@@ -36,17 +36,44 @@ pub(crate) struct ChallengesFpElemVar<F: PrimeField> {
     pub(crate) u: FpElemVar<F>,
 }
 
+/// Split a challenge variable into limbs, enforcing that each limb is in
+/// `[0, 2^m)`.
+///
+/// `FpElemVar::new_unchecked` only binds the limbs to the challenge with the
+/// single linear constraint `limb_0 + 2^m * limb_1 = challenge`, which a prover
+/// can also satisfy with non-canonical limbs. Since the challenges are consumed
+/// by `mod_mul`, which reads the limbs back as integers, non-canonical limbs
+/// make the emulated arithmetic wrap the native modulus and produce a wrong
+/// residue modulo the emulated one. The transcript range-checks only the
+/// squeezed challenge, never its decomposition, so the range checks have to
+/// happen here.
+///
+/// Once `jf-relation` is released with `FpElemVar::new_checked`, this helper
+/// can be replaced by a call to it.
+fn challenge_var_to_range_checked_limbs<F: PrimeField>(
+    circuit: &mut PlonkCircuit<F>,
+    challenge_var: Variable,
+    non_native_field_info: &NonNativeFieldInfo<F>,
+) -> Result<FpElemVar<F>, CircuitError> {
+    let elem = FpElemVar::new_unchecked(
+        circuit,
+        challenge_var,
+        non_native_field_info.m,
+        non_native_field_info.two_power_m,
+    )?;
+    let (limb_0, limb_1) = elem.components();
+    circuit.enforce_in_range(limb_0, non_native_field_info.m)?;
+    circuit.enforce_in_range(limb_1, non_native_field_info.m)?;
+    Ok(elem)
+}
+
 pub(crate) fn challenge_var_to_fp_elem_var<F: PrimeField>(
     circuit: &mut PlonkCircuit<F>,
     challenge_var: &ChallengesVar,
     non_native_field_info: &NonNativeFieldInfo<F>,
 ) -> Result<ChallengesFpElemVar<F>, CircuitError> {
-    let alpha_fp_elem_var = FpElemVar::new_unchecked(
-        circuit,
-        challenge_var.alpha,
-        non_native_field_info.m,
-        non_native_field_info.two_power_m,
-    )?;
+    let alpha_fp_elem_var =
+        challenge_var_to_range_checked_limbs(circuit, challenge_var.alpha, non_native_field_info)?;
     let alpha_2_fp_elem_var = circuit.mod_mul(
         &alpha_fp_elem_var,
         &alpha_fp_elem_var,
@@ -60,36 +87,23 @@ pub(crate) fn challenge_var_to_fp_elem_var<F: PrimeField>(
 
     Ok(ChallengesFpElemVar {
         alphas: [alpha_fp_elem_var, alpha_2_fp_elem_var, alpha_3_fp_elem_var],
-        beta: FpElemVar::new_unchecked(
+        beta: challenge_var_to_range_checked_limbs(
             circuit,
             challenge_var.beta,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
+            non_native_field_info,
         )?,
-        gamma: FpElemVar::new_unchecked(
+        gamma: challenge_var_to_range_checked_limbs(
             circuit,
             challenge_var.gamma,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
+            non_native_field_info,
         )?,
-        zeta: FpElemVar::new_unchecked(
+        zeta: challenge_var_to_range_checked_limbs(
             circuit,
             challenge_var.zeta,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
+            non_native_field_info,
         )?,
-        u: FpElemVar::new_unchecked(
-            circuit,
-            challenge_var.u,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
-        )?,
-        v: FpElemVar::new_unchecked(
-            circuit,
-            challenge_var.v,
-            non_native_field_info.m,
-            non_native_field_info.two_power_m,
-        )?,
+        u: challenge_var_to_range_checked_limbs(circuit, challenge_var.u, non_native_field_info)?,
+        v: challenge_var_to_range_checked_limbs(circuit, challenge_var.v, non_native_field_info)?,
     })
 }
 
@@ -187,4 +201,62 @@ pub(crate) struct NonNativeFieldInfo<F: PrimeField> {
     pub(crate) two_power_m: Option<F>,
     pub(crate) modulus_in_f: F,
     pub(crate) modulus_fp_elem: FpElem<F>,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use ark_bls12_377::{Fq as Fq377, Fr as Fr377};
+    use ark_ff::{BigInteger, Field};
+    use ark_std::One;
+    use jf_relation::Circuit;
+
+    const RANGE_BIT_LEN_FOR_TEST: usize = 16;
+
+    // Regression test: the limb decomposition of every Fiat-Shamir challenge
+    // must be range-checked.
+    //
+    // `FpElemVar::new_unchecked` binds the limbs to the challenge with a single
+    // linear constraint, `vars.0 + 2^m * vars.1 = challenge`, which a prover can
+    // satisfy with non-canonical limbs by shifting one down by `2^m` and the
+    // other up by 1. The challenges are then consumed by `mod_mul`, which reads
+    // the limbs as integers -- so an aliased challenge wraps the native modulus
+    // and multiplies by a wrong residue modulo the emulated one, breaking the
+    // soundness of the in-circuit verifier. The transcript range-checks only the
+    // squeezed challenge (< 2^248), never its decomposition.
+    #[test]
+    fn test_challenge_limbs_are_range_checked() -> Result<(), CircuitError> {
+        let m = 128;
+        let two_power_m = Fq377::from(2u8).pow([m as u64]);
+        let modulus_in_f =
+            Fq377::from_le_bytes_mod_order(&<Fr377 as PrimeField>::MODULUS.to_bytes_le());
+        let non_native_field_info = NonNativeFieldInfo::<Fq377> {
+            m,
+            two_power_m: Some(two_power_m),
+            modulus_in_f,
+            modulus_fp_elem: FpElem::new(&modulus_in_f, m, Some(two_power_m))?,
+        };
+
+        let mut circuit = PlonkCircuit::<Fq377>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let challenge_var = ChallengesVar {
+            alpha: circuit.create_variable(Fq377::from(7u8))?,
+            beta: circuit.create_variable(Fq377::from(11u8))?,
+            gamma: circuit.create_variable(Fq377::from(13u8))?,
+            zeta: circuit.create_variable(Fq377::from(17u8))?,
+            v: circuit.create_variable(Fq377::from(19u8))?,
+            u: circuit.create_variable(Fq377::from(23u8))?,
+        };
+        let challenges_fp_elem_var =
+            challenge_var_to_fp_elem_var(&mut circuit, &challenge_var, &non_native_field_info)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+
+        // `beta` is not consumed inside `challenge_var_to_fp_elem_var`, so the
+        // limb range checks are the only thing that can reject the alias.
+        let (beta_0, beta_1) = challenges_fp_elem_var.beta.components();
+        *circuit.witness_mut(beta_0) -= two_power_m;
+        *circuit.witness_mut(beta_1) += Fq377::one();
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        Ok(())
+    }
 }

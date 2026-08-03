@@ -97,9 +97,22 @@ pub struct FpElemVar<F: PrimeField> {
 impl<F: PrimeField> FpElemVar<F> {
     /// Create an FpElemVar from Fp element variable `var` and split parameter
     /// `m`. Does not perform range checks on the resulting variables.
-    /// To create an `FpElemVar` from a field element, consider to
-    /// use `new_from_field_element` instead (which comes with
-    /// a range proof for the field element).
+    ///
+    /// # Warning
+    /// The only constraint added is `vars.0 + 2^m * vars.1 = var`, which every
+    /// limb pair whose weighted sum matches `var` over the native field
+    /// satisfies -- not just the canonical decomposition.
+    /// Every operation that reads the limbs back as *integers* --
+    /// [`PlonkCircuit::mod_mul`], [`PlonkCircuit::mod_mul_constant`] and the
+    /// modular addition gates -- is sound only while both limbs are known to be
+    /// in `[0, 2^m)`; a non-canonical assignment makes those gates wrap the
+    /// native modulus and yield a wrong residue modulo the emulated one.
+    ///
+    /// Only use this constructor when the limbs are already range-checked by
+    /// construction (e.g. the outputs of [`PlonkCircuit::mod_mul`]) or when the
+    /// value never enters modular arithmetic. Otherwise use
+    /// [`Self::new_checked`], or [`Self::new_from_field_element`] when starting
+    /// from a field element rather than an existing variable.
     pub fn new_unchecked(
         cs: &mut PlonkCircuit<F>,
         var: Variable,
@@ -119,6 +132,26 @@ impl<F: PrimeField> FpElemVar<F> {
             m,
             two_power_m: fp_elem.two_power_m,
         })
+    }
+
+    /// Create an FpElemVar from Fp element variable `var` and split parameter
+    /// `m`, enforcing both that the limbs recompose to `var` and that each limb
+    /// is in `[0, 2^m)`.
+    ///
+    /// This is the sound counterpart of [`Self::new_unchecked`]: the range
+    /// checks pin down the canonical decomposition, which is what the modular
+    /// arithmetic gates assume of their operands.
+    /// Requires a lookup table.
+    pub fn new_checked(
+        cs: &mut PlonkCircuit<F>,
+        var: Variable,
+        m: usize,
+        two_power_m: Option<F>,
+    ) -> Result<Self, CircuitError> {
+        let elem = Self::new_unchecked(cs, var, m, two_power_m)?;
+        cs.range_gate_with_lookup(elem.vars.0, m)?;
+        cs.range_gate_with_lookup(elem.vars.1, m)?;
+        Ok(elem)
     }
 
     /// Convert into a single variable with value `witness[vars.0] + 2^m *
@@ -342,7 +375,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let num_range_blocks = self.num_range_blocks()?;
         let res = self.mod_add_internal(&[x_var, y_var], p.field_elem(), num_range_blocks)?;
 
-        FpElemVar::new_unchecked(self, res, x.m, Some(p.two_power_m))
+        FpElemVar::new_checked(self, res, x.m, Some(p.two_power_m))
     }
 
     /// Modular addition gate:
@@ -432,7 +465,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         self.quad_poly_gate(&wires, &q_lc, &q_mul, q_o, q_c)?;
 
-        FpElemVar::new_unchecked(self, remainder_var, x.m, Some(p.two_power_m))
+        FpElemVar::new_checked(self, remainder_var, x.m, Some(p.two_power_m))
     }
 
     /// Modular addition gate:
@@ -474,7 +507,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let num_range_blocks = self.num_range_blocks()?;
         let res = self.mod_add_internal(x_vars.as_ref(), p.field_elem(), num_range_blocks)?;
 
-        FpElemVar::new_unchecked(self, res, p.m, Some(p.two_power_m))
+        FpElemVar::new_checked(self, res, p.m, Some(p.two_power_m))
     }
 
     /// Modular multiplication gate:
@@ -864,7 +897,7 @@ impl<F: PrimeField> PlonkCircuit<F> {
 
         self.lc_gate(&wires, &coeffs)?;
 
-        FpElemVar::new_unchecked(self, x_neg_var, x.m, Some(x.two_power_m))
+        FpElemVar::new_checked(self, x_neg_var, x.m, Some(x.two_power_m))
     }
 }
 
@@ -976,6 +1009,100 @@ mod test {
         let _ = fp_elem_var.convert_to_var(&mut circuit)?;
         circuit.finalize_for_arithmetization()?;
         Ok(circuit)
+    }
+
+    // Regression test for the limb decomposition of an `FpElemVar`.
+    //
+    // `new_unchecked` only enforces `vars.0 + 2^m * vars.1 = var` over the
+    // native field, which admits a whole family of limb assignments besides the
+    // canonical one: shifting one limb down by `2^m` and the other up by 1
+    // leaves the constraint satisfied. The aliased limbs then stand for a
+    // different *integer*, and the modular arithmetic gates -- which read the
+    // limbs as integers -- wrap the native modulus and compute a wrong residue
+    // modulo the emulated one. `new_checked` range-checks both limbs, which
+    // pins down the canonical decomposition and rejects the alias.
+    #[test]
+    fn test_fp_elem_var_limb_aliasing() -> Result<(), CircuitError> {
+        test_fp_elem_var_limb_aliasing_helper::<FqEd254>()?;
+        test_fp_elem_var_limb_aliasing_helper::<FqEd377>()?;
+        test_fp_elem_var_limb_aliasing_helper::<FqEd381>()?;
+        test_fp_elem_var_limb_aliasing_helper::<Fq377>()
+    }
+    fn test_fp_elem_var_limb_aliasing_helper<F: PrimeField>() -> Result<(), CircuitError> {
+        let m = RANGE_BIT_LEN_FOR_TEST * 4;
+        let two_power_m = F::from(2u8).pow([m as u64]);
+        // canonical limbs are (5, 3), both well inside [0, 2^m)
+        let val = F::from(3u8) * two_power_m + F::from(5u8);
+
+        // `new_unchecked` leaves the decomposition underconstrained: the aliased
+        // witness satisfies the circuit just as well as the canonical one.
+        let (mut circuit, elem) = build_limb_aliasing_circuit::<F>(val, m, false)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        alias_limbs(&mut circuit, &elem);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+
+        // `new_checked` accepts the canonical witness and rejects the alias.
+        let (mut circuit, elem) = build_limb_aliasing_circuit::<F>(val, m, true)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+        alias_limbs(&mut circuit, &elem);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        Ok(())
+    }
+    fn build_limb_aliasing_circuit<F: PrimeField>(
+        val: F,
+        m: usize,
+        checked: bool,
+    ) -> Result<(PlonkCircuit<F>, FpElemVar<F>), CircuitError> {
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let var = circuit.create_variable(val)?;
+        let elem = if checked {
+            FpElemVar::new_checked(&mut circuit, var, m, None)?
+        } else {
+            FpElemVar::new_unchecked(&mut circuit, var, m, None)?
+        };
+        Ok((circuit, elem))
+    }
+    // Move the limbs off their canonical values while preserving
+    // `vars.0 + 2^m * vars.1`, as a malicious prover would.
+    fn alias_limbs<F: PrimeField>(circuit: &mut PlonkCircuit<F>, elem: &FpElemVar<F>) {
+        let (var0, var1) = elem.components();
+        let two_power_m = elem.two_power_m();
+        *circuit.witness_mut(var0) -= two_power_m;
+        *circuit.witness_mut(var1) += F::one();
+    }
+
+    // The outputs of the modular addition gates are re-split into limbs too, so
+    // they need the same treatment: an aliased sum feeding a `mod_mul` is the
+    // same soundness break one step removed from the inputs.
+    #[test]
+    fn test_mod_add_output_limbs_are_range_checked() -> Result<(), CircuitError> {
+        test_mod_add_output_limbs_helper::<FqEd254>()?;
+        test_mod_add_output_limbs_helper::<FqEd377>()?;
+        test_mod_add_output_limbs_helper::<FqEd381>()?;
+        test_mod_add_output_limbs_helper::<Fq377>()
+    }
+    fn test_mod_add_output_limbs_helper<F: PrimeField>() -> Result<(), CircuitError> {
+        let m = RANGE_BIT_LEN_FOR_TEST * 4;
+        let p = F::from(RANGE_SIZE_FOR_TEST as u32).pow([10u64]);
+        let p_split = FpElem::new(&p, m, None)?;
+
+        let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
+        let x_var = circuit.create_variable(F::from(7u8))?;
+        let y_var = circuit.create_variable(F::from(11u8))?;
+        let x = FpElemVar::new_checked(&mut circuit, x_var, m, Some(p_split.two_power_m()))?;
+        let y = FpElemVar::new_checked(&mut circuit, y_var, m, Some(p_split.two_power_m()))?;
+        // No consumer of `sum` on purpose: the only constraints that can reject
+        // an aliased limb assignment here are the range checks on the limbs of
+        // the sum itself. Without them the aliased witness satisfies the
+        // circuit, and the wrong residue is invisible to every later gate.
+        let sum = circuit.mod_add(&x, &y, &p_split)?;
+        assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
+
+        alias_limbs(&mut circuit, &sum);
+        assert!(circuit.check_circuit_satisfiability(&[]).is_err());
+
+        Ok(())
     }
 
     // ========================================
