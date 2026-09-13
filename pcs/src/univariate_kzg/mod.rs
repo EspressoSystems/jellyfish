@@ -252,6 +252,26 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         let check_time =
             start_timer!(|| format!("Checking {} evaluation proofs", multi_commitment.len()));
 
+        // The inputs are zipped below, which would silently drop the trailing
+        // openings of the longer inputs and verify only a prefix of the batch.
+        if multi_commitment.is_empty() {
+            return Err(PCSError::InvalidParameters(
+                "no evaluation to check".to_string(),
+            ));
+        }
+        if multi_commitment.len() != points.len()
+            || multi_commitment.len() != values.len()
+            || multi_commitment.len() != batch_proof.len()
+        {
+            return Err(PCSError::InvalidParameters(format!(
+                "commitments length {} is different from points length {}, values length {} or proofs length {}",
+                multi_commitment.len(),
+                points.len(),
+                values.len(),
+                batch_proof.len(),
+            )));
+        }
+
         let mut total_c = <E::G1>::zero();
         let mut total_w = <E::G1>::zero();
 
@@ -1180,6 +1200,87 @@ mod tests {
         Ok(())
     }
 
+    fn batch_check_length_mismatch_test_template<E>() -> Result<(), PCSError>
+    where
+        E: Pairing,
+    {
+        let rng = &mut test_rng();
+        let degree = 8;
+        let pp = UnivariateKzgPCS::<E>::gen_srs_for_testing(rng, degree)?;
+        let (ck, vk) = UnivariateKzgPCS::<E>::trim(&pp, degree, None)?;
+        let mut comms = Vec::new();
+        let mut values = Vec::new();
+        let mut points = Vec::new();
+        let mut proofs = Vec::new();
+        for _ in 0..3 {
+            let p = <DensePolynomial<E::ScalarField> as DenseUVPolynomial<E::ScalarField>>::rand(
+                degree, rng,
+            );
+            comms.push(UnivariateKzgPCS::<E>::commit(&ck, &p)?);
+            let point = E::ScalarField::rand(rng);
+            let (proof, value) = UnivariateKzgPCS::<E>::open(&ck, &p, &point)?;
+            values.push(value);
+            points.push(point);
+            proofs.push(proof);
+        }
+        assert!(UnivariateKzgPCS::<E>::batch_verify(
+            &vk, &comms, &points, &values, &proofs, rng
+        )?);
+
+        // A wrong value fails the full batch.
+        let mut bad_values = values.clone();
+        bad_values[2] += E::ScalarField::one();
+        assert!(!UnivariateKzgPCS::<E>::batch_verify(
+            &vk,
+            &comms,
+            &points,
+            &bad_values,
+            &proofs,
+            rng
+        )?);
+
+        // Dropping the trailing proof must not turn the batch into a prefix
+        // that verifies; every length mismatch is rejected.
+        assert!(UnivariateKzgPCS::<E>::batch_verify(
+            &vk,
+            &comms,
+            &points,
+            &bad_values,
+            &proofs[..2].to_vec(),
+            rng
+        )
+        .is_err());
+        assert!(UnivariateKzgPCS::<E>::batch_verify(
+            &vk,
+            &comms[..2].to_vec(),
+            &points,
+            &values,
+            &proofs,
+            rng
+        )
+        .is_err());
+        assert!(UnivariateKzgPCS::<E>::batch_verify(
+            &vk,
+            &comms,
+            &points[..2],
+            &values,
+            &proofs,
+            rng
+        )
+        .is_err());
+        assert!(UnivariateKzgPCS::<E>::batch_verify(
+            &vk,
+            &comms,
+            &points,
+            &values[..2],
+            &proofs,
+            rng
+        )
+        .is_err());
+        assert!(UnivariateKzgPCS::<E>::batch_verify(&vk, &vec![], &[], &[], &vec![], rng).is_err());
+        Ok(())
+    }
+
     fn multi_point_open_test_template<E>() -> Result<(), PCSError>
     where
         E: Pairing,
@@ -1226,6 +1327,12 @@ mod tests {
     #[test]
     fn batch_check_test() {
         batch_check_test_template::<Bls12_381>().expect("test failed for bls12-381");
+    }
+
+    #[test]
+    fn batch_check_length_mismatch_test() {
+        batch_check_length_mismatch_test_template::<Bls12_381>()
+            .expect("test failed for bls12-381");
     }
 
     #[test]

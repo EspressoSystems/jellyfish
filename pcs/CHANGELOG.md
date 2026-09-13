@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Untracked
 
+### Fixes
+
+- [#898](https://github.com/EspressoSystems/jellyfish/pull/898): `UnivariateKzgPCS::batch_verify` rejects empty batches and mismatched input lengths instead of silently verifying only a prefix.
+
 ### Changes
 
 - [#843](https://github.com/EspressoSystems/jellyfish/pull/843): replace unmaintained `derivative` with `derive_where`.
