@@ -603,4 +603,78 @@ mod mt_tests {
             bincode::deserialize(&bincode::serialize(&non_mem_proof).unwrap()).unwrap()
         );
     }
+
+    #[test]
+    fn test_non_membership_through_empty_subtree() {
+        test_non_membership_through_empty_subtree_helper::<Fr254>();
+        test_non_membership_through_empty_subtree_helper::<Fr377>();
+        test_non_membership_through_empty_subtree_helper::<Fr381>();
+    }
+
+    /// Non-membership proofs whose path meets an empty subtree above the leaf
+    /// level (the proof then has empty levels for that subtree and below).
+    fn test_non_membership_through_empty_subtree_helper<F: RescueParameter>() {
+        // Height-3 tree with a single leaf at position 0. Position 26 has path
+        // [2, 2, 2] and diverges at the root: the node at height 2 is empty.
+        // Position 18 has path [0, 0, 2] and also diverges at the root, but the
+        // branches below the empty node are all 0.
+        let mut mt = RescueSparseMerkleTree::<BigUint, F>::new(3);
+        mt.update(BigUint::from(0u64), F::from(1u64)).unwrap();
+        let commitment = mt.commitment();
+
+        for pos in [26u64, 18u64].map(BigUint::from) {
+            let lookup_proof = mt.universal_lookup(&pos).expect_not_found().unwrap();
+            assert_eq!(lookup_proof.height(), 3);
+            assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+                &commitment,
+                &pos,
+                &lookup_proof
+            )
+            .unwrap()
+            .is_ok());
+
+            // `universal_forget` returns the same proof as `universal_lookup`.
+            let forget_proof = mt.universal_forget(pos.clone()).expect_not_found().unwrap();
+            assert_eq!(forget_proof, lookup_proof);
+
+            // The proof can be remembered into a fully forgotten tree without
+            // touching the commitment, and is looked up as `NotFound` afterwards.
+            let mut forgotten =
+                RescueSparseMerkleTree::<BigUint, F>::from_commitment(commitment, 3, 1);
+            forgotten
+                .non_membership_remember(pos.clone(), &lookup_proof)
+                .unwrap();
+            assert_eq!(forgotten.commitment(), commitment);
+            let remembered_proof = forgotten.universal_lookup(&pos).expect_not_found().unwrap();
+            assert!(RescueSparseMerkleTree::<BigUint, F>::non_membership_verify(
+                &commitment,
+                &pos,
+                &remembered_proof
+            )
+            .unwrap()
+            .is_ok());
+
+            // The leaf is still forgotten and can be remembered afterwards.
+            assert!(matches!(
+                forgotten.universal_lookup(BigUint::from(0u64)),
+                LookupResult::NotInMemory
+            ));
+            let (elem, mem_proof) = mt
+                .universal_lookup(BigUint::from(0u64))
+                .expect_ok()
+                .unwrap();
+            forgotten
+                .remember(BigUint::from(0u64), elem, &mem_proof)
+                .unwrap();
+            assert_eq!(forgotten.commitment(), commitment);
+            assert_eq!(
+                forgotten
+                    .universal_lookup(BigUint::from(0u64))
+                    .expect_ok()
+                    .unwrap()
+                    .0,
+                elem
+            );
+        }
+    }
 }
