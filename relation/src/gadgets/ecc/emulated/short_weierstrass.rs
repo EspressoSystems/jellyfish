@@ -10,7 +10,10 @@ use crate::{
     gadgets::{from_emulated_field, EmulatedVariable, EmulationConfig, SerializableEmulatedStruct},
     BoolVar, Circuit, CircuitError, PlonkCircuit,
 };
-use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+use ark_ec::{
+    short_weierstrass::{Affine, SWCurveConfig},
+    AffineRepr,
+};
 use ark_ff::PrimeField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{vec, vec::Vec};
@@ -31,7 +34,7 @@ where
     P: SWCurveConfig<BaseField = F>,
 {
     fn from(p: Affine<P>) -> Self {
-        SWPoint(p.x, p.y, p.infinity)
+        SWPoint(p.x, p.y, p.is_zero())
     }
 }
 

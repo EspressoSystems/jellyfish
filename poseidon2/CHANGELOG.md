@@ -3,6 +3,11 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.3.0
+
+- [#PR](https://github.com/EspressoSystems/jellyfish/pull/PR) Upgrade arkworks dependencies to v0.6.0.
+- [#PR](https://github.com/EspressoSystems/jellyfish/pull/PR) Move to `spongefish` 0.7. `Poseidon2Permutation` is now stateless and drops its rate parameter, the CRHFs take a sponge type such as `Poseidon2SpongeBnN3R1` instead of a permutation, and the `Poseidon2Permutation*R*` aliases are removed. Hash outputs are unchanged.
+
 ## 0.2.0
 
 - [#827](https://github.com/EspressoSystems/jellyfish/pull/827) Upgrade arkworks dependencies to v0.5.0.
