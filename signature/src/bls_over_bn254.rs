@@ -41,6 +41,7 @@ use crate::{
     constants::{tag, CS_ID_BLS_BN254},
     SignatureError,
 };
+use ::serde::{Deserialize, Serialize};
 use ark_bn254::{
     Bn254, Fq as BaseField, Fr as ScalarField, G1Affine, G1Projective, G2Affine, G2Projective,
 };
@@ -65,7 +66,6 @@ use ark_std::{
 };
 use derivative::Derivative;
 use digest::{DynDigest, FixedOutputReset};
-use serde::{Deserialize, Serialize};
 use sha3::Keccak256;
 
 use crate::SignatureError::{ParameterError, VerificationError};

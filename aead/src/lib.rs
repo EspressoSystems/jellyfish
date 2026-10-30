@@ -21,6 +21,7 @@ extern crate std;
 #[doc(hidden)]
 extern crate alloc;
 
+use ::serde::{Deserialize, Deserializer, Serialize};
 use ark_serialize::*;
 use ark_std::{
     fmt, format,
@@ -33,7 +34,6 @@ use chacha20poly1305::{
     KeyInit, XChaCha20Poly1305, XNonce,
 };
 use displaydoc::Display;
-use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Clone, Eq, PartialEq, Serialize, Deserialize, Hash)]
 /// Public/encryption key for AEAD
@@ -204,7 +204,7 @@ struct Nonce(XNonce);
 impl Serialize for Nonce {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer,
+        S: ::serde::Serializer,
     {
         serializer.serialize_bytes(self.0.as_slice())
     }
@@ -217,7 +217,7 @@ impl<'de> Deserialize<'de> for Nonce {
     {
         struct NonceVisitor;
 
-        impl<'de> serde::de::Visitor<'de> for NonceVisitor {
+        impl<'de> ::serde::de::Visitor<'de> for NonceVisitor {
             type Value = Nonce;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -226,18 +226,18 @@ impl<'de> Deserialize<'de> for Nonce {
 
             fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
             where
-                E: serde::de::Error,
+                E: ::serde::de::Error,
             {
                 Ok(Nonce(*XNonce::from_slice(&v)))
             }
 
             fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
             where
-                A: serde::de::SeqAccess<'de>,
+                A: ::serde::de::SeqAccess<'de>,
             {
                 let bytes: Vec<u8> = seq
                     .next_element()?
-                    .ok_or_else(|| serde::de::Error::invalid_length(0, &self))?;
+                    .ok_or_else(|| ::serde::de::Error::invalid_length(0, &self))?;
                 Ok(Nonce(*XNonce::from_slice(&bytes)))
             }
         }

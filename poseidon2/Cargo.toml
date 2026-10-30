@@ -23,7 +23,7 @@ ark-ff = { workspace = true }
 ark-std = { workspace = true }
 displaydoc = { workspace = true }
 hex = "0.4.3"
-jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", branch = "ab/ark-0.6", default-features = false }
 lazy_static = "1.5.0"
 spongefish = { workspace = true }
 zeroize = { workspace = true }

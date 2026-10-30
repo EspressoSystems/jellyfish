@@ -30,7 +30,7 @@ use jf_poseidon2::{
 };
 use jf_rescue::{crhf::RescueCRHF, RescueParameter};
 use sha3::{Digest, Keccak256, Sha3_256};
-use spongefish::{duplex_sponge::Permutation, Unit};
+use spongefish::Unit;
 
 /// Wrapper for rescue hash function
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,7 +83,7 @@ impl<I, F, S, const INPUT_SIZE: usize> DigestAlgorithm<F, I, F>
 where
     I: Index,
     F: PrimeField + From<I> + Unit,
-    S: Permutation<U = F> + Poseidon2Sponge,
+    S: Poseidon2Sponge<U = F>,
 {
     fn digest(data: &[F]) -> Result<F, MerkleTreeError> {
         let mut input = vec![internal_hash_dom_sep()];
