@@ -44,10 +44,10 @@ digest = { workspace = true }
 displaydoc = { workspace = true }
 hashbrown = { workspace = true }
 itertools = { workspace = true }
-jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-crhf-v0.2.0", default-features = false }
-jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", branch = "jf-relation-v0.5.0-compat", optional = true, default-features = false }
-jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", branch = "jf-relation-v0.5.0-compat", default-features = false }
-jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
+jf-crhf = { git = "https://github.com/EspressoSystems/jellyfish", branch = "ab/ark-0.6", default-features = false }
+jf-relation = { git = "https://github.com/EspressoSystems/jellyfish", branch = "ab/ark-0.6-relation-compat", optional = true, default-features = false }
+jf-rescue = { git = "https://github.com/EspressoSystems/jellyfish", branch = "ab/ark-0.6-relation-compat", default-features = false }
+jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", branch = "ab/ark-0.6", default-features = false }
 num-bigint = { workspace = true }
 num-traits = { version = "0.2.15", default-features = false }
 serde = { workspace = true }
