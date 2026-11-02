@@ -16,7 +16,10 @@
 //! points to the TE form and work on the TE form inside the circuits.
 
 use super::TEPoint;
-use ark_ec::short_weierstrass::{Affine as SWAffine, SWCurveConfig as SWParam};
+use ark_ec::{
+    short_weierstrass::{Affine as SWAffine, SWCurveConfig as SWParam},
+    AffineRepr,
+};
 use ark_ff::{BigInteger256, BigInteger384, BigInteger768, PrimeField};
 
 impl<F, P> From<SWAffine<P>> for TEPoint<F>
@@ -30,7 +33,7 @@ where
 
         // if p is an infinity point
         // return infinity point
-        if p.infinity {
+        if p.is_zero() {
             return Self(F::zero(), F::one());
         }
 

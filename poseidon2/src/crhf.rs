@@ -5,10 +5,7 @@ use core::marker::PhantomData;
 use ark_ff::{Field, PrimeField};
 use ark_std::{borrow::Borrow, string::ToString, vec::Vec};
 use jf_crhf::CRHF;
-use spongefish::{
-    duplex_sponge::{DuplexSponge, Permutation},
-    DuplexSpongeInterface, Unit,
-};
+use spongefish::Unit;
 
 use crate::{sponge::Poseidon2Sponge, Poseidon2Error};
 
@@ -17,12 +14,12 @@ use crate::{sponge::Poseidon2Sponge, Poseidon2Error};
 /// be zero-padded to `INPUT_SIZE`
 ///
 /// Example:
-/// `FixedLenPoseidon2Hash<ark_bn254::Fr, Poseidon2SpongeStateBnN3R1, 6, 2>`
+/// `FixedLenPoseidon2Hash<ark_bn254::Fr, Poseidon2SpongeBnN3R1, 6, 2>`
 #[derive(Clone)]
 pub struct FixedLenPoseidon2Hash<F, S, const INPUT_SIZE: usize, const OUTPUT_SIZE: usize>
 where
     F: PrimeField + Unit,
-    S: Permutation<U = F> + Poseidon2Sponge,
+    S: Poseidon2Sponge<U = F>,
 {
     _field: PhantomData<F>,
     _sponge: PhantomData<S>,
@@ -31,7 +28,7 @@ where
 impl<F, S, const IN: usize, const OUT: usize> CRHF for FixedLenPoseidon2Hash<F, S, IN, OUT>
 where
     F: PrimeField + Unit,
-    S: Permutation<U = F> + Poseidon2Sponge,
+    S: Poseidon2Sponge<U = F>,
 {
     type Input = [F]; // length should be <= IN
     type Output = [F; OUT];
@@ -46,10 +43,10 @@ where
         let mut padded = Vec::from(input);
         zero_padding(&mut padded, IN);
 
-        let mut sponge = DuplexSponge::<S>::default();
-        sponge.absorb_unchecked(&padded);
+        let mut sponge = S::default();
+        sponge.absorb(&padded);
         let mut output = [F::default(); OUT];
-        sponge.squeeze_unchecked(&mut output);
+        sponge.squeeze(&mut output);
         Ok(output)
     }
 }
@@ -60,7 +57,7 @@ where
 pub struct VariableLenPoseidon2Hash<F, S, const OUTPUT_SIZE: usize>
 where
     F: PrimeField + Unit,
-    S: Permutation<U = F>,
+    S: Poseidon2Sponge<U = F>,
 {
     _field: PhantomData<F>,
     _sponge: PhantomData<S>,
@@ -69,7 +66,7 @@ where
 impl<F, S, const OUT: usize> CRHF for VariableLenPoseidon2Hash<F, S, OUT>
 where
     F: PrimeField + Unit,
-    S: Permutation<U = F>,
+    S: Poseidon2Sponge<U = F>,
 {
     type Input = [F];
     type Output = [F; OUT];
@@ -77,12 +74,12 @@ where
 
     fn evaluate<T: Borrow<Self::Input>>(input: T) -> Result<Self::Output, Self::Error> {
         let mut padded = Vec::from(input.borrow());
-        bit_padding(&mut padded, S::R);
+        bit_padding(&mut padded, S::RATE);
 
-        let mut sponge = DuplexSponge::<S>::default();
-        sponge.absorb_unchecked(&padded);
+        let mut sponge = S::default();
+        sponge.absorb(&padded);
         let mut output = [F::default(); OUT];
-        sponge.squeeze_unchecked(&mut output);
+        sponge.squeeze(&mut output);
         Ok(output)
     }
 }
