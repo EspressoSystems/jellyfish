@@ -51,8 +51,16 @@ pub fn challenge_bit_len<F: PrimeField>() -> usize {
     (field_byte_len::<F>() - 1) << 3
 }
 
+/// Compute the smallest multiple of `multiple` that is greater than or equal to
+/// `len`.
+///
+/// # Panics
+///
+/// Panics if `multiple` is zero.
 #[inline]
 pub fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {
+    assert!(multiple > 0, "multiple must be nonzero");
+
     if len % multiple == 0 {
         len
     } else {
@@ -60,7 +68,11 @@ pub fn compute_len_to_next_multiple(len: usize, multiple: usize) -> usize {
     }
 }
 
-// Pad message with 0 until `msg` is multiple of `multiple`
+/// Pad a vector with zeros until its length is a multiple of `multiple`.
+///
+/// # Panics
+///
+/// Panics if `multiple` is zero.
 #[inline]
 pub fn pad_with_zeros<F: Field>(vec: &mut Vec<F>, multiple: usize) {
     let len = vec.len();
@@ -123,5 +135,19 @@ mod tests {
         test_hadamard_template::<ark_bls12_381::Fr, ark_bls12_381::G1Projective>();
         test_hadamard_template::<ark_bls12_377::Fr, ark_bls12_377::G1Projective>();
         test_hadamard_template::<ark_bn254::Fr, ark_bn254::G1Projective>();
+    }
+
+    #[test]
+    fn test_compute_len_to_next_multiple() {
+        assert_eq!(compute_len_to_next_multiple(0, 4), 0);
+        assert_eq!(compute_len_to_next_multiple(1, 4), 4);
+        assert_eq!(compute_len_to_next_multiple(4, 4), 4);
+        assert_eq!(compute_len_to_next_multiple(5, 4), 8);
+    }
+
+    #[test]
+    #[should_panic(expected = "multiple must be nonzero")]
+    fn test_compute_len_to_next_multiple_rejects_zero_multiple() {
+        compute_len_to_next_multiple(1, 0);
     }
 }
