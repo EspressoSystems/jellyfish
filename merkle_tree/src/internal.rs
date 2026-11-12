@@ -458,9 +458,11 @@ where
         LookupResult<E, MerkleTreeProof<T>, MerkleTreeProof<T>>,
     ) {
         match self {
+            // Same shape as `lookup_internal`: one empty level for every node
+            // below this empty subtree, so the proof has the tree height.
             MerkleNode::Empty => (
                 Arc::new(self.clone()),
-                LookupResult::NotFound(MerkleTreeProof(vec![])),
+                LookupResult::NotFound(MerkleTreeProof(vec![vec![]; height])),
             ),
             MerkleNode::Branch { value, children } => {
                 let mut children = children.clone();
@@ -585,6 +587,14 @@ where
                 } else {
                     MerkleNode::Empty
                 }
+            } else if proof[height - 1].is_empty() {
+                // A non-membership proof has an empty level for the empty
+                // subtree on the path and for every node below it. The
+                // verified proof pinned this node's value to the empty value,
+                // so restore it as `Empty` instead of expanding it. (`value`
+                // is only a placeholder here: the parent fills in its own
+                // value before recursing and reads the real one back.)
+                MerkleNode::Empty
             } else {
                 let branch = traversal_path[height - 1];
                 let mut values = proof[height - 1].clone();
