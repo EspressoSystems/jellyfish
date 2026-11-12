@@ -3,6 +3,12 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Untracked
+
+### Changes
+
+- [#894](https://github.com/EspressoSystems/jellyfish/pull/893): Circuit bug: range-check the limb decomposition of the Fiat-Shamir challenges in the recursive PlonK verifier. The limbs of `alpha`, `beta`, `gamma`, `zeta`, `u` and `v` were bound to the squeezed challenge by a single linear constraint, so non-canonical decompositions were admissible and made the emulated multiplications compute wrong residues. This changes the recursive verifier circuit, and therefore its verifying key.
+
 ## 0.8.0
 
 ### Breaking Changes
