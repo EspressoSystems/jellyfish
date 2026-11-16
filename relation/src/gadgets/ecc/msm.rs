@@ -439,8 +439,8 @@ mod tests {
 
             assert_eq!(circuit.point_witness(&res_var)?, res_point);
 
-            // // uncomment the following code to dump the circuit comparison to
-            // screen ark_std::println!("number of basis: {}", dim);
+            // // uncomment to dump circuit stats:
+            // ark_std::println!("number of basis: {}", dim);
             // ark_std::println!("#variables: {}", circuit.num_vars(),);
             // ark_std::println!("#constraints: {}\n", circuit.num_gates(),);
 

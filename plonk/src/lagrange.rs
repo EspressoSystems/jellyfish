@@ -149,7 +149,9 @@ impl<F: FftField> LagrangeCoeffs<F> for Radix2EvaluationDomain<F> {
             // We actually compute this by computing (Z_H(tau) * v_i)^{-1} *
             // (tau - h g^i) and then batch inverting to get the correct
             // lagrange coefficients. We let `l_i = (Z_H(tau) * v_i)^-1` and
-            // `r_i = tau - h g^i` Notice that since Z_H(tau) is i-independent,
+            // `r_i = tau - h g^i`.
+            //
+            // Notice that since Z_H(tau) is i-independent,
             // and v_i = g * v_{i-1}, it follows that
             // l_i = g^-1 * l_{i-1}
 

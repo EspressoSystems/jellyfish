@@ -227,9 +227,13 @@ impl RescueParameter for Fq {
     // 3. KEY_INJECTION[i] = KEY_SCHED_MATRIX * KEY_INJECTION[ i - 1] +
     // KEY_SCHED_VEC
     // where the INIT_VECTOR, KEY_SCHED_MATRIX and KEY_INJECTION are defined
-    // above Those constants can be obtained via
-    //   key_injection(init_vec_377, key_sched_matrix_377, key_sched_vec_377,
-    // q377) from rescue377.sage
+    // above.
+    //
+    // Those constants can be obtained from rescue377.sage via
+    //
+    //   key_injection(
+    //       init_vec_377, key_sched_matrix_377, key_sched_vec_377, q377,
+    //   )
     const KEY_INJECTION_LE: [[&'static [u8]; 4]; 2 * ROUNDS] = [
         [
             &[

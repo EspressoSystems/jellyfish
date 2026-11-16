@@ -797,7 +797,9 @@ where
                 } else {
                     // Otherwise, an entry has been updated and the value of one
                     // of our children has changed, so we must recompute our own
-                    // value. *value = digest_branch::<E, H, I, T>(&children)?;
+                    // value.
+                    //
+                    // *value = digest_branch::<E, H, I, T>(&children)?;
                     Ok((
                         Arc::new(MerkleNode::Branch {
                             value: digest_branch::<E, H, I, T>(&children)?,
