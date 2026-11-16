@@ -571,7 +571,9 @@ where
 
         for (i, (vk, &current_alpha_bases)) in vks.iter().zip(alpha_bases).enumerate() {
             // Compute coefficient for the permutation product polynomial
-            // commitment. coeff = L1(zeta) * alpha^2
+            // commitment.
+            //
+            // coeff = L1(zeta) * alpha^2
             //       + alpha
             //       * (beta * zeta      + a_bar + gamma)
             //       * (beta * k1 * zeta + b_bar + gamma)
