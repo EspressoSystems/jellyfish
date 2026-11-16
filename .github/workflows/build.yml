@@ -47,8 +47,14 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lockfile: [committed, latest]
     steps:
       - uses: actions/checkout@v6
+      - if: matrix.lockfile == 'latest'
+        run: cargo update
       - uses: rustsec/audit-check@v2
         with:
           token: ${{ github.token }}
