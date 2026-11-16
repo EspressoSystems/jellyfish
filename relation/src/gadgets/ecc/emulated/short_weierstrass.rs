@@ -212,7 +212,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         let non_infinity_mark = self.logic_neg(infinity_mark)?;
 
         // Case 2: p2 is infinity, while p0 and p1 are not.
-        // inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 && y0 != 0)
+        // inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 && y0 !=
+        // 0)
         let non_inf_p2 = self.logic_neg(p2.2)?;
         let eq_x0_x1 = self.is_emulated_var_equal(&p0.0, &p1.0)?;
         let neq_x0_x1 = self.logic_neg(eq_x0_x1)?;

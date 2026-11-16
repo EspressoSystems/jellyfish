@@ -170,8 +170,8 @@ mod test {
         let direct_hash_output = hasher.finalize().to_vec();
         assert_eq!(direct_hash_output, vrf_output);
 
-        // now test for bad message. User can choose to ignore the output if they really
-        // want to.
+        // now test for bad message. User can choose to ignore the output if
+        // they really want to.
         let (is_correct, _) = vrf.verify(&(), &vrf_proof, &pk, bad_message).unwrap();
         assert!(!is_correct);
     }

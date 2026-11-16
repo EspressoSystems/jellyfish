@@ -232,7 +232,8 @@ where
             F::zero(),
             F::zero(),
         ]));
-        // since key was just sampled and to be used only once, we can allow NONCE = 0
+        // since key was just sampled and to be used only once, we can allow
+        // NONCE = 0
         Ciphertext {
             ephemeral: ephemeral_key_pair.enc_key(),
             data: apply_counter_mode_stream::<F>(&key, msg, &F::zero(), Direction::Encrypt),
@@ -274,7 +275,8 @@ where
             F::zero(),
             F::zero(),
         ]));
-        // since key was just samples and to be used only once, we can have NONCE = 0
+        // since key was just samples and to be used only once, we can have
+        // NONCE = 0
         apply_counter_mode_stream::<F>(&key, ctext.data.as_slice(), &F::zero(), Direction::Decrypt)
     }
 }

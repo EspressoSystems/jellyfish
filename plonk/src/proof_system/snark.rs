@@ -252,8 +252,8 @@ where
         }
 
         // Round 1.5
-        // Plookup: compute and interpolate the sorted concatenation of the (merged)
-        // lookup table and the (merged) witness values
+        // Plookup: compute and interpolate the sorted concatenation of the
+        // (merged) lookup table and the (merged) witness values
         if circuits.iter().any(|c| C::support_lookup(c)) {
             challenges.tau = Some(transcript.get_challenge::<E>(b"tau")?);
         } else {
@@ -379,8 +379,8 @@ where
                     &poly_evals_vec[i],
                     plookup_evals_vec[i].as_ref(),
                 )?;
-            // update the alpha power term (i.e. the random combiner that aggregates
-            // multiple instances)
+            // update the alpha power term (i.e. the random combiner that
+            // aggregates multiple instances)
             if plookup_evals_vec[i].is_some() {
                 alpha_base *= alpha_7;
             } else {
@@ -493,7 +493,8 @@ where
         srs: &Self::UniversalSRS,
         circuit: &C,
     ) -> Result<(Self::ProvingKey, Self::VerifyingKey), Self::Error> {
-        // Make sure the SRS can support the circuit (with hiding degree of 2 for zk)
+        // Make sure the SRS can support the circuit (with hiding degree of 2
+        // for zk)
         let domain_size = circuit.eval_domain_size()?;
         let srs_size = circuit.srs_size()?;
         let num_inputs = circuit.num_inputs();
@@ -679,6 +680,7 @@ pub mod test {
     };
     use jf_rescue::RescueParameter;
     use jf_utils::test_rng;
+    use rstest::rstest;
 
     // Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.
@@ -849,49 +851,24 @@ pub mod test {
         Ok(())
     }
 
+    #[rstest]
+    #[case::bn254(test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>)]
+    #[case::bls12_377(test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>)]
+    #[case::bls12_381(test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>)]
+    #[case::bw6_761(test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>)]
+    #[case::bls12_377_rescue(test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>)]
+    fn test_plonk_proof_system(
+        #[case] helper: fn(PlonkType) -> Result<(), PlonkError>,
+        #[values(PlonkType::TurboPlonk, PlonkType::UltraPlonk)] plonk_type: PlonkType,
+    ) -> Result<(), PlonkError> {
+        helper(plonk_type)
+    }
+
     #[test]
-    fn test_plonk_proof_system() -> Result<(), PlonkError> {
-        // merlin transcripts
-        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::UltraPlonk,
-        )?;
-
-        // solidity-friendly keccak256 transcripts
-        // currently only needed for CAPE using bls12-381
+    fn test_plonk_proof_system_bls12_381_solidity() -> Result<(), PlonkError> {
         test_plonk_proof_system_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
             PlonkType::TurboPlonk,
-        )?;
-        Ok(())
+        )
     }
 
     fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
@@ -1233,7 +1210,8 @@ pub mod test {
         let (_, oracles, challenges) =
             PlonkKzgSnark::<E>::batch_prove_internal::<_, _, T>(rng, &[&circuit], &[&pk], None)?;
 
-        // 5. Check that the targeted polynomials evaluate to zero on the vanishing set.
+        // 5. Check that the targeted polynomials evaluate to zero on the
+        //    vanishing set.
         check_plonk_prover_polynomials(plonk_type, &oracles[0], &pk, &challenges)?;
 
         Ok(())
@@ -1334,7 +1312,8 @@ pub mod test {
         let beta = challenges.beta;
         let gamma = challenges.gamma;
 
-        // check that \prod_i [w_i(X) + beta * k_i * X + gamma] * z(X) = \prod_i [w_i(X)
+        // check that \prod_i [w_i(X) + beta * k_i * X + gamma] * z(X) = \prod_i
+        // [w_i(X)
         // + beta * sigma_i(X) + gamma] * z(wX) on the vanishing set
         let one_poly = DensePolynomial::from_coefficients_vec(vec![E::ScalarField::one()]);
         let poly_1 = oracles
@@ -1563,27 +1542,16 @@ pub mod test {
         Ok(())
     }
 
-    #[test]
-    fn test_key_aggregation_and_batch_prove() -> Result<(), PlonkError> {
-        // merlin transcripts
-        test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )
+    #[rstest]
+    #[case::bn254(test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>)]
+    #[case::bls12_377(test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>)]
+    #[case::bls12_381(test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>)]
+    #[case::bw6_761(test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>)]
+    #[case::bls12_377_rescue(test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>)]
+    fn test_key_aggregation_and_batch_prove(
+        #[case] helper: fn(PlonkType) -> Result<(), PlonkError>,
+    ) -> Result<(), PlonkError> {
+        helper(PlonkType::TurboPlonk)
     }
 
     fn test_key_aggregation_and_batch_prove_helper<E, F, P, T>(
@@ -1604,7 +1572,8 @@ pub mod test {
         // 2. Create many circuits with same domain size
         let circuits = (6..13)
             .map(|i| gen_circuit_for_test::<E::ScalarField>(i, i, plonk_type))
-            .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
+            .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates =
+                                                       // 4m + 11
         let cs_ref: Vec<&PlonkCircuit<E::ScalarField>> = circuits.iter().collect();
 
         // 3. Preprocessing
@@ -1626,7 +1595,8 @@ pub mod test {
         // 2. Create circuits
         let type_a_circuits: Vec<PlonkCircuit<E::ScalarField>> = (6..13)
             .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeA))
-            .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates = 4m + 11
+            .collect::<Result<Vec<_>, PlonkError>>()?; // the number of gates =
+                                                       // 4m + 11
         let type_b_circuits = (6..13)
             .map(|i| gen_mergeable_circuit(i, i, MergeableCircuitType::TypeB))
             .collect::<Result<Vec<_>, PlonkError>>()?;

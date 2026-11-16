@@ -83,7 +83,8 @@ where
     )?;
     // the random combiner term for the polynomials evaluated at point `zeta`
     let mut v_base = challenges.v;
-    // the random combiner term for the polynomials evaluated at point `zeta * g`
+    // the random combiner term for the polynomials evaluated at point `zeta *
+    // g`
     let mut uv_base = challenges.u;
 
     // return the buffer data for aggregate_evaluations_circuit
@@ -103,7 +104,8 @@ where
                 &non_native_field_info.modulus_fp_elem,
             )?;
         }
-        // Add wire sigma polynomial commitments. The last sigma commitment is excluded.
+        // Add wire sigma polynomial commitments. The last sigma commitment is
+        // excluded.
         let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
         for &poly_comm in vk.sigma_comms.iter().take(num_wire_types - 1) {
             v_and_uv_basis.push(v_base);

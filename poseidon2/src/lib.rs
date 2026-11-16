@@ -68,10 +68,10 @@ pub trait Poseidon2Params<F: PrimeField, const T: usize>: Clone {
         let ext_rc = Self::external_rc();
         let int_rc = Self::internal_rc();
 
-        // TODO: consider adding more security-related check, incl. number of internal
-        // rounds in terms of field size to achieve 128-bit security. see
-        // `poseidon2_round_numbers_128` in plonky3, we skip for now as GCD is not
-        // implemented in arkworks, and params are trusted.
+        // TODO: consider adding more security-related check, incl. number of
+        // internal rounds in terms of field size to achieve 128-bit security.
+        // see `poseidon2_round_numbers_128` in plonky3, we skip for now as GCD
+        // is not implemented in arkworks, and params are trusted.
         [2, 3, 4, 8, 12, 16, 20, 24].contains(&T)
             && [3, 5, 7, 11].contains(&Self::D)
             && ext_rc.len() == Self::EXT_ROUNDS

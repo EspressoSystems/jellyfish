@@ -520,13 +520,16 @@ where
     let mut scalars_and_bases = ScalarsAndBasesVar::new();
     for (i, vk) in vks.iter().enumerate() {
         // ============================================
-        // Compute coefficient for the permutation product polynomial commitment.
-        // coeff = [z]_1 *
+        // Compute coefficient for the permutation product polynomial
+        // commitment. coeff = [z]_1 *
         //       ( L1(zeta) * alpha^2
         //          + alpha
-        //              * (beta * zeta      + a_bar + gamma)    <- computed via the loop
-        //              * (beta * k1 * zeta + b_bar + gamma)    <- computed via the loop
-        //              * (beta * k2 * zeta + c_bar + gamma)    <- computed via the loop
+        //              * (beta * zeta      + a_bar + gamma)    <- computed via
+        //                the loop
+        //              * (beta * k1 * zeta + b_bar + gamma)    <- computed via
+        //                the loop
+        //              * (beta * k2 * zeta + c_bar + gamma)    <- computed via
+        //                the loop
         //       )
         // where a_bar, b_bar and c_bar are in w_evals
         // ============================================
@@ -649,7 +652,8 @@ where
         // q_scalars[9] = w_evals[3].pow([5]);
         q_scalars_fp_elem_vars.push(circuit.non_native_power_5_gen::<E::ScalarField>(&w_evals[3])?);
         // q_scalars[10] = -w_evals[4];
-        // note that we push w_eval to the buffer, so we will need to inverse the basis
+        // note that we push w_eval to the buffer, so we will need to inverse
+        // the basis
         q_scalars_fp_elem_vars.push(w_evals[4]);
         // q_scalars[11] = E::ScalarField::one();
         // TODO(optimization): public wire?

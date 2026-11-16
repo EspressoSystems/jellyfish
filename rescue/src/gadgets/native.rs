@@ -221,7 +221,8 @@ where
             // Apply permutation
             state = RescueNativeGadget::<F>::rescue_permutation(self, state)?;
         }
-        // squeeze phase, but only a single output, can return directly from state
+        // squeeze phase, but only a single output, can return directly from
+        // state
         Ok(state.0[0])
     }
 
@@ -864,7 +865,8 @@ mod tests {
         *circuit.witness_mut(sponge_var) = F::from(1_u32);
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
-        // If the data length is not a multiple of RATE==3 then an error is triggered
+        // If the data length is not a multiple of RATE==3 then an error is
+        // triggered
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
 
         let size = 2 * CRHF_RATE + 1; // Non multiple of RATE

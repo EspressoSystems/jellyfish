@@ -95,15 +95,11 @@ RUSTFLAGS='--cfg curve25519_dalek_bits="SIZE"'
 ### Tests
 
 ```
-cargo test --release
+just test
+just doctest
 ```
 
-Note that by default the _release_ mode does not check integers overflow.
-In order to enforce this check run:
-
-```
-./scripts/run_tests.sh
-```
+`just` lists all recipes; CI runs the same recipes.
 
 #### Test coverage
 

@@ -257,8 +257,9 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
 
         let combination_time = start_timer!(|| "Combining commitments and proofs");
         let mut randomizer = E::ScalarField::one();
-        // Instead of multiplying g and gamma_g in each turn, we simply accumulate
-        // their coefficients and perform a final multiplication at the end.
+        // Instead of multiplying g and gamma_g in each turn, we simply
+        // accumulate their coefficients and perform a final multiplication at
+        // the end.
         let mut g_multiplier = E::ScalarField::zero();
         for (((c, z), v), proof) in multi_commitment
             .iter()
@@ -937,8 +938,8 @@ pub(crate) mod icicle {
         ) -> Result<Vec<Commitment<E>>, PCSError> {
             #[cfg(feature = "kzg-print-trace")]
             let sync_time = start_timer!(|| "Sync MSM result");
-            // Since `commit_on_gpu()` is conducting the MSM in async way, we need to
-            // synchronize it first.
+            // Since `commit_on_gpu()` is conducting the MSM in async way, we
+            // need to synchronize it first.
             stream.synchronize()?;
             #[cfg(feature = "kzg-print-trace")]
             end_timer!(sync_time);
@@ -1031,10 +1032,10 @@ pub(crate) mod icicle {
             end_timer!(msm_time);
 
             // TODO: update after https://github.com/ingonyama-zk/icicle/pull/412
-            // FIXME: even though `trimmed_prover_param` is an internal, temporary variable
-            // there's still risk of double-free if `msm()` above panic. Switching to
-            // `ManuallyDrop<HostOrDeviceSlice>` would fix this issue but aren't supported
-            // by ICICLE's msm API.
+            // FIXME: even though `trimmed_prover_param` is an internal,
+            // temporary variable there's still risk of double-free if `msm()`
+            // above panic. Switching to `ManuallyDrop<HostOrDeviceSlice>` would
+            // fix this issue but aren't supported by ICICLE's msm API.
             ark_std::mem::forget(trimmed_prover_param);
             Ok(msm_result)
         }
@@ -1244,7 +1245,8 @@ mod tests {
         let degrees = [14, 15, 16, 17, 18];
 
         for degree in degrees {
-            let num_points = rng.gen_range(5..30); // should allow more points than degree
+            let num_points = rng.gen_range(5..30); // should allow more points
+                                                   // than degree
             ark_std::println!(
                 "Multi-opening: poly deg: {}, num of points: {}",
                 degree,
@@ -1252,8 +1254,9 @@ mod tests {
             );
 
             // NOTE: THIS IS IMPORTANT FOR USER OF `multi_open()`!
-            // since we will pad your polynomial degree to the next_power_of_two, you will
-            // need to trim to the correct padded degree as follows:
+            // since we will pad your polynomial degree to the
+            // next_power_of_two, you will need to trim to the correct padded
+            // degree as follows:
             let (ck, _) = UnivariateKzgPCS::<E>::trim_fft_size(&pp, degree)?;
             let poly = <DensePolynomial<Fr> as DenseUVPolynomial<Fr>>::rand(degree, &mut rng);
             let points: Vec<Fr> = (0..num_points).map(|_| Fr::rand(&mut rng)).collect();

@@ -124,8 +124,8 @@ where
     let proof = proof.path_values();
     match element {
         // only strictly checking this during membership proof
-        // in non-membership proof, empty leaf/branch node can have empty vector in
-        // their merkle proof
+        // in non-membership proof, empty leaf/branch node can have empty vector
+        // in their merkle proof
         Some(_) => {
             if proof.iter().any(|v| v.len() != ARITY - 1) {
                 return Err(MerkleTreeError::InconsistentStructureError(
@@ -143,8 +143,8 @@ where
     };
     if element.is_some() && proof.iter().any(|v| v.len() != ARITY - 1) {
         // only strictly checking this during membership proof
-        // in non-membership proof, empty leaf/branch node can have empty vector in
-        // their merkle proof
+        // in non-membership proof, empty leaf/branch node can have empty vector
+        // in their merkle proof
         return Err(MerkleTreeError::InconsistentStructureError(
             "Malformed proof".to_string(),
         ));
@@ -795,9 +795,9 @@ where
                 {
                     Ok((Arc::new(MerkleNode::Empty), result.1, result.2))
                 } else {
-                    // Otherwise, an entry has been updated and the value of one of our children has
-                    // changed, so we must recompute our own value.
-                    // *value = digest_branch::<E, H, I, T>(&children)?;
+                    // Otherwise, an entry has been updated and the value of one
+                    // of our children has changed, so we must recompute our own
+                    // value. *value = digest_branch::<E, H, I, T>(&children)?;
                     Ok((
                         Arc::new(MerkleNode::Branch {
                             value: digest_branch::<E, H, I, T>(&children)?,

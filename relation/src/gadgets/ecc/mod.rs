@@ -41,10 +41,10 @@ where
 {
     fn from(p: Affine<P>) -> Self {
         if p.is_zero() {
-            // separately treat point of infinity since maliciously constructed Affine
-            // could be (0,0,true) which is still a valid infinity point but would result in
-            // `Point(0, 0)` which might lead to problems as seen in precedence:
-            // https://cryptosubtlety.medium.com/00-8d4adcf4d255
+            // separately treat point of infinity since maliciously constructed
+            // Affine could be (0,0,true) which is still a valid infinity point
+            // but would result in `Point(0, 0)` which might lead to problems as
+            // seen in precedence: https://cryptosubtlety.medium.com/00-8d4adcf4d255
             let inf = Affine::<P>::zero();
             TEPoint(inf.x, inf.y)
         } else {

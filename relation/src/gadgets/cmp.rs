@@ -334,7 +334,8 @@ mod test {
                         circuit.is_gt_constant(a, *b)?
                     }
                 },
-                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                // Equality test will be handled elsewhere, comparison gate test
+                // will not enter here
                 Ordering::Equal => circuit.create_boolean_variable_unchecked(expected_result)?,
             }
         } else {
@@ -354,7 +355,8 @@ mod test {
                         circuit.is_gt(a, b)?
                     }
                 },
-                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                // Equality test will be handled elsewhere, comparison gate test
+                // will not enter here
                 Ordering::Equal => circuit.create_boolean_variable_unchecked(expected_result)?,
             }
         };
@@ -389,7 +391,8 @@ mod test {
                         circuit.enforce_gt_constant(a, *b)?
                     }
                 },
-                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                // Equality test will be handled elsewhere, comparison gate test
+                // will not enter here
                 Ordering::Equal => (),
             }
         } else {
@@ -409,7 +412,8 @@ mod test {
                         circuit.enforce_gt(a, b)?
                     }
                 },
-                // Equality test will be handled elsewhere, comparison gate test will not enter here
+                // Equality test will be handled elsewhere, comparison gate test
+                // will not enter here
                 Ordering::Equal => (),
             }
         };

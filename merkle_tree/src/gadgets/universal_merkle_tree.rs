@@ -34,7 +34,8 @@ where
         proof_var: &Merkle3AryProofVar,
         commitment_var: Variable,
     ) -> Result<BoolVar, CircuitError> {
-        // First check that the input index is consistent with the proof branches
+        // First check that the input index is consistent with the proof
+        // branches
         let mut base = F::from(1u64);
         let mut cumulative = self.zero();
         for node_var in &proof_var.node_vars {
@@ -45,8 +46,8 @@ where
             base = base + base + base;
         }
         let index_check = self.is_equal(cumulative, non_elem_idx_var)?;
-        // Compute the commitment from the proof and check if it matches the expected
-        // commitment.
+        // Compute the commitment from the proof and check if it matches the
+        // expected commitment.
         let computed_commitment_var = {
             let mut cur_label = self.zero();
             for cur_node in proof_var.node_vars.iter() {
@@ -113,8 +114,8 @@ where
             })
             .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
 
-        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
-        // boolean
+        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child`
+        // are boolean
         for node in nodes.iter() {
             // Boolean constrain `is_left_child + is_right_child` because a node
             // can either be the left or the right child of its parent
@@ -287,8 +288,8 @@ mod test {
         assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
         // Bad path:
-        // The circuit cannot be satisfied if we try to prove non-membership of an
-        // existing element.
+        // The circuit cannot be satisfied if we try to prove non-membership of
+        // an existing element.
         let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
         let pos = 2u64;
         let elem_idx_var = circuit.create_variable(pos.into()).unwrap();

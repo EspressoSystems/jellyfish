@@ -487,8 +487,8 @@ where
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid: B) -> P::ScalarField {
-        // is the domain separator always an Fr? If so how about using Fr as domain
-        // separator rather than bytes?
+        // is the domain separator always an Fr? If so how about using Fr as
+        // domain separator rather than bytes?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut challenge_input = {
             let vk_affine = self.0.into_affine();
@@ -524,52 +524,52 @@ mod tests {
     use ark_ed_on_bls12_381_bandersnatch::EdwardsConfig as Param381b;
     use ark_ed_on_bn254::EdwardsConfig as Param254;
     use ark_std::UniformRand;
+    use rstest::rstest;
 
-    macro_rules! test_signature {
-        ($curve_param:tt) => {
-            let mut rng = jf_utils::test_rng();
+    fn test_signature_helper<F: RescueParameter, P: Config<BaseField = F> + Clone>() {
+        let mut rng = jf_utils::test_rng();
 
-            let keypair1 = KeyPair::generate(&mut rng);
-            // test randomized key pair
-            let randomizer2 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
-            let keypair2 = keypair1.randomize_with(&randomizer2);
-            let randomizer3 = <$curve_param as CurveConfig>::ScalarField::rand(&mut rng);
-            let keypair3 = keypair2.randomize_with(&randomizer3);
-            let keypairs = vec![keypair1, keypair2, keypair3];
+        let keypair1 = KeyPair::generate(&mut rng);
+        // test randomized key pair
+        let randomizer2 = <P as CurveConfig>::ScalarField::rand(&mut rng);
+        let keypair2 = keypair1.randomize_with(&randomizer2);
+        let randomizer3 = <P as CurveConfig>::ScalarField::rand(&mut rng);
+        let keypair3 = keypair2.randomize_with(&randomizer3);
+        let keypairs = vec![keypair1, keypair2, keypair3];
 
-            let pk_bad: VerKey<$curve_param> = KeyPair::generate(&mut rng).ver_key_ref().clone();
+        let pk_bad: VerKey<P> = KeyPair::generate(&mut rng).ver_key_ref().clone();
 
-            let mut msg = vec![];
-            for i in 0..20 {
-                for keypair in &keypairs {
-                    assert_eq!(keypair.vk, VerKey::from(&keypair.sk));
+        let mut msg = vec![];
+        for i in 0..20 {
+            for keypair in &keypairs {
+                assert_eq!(keypair.vk, VerKey::from(&keypair.sk));
 
-                    let sig = keypair.sign(&msg, CS_ID_SCHNORR);
-                    let pk = keypair.ver_key_ref();
-                    assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
-                    // wrong public key
-                    assert!(pk_bad.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
-                    // wrong message
-                    msg.push(<$curve_param as CurveConfig>::BaseField::from(i as u64));
-                    assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
-                }
+                let sig = keypair.sign(&msg, CS_ID_SCHNORR);
+                let pk = keypair.ver_key_ref();
+                assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_ok());
+                // wrong public key
+                assert!(pk_bad.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
+                // wrong message
+                msg.push(<P as CurveConfig>::BaseField::from(i as u64));
+                assert!(pk.verify(&msg, &sig, CS_ID_SCHNORR).is_err());
             }
+        }
 
-            let message = <$curve_param as CurveConfig>::BaseField::rand(&mut rng);
-            sign_and_verify::<SchnorrSignatureScheme<$curve_param>>(&[message]);
-            failed_verification::<SchnorrSignatureScheme<$curve_param>>(
-                &[message],
-                &[<$curve_param as CurveConfig>::BaseField::rand(&mut rng)],
-            );
-        };
+        let message = <P as CurveConfig>::BaseField::rand(&mut rng);
+        sign_and_verify::<SchnorrSignatureScheme<P>>(&[message]);
+        failed_verification::<SchnorrSignatureScheme<P>>(
+            &[message],
+            &[<P as CurveConfig>::BaseField::rand(&mut rng)],
+        );
     }
 
-    #[test]
-    fn test_signature() {
-        test_signature!(Param254);
-        test_signature!(Param377);
-        test_signature!(Param381);
-        test_signature!(Param381b);
+    #[rstest]
+    #[case::ed254(test_signature_helper::<_, Param254>)]
+    #[case::ed377(test_signature_helper::<_, Param377>)]
+    #[case::ed381(test_signature_helper::<_, Param381>)]
+    #[case::bandersnatch(test_signature_helper::<_, Param381b>)]
+    fn test_signature(#[case] helper: fn()) {
+        helper()
     }
 
     mod serde {
