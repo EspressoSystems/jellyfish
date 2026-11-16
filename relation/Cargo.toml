@@ -58,3 +58,4 @@ ark-ed-on-bls12-377 = { workspace = true }
 ark-ed-on-bls12-381 = { workspace = true }
 ark-ed-on-bls12-381-bandersnatch = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
+rstest = "0.26.1"

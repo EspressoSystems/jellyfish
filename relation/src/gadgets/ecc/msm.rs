@@ -366,7 +366,6 @@ fn ln_without_floats(a: usize) -> usize {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use crate::PlonkType;
     use ark_bls12_377::{g1::Config as Param377, Fq as Fq377};
@@ -379,24 +378,20 @@ mod tests {
     use ark_ed_on_bn254::{EdwardsConfig as ParamEd254, Fq as FqEd254};
     use ark_ff::UniformRand;
     use jf_utils::fr_to_fq;
+    use rstest::rstest;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 8;
 
-    #[test]
-    fn test_variable_base_multi_scalar_mul() -> Result<(), CircuitError> {
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>(PlonkType::UltraPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::TurboPlonk)?;
-        test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>(PlonkType::UltraPlonk)?;
-
-        // // uncomment the following code to dump the circuit comparison to screen
-        // assert!(false);
-
-        Ok(())
+    #[rstest]
+    #[case::ed254(test_variable_base_multi_scalar_mul_helper::<FqEd254, ParamEd254>)]
+    #[case::ed377(test_variable_base_multi_scalar_mul_helper::<FqEd377, ParamEd377>)]
+    #[case::ed381(test_variable_base_multi_scalar_mul_helper::<FqEd381, ParamEd381>)]
+    #[case::bls12_377(test_variable_base_multi_scalar_mul_helper::<Fq377, Param377>)]
+    fn test_variable_base_multi_scalar_mul(
+        #[case] helper: fn(PlonkType) -> Result<(), CircuitError>,
+        #[values(PlonkType::TurboPlonk, PlonkType::UltraPlonk)] plonk_type: PlonkType,
+    ) -> Result<(), CircuitError> {
+        helper(plonk_type)
     }
 
     fn test_variable_base_multi_scalar_mul_helper<F, P>(

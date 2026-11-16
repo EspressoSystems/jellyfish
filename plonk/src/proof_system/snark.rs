@@ -679,6 +679,7 @@ pub mod test {
     };
     use jf_rescue::RescueParameter;
     use jf_utils::test_rng;
+    use rstest::rstest;
 
     // Different `m`s lead to different circuits.
     // Different `a0`s lead to different witness values.
@@ -849,49 +850,24 @@ pub mod test {
         Ok(())
     }
 
+    #[rstest]
+    #[case::bn254(test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>)]
+    #[case::bls12_377(test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>)]
+    #[case::bls12_381(test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>)]
+    #[case::bw6_761(test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>)]
+    #[case::bls12_377_rescue(test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>)]
+    fn test_plonk_proof_system(
+        #[case] helper: fn(PlonkType) -> Result<(), PlonkError>,
+        #[values(PlonkType::TurboPlonk, PlonkType::UltraPlonk)] plonk_type: PlonkType,
+    ) -> Result<(), PlonkError> {
+        helper(plonk_type)
+    }
+
     #[test]
-    fn test_plonk_proof_system() -> Result<(), PlonkError> {
-        // merlin transcripts
-        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::UltraPlonk,
-        )?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_plonk_proof_system_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::UltraPlonk,
-        )?;
-
-        // solidity-friendly keccak256 transcripts
-        // currently only needed for CAPE using bls12-381
+    fn test_plonk_proof_system_bls12_381_solidity() -> Result<(), PlonkError> {
         test_plonk_proof_system_helper::<Bls12_381, Fq381, _, SolidityTranscript>(
             PlonkType::TurboPlonk,
-        )?;
-        Ok(())
+        )
     }
 
     fn test_plonk_proof_system_helper<E, F, P, T>(plonk_type: PlonkType) -> Result<(), PlonkError>
@@ -1563,27 +1539,16 @@ pub mod test {
         Ok(())
     }
 
-    #[test]
-    fn test_key_aggregation_and_batch_prove() -> Result<(), PlonkError> {
-        // merlin transcripts
-        test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-        test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>(
-            PlonkType::TurboPlonk,
-        )?;
-
-        // rescue transcripts
-        // currently only available for bls12-377
-        test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>(
-            PlonkType::TurboPlonk,
-        )
+    #[rstest]
+    #[case::bn254(test_key_aggregation_and_batch_prove_helper::<Bn254, Fq254, _, StandardTranscript>)]
+    #[case::bls12_377(test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, StandardTranscript>)]
+    #[case::bls12_381(test_key_aggregation_and_batch_prove_helper::<Bls12_381, Fq381, _, StandardTranscript>)]
+    #[case::bw6_761(test_key_aggregation_and_batch_prove_helper::<BW6_761, Fq761, _, StandardTranscript>)]
+    #[case::bls12_377_rescue(test_key_aggregation_and_batch_prove_helper::<Bls12_377, Fq377, _, RescueTranscript<_>>)]
+    fn test_key_aggregation_and_batch_prove(
+        #[case] helper: fn(PlonkType) -> Result<(), PlonkError>,
+    ) -> Result<(), PlonkError> {
+        helper(PlonkType::TurboPlonk)
     }
 
     fn test_key_aggregation_and_batch_prove_helper<E, F, P, T>(
