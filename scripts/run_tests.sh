@@ -1,18 +1,39 @@
 #!/usr/bin/env bash
-set -e
+# Usage: run_tests.sh [--list | package...]  (no arguments: all packages)
+set -euo pipefail
 
 # We want the code to panic if there is an integer overflow
 export RUSTFLAGS="-C overflow-checks=on"
 
-cargo +nightly-2025-09-04 test --release -p jf-utils -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-plonk --lib --bins -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-merkle-tree --features gadgets -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-pcs --features test-srs -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-rescue --features gadgets -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-signature --features "bls, schnorr, gadgets" -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-aead -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-elgamal --features gadgets -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-vrf -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-prf -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-crhf -- -Zunstable-options --report-time
-cargo +nightly-2025-09-04 test --release -p jf-commitment -- -Zunstable-options --report-time
+# CI sets NIGHTLY from .github/workflows/build.yml
+NIGHTLY="${NIGHTLY:-nightly-2025-09-04}"
+
+TESTS=(
+  "jf-utils"
+  "jf-plonk --lib --bins"
+  "jf-merkle-tree --features gadgets"
+  "jf-pcs --features test-srs"
+  "jf-rescue --features gadgets"
+  "jf-signature --features bls,schnorr,gadgets"
+  "jf-aead"
+  "jf-elgamal --features gadgets"
+  "jf-vrf"
+  "jf-prf"
+  "jf-crhf"
+  "jf-commitment"
+)
+
+if [ "${1:-}" = "--list" ]; then
+  for t in "${TESTS[@]}"; do echo "${t%% *}"; done
+  exit
+fi
+
+ran=0
+for t in "${TESTS[@]}"; do
+  pkg="${t%% *}"
+  if [ $# -gt 0 ] && [[ " $* " != *" $pkg "* ]]; then continue; fi
+  # shellcheck disable=SC2086
+  cargo +"$NIGHTLY" test --release -p $t -- -Zunstable-options --report-time
+  ran=$((ran + 1))
+done
+[ $# -eq 0 ] || [ "$ran" -eq $# ] || { echo "unknown package in: $*" >&2; exit 1; }

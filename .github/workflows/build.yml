@@ -9,75 +9,156 @@ on:
     - cron: "0 0 * * 1"
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NIGHTLY: nightly-2025-09-04
+
 jobs:
-  build:
+  typos:
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel Outdated Builds
-        uses: styfle/cancel-workflow-action@0.13.1
-        with:
-          all_but_latest: true
-          access_token: ${{ github.token }}
+      - uses: actions/checkout@v6
+      - uses: crate-ci/typos@v1.47.0
 
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-
-      - name: Install nightly toolchain
-        uses: dtolnay/rust-toolchain@master
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2025-09-04
+          toolchain: ${{ env.NIGHTLY }}
           components: rustfmt
+      - run: cargo +${{ env.NIGHTLY }} fmt -- --check
 
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-          targets: wasm32-unknown-unknown
-
+          components: clippy
       - uses: Swatinem/rust-cache@v2
-        name: Enable Rust Caching
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo clippy --workspace --features 'test-srs test-apis bls schnorr gadgets' -- -D warnings
 
-      - name: Spell Check
-        uses: crate-ci/typos@v1.47.0
-
-      - name: Format Check
-        run: cargo +nightly-2025-09-04 fmt -- --check
-
-      - name: Clippy
-        run: cargo clippy --workspace --features 'test-srs test-apis bls schnorr gadgets' -- -D warnings
-
-      - name: Audit
-        uses: rustsec/audit-check@v2
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: rustsec/audit-check@v2
         with:
           token: ${{ github.token }}
 
-      - name: Check Bench
-        run: cargo bench --features "test-srs bls bls12-381 schnorr gadgets" --no-run
+  check-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo bench --features "test-srs bls bls12-381 schnorr gadgets" --no-run
 
-      - name: Check all tests and binaries compilation
-        run: |
-          cargo check --workspace --tests --lib --bins
-          cargo check --workspace --features 'std parallel test-srs test-apis bls schnorr gadgets'
+  check-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo check --workspace --tests --lib --bins
 
-      - name: Check no_std support and WASM compilation
-        env:
-          RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
-        run: |
-          cargo check --no-default-features --features "bls schnorr gadgets"
-          cargo build --target wasm32-unknown-unknown --no-default-features --features "bls schnorr gadgets"
+  check-features:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo check --workspace --features 'std parallel test-srs test-apis bls schnorr gadgets'
 
-      - name: Test
-        run: bash ./scripts/run_tests.sh
+  no-std:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo check --no-default-features --features "bls schnorr gadgets"
 
-      - name: Example
-        run: cargo run --release --example proof-of-exp --features test-srs
+  wasm:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo build --target wasm32-unknown-unknown --no-default-features --features "bls schnorr gadgets"
 
+  test-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: list
+        run: echo "packages=$(bash ./scripts/run_tests.sh --list | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: test-packages
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.test-packages.outputs.packages) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.NIGHTLY }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.package }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: bash ./scripts/run_tests.sh ${{ matrix.package }}
+
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo run --release --example proof-of-exp --features test-srs
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Generate Documentation
         run: |
           cargo doc --no-deps --lib --release
           cp -R target/doc public
           echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
-
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         if: ${{ github.ref == 'refs/heads/main' }}
