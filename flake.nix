@@ -24,7 +24,7 @@
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
         # keep in sync with NIGHTLY in .github/workflows/build.yml
-        nightlyToolchain = pkgs.rust-bin.nightly."2025-09-04".minimal.override {
+        nightlyToolchain = pkgs.rust-bin.nightly."2026-11-16".minimal.override {
           extensions = [ "rustfmt" ];
         };
 

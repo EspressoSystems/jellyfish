@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NIGHTLY: nightly-2025-09-04
+  NIGHTLY: nightly-2026-11-16
   CARGO_PROFILE_DEV_DEBUG: line-tables-only
 
 jobs:
