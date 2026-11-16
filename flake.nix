@@ -58,6 +58,8 @@
               cargo-with-nightly
               stableToolchain
               nightlyToolchain
+              cargo-nextest
+              just
               cargo-sort
               clang-tools_15
               clangStdenv
@@ -87,10 +89,11 @@
               # by default choose u64_backend
               export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
             ''
-              # install pre-commit hooks
-              + self.check.${system}.pre-commit-check.shellHook;
+            # install pre-commit hooks
+            + self.check.${system}.pre-commit-check.shellHook;
           };
-      in with pkgs; {
+      in
+      with pkgs; {
         check = {
           pre-commit-check = pre-commit-hooks.lib.${system}.run {
             src = ./.;

@@ -15,6 +15,7 @@ concurrency:
 
 env:
   NIGHTLY: nightly-2025-09-04
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
 
 jobs:
   typos:
@@ -31,7 +32,8 @@ jobs:
         with:
           toolchain: ${{ env.NIGHTLY }}
           components: rustfmt
-      - run: cargo +${{ env.NIGHTLY }} fmt -- --check
+      - uses: taiki-e/install-action@just
+      - run: just fmt-check
 
   clippy:
     runs-on: ubuntu-latest
@@ -40,10 +42,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo clippy --workspace --features 'test-srs test-apis bls schnorr gadgets' -- -D warnings
+      - run: just clippy
 
   audit:
     runs-on: ubuntu-latest
@@ -58,105 +61,105 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo bench --features "test-srs bls bls12-381 schnorr gadgets" --no-run
+      - run: just check-bench
 
   check-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo check --workspace --tests --lib --bins
+      - run: just check-tests
 
   check-features:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo check --workspace --features 'std parallel test-srs test-apis bls schnorr gadgets'
+      - run: just check-features
 
   no-std:
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo check --no-default-features --features "bls schnorr gadgets"
+      - run: just no-std
 
   wasm:
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo build --target wasm32-unknown-unknown --no-default-features --features "bls schnorr gadgets"
-
-  test-packages:
-    runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.list.outputs.packages }}
-    steps:
-      - uses: actions/checkout@v6
-      - id: list
-        run: echo "packages=$(bash ./scripts/run_tests.sh --list | jq -Rnc '[inputs]')" >> "$GITHUB_OUTPUT"
+      - run: just wasm
 
   test:
-    needs: test-packages
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        package: ${{ fromJSON(needs.test-packages.outputs.packages) }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
         with:
-          toolchain: ${{ env.NIGHTLY }}
+          tool: just,cargo-nextest
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.package }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: bash ./scripts/run_tests.sh ${{ matrix.package }}
+      - run: just test
+
+  doctest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: just doctest
 
   example:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo run --release --example proof-of-exp --features test-srs
+      - run: just example
 
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@just
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Generate Documentation
         run: |
-          cargo doc --no-deps --lib --release
+          just docs
           cp -R target/doc public
           echo '<meta http-equiv="refresh" content="0; url=jf_plonk">' > public/index.html
       - name: Deploy
