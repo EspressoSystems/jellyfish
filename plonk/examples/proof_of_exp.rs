@@ -52,8 +52,8 @@ fn main() -> Result<(), PlonkError> {
     // The required SRS size can be obtained from the circuit.
     let srs_size = circuit.srs_size()?;
     // in production:
-    // let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut rng)?;
-    // in test (with `test-srs` feature flag):
+    // let srs = PlonkKzgSnark::<Bls12_381>::universal_setup(srs_size, &mut
+    // rng)?; in test (with `test-srs` feature flag):
     let srs = <PlonkKzgSnark<Bls12_381> as UniversalSNARK<Bls12_381>>::universal_setup_for_testing(
         srs_size, &mut rng,
     )?;
@@ -71,8 +71,8 @@ fn main() -> Result<(), PlonkError> {
 
     // Last step, verify the proof against the public inputs.
     let public_inputs = circuit.public_input().unwrap();
-    // extra messages to bound to proof by appending in its transcripts, not used
-    // here.
+    // extra messages to bound to proof by appending in its transcripts, not
+    // used here.
     let extra_transcript_init_msg = None;
     assert!(PlonkKzgSnark::<Bls12_381>::verify::<StandardTranscript>(
         &vk,

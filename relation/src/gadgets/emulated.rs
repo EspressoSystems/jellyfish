@@ -215,8 +215,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
             let next_carry_out = self.create_variable(val_next_carry_out)?;
 
             // range checking for this carry out.
-            // let a = 2^B - 1. The maximum possible value of `next_carry_out` is ((i + 1) *
-            // 2 * a^2 + a) / 2^B.
+            // let a = 2^B - 1. The maximum possible value of `next_carry_out`
+            // is ((i + 1) * 2 * a^2 + a) / 2^B.
             let num_vals = 2u64 * (i as u64) + 2;
             let log_num_vals = (u64::BITS - num_vals.leading_zeros()) as usize;
             self.enforce_in_range(next_carry_out, E::B + log_num_vals)?;

@@ -321,7 +321,8 @@ where
     let mut scalar_val = circuit.witness(scalar_var)?.into_bigint();
     let decomposed_scalar_vars = (0..m)
         .map(|_| {
-            // We mod the remaining bits by 2^{window size}, thus taking `c` bits.
+            // We mod the remaining bits by 2^{window size}, thus taking `c`
+            // bits.
             let scalar_u64 = scalar_val.as_ref()[0] % (1 << c);
             // We right-shift by c bits, thus getting rid of the
             // lower bits.
@@ -438,8 +439,8 @@ mod tests {
 
             assert_eq!(circuit.point_witness(&res_var)?, res_point);
 
-            // // uncomment the following code to dump the circuit comparison to screen
-            // ark_std::println!("number of basis: {}", dim);
+            // // uncomment the following code to dump the circuit comparison to
+            // screen ark_std::println!("number of basis: {}", dim);
             // ark_std::println!("#variables: {}", circuit.num_vars(),);
             // ark_std::println!("#constraints: {}\n", circuit.num_gates(),);
 

@@ -172,8 +172,8 @@ where
         msg: &[Variable],
     ) -> Result<Vec<BoolVar>, CircuitError> {
         let instance_description = F::from_be_bytes_mod_order(CS_ID_SCHNORR.as_ref());
-        // TODO: create `inst_desc_var` and the constant gate *only once* during the
-        // entire circuit construction.
+        // TODO: create `inst_desc_var` and the constant gate *only once* during
+        // the entire circuit construction.
         let inst_desc_var = self.create_variable(instance_description)?;
         self.enforce_constant(inst_desc_var, instance_description)?;
         let mut chal_input = vec![

@@ -98,8 +98,8 @@ pub(crate) mod tests {
 
         // verifier transcript
         let mut arthur = io.to_verifier_state(merlin.narg_string());
-        // reading prover's first message labelled "in", since we don't need it, read
-        // into a one-time throw-away array
+        // reading prover's first message labelled "in", since we don't need it,
+        // read into a one-time throw-away array
         arthur.fill_next_units(&mut [F::default()]).unwrap();
         let mut arthur_challenges = [F::default(); 2048];
         arthur.fill_challenge_units(&mut arthur_challenges).unwrap();

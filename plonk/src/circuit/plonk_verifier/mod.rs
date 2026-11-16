@@ -653,9 +653,9 @@ mod test {
 
             // wrong shared input and circuit input
             // instance inputs != partial verify inputs = satisfiability inputs
-            // the circuit is satisfied because partial verify inputs = satisfiability
-            // inputs both output must be different so it will not verify
-            // original instance
+            // the circuit is satisfied because partial verify inputs =
+            // satisfiability inputs both output must be different so it will
+            // not verify original instance
             let wrong_public_inputs =
                 [[field_switching(&wrong_shared_public_input)].as_ref()].concat();
             assert!(

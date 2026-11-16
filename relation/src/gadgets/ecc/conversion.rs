@@ -42,13 +42,13 @@ where
         let neg_alpha = F::from(F::NEG_ALPHA);
         let beta = F::from(F::BETA);
 
-        // we first transform the Weierstrass point (px, py) to Montgomery point (mx,
-        // my) where mx = s * (px - alpha)
+        // we first transform the Weierstrass point (px, py) to Montgomery point
+        // (mx, my) where mx = s * (px - alpha)
         // my = s * py
         let montgomery_x = s * (p.x + neg_alpha);
         let montgomery_y = s * p.y;
-        // then we transform the Montgomery point (mx, my) to TE point (ex, ey) where
-        // ex = beta * mx / my
+        // then we transform the Montgomery point (mx, my) to TE point (ex, ey)
+        // where ex = beta * mx / my
         // ey = (mx - 1) / (mx + 1)
         let edwards_x = beta * montgomery_x / montgomery_y;
         let edwards_y = (montgomery_x - F::one()) / (montgomery_x + F::one());

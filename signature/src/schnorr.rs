@@ -487,8 +487,8 @@ where
     // Fixme after the hash-api PR is merged.
     #[allow(non_snake_case)]
     fn challenge<B: AsRef<[u8]>>(&self, R: &Projective<P>, msg: &[F], csid: B) -> P::ScalarField {
-        // is the domain separator always an Fr? If so how about using Fr as domain
-        // separator rather than bytes?
+        // is the domain separator always an Fr? If so how about using Fr as
+        // domain separator rather than bytes?
         let instance_description = F::from_be_bytes_mod_order(csid.as_ref());
         let mut challenge_input = {
             let vk_affine = self.0.into_affine();

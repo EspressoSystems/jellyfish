@@ -376,7 +376,8 @@ where
     };
     let t_int_with_sign = &t_int * &t_int_sign;
 
-    // tmp = tmp1 + 2^128 tmp2 =  lambda_1 * k2 * k2_sign + s - t * t_sign * r1 - k1
+    // tmp = tmp1 + 2^128 tmp2 =  lambda_1 * k2 * k2_sign + s - t * t_sign * r1
+    // - k1
     let tmp_int = &lambda_1_int * &k2_with_sign + &s_int - &t_int_with_sign * &r1_int - &k1_int;
     let tmp2_int = &tmp_int / &two_to_128;
 
@@ -392,7 +393,8 @@ where
         let lambda_2_int = fq_to_big_int!(lambda_2);
         let r2_int = fq_to_big_int!(r2);
         // sanity checks
-        // equation (0): lambda * k2_sign * k2 + s = t * t_sign * Fr::modulus + k1
+        // equation (0): lambda * k2_sign * k2 + s = t * t_sign * Fr::modulus +
+        // k1
         assert_eq!(
             &s_int + &lambda_int * &k2_with_sign,
             &k1_int + &t_int_with_sign * &fr_order_int
@@ -425,8 +427,8 @@ where
         assert!(tmp1_int == BigInt::from(0));
         assert!(tmp2_bits < 128, "tmp2 bits {}", tmp2_bits);
 
-        // equation (f): tmp1 + 2^128 tmp2 =  lambda_1 * k2_sign * k2 + s - t * t_sign *
-        // r1 - k1
+        // equation (f): tmp1 + 2^128 tmp2 =  lambda_1 * k2_sign * k2 + s - t *
+        // t_sign * r1 - k1
         assert_eq!(
             &tmp1_int + &two_to_128 * &tmp2_int,
             &lambda_1_int * &k2_with_sign + &s_int - &t_int_with_sign * &r1_int - &k1_int
@@ -602,7 +604,8 @@ mod tests {
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Turbo Plonk: {} constraints", circuit.num_gates());
+                // ark_std::println!("Turbo Plonk: {} constraints",
+                // circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
             {
@@ -616,7 +619,8 @@ mod tests {
                 let result = circuit.variable_base_scalar_mul::<P>(s_var, &base_var)?;
                 assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Ultra Plonk: {} constraints", circuit.num_gates());
+                // ark_std::println!("Ultra Plonk: {} constraints",
+                // circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
 
@@ -631,7 +635,8 @@ mod tests {
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Turbo Plonk GLV: {} constraints", circuit.num_gates());
+                // ark_std::println!("Turbo Plonk GLV: {} constraints",
+                // circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
 
@@ -646,7 +651,8 @@ mod tests {
                 let result = circuit.glv_mul::<P>(s_var, &base_var)?;
                 assert_eq!(TEPoint::from(base), circuit.point_witness(&result)?);
 
-                // ark_std::println!("Ultra Plonk GLV: {} constraints", circuit.num_gates());
+                // ark_std::println!("Ultra Plonk GLV: {} constraints",
+                // circuit.num_gates());
                 assert!(circuit.check_circuit_satisfiability(&[]).is_ok());
             }
         }

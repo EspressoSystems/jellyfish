@@ -120,8 +120,8 @@ where
         Ok(())
     }
 
-    // Append  a slice of commitment variables (in the form of PointVariable) to the
-    // The caller needs to make sure that the commitment is
+    // Append  a slice of commitment variables (in the form of PointVariable) to
+    // the The caller needs to make sure that the commitment is
     // already converted to TE form before generating the variables.
     // transcript For efficiency purpose, label is not used for rescue FS.
     pub(crate) fn append_commitments_vars(

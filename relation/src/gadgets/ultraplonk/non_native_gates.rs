@@ -60,8 +60,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // // checks already done by the caller
         // if T::MODULUS_BIT_SIZE >= F::MODULUS_BIT_SIZE {
         //     return Err(CircuitError::NotSupported(format!(
-        //         "Target field size ({}) is greater than evaluation field size (P{})",
-        //         T::MODULUS_BIT_SIZE,
+        //         "Target field size ({}) is greater than evaluation field size
+        // (P{})",         T::MODULUS_BIT_SIZE,
         //         F::MODULUS_BIT_SIZE
         //     ))
         //     .into());

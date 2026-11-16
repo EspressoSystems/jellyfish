@@ -259,7 +259,8 @@ mod tests {
         vec, UniformRand,
     };
 
-    // fix first `pad` variables of `poly` represented in evaluation form to zero
+    // fix first `pad` variables of `poly` represented in evaluation form to
+    // zero
     fn remove_dummy_variable<F: Field>(poly: &[F], pad: usize) -> Result<Vec<F>, PCSError> {
         if pad == 0 {
             return Ok(poly.to_vec());

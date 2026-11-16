@@ -203,7 +203,8 @@ where
 {
     type Output = Self;
 
-    // TODO: (alex) add `Add<'a Self, Output=Self>` and internally use that instead.
+    // TODO: (alex) add `Add<'a Self, Output=Self>` and internally use that
+    // instead.
     fn add(self, rhs: Self) -> Self::Output {
         let mut res = if self.is_zero() {
             rhs
@@ -271,7 +272,8 @@ pub(crate) mod tests {
 
             let g_x = g.evaluate(&point);
             // g(X) = G0 + G1 * X + G2 * X^2 + G3 * X^3 + ...
-            // turn into an MSM between [G0, G1, G2, ...] and [1, x, x^2, x^3, ...]
+            // turn into an MSM between [G0, G1, G2, ...] and [1, x, x^2, x^3,
+            // ...]
             let scalars: Vec<Fr> = successors(Some(Fr::from(1u32)), |&prev| Some(prev * point))
                 .take(g.degree() + 1)
                 .collect();
@@ -322,8 +324,8 @@ pub(crate) mod tests {
         let degrees = [14, 15, 16, 17, 18];
 
         for degree in degrees {
-            // TODO: (alex) change to a higher degree when need to test cutoff point and
-            // FFT-based eval on arbitrary points
+            // TODO: (alex) change to a higher degree when need to test cutoff
+            // point and FFT-based eval on arbitrary points
             let num_points = rng.gen_range(degree - 4..degree + 4); // should allow more points than degree
             let mut f = GeneralDensePolynomial::<Fr, Fr>::rand(degree, &mut rng);
             let mut g = GeneralDensePolynomial::<G1Projective, Fr>::rand(degree, &mut rng);

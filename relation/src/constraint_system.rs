@@ -843,10 +843,11 @@ impl<F: FftField> PlonkCircuit<F> {
             }
         }
         if self.support_lookup() {
-            // move lookup gates to the rear, the relative order of the lookup gates
-            // should not change
+            // move lookup gates to the rear, the relative order of the lookup
+            // gates should not change
             let n = self.eval_domain.size();
-            // be careful that we can't put a lookup gates at the very last slot.
+            // be careful that we can't put a lookup gates at the very last
+            // slot.
             let mut cur_gate_id = n - 2;
             for &(table_gate_id, table_size) in self.table_gate_ids.iter().rev() {
                 for gate_id in (table_gate_id..table_gate_id + table_size).rev() {
@@ -946,11 +947,12 @@ impl<F: FftField> PlonkCircuit<F> {
         let m = self.num_vars();
 
         // Compute the mapping from variables to wires.
-        // NOTE: we can use a vector as a map because our variable (the intended "key"
-        // value type of the Map) is sorted and match exactly as the
-        // non-negative integer ranged from 0 to m. Our current implementation should be
-        // slightly faster than using a `HashMap<Variable, Vec<(WireId, GateId)>>` as we
-        // avoid any constant overhead from the hashmap read/write.
+        // NOTE: we can use a vector as a map because our variable (the intended
+        // "key" value type of the Map) is sorted and match exactly as the
+        // non-negative integer ranged from 0 to m. Our current implementation
+        // should be slightly faster than using a `HashMap<Variable,
+        // Vec<(WireId, GateId)>>` as we avoid any constant overhead from the
+        // hashmap read/write.
         let mut variable_wires_map = vec![vec![]; m];
         for (gate_wire_id, variables) in self
             .wire_variables
@@ -968,13 +970,14 @@ impl<F: FftField> PlonkCircuit<F> {
         for wires_vec in variable_wires_map.iter_mut() {
             // The list of wires that map to the same variable forms a cycle.
             if !wires_vec.is_empty() {
-                // push the first item so that window iterator will visit the last item
-                // paired with the first item, forming a cycle
+                // push the first item so that window iterator will visit the
+                // last item paired with the first item, forming a cycle
                 wires_vec.push(wires_vec[0]);
                 for window in wires_vec.windows(2) {
                     self.wire_permutation[window[0].0 * n + window[0].1] = window[1];
                 }
-                // remove the extra first item pushed at the beginning of the iterator
+                // remove the extra first item pushed at the beginning of the
+                // iterator
                 wires_vec.pop();
             }
         }
@@ -993,8 +996,8 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    // Check whether the Plonk type is the expected Plonk type. Return an error if
-    // not.
+    // Check whether the Plonk type is the expected Plonk type. Return an error
+    // if not.
     #[inline]
     fn check_plonk_type(&self, expect_type: PlonkType) -> Result<(), CircuitError> {
         if self.plonk_params.plonk_type != expect_type {
@@ -1003,8 +1006,8 @@ impl<F: FftField> PlonkCircuit<F> {
         Ok(())
     }
 
-    // Return the variable that maps to a wire `(i, j)` where i is the wire type and
-    // j is the gate index. If gate `j` is a padded dummy gate, return zero
+    // Return the variable that maps to a wire `(i, j)` where i is the wire type
+    // and j is the gate index. If gate `j` is a padded dummy gate, return zero
     // variable.
     #[inline]
     fn wire_variable(&self, i: WireId, j: GateId) -> Variable {
@@ -1231,14 +1234,16 @@ impl<F: PrimeField> PlonkCircuit<F> {
             for i in 0..self.num_wire_types {
                 for j in 0..n {
                     let (wire_id, gate_id) = self.wire_permutation[i * n + j];
-                    // the new gate index is the reverse of the original gate index
+                    // the new gate index is the reverse of the original gate
+                    // index
                     let gate_id = 2 * n - 1 - gate_id;
                     wire_perm[i * 2 * n + 2 * n - 1 - j] = (wire_id, gate_id);
                 }
             }
             self.wire_permutation = wire_perm;
         }
-        // need to recompute extended_id_permutation because the domain has changed.
+        // need to recompute extended_id_permutation because the domain has
+        // changed.
         self.compute_extended_id_permutation();
         Ok(())
     }
@@ -2164,7 +2169,8 @@ pub(crate) mod test {
 
     fn test_finalized_flag_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_turbo_plonk();
-        // Should not call arithmetization methods before finalizing the circuit.
+        // Should not call arithmetization methods before finalizing the
+        // circuit.
         assert!(circuit.compute_selector_polynomials().is_err());
         assert!(circuit.compute_extended_permutation_polynomials().is_err());
         assert!(circuit.compute_pub_input_polynomial().is_err());
@@ -2173,7 +2179,8 @@ pub(crate) mod test {
             .compute_prod_permutation_polynomial(&F::one(), &F::one())
             .is_err());
 
-        // Should not insert gates or add variables after finalizing the circuit.
+        // Should not insert gates or add variables after finalizing the
+        // circuit.
         circuit.finalize_for_arithmetization()?;
         assert!(circuit.create_variable(F::one()).is_err());
         assert!(circuit.create_public_variable(F::one()).is_err());
@@ -2198,7 +2205,8 @@ pub(crate) mod test {
 
     fn test_ultra_plonk_finalized_flag_helper<F: PrimeField>() -> Result<(), CircuitError> {
         let mut circuit: PlonkCircuit<F> = PlonkCircuit::new_ultra_plonk(1);
-        // Should not call arithmetization methods before finalizing the circuit.
+        // Should not call arithmetization methods before finalizing the
+        // circuit.
         assert!(circuit.compute_selector_polynomials().is_err());
         assert!(circuit.compute_extended_permutation_polynomials().is_err());
         assert!(circuit.compute_pub_input_polynomial().is_err());
@@ -2216,7 +2224,8 @@ pub(crate) mod test {
             .compute_lookup_prod_polynomial(&F::one(), &F::one(), &F::one(), &[], &[])
             .is_err());
 
-        // Should not insert gates or add variables after finalizing the circuit.
+        // Should not insert gates or add variables after finalizing the
+        // circuit.
         circuit.finalize_for_arithmetization()?;
         assert!(circuit.create_variable(F::one()).is_err());
         assert!(circuit.create_public_variable(F::one()).is_err());
@@ -2257,8 +2266,8 @@ pub(crate) mod test {
         Ok(())
     }
 
-    // Check that the polynomial `poly` is consistent with the evaluations `evals`
-    // over the domain.
+    // Check that the polynomial `poly` is consistent with the evaluations
+    // `evals` over the domain.
     fn check_polynomial<F: PrimeField>(poly: &DensePolynomial<F>, evals: &[F]) {
         let domain = Radix2EvaluationDomain::new(evals.len()).unwrap();
         let poly_eval = poly.evaluate_over_domain_by_ref(domain);

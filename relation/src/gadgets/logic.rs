@@ -402,9 +402,9 @@ mod test {
             .conditional_select(bit_false, circuit.num_vars(), x_1)
             .is_err());
 
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
+        // build two fixed circuits with different variable assignments,
+        // checking that the arithmetized extended permutation polynomial is
+        // variable independent
         let circuit_1 = build_conditional_select_circuit(true, F::from(23u32), F::from(24u32))?;
         let circuit_2 = build_conditional_select_circuit(false, F::from(99u32), F::from(98u32))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;

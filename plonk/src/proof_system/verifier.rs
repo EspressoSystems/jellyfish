@@ -211,9 +211,10 @@ where
             E::ScalarField::one()
         } else {
             let mut transcript = T::new(b"batch verify");
-            // r := hash(u1||u2||...||u_m), where u_i is the hash output of the i-th Plonk
-            // protocol transcript. This approach is more secure as `r` depends not only
-            // on the proofs, but also the list of public inputs and verifying keys.
+            // r := hash(u1||u2||...||u_m), where u_i is the hash output of the
+            // i-th Plonk protocol transcript. This approach is more secure as
+            // `r` depends not only on the proofs, but also the list of public
+            // inputs and verifying keys.
             for pcs_info in pcs_infos {
                 transcript.append_field_elem::<E>(b"u", &pcs_info.u)?;
             }
@@ -468,9 +469,11 @@ where
             alpha_bases,
         )?;
 
-        // the random combiner term for the polynomials evaluated at point `zeta`
+        // the random combiner term for the polynomials evaluated at point
+        // `zeta`
         let mut v_base = challenges.v;
-        // the random combiner term for the polynomials evaluated at point `zeta * g`
+        // the random combiner term for the polynomials evaluated at point `zeta
+        // * g`
         let mut uv_base = challenges.u;
 
         // return buffer for aggregate_evaluations computation
@@ -488,7 +491,8 @@ where
                     challenges.v,
                 );
             }
-            // Add wire sigma polynomial commitments. The last sigma commitment is excluded.
+            // Add wire sigma polynomial commitments. The last sigma commitment
+            // is excluded.
             let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
             for &poly_comm in vk.sigma_comms.iter().take(num_wire_types - 1) {
                 buffer_v_and_uv_basis.push(v_base);
@@ -566,8 +570,8 @@ where
         let mut scalars_and_bases = ScalarsAndBases::new();
 
         for (i, (vk, &current_alpha_bases)) in vks.iter().zip(alpha_bases).enumerate() {
-            // Compute coefficient for the permutation product polynomial commitment.
-            // coeff = L1(zeta) * alpha^2
+            // Compute coefficient for the permutation product polynomial
+            // commitment. coeff = L1(zeta) * alpha^2
             //       + alpha
             //       * (beta * zeta      + a_bar + gamma)
             //       * (beta * k1 * zeta + b_bar + gamma)
@@ -585,7 +589,8 @@ where
             // Add permutation product polynomial commitment.
             scalars_and_bases.push(coeff, batch_proof.prod_perm_poly_comms_vec[i].0);
 
-            // Compute coefficient for the last wire sigma polynomial commitment.
+            // Compute coefficient for the last wire sigma polynomial
+            // commitment.
             let num_wire_types = batch_proof.wires_poly_comms_vec[i].len();
             let sigma_evals = &batch_proof.poly_evals_vec[i].wire_sigma_evals;
             let coeff = w_evals
@@ -663,8 +668,10 @@ where
                 // coefficient for prod_lookup_poly(X):
                 // coeff_lin_poly = alpha^4 * L1(x) +
                 //                  alpha^5 * Ln(x) +
-                //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma + lookup_w_eval)
-                //                  * (gamma(1+beta) + table_x + beta * table_xw),
+                //                  alpha^6 * (x - w^{n-1}) * (1+beta) * (gamma
+                // + lookup_w_eval)
+                //                  * (gamma(1+beta) + table_x + beta *
+                //                    table_xw),
                 let mut coeff = alpha_powers[2] * lagrange_1_eval
                     + alpha_powers[3] * lagrange_n_eval
                     + alpha_powers[4]

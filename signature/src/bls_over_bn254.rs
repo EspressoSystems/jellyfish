@@ -174,8 +174,8 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         // both oncurve check and subgroup check for verification keys
         vks.iter()
             .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
-        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
-        // thus only conducting on_curve check
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is
+        // 1, thus only conducting on_curve check
         if !sig.sigma.into_affine().is_on_curve() {
             return Err(SignatureError::FailedOnCurveCheck);
         }
@@ -201,8 +201,8 @@ impl AggregateableSignatureSchemes for BLSOverBN254CurveSignatureScheme {
         // both oncurve check and subgroup check for verification keys
         vks.iter()
             .try_for_each(|vk| vk.check().map_err(|_| SignatureError::FailedValidityCheck))?;
-        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
-        // thus only conducting on_curve check
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is
+        // 1, thus only conducting on_curve check
         if !sig.sigma.into_affine().is_on_curve() {
             return Err(SignatureError::FailedOnCurveCheck);
         }
@@ -610,8 +610,8 @@ impl VerKey {
         sig: &Signature,
         csid: B,
     ) -> Result<(), SignatureError> {
-        // NOTE: for BN curve, we don't need subgroup check, since co-factor is 1,
-        // thus only conducting on_curve check
+        // NOTE: for BN curve, we don't need subgroup check, since co-factor is
+        // 1, thus only conducting on_curve check
         if !sig.sigma.into_affine().is_on_curve() {
             return Err(SignatureError::FailedOnCurveCheck);
         }
@@ -675,7 +675,8 @@ mod tests {
         }
 
         // Test for long messages
-        const SIZE: usize = 35; // Bigger than 32 which is the number of bytes needed to encode a field element
+        const SIZE: usize = 35; // Bigger than 32 which is the number of bytes
+                                // needed to encode a field element
         let key_pair = KeyPair::generate(&mut rng);
         let msg = [33u8; SIZE];
         let sig = key_pair.sign(&msg, CS_ID_BLS_BN254);
@@ -762,8 +763,8 @@ mod tests {
                 assert_ne!(vk1.cmp(&vk2), ark_std::cmp::Ordering::Equal);
                 assert_ne!(vk1, vk2);
             }
-            // Generate two group elements that are equal but have different projective
-            // representation.
+            // Generate two group elements that are equal but have different
+            // projective representation.
             let mut vk = VerKey::from(&SignKey::generate(&mut rng));
             let vk_copy = vk;
             let scalar = ark_bn254::Fq::rand(&mut rng);

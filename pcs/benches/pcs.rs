@@ -38,8 +38,9 @@ pub fn bench_pcs_method<E: Pairing>(
             BenchmarkId::from_parameter(num_vars),
             &num_vars,
             |b, num_vars| {
-                // `iter` ignores the result of the function call (i.e. the time), so we need
-                // `iter_custom`, otherwise the PCS setup is included in the measurements.
+                // `iter` ignores the result of the function call (i.e. the
+                // time), so we need `iter_custom`, otherwise the PCS setup is
+                // included in the measurements.
                 b.iter_custom(|i| {
                     let mut time = Duration::from_nanos(0);
                     for _ in 0..i {

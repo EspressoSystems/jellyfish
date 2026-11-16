@@ -153,7 +153,8 @@ where
         let pcs_info =
             verifier.prepare_pcs_info::<T>(&merged_vks_ref, &public_inputs, batch_proof, &None)?;
 
-        // inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor * [1]1
+        // inner1 = [open_proof] + u * [shifted_open_proof] + blinding_factor *
+        // [1]1
         let mut scalars_and_bases = ScalarsAndBases::<E>::new();
         scalars_and_bases.push(E::ScalarField::one(), pcs_info.opening_proof.0);
         scalars_and_bases.push(pcs_info.u, pcs_info.shifted_opening_proof.0);
