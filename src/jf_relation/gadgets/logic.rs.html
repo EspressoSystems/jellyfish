@@ -402,9 +402,9 @@
 <a href=#402 id=402 data-nosnippet>402</a>            .conditional_select(bit_false, circuit.num_vars(), x_1)
 <a href=#403 id=403 data-nosnippet>403</a>            .is_err());
 <a href=#404 id=404 data-nosnippet>404</a>
-<a href=#405 id=405 data-nosnippet>405</a>        <span class="comment">// build two fixed circuits with different variable assignments, checking that
-<a href=#406 id=406 data-nosnippet>406</a>        // the arithmetized extended permutation polynomial is variable
-<a href=#407 id=407 data-nosnippet>407</a>        // independent
+<a href=#405 id=405 data-nosnippet>405</a>        <span class="comment">// build two fixed circuits with different variable assignments,
+<a href=#406 id=406 data-nosnippet>406</a>        // checking that the arithmetized extended permutation polynomial is
+<a href=#407 id=407 data-nosnippet>407</a>        // variable independent
 <a href=#408 id=408 data-nosnippet>408</a>        </span><span class="kw">let </span>circuit_1 = build_conditional_select_circuit(<span class="bool-val">true</span>, F::from(<span class="number">23u32</span>), F::from(<span class="number">24u32</span>))<span class="question-mark">?</span>;
 <a href=#409 id=409 data-nosnippet>409</a>        <span class="kw">let </span>circuit_2 = build_conditional_select_circuit(<span class="bool-val">false</span>, F::from(<span class="number">99u32</span>), F::from(<span class="number">98u32</span>))<span class="question-mark">?</span>;
 <a href=#410 id=410 data-nosnippet>410</a>        test_variable_independence_for_circuit(circuit_1, circuit_2)<span class="question-mark">?</span>;

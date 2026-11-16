@@ -212,224 +212,225 @@
 <a href=#212 id=212 data-nosnippet>212</a>        </span><span class="kw">let </span>non_infinity_mark = <span class="self">self</span>.logic_neg(infinity_mark)<span class="question-mark">?</span>;
 <a href=#213 id=213 data-nosnippet>213</a>
 <a href=#214 id=214 data-nosnippet>214</a>        <span class="comment">// Case 2: p2 is infinity, while p0 and p1 are not.
-<a href=#215 id=215 data-nosnippet>215</a>        // inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 &amp;&amp; y0 != 0)
-<a href=#216 id=216 data-nosnippet>216</a>        </span><span class="kw">let </span>non_inf_p2 = <span class="self">self</span>.logic_neg(p2.<span class="number">2</span>)<span class="question-mark">?</span>;
-<a href=#217 id=217 data-nosnippet>217</a>        <span class="kw">let </span>eq_x0_x1 = <span class="self">self</span>.is_emulated_var_equal(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#218 id=218 data-nosnippet>218</a>        <span class="kw">let </span>neq_x0_x1 = <span class="self">self</span>.logic_neg(eq_x0_x1)<span class="question-mark">?</span>;
-<a href=#219 id=219 data-nosnippet>219</a>        <span class="kw">let </span>eq_y0_y1 = <span class="self">self</span>.is_emulated_var_equal(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span>is_y0_zero = <span class="self">self</span>.is_emulated_var_zero(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">let </span>not_y0_zero = <span class="self">self</span>.logic_neg(is_y0_zero)<span class="question-mark">?</span>;
-<a href=#222 id=222 data-nosnippet>222</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_and(eq_y0_y1, not_y0_zero)<span class="question-mark">?</span>;
-<a href=#223 id=223 data-nosnippet>223</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_or(neq_x0_x1, t)<span class="question-mark">?</span>;
-<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_or(non_inf_p2, t)<span class="question-mark">?</span>;
-<a href=#225 id=225 data-nosnippet>225</a>        <span class="self">self</span>.logic_or_gate(infinity_mark, t)<span class="question-mark">?</span>;
-<a href=#226 id=226 data-nosnippet>226</a>
-<a href=#227 id=227 data-nosnippet>227</a>        <span class="comment">// Case 3: point doubling
-<a href=#228 id=228 data-nosnippet>228</a>        // doubling mark is 1 iff x0 == x1 and y0 == y1
-<a href=#229 id=229 data-nosnippet>229</a>        </span><span class="kw">let </span>doubling_mark = <span class="self">self</span>.mul(eq_x0_x1.<span class="number">0</span>, eq_y0_y1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#230 id=230 data-nosnippet>230</a>        <span class="kw">let </span>doubling_coef = <span class="self">self</span>.mul(doubling_mark, non_infinity_mark.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>doubling_coef = <span class="self">self</span>.mul(doubling_coef, not_y0_zero.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#232 id=232 data-nosnippet>232</a>        <span class="comment">// forcefully convert Variable into EmulatedVariable
-<a href=#233 id=233 data-nosnippet>233</a>        // safe because it's boolean
-<a href=#234 id=234 data-nosnippet>234</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="self">self</span>.zero(); E::NUM_LIMBS];
-<a href=#235 id=235 data-nosnippet>235</a>        v[<span class="number">0</span>] = doubling_coef;
-<a href=#236 id=236 data-nosnippet>236</a>        <span class="kw">let </span>doubling_coef = EmulatedVariable::&lt;E&gt;(v, core::marker::PhantomData);
-<a href=#237 id=237 data-nosnippet>237</a>
-<a href=#238 id=238 data-nosnippet>238</a>        <span class="comment">// first equality (x0 + x1 + x2) * (y0 + y0)^2 == (3 * x1^2 + a)^2
-<a href=#239 id=239 data-nosnippet>239</a>        </span><span class="kw">let </span>y0_times_2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#240 id=240 data-nosnippet>240</a>        <span class="kw">let </span>x0_plus_x1 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#241 id=241 data-nosnippet>241</a>        <span class="kw">let </span>x0_plus_x1_plus_x2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p2.<span class="number">0</span>, <span class="kw-2">&amp;</span>x0_plus_x1)<span class="question-mark">?</span>;
-<a href=#242 id=242 data-nosnippet>242</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_plus_x1_plus_x2, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
-<a href=#243 id=243 data-nosnippet>243</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
-<a href=#244 id=244 data-nosnippet>244</a>        <span class="comment">// s = 3 * x1^2 + a
-<a href=#245 id=245 data-nosnippet>245</a>        </span><span class="kw">let </span>s = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p0.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#246 id=246 data-nosnippet>246</a>        <span class="kw">let </span>s = <span class="self">self</span>.emulated_mul_constant(<span class="kw-2">&amp;</span>s, E::from(<span class="number">3u64</span>))<span class="question-mark">?</span>;
-<a href=#247 id=247 data-nosnippet>247</a>        <span class="kw">let </span>s = <span class="self">self</span>.emulated_add_constant(<span class="kw-2">&amp;</span>s, a)<span class="question-mark">?</span>;
-<a href=#248 id=248 data-nosnippet>248</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>s, <span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
-<a href=#249 id=249 data-nosnippet>249</a>
-<a href=#250 id=250 data-nosnippet>250</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
-<a href=#251 id=251 data-nosnippet>251</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
-<a href=#252 id=252 data-nosnippet>252</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
-<a href=#253 id=253 data-nosnippet>253</a>
-<a href=#254 id=254 data-nosnippet>254</a>        <span class="comment">// second equality (y2 + y0) * (y0 + y0) == (3 * x1^2 + a) (x0 - x2)
-<a href=#255 id=255 data-nosnippet>255</a>        </span><span class="kw">let </span>y2_plus_y0 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p2.<span class="number">1</span>, <span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#256 id=256 data-nosnippet>256</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y2_plus_y0, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
-<a href=#257 id=257 data-nosnippet>257</a>        <span class="kw">let </span>x0_minus_x2 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p2.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>s, <span class="kw-2">&amp;</span>x0_minus_x2)<span class="question-mark">?</span>;
-<a href=#259 id=259 data-nosnippet>259</a>
-<a href=#260 id=260 data-nosnippet>260</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
-<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
-<a href=#262 id=262 data-nosnippet>262</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
-<a href=#263 id=263 data-nosnippet>263</a>
-<a href=#264 id=264 data-nosnippet>264</a>        <span class="comment">// Case 4: point addition
-<a href=#265 id=265 data-nosnippet>265</a>        </span><span class="kw">let </span>coef = <span class="self">self</span>.mul(non_infinity_mark.<span class="number">0</span>, neq_x0_x1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#266 id=266 data-nosnippet>266</a>        <span class="comment">// forcefully convert Variable into EmulatedVariable
-<a href=#267 id=267 data-nosnippet>267</a>        // safe because it's boolean
-<a href=#268 id=268 data-nosnippet>268</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="self">self</span>.zero(); E::NUM_LIMBS];
-<a href=#269 id=269 data-nosnippet>269</a>        v[<span class="number">0</span>] = coef;
-<a href=#270 id=270 data-nosnippet>270</a>        <span class="kw">let </span>add_coef = EmulatedVariable::&lt;E&gt;(v, core::marker::PhantomData);
-<a href=#271 id=271 data-nosnippet>271</a>
-<a href=#272 id=272 data-nosnippet>272</a>        <span class="comment">// first equality (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
-<a href=#273 id=273 data-nosnippet>273</a>        </span><span class="kw">let </span>x0_minus_x1 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#274 id=274 data-nosnippet>274</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_minus_x1, <span class="kw-2">&amp;</span>x0_minus_x1)<span class="question-mark">?</span>;
-<a href=#275 id=275 data-nosnippet>275</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>x0_plus_x1_plus_x2)<span class="question-mark">?</span>;
-<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>y0_minus_y1 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y0_minus_y1, <span class="kw-2">&amp;</span>y0_minus_y1)<span class="question-mark">?</span>;
-<a href=#278 id=278 data-nosnippet>278</a>
-<a href=#279 id=279 data-nosnippet>279</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
-<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
-<a href=#281 id=281 data-nosnippet>281</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
-<a href=#282 id=282 data-nosnippet>282</a>
-<a href=#283 id=283 data-nosnippet>283</a>        <span class="comment">// second equality (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
-<a href=#284 id=284 data-nosnippet>284</a>        </span><span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_minus_x2, <span class="kw-2">&amp;</span>y0_minus_y1)<span class="question-mark">?</span>;
-<a href=#285 id=285 data-nosnippet>285</a>        <span class="kw">let </span>y0_plus_y2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p2.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#286 id=286 data-nosnippet>286</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y0_plus_y2, <span class="kw-2">&amp;</span>x0_minus_x1)<span class="question-mark">?</span>;
-<a href=#287 id=287 data-nosnippet>287</a>
-<a href=#288 id=288 data-nosnippet>288</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
-<a href=#289 id=289 data-nosnippet>289</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
-<a href=#290 id=290 data-nosnippet>290</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
-<a href=#291 id=291 data-nosnippet>291</a>
-<a href=#292 id=292 data-nosnippet>292</a>        <span class="prelude-val">Ok</span>(())
-<a href=#293 id=293 data-nosnippet>293</a>    }
-<a href=#294 id=294 data-nosnippet>294</a>
-<a href=#295 id=295 data-nosnippet>295</a>    <span class="doccomment">/// Obtain a variable to the point addition result of `p0` + `p1`
-<a href=#296 id=296 data-nosnippet>296</a>    </span><span class="kw">pub fn </span>emulated_sw_ecc_add&lt;E: EmulationConfig&lt;F&gt;&gt;(
-<a href=#297 id=297 data-nosnippet>297</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-<a href=#298 id=298 data-nosnippet>298</a>        p0: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
-<a href=#299 id=299 data-nosnippet>299</a>        p1: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
-<a href=#300 id=300 data-nosnippet>300</a>        a: E,
-<a href=#301 id=301 data-nosnippet>301</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedSWPointVariable&lt;E&gt;, CircuitError&gt; {
-<a href=#302 id=302 data-nosnippet>302</a>        <span class="kw">let </span>x0 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">let </span>y0 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#304 id=304 data-nosnippet>304</a>        <span class="kw">let </span>infinity0 = <span class="self">self</span>.witness(p0.<span class="number">2 </span>.<span class="number">0</span>)<span class="question-mark">? </span>== F::one();
-<a href=#305 id=305 data-nosnippet>305</a>        <span class="kw">let </span>x1 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
-<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">let </span>y1 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
-<a href=#307 id=307 data-nosnippet>307</a>        <span class="kw">let </span>infinity1 = <span class="self">self</span>.witness(p1.<span class="number">2 </span>.<span class="number">0</span>)<span class="question-mark">? </span>== F::one();
-<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">let </span>p2 = <span class="kw">if </span>infinity0 {
-<a href=#309 id=309 data-nosnippet>309</a>            SWPoint(x1, y1, infinity1)
-<a href=#310 id=310 data-nosnippet>310</a>        } <span class="kw">else if </span>infinity1 {
-<a href=#311 id=311 data-nosnippet>311</a>            SWPoint(x0, y0, infinity0)
-<a href=#312 id=312 data-nosnippet>312</a>        } <span class="kw">else if </span>x0 == x1 &amp;&amp; y0 == y1 {
-<a href=#313 id=313 data-nosnippet>313</a>            <span class="comment">// point doubling
-<a href=#314 id=314 data-nosnippet>314</a>            </span><span class="kw">if </span>y0.is_zero() {
-<a href=#315 id=315 data-nosnippet>315</a>                SWPoint(E::zero(), E::zero(), <span class="bool-val">true</span>)
-<a href=#316 id=316 data-nosnippet>316</a>            } <span class="kw">else </span>{
-<a href=#317 id=317 data-nosnippet>317</a>                <span class="kw">let </span>s = (x0 * x0 * E::from(<span class="number">3u64</span>) + a) / (y0 + y0);
-<a href=#318 id=318 data-nosnippet>318</a>                <span class="kw">let </span>x2 = s * s - x0 - x1;
-<a href=#319 id=319 data-nosnippet>319</a>                <span class="kw">let </span>y2 = s * (x0 - x2) - y0;
-<a href=#320 id=320 data-nosnippet>320</a>                SWPoint(x2, y2, <span class="bool-val">false</span>)
-<a href=#321 id=321 data-nosnippet>321</a>            }
-<a href=#322 id=322 data-nosnippet>322</a>        } <span class="kw">else </span>{
-<a href=#323 id=323 data-nosnippet>323</a>            <span class="comment">// point addition
-<a href=#324 id=324 data-nosnippet>324</a>            </span><span class="kw">if </span>x0 == x1 {
-<a href=#325 id=325 data-nosnippet>325</a>                SWPoint(E::zero(), E::zero(), <span class="bool-val">true</span>)
-<a href=#326 id=326 data-nosnippet>326</a>            } <span class="kw">else </span>{
-<a href=#327 id=327 data-nosnippet>327</a>                <span class="kw">let </span>s = (y0 - y1) / (x0 - x1);
-<a href=#328 id=328 data-nosnippet>328</a>                <span class="kw">let </span>x2 = s * s - x0 - x1;
-<a href=#329 id=329 data-nosnippet>329</a>                <span class="kw">let </span>y2 = s * (x0 - x2) - y0;
-<a href=#330 id=330 data-nosnippet>330</a>                SWPoint(x2, y2, <span class="bool-val">false</span>)
-<a href=#331 id=331 data-nosnippet>331</a>            }
-<a href=#332 id=332 data-nosnippet>332</a>        };
-<a href=#333 id=333 data-nosnippet>333</a>        <span class="kw">let </span>p2 = <span class="self">self</span>.create_emulated_sw_point_variable(p2)<span class="question-mark">?</span>;
-<a href=#334 id=334 data-nosnippet>334</a>        <span class="self">self</span>.emulated_sw_ecc_add_gate(p0, p1, <span class="kw-2">&amp;</span>p2, a)<span class="question-mark">?</span>;
-<a href=#335 id=335 data-nosnippet>335</a>        <span class="prelude-val">Ok</span>(p2)
-<a href=#336 id=336 data-nosnippet>336</a>    }
-<a href=#337 id=337 data-nosnippet>337</a>}
-<a href=#338 id=338 data-nosnippet>338</a>
-<a href=#339 id=339 data-nosnippet>339</a><span class="attr">#[cfg(test)]
-<a href=#340 id=340 data-nosnippet>340</a></span><span class="kw">mod </span>tests {
-<a href=#341 id=341 data-nosnippet>341</a>    <span class="kw">use crate</span>::{
-<a href=#342 id=342 data-nosnippet>342</a>        gadgets::{ecc::conversion::<span class="kw-2">*</span>, EmulationConfig, SerializableEmulatedStruct},
-<a href=#343 id=343 data-nosnippet>343</a>        Circuit, CircuitError, PlonkCircuit,
-<a href=#344 id=344 data-nosnippet>344</a>    };
-<a href=#345 id=345 data-nosnippet>345</a>    <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
-<a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">use </span>ark_bn254::{g1::Config <span class="kw">as </span>Param254, Fq <span class="kw">as </span>Fq254, Fr <span class="kw">as </span>Fr254};
-<a href=#347 id=347 data-nosnippet>347</a>    <span class="kw">use </span>ark_ec::{
-<a href=#348 id=348 data-nosnippet>348</a>        short_weierstrass::{Projective, SWCurveConfig},
-<a href=#349 id=349 data-nosnippet>349</a>        CurveGroup, PrimeGroup,
-<a href=#350 id=350 data-nosnippet>350</a>    };
-<a href=#351 id=351 data-nosnippet>351</a>    <span class="kw">use </span>ark_ff::{MontFp, PrimeField};
-<a href=#352 id=352 data-nosnippet>352</a>    <span class="kw">use </span>ark_std::{UniformRand, Zero};
-<a href=#353 id=353 data-nosnippet>353</a>
-<a href=#354 id=354 data-nosnippet>354</a>    <span class="kw">use super</span>::{EmulatedSWPointVariable, SWPoint};
-<a href=#355 id=355 data-nosnippet>355</a>
-<a href=#356 id=356 data-nosnippet>356</a>    <span class="attr">#[test]
-<a href=#357 id=357 data-nosnippet>357</a>    </span><span class="kw">fn </span>test_emulated_sw_point_addition() {
-<a href=#358 id=358 data-nosnippet>358</a>        <span class="kw">let </span>a: Fq377 = <span class="macro">MontFp!</span>(<span class="string">"0"</span>);
-<a href=#359 id=359 data-nosnippet>359</a>        test_emulated_sw_point_addition_helper::&lt;Fq377, Fr254, Param377&gt;(a);
-<a href=#360 id=360 data-nosnippet>360</a>        <span class="kw">let </span>a: Fq254 = <span class="macro">MontFp!</span>(<span class="string">"0"</span>);
-<a href=#361 id=361 data-nosnippet>361</a>        test_emulated_sw_point_addition_helper::&lt;Fq254, Fr254, Param254&gt;(a);
-<a href=#362 id=362 data-nosnippet>362</a>    }
-<a href=#363 id=363 data-nosnippet>363</a>
-<a href=#364 id=364 data-nosnippet>364</a>    <span class="kw">fn </span>ecc_add_and_check&lt;E, F&gt;(
-<a href=#365 id=365 data-nosnippet>365</a>        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
-<a href=#366 id=366 data-nosnippet>366</a>        p0: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
-<a href=#367 id=367 data-nosnippet>367</a>        p1: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
-<a href=#368 id=368 data-nosnippet>368</a>        a: E,
-<a href=#369 id=369 data-nosnippet>369</a>        expected: <span class="kw-2">&amp;</span>SWPoint&lt;E&gt;,
-<a href=#370 id=370 data-nosnippet>370</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedSWPointVariable&lt;E&gt;, CircuitError&gt;
-<a href=#371 id=371 data-nosnippet>371</a>    <span class="kw">where
-<a href=#372 id=372 data-nosnippet>372</a>        </span>E: EmulationConfig&lt;F&gt; + SWToTEConParam,
-<a href=#373 id=373 data-nosnippet>373</a>        F: PrimeField,
-<a href=#374 id=374 data-nosnippet>374</a>    {
-<a href=#375 id=375 data-nosnippet>375</a>        <span class="kw">let </span>result = circuit.emulated_sw_ecc_add(p0, p1, a)<span class="question-mark">?</span>;
-<a href=#376 id=376 data-nosnippet>376</a>        <span class="macro">assert_eq!</span>(circuit.emulated_sw_point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>, <span class="kw-2">*</span>expected);
-<a href=#377 id=377 data-nosnippet>377</a>        <span class="prelude-val">Ok</span>(result)
-<a href=#378 id=378 data-nosnippet>378</a>    }
-<a href=#379 id=379 data-nosnippet>379</a>
-<a href=#380 id=380 data-nosnippet>380</a>    <span class="kw">fn </span>test_emulated_sw_point_addition_helper&lt;E, F, P&gt;(a: E)
-<a href=#381 id=381 data-nosnippet>381</a>    <span class="kw">where
-<a href=#382 id=382 data-nosnippet>382</a>        </span>E: EmulationConfig&lt;F&gt; + SWToTEConParam,
-<a href=#383 id=383 data-nosnippet>383</a>        F: PrimeField,
-<a href=#384 id=384 data-nosnippet>384</a>        P: SWCurveConfig&lt;BaseField = E&gt;,
-<a href=#385 id=385 data-nosnippet>385</a>    {
-<a href=#386 id=386 data-nosnippet>386</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
-<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span>neutral = Projective::&lt;P&gt;::zero().into_affine();
-<a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">let </span>p1 = Projective::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
-<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>p2 = Projective::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
-<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span>expected = (p1 + p2).into_affine().into();
-<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span>wrong_result = (p1 + p2 + Projective::&lt;P&gt;::generator())
-<a href=#392 id=392 data-nosnippet>392</a>            .into_affine()
-<a href=#393 id=393 data-nosnippet>393</a>            .into();
-<a href=#394 id=394 data-nosnippet>394</a>
-<a href=#395 id=395 data-nosnippet>395</a>        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(<span class="number">20</span>);
-<a href=#396 id=396 data-nosnippet>396</a>
-<a href=#397 id=397 data-nosnippet>397</a>        <span class="kw">let </span>var_p1 = circuit
-<a href=#398 id=398 data-nosnippet>398</a>            .create_public_emulated_sw_point_variable(p1.into())
-<a href=#399 id=399 data-nosnippet>399</a>            .unwrap();
-<a href=#400 id=400 data-nosnippet>400</a>        <span class="kw">let </span>var_p2 = circuit
-<a href=#401 id=401 data-nosnippet>401</a>            .create_emulated_sw_point_variable(p2.into())
-<a href=#402 id=402 data-nosnippet>402</a>            .unwrap();
-<a href=#403 id=403 data-nosnippet>403</a>        <span class="kw">let </span>var_neutral = circuit
-<a href=#404 id=404 data-nosnippet>404</a>            .create_emulated_sw_point_variable(neutral.into())
-<a href=#405 id=405 data-nosnippet>405</a>            .unwrap();
-<a href=#406 id=406 data-nosnippet>406</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p2, a, <span class="kw-2">&amp;</span>expected).unwrap();
-<a href=#407 id=407 data-nosnippet>407</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_neutral, a, <span class="kw-2">&amp;</span>p1.into()).unwrap();
-<a href=#408 id=408 data-nosnippet>408</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_neutral, <span class="kw-2">&amp;</span>var_p2, a, <span class="kw-2">&amp;</span>p2.into()).unwrap();
-<a href=#409 id=409 data-nosnippet>409</a>
-<a href=#410 id=410 data-nosnippet>410</a>        <span class="comment">// test point doubling
-<a href=#411 id=411 data-nosnippet>411</a>        </span><span class="kw">let </span>double_p1 = (p1 + p1).into_affine().into();
-<a href=#412 id=412 data-nosnippet>412</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p1, a, <span class="kw-2">&amp;</span>double_p1).unwrap();
-<a href=#413 id=413 data-nosnippet>413</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_neutral, <span class="kw-2">&amp;</span>var_neutral, a, <span class="kw-2">&amp;</span>neutral.into())
-<a href=#414 id=414 data-nosnippet>414</a>            .unwrap();
-<a href=#415 id=415 data-nosnippet>415</a>
-<a href=#416 id=416 data-nosnippet>416</a>        <span class="kw">let </span>public_inputs: SWPoint&lt;E&gt; = p1.into();
-<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">let </span>public_inputs = public_inputs.serialize_to_native_elements();
-<a href=#418 id=418 data-nosnippet>418</a>        <span class="kw">let </span>wrong_inputs: SWPoint&lt;E&gt; = neutral.into();
-<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>wrong_inputs = wrong_inputs.serialize_to_native_elements();
-<a href=#420 id=420 data-nosnippet>420</a>        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>public_inputs).is_ok());
-<a href=#421 id=421 data-nosnippet>421</a>        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>wrong_inputs).is_err());
-<a href=#422 id=422 data-nosnippet>422</a>
-<a href=#423 id=423 data-nosnippet>423</a>        <span class="comment">// fail path
-<a href=#424 id=424 data-nosnippet>424</a>        </span><span class="kw">let </span>var_wrong_result = circuit
-<a href=#425 id=425 data-nosnippet>425</a>            .create_emulated_sw_point_variable(wrong_result)
-<a href=#426 id=426 data-nosnippet>426</a>            .unwrap();
-<a href=#427 id=427 data-nosnippet>427</a>        circuit
-<a href=#428 id=428 data-nosnippet>428</a>            .emulated_sw_ecc_add_gate(<span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p2, <span class="kw-2">&amp;</span>var_wrong_result, a)
-<a href=#429 id=429 data-nosnippet>429</a>            .unwrap();
-<a href=#430 id=430 data-nosnippet>430</a>        <span class="macro">assert!</span>(circuit
-<a href=#431 id=431 data-nosnippet>431</a>            .check_circuit_satisfiability(<span class="kw-2">&amp;</span>public_inputs)
-<a href=#432 id=432 data-nosnippet>432</a>            .is_err());
-<a href=#433 id=433 data-nosnippet>433</a>    }
-<a href=#434 id=434 data-nosnippet>434</a>}
+<a href=#215 id=215 data-nosnippet>215</a>        // inf0 == 1 || inf1 == 1 || inf2 == 0 || x0 != x1 || (y0 == y1 &amp;&amp; y0 !=
+<a href=#216 id=216 data-nosnippet>216</a>        // 0)
+<a href=#217 id=217 data-nosnippet>217</a>        </span><span class="kw">let </span>non_inf_p2 = <span class="self">self</span>.logic_neg(p2.<span class="number">2</span>)<span class="question-mark">?</span>;
+<a href=#218 id=218 data-nosnippet>218</a>        <span class="kw">let </span>eq_x0_x1 = <span class="self">self</span>.is_emulated_var_equal(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#219 id=219 data-nosnippet>219</a>        <span class="kw">let </span>neq_x0_x1 = <span class="self">self</span>.logic_neg(eq_x0_x1)<span class="question-mark">?</span>;
+<a href=#220 id=220 data-nosnippet>220</a>        <span class="kw">let </span>eq_y0_y1 = <span class="self">self</span>.is_emulated_var_equal(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#221 id=221 data-nosnippet>221</a>        <span class="kw">let </span>is_y0_zero = <span class="self">self</span>.is_emulated_var_zero(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#222 id=222 data-nosnippet>222</a>        <span class="kw">let </span>not_y0_zero = <span class="self">self</span>.logic_neg(is_y0_zero)<span class="question-mark">?</span>;
+<a href=#223 id=223 data-nosnippet>223</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_and(eq_y0_y1, not_y0_zero)<span class="question-mark">?</span>;
+<a href=#224 id=224 data-nosnippet>224</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_or(neq_x0_x1, t)<span class="question-mark">?</span>;
+<a href=#225 id=225 data-nosnippet>225</a>        <span class="kw">let </span>t = <span class="self">self</span>.logic_or(non_inf_p2, t)<span class="question-mark">?</span>;
+<a href=#226 id=226 data-nosnippet>226</a>        <span class="self">self</span>.logic_or_gate(infinity_mark, t)<span class="question-mark">?</span>;
+<a href=#227 id=227 data-nosnippet>227</a>
+<a href=#228 id=228 data-nosnippet>228</a>        <span class="comment">// Case 3: point doubling
+<a href=#229 id=229 data-nosnippet>229</a>        // doubling mark is 1 iff x0 == x1 and y0 == y1
+<a href=#230 id=230 data-nosnippet>230</a>        </span><span class="kw">let </span>doubling_mark = <span class="self">self</span>.mul(eq_x0_x1.<span class="number">0</span>, eq_y0_y1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#231 id=231 data-nosnippet>231</a>        <span class="kw">let </span>doubling_coef = <span class="self">self</span>.mul(doubling_mark, non_infinity_mark.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#232 id=232 data-nosnippet>232</a>        <span class="kw">let </span>doubling_coef = <span class="self">self</span>.mul(doubling_coef, not_y0_zero.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#233 id=233 data-nosnippet>233</a>        <span class="comment">// forcefully convert Variable into EmulatedVariable
+<a href=#234 id=234 data-nosnippet>234</a>        // safe because it's boolean
+<a href=#235 id=235 data-nosnippet>235</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="self">self</span>.zero(); E::NUM_LIMBS];
+<a href=#236 id=236 data-nosnippet>236</a>        v[<span class="number">0</span>] = doubling_coef;
+<a href=#237 id=237 data-nosnippet>237</a>        <span class="kw">let </span>doubling_coef = EmulatedVariable::&lt;E&gt;(v, core::marker::PhantomData);
+<a href=#238 id=238 data-nosnippet>238</a>
+<a href=#239 id=239 data-nosnippet>239</a>        <span class="comment">// first equality (x0 + x1 + x2) * (y0 + y0)^2 == (3 * x1^2 + a)^2
+<a href=#240 id=240 data-nosnippet>240</a>        </span><span class="kw">let </span>y0_times_2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#241 id=241 data-nosnippet>241</a>        <span class="kw">let </span>x0_plus_x1 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#242 id=242 data-nosnippet>242</a>        <span class="kw">let </span>x0_plus_x1_plus_x2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p2.<span class="number">0</span>, <span class="kw-2">&amp;</span>x0_plus_x1)<span class="question-mark">?</span>;
+<a href=#243 id=243 data-nosnippet>243</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_plus_x1_plus_x2, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
+<a href=#244 id=244 data-nosnippet>244</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
+<a href=#245 id=245 data-nosnippet>245</a>        <span class="comment">// s = 3 * x1^2 + a
+<a href=#246 id=246 data-nosnippet>246</a>        </span><span class="kw">let </span>s = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p0.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#247 id=247 data-nosnippet>247</a>        <span class="kw">let </span>s = <span class="self">self</span>.emulated_mul_constant(<span class="kw-2">&amp;</span>s, E::from(<span class="number">3u64</span>))<span class="question-mark">?</span>;
+<a href=#248 id=248 data-nosnippet>248</a>        <span class="kw">let </span>s = <span class="self">self</span>.emulated_add_constant(<span class="kw-2">&amp;</span>s, a)<span class="question-mark">?</span>;
+<a href=#249 id=249 data-nosnippet>249</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>s, <span class="kw-2">&amp;</span>s)<span class="question-mark">?</span>;
+<a href=#250 id=250 data-nosnippet>250</a>
+<a href=#251 id=251 data-nosnippet>251</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
+<a href=#252 id=252 data-nosnippet>252</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
+<a href=#253 id=253 data-nosnippet>253</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
+<a href=#254 id=254 data-nosnippet>254</a>
+<a href=#255 id=255 data-nosnippet>255</a>        <span class="comment">// second equality (y2 + y0) * (y0 + y0) == (3 * x1^2 + a) (x0 - x2)
+<a href=#256 id=256 data-nosnippet>256</a>        </span><span class="kw">let </span>y2_plus_y0 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p2.<span class="number">1</span>, <span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#257 id=257 data-nosnippet>257</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y2_plus_y0, <span class="kw-2">&amp;</span>y0_times_2)<span class="question-mark">?</span>;
+<a href=#258 id=258 data-nosnippet>258</a>        <span class="kw">let </span>x0_minus_x2 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p2.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#259 id=259 data-nosnippet>259</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>s, <span class="kw-2">&amp;</span>x0_minus_x2)<span class="question-mark">?</span>;
+<a href=#260 id=260 data-nosnippet>260</a>
+<a href=#261 id=261 data-nosnippet>261</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
+<a href=#262 id=262 data-nosnippet>262</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>doubling_coef)<span class="question-mark">?</span>;
+<a href=#263 id=263 data-nosnippet>263</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
+<a href=#264 id=264 data-nosnippet>264</a>
+<a href=#265 id=265 data-nosnippet>265</a>        <span class="comment">// Case 4: point addition
+<a href=#266 id=266 data-nosnippet>266</a>        </span><span class="kw">let </span>coef = <span class="self">self</span>.mul(non_infinity_mark.<span class="number">0</span>, neq_x0_x1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#267 id=267 data-nosnippet>267</a>        <span class="comment">// forcefully convert Variable into EmulatedVariable
+<a href=#268 id=268 data-nosnippet>268</a>        // safe because it's boolean
+<a href=#269 id=269 data-nosnippet>269</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>v = <span class="macro">vec!</span>[<span class="self">self</span>.zero(); E::NUM_LIMBS];
+<a href=#270 id=270 data-nosnippet>270</a>        v[<span class="number">0</span>] = coef;
+<a href=#271 id=271 data-nosnippet>271</a>        <span class="kw">let </span>add_coef = EmulatedVariable::&lt;E&gt;(v, core::marker::PhantomData);
+<a href=#272 id=272 data-nosnippet>272</a>
+<a href=#273 id=273 data-nosnippet>273</a>        <span class="comment">// first equality (x0 - x1)^2 (x0 + x1 + x2) == (y0 - y1)^2
+<a href=#274 id=274 data-nosnippet>274</a>        </span><span class="kw">let </span>x0_minus_x1 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>, <span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#275 id=275 data-nosnippet>275</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_minus_x1, <span class="kw-2">&amp;</span>x0_minus_x1)<span class="question-mark">?</span>;
+<a href=#276 id=276 data-nosnippet>276</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>x0_plus_x1_plus_x2)<span class="question-mark">?</span>;
+<a href=#277 id=277 data-nosnippet>277</a>        <span class="kw">let </span>y0_minus_y1 = <span class="self">self</span>.emulated_sub(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#278 id=278 data-nosnippet>278</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y0_minus_y1, <span class="kw-2">&amp;</span>y0_minus_y1)<span class="question-mark">?</span>;
+<a href=#279 id=279 data-nosnippet>279</a>
+<a href=#280 id=280 data-nosnippet>280</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
+<a href=#281 id=281 data-nosnippet>281</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
+<a href=#282 id=282 data-nosnippet>282</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
+<a href=#283 id=283 data-nosnippet>283</a>
+<a href=#284 id=284 data-nosnippet>284</a>        <span class="comment">// second equality (x0 - x2) (y0 - y1) == (y0 + y2) (x0 - x1)
+<a href=#285 id=285 data-nosnippet>285</a>        </span><span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>x0_minus_x2, <span class="kw-2">&amp;</span>y0_minus_y1)<span class="question-mark">?</span>;
+<a href=#286 id=286 data-nosnippet>286</a>        <span class="kw">let </span>y0_plus_y2 = <span class="self">self</span>.emulated_add(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>, <span class="kw-2">&amp;</span>p2.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#287 id=287 data-nosnippet>287</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>y0_plus_y2, <span class="kw-2">&amp;</span>x0_minus_x1)<span class="question-mark">?</span>;
+<a href=#288 id=288 data-nosnippet>288</a>
+<a href=#289 id=289 data-nosnippet>289</a>        <span class="kw">let </span>lhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
+<a href=#290 id=290 data-nosnippet>290</a>        <span class="kw">let </span>rhs = <span class="self">self</span>.emulated_mul(<span class="kw-2">&amp;</span>rhs, <span class="kw-2">&amp;</span>add_coef)<span class="question-mark">?</span>;
+<a href=#291 id=291 data-nosnippet>291</a>        <span class="self">self</span>.enforce_emulated_var_equal(<span class="kw-2">&amp;</span>lhs, <span class="kw-2">&amp;</span>rhs)<span class="question-mark">?</span>;
+<a href=#292 id=292 data-nosnippet>292</a>
+<a href=#293 id=293 data-nosnippet>293</a>        <span class="prelude-val">Ok</span>(())
+<a href=#294 id=294 data-nosnippet>294</a>    }
+<a href=#295 id=295 data-nosnippet>295</a>
+<a href=#296 id=296 data-nosnippet>296</a>    <span class="doccomment">/// Obtain a variable to the point addition result of `p0` + `p1`
+<a href=#297 id=297 data-nosnippet>297</a>    </span><span class="kw">pub fn </span>emulated_sw_ecc_add&lt;E: EmulationConfig&lt;F&gt;&gt;(
+<a href=#298 id=298 data-nosnippet>298</a>        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+<a href=#299 id=299 data-nosnippet>299</a>        p0: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
+<a href=#300 id=300 data-nosnippet>300</a>        p1: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
+<a href=#301 id=301 data-nosnippet>301</a>        a: E,
+<a href=#302 id=302 data-nosnippet>302</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedSWPointVariable&lt;E&gt;, CircuitError&gt; {
+<a href=#303 id=303 data-nosnippet>303</a>        <span class="kw">let </span>x0 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p0.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#304 id=304 data-nosnippet>304</a>        <span class="kw">let </span>y0 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p0.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#305 id=305 data-nosnippet>305</a>        <span class="kw">let </span>infinity0 = <span class="self">self</span>.witness(p0.<span class="number">2 </span>.<span class="number">0</span>)<span class="question-mark">? </span>== F::one();
+<a href=#306 id=306 data-nosnippet>306</a>        <span class="kw">let </span>x1 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p1.<span class="number">0</span>)<span class="question-mark">?</span>;
+<a href=#307 id=307 data-nosnippet>307</a>        <span class="kw">let </span>y1 = <span class="self">self</span>.emulated_witness(<span class="kw-2">&amp;</span>p1.<span class="number">1</span>)<span class="question-mark">?</span>;
+<a href=#308 id=308 data-nosnippet>308</a>        <span class="kw">let </span>infinity1 = <span class="self">self</span>.witness(p1.<span class="number">2 </span>.<span class="number">0</span>)<span class="question-mark">? </span>== F::one();
+<a href=#309 id=309 data-nosnippet>309</a>        <span class="kw">let </span>p2 = <span class="kw">if </span>infinity0 {
+<a href=#310 id=310 data-nosnippet>310</a>            SWPoint(x1, y1, infinity1)
+<a href=#311 id=311 data-nosnippet>311</a>        } <span class="kw">else if </span>infinity1 {
+<a href=#312 id=312 data-nosnippet>312</a>            SWPoint(x0, y0, infinity0)
+<a href=#313 id=313 data-nosnippet>313</a>        } <span class="kw">else if </span>x0 == x1 &amp;&amp; y0 == y1 {
+<a href=#314 id=314 data-nosnippet>314</a>            <span class="comment">// point doubling
+<a href=#315 id=315 data-nosnippet>315</a>            </span><span class="kw">if </span>y0.is_zero() {
+<a href=#316 id=316 data-nosnippet>316</a>                SWPoint(E::zero(), E::zero(), <span class="bool-val">true</span>)
+<a href=#317 id=317 data-nosnippet>317</a>            } <span class="kw">else </span>{
+<a href=#318 id=318 data-nosnippet>318</a>                <span class="kw">let </span>s = (x0 * x0 * E::from(<span class="number">3u64</span>) + a) / (y0 + y0);
+<a href=#319 id=319 data-nosnippet>319</a>                <span class="kw">let </span>x2 = s * s - x0 - x1;
+<a href=#320 id=320 data-nosnippet>320</a>                <span class="kw">let </span>y2 = s * (x0 - x2) - y0;
+<a href=#321 id=321 data-nosnippet>321</a>                SWPoint(x2, y2, <span class="bool-val">false</span>)
+<a href=#322 id=322 data-nosnippet>322</a>            }
+<a href=#323 id=323 data-nosnippet>323</a>        } <span class="kw">else </span>{
+<a href=#324 id=324 data-nosnippet>324</a>            <span class="comment">// point addition
+<a href=#325 id=325 data-nosnippet>325</a>            </span><span class="kw">if </span>x0 == x1 {
+<a href=#326 id=326 data-nosnippet>326</a>                SWPoint(E::zero(), E::zero(), <span class="bool-val">true</span>)
+<a href=#327 id=327 data-nosnippet>327</a>            } <span class="kw">else </span>{
+<a href=#328 id=328 data-nosnippet>328</a>                <span class="kw">let </span>s = (y0 - y1) / (x0 - x1);
+<a href=#329 id=329 data-nosnippet>329</a>                <span class="kw">let </span>x2 = s * s - x0 - x1;
+<a href=#330 id=330 data-nosnippet>330</a>                <span class="kw">let </span>y2 = s * (x0 - x2) - y0;
+<a href=#331 id=331 data-nosnippet>331</a>                SWPoint(x2, y2, <span class="bool-val">false</span>)
+<a href=#332 id=332 data-nosnippet>332</a>            }
+<a href=#333 id=333 data-nosnippet>333</a>        };
+<a href=#334 id=334 data-nosnippet>334</a>        <span class="kw">let </span>p2 = <span class="self">self</span>.create_emulated_sw_point_variable(p2)<span class="question-mark">?</span>;
+<a href=#335 id=335 data-nosnippet>335</a>        <span class="self">self</span>.emulated_sw_ecc_add_gate(p0, p1, <span class="kw-2">&amp;</span>p2, a)<span class="question-mark">?</span>;
+<a href=#336 id=336 data-nosnippet>336</a>        <span class="prelude-val">Ok</span>(p2)
+<a href=#337 id=337 data-nosnippet>337</a>    }
+<a href=#338 id=338 data-nosnippet>338</a>}
+<a href=#339 id=339 data-nosnippet>339</a>
+<a href=#340 id=340 data-nosnippet>340</a><span class="attr">#[cfg(test)]
+<a href=#341 id=341 data-nosnippet>341</a></span><span class="kw">mod </span>tests {
+<a href=#342 id=342 data-nosnippet>342</a>    <span class="kw">use crate</span>::{
+<a href=#343 id=343 data-nosnippet>343</a>        gadgets::{ecc::conversion::<span class="kw-2">*</span>, EmulationConfig, SerializableEmulatedStruct},
+<a href=#344 id=344 data-nosnippet>344</a>        Circuit, CircuitError, PlonkCircuit,
+<a href=#345 id=345 data-nosnippet>345</a>    };
+<a href=#346 id=346 data-nosnippet>346</a>    <span class="kw">use </span>ark_bls12_377::{g1::Config <span class="kw">as </span>Param377, Fq <span class="kw">as </span>Fq377};
+<a href=#347 id=347 data-nosnippet>347</a>    <span class="kw">use </span>ark_bn254::{g1::Config <span class="kw">as </span>Param254, Fq <span class="kw">as </span>Fq254, Fr <span class="kw">as </span>Fr254};
+<a href=#348 id=348 data-nosnippet>348</a>    <span class="kw">use </span>ark_ec::{
+<a href=#349 id=349 data-nosnippet>349</a>        short_weierstrass::{Projective, SWCurveConfig},
+<a href=#350 id=350 data-nosnippet>350</a>        CurveGroup, PrimeGroup,
+<a href=#351 id=351 data-nosnippet>351</a>    };
+<a href=#352 id=352 data-nosnippet>352</a>    <span class="kw">use </span>ark_ff::{MontFp, PrimeField};
+<a href=#353 id=353 data-nosnippet>353</a>    <span class="kw">use </span>ark_std::{UniformRand, Zero};
+<a href=#354 id=354 data-nosnippet>354</a>
+<a href=#355 id=355 data-nosnippet>355</a>    <span class="kw">use super</span>::{EmulatedSWPointVariable, SWPoint};
+<a href=#356 id=356 data-nosnippet>356</a>
+<a href=#357 id=357 data-nosnippet>357</a>    <span class="attr">#[test]
+<a href=#358 id=358 data-nosnippet>358</a>    </span><span class="kw">fn </span>test_emulated_sw_point_addition() {
+<a href=#359 id=359 data-nosnippet>359</a>        <span class="kw">let </span>a: Fq377 = <span class="macro">MontFp!</span>(<span class="string">"0"</span>);
+<a href=#360 id=360 data-nosnippet>360</a>        test_emulated_sw_point_addition_helper::&lt;Fq377, Fr254, Param377&gt;(a);
+<a href=#361 id=361 data-nosnippet>361</a>        <span class="kw">let </span>a: Fq254 = <span class="macro">MontFp!</span>(<span class="string">"0"</span>);
+<a href=#362 id=362 data-nosnippet>362</a>        test_emulated_sw_point_addition_helper::&lt;Fq254, Fr254, Param254&gt;(a);
+<a href=#363 id=363 data-nosnippet>363</a>    }
+<a href=#364 id=364 data-nosnippet>364</a>
+<a href=#365 id=365 data-nosnippet>365</a>    <span class="kw">fn </span>ecc_add_and_check&lt;E, F&gt;(
+<a href=#366 id=366 data-nosnippet>366</a>        circuit: <span class="kw-2">&amp;mut </span>PlonkCircuit&lt;F&gt;,
+<a href=#367 id=367 data-nosnippet>367</a>        p0: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
+<a href=#368 id=368 data-nosnippet>368</a>        p1: <span class="kw-2">&amp;</span>EmulatedSWPointVariable&lt;E&gt;,
+<a href=#369 id=369 data-nosnippet>369</a>        a: E,
+<a href=#370 id=370 data-nosnippet>370</a>        expected: <span class="kw-2">&amp;</span>SWPoint&lt;E&gt;,
+<a href=#371 id=371 data-nosnippet>371</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;EmulatedSWPointVariable&lt;E&gt;, CircuitError&gt;
+<a href=#372 id=372 data-nosnippet>372</a>    <span class="kw">where
+<a href=#373 id=373 data-nosnippet>373</a>        </span>E: EmulationConfig&lt;F&gt; + SWToTEConParam,
+<a href=#374 id=374 data-nosnippet>374</a>        F: PrimeField,
+<a href=#375 id=375 data-nosnippet>375</a>    {
+<a href=#376 id=376 data-nosnippet>376</a>        <span class="kw">let </span>result = circuit.emulated_sw_ecc_add(p0, p1, a)<span class="question-mark">?</span>;
+<a href=#377 id=377 data-nosnippet>377</a>        <span class="macro">assert_eq!</span>(circuit.emulated_sw_point_witness(<span class="kw-2">&amp;</span>result)<span class="question-mark">?</span>, <span class="kw-2">*</span>expected);
+<a href=#378 id=378 data-nosnippet>378</a>        <span class="prelude-val">Ok</span>(result)
+<a href=#379 id=379 data-nosnippet>379</a>    }
+<a href=#380 id=380 data-nosnippet>380</a>
+<a href=#381 id=381 data-nosnippet>381</a>    <span class="kw">fn </span>test_emulated_sw_point_addition_helper&lt;E, F, P&gt;(a: E)
+<a href=#382 id=382 data-nosnippet>382</a>    <span class="kw">where
+<a href=#383 id=383 data-nosnippet>383</a>        </span>E: EmulationConfig&lt;F&gt; + SWToTEConParam,
+<a href=#384 id=384 data-nosnippet>384</a>        F: PrimeField,
+<a href=#385 id=385 data-nosnippet>385</a>        P: SWCurveConfig&lt;BaseField = E&gt;,
+<a href=#386 id=386 data-nosnippet>386</a>    {
+<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span><span class="kw-2">mut </span>rng = jf_utils::test_rng();
+<a href=#388 id=388 data-nosnippet>388</a>        <span class="kw">let </span>neutral = Projective::&lt;P&gt;::zero().into_affine();
+<a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>p1 = Projective::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
+<a href=#390 id=390 data-nosnippet>390</a>        <span class="kw">let </span>p2 = Projective::&lt;P&gt;::rand(<span class="kw-2">&amp;mut </span>rng).into_affine();
+<a href=#391 id=391 data-nosnippet>391</a>        <span class="kw">let </span>expected = (p1 + p2).into_affine().into();
+<a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span>wrong_result = (p1 + p2 + Projective::&lt;P&gt;::generator())
+<a href=#393 id=393 data-nosnippet>393</a>            .into_affine()
+<a href=#394 id=394 data-nosnippet>394</a>            .into();
+<a href=#395 id=395 data-nosnippet>395</a>
+<a href=#396 id=396 data-nosnippet>396</a>        <span class="kw">let </span><span class="kw-2">mut </span>circuit = PlonkCircuit::&lt;F&gt;::new_ultra_plonk(<span class="number">20</span>);
+<a href=#397 id=397 data-nosnippet>397</a>
+<a href=#398 id=398 data-nosnippet>398</a>        <span class="kw">let </span>var_p1 = circuit
+<a href=#399 id=399 data-nosnippet>399</a>            .create_public_emulated_sw_point_variable(p1.into())
+<a href=#400 id=400 data-nosnippet>400</a>            .unwrap();
+<a href=#401 id=401 data-nosnippet>401</a>        <span class="kw">let </span>var_p2 = circuit
+<a href=#402 id=402 data-nosnippet>402</a>            .create_emulated_sw_point_variable(p2.into())
+<a href=#403 id=403 data-nosnippet>403</a>            .unwrap();
+<a href=#404 id=404 data-nosnippet>404</a>        <span class="kw">let </span>var_neutral = circuit
+<a href=#405 id=405 data-nosnippet>405</a>            .create_emulated_sw_point_variable(neutral.into())
+<a href=#406 id=406 data-nosnippet>406</a>            .unwrap();
+<a href=#407 id=407 data-nosnippet>407</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p2, a, <span class="kw-2">&amp;</span>expected).unwrap();
+<a href=#408 id=408 data-nosnippet>408</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_neutral, a, <span class="kw-2">&amp;</span>p1.into()).unwrap();
+<a href=#409 id=409 data-nosnippet>409</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_neutral, <span class="kw-2">&amp;</span>var_p2, a, <span class="kw-2">&amp;</span>p2.into()).unwrap();
+<a href=#410 id=410 data-nosnippet>410</a>
+<a href=#411 id=411 data-nosnippet>411</a>        <span class="comment">// test point doubling
+<a href=#412 id=412 data-nosnippet>412</a>        </span><span class="kw">let </span>double_p1 = (p1 + p1).into_affine().into();
+<a href=#413 id=413 data-nosnippet>413</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p1, a, <span class="kw-2">&amp;</span>double_p1).unwrap();
+<a href=#414 id=414 data-nosnippet>414</a>        ecc_add_and_check::&lt;E, F&gt;(<span class="kw-2">&amp;mut </span>circuit, <span class="kw-2">&amp;</span>var_neutral, <span class="kw-2">&amp;</span>var_neutral, a, <span class="kw-2">&amp;</span>neutral.into())
+<a href=#415 id=415 data-nosnippet>415</a>            .unwrap();
+<a href=#416 id=416 data-nosnippet>416</a>
+<a href=#417 id=417 data-nosnippet>417</a>        <span class="kw">let </span>public_inputs: SWPoint&lt;E&gt; = p1.into();
+<a href=#418 id=418 data-nosnippet>418</a>        <span class="kw">let </span>public_inputs = public_inputs.serialize_to_native_elements();
+<a href=#419 id=419 data-nosnippet>419</a>        <span class="kw">let </span>wrong_inputs: SWPoint&lt;E&gt; = neutral.into();
+<a href=#420 id=420 data-nosnippet>420</a>        <span class="kw">let </span>wrong_inputs = wrong_inputs.serialize_to_native_elements();
+<a href=#421 id=421 data-nosnippet>421</a>        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>public_inputs).is_ok());
+<a href=#422 id=422 data-nosnippet>422</a>        <span class="macro">assert!</span>(circuit.check_circuit_satisfiability(<span class="kw-2">&amp;</span>wrong_inputs).is_err());
+<a href=#423 id=423 data-nosnippet>423</a>
+<a href=#424 id=424 data-nosnippet>424</a>        <span class="comment">// fail path
+<a href=#425 id=425 data-nosnippet>425</a>        </span><span class="kw">let </span>var_wrong_result = circuit
+<a href=#426 id=426 data-nosnippet>426</a>            .create_emulated_sw_point_variable(wrong_result)
+<a href=#427 id=427 data-nosnippet>427</a>            .unwrap();
+<a href=#428 id=428 data-nosnippet>428</a>        circuit
+<a href=#429 id=429 data-nosnippet>429</a>            .emulated_sw_ecc_add_gate(<span class="kw-2">&amp;</span>var_p1, <span class="kw-2">&amp;</span>var_p2, <span class="kw-2">&amp;</span>var_wrong_result, a)
+<a href=#430 id=430 data-nosnippet>430</a>            .unwrap();
+<a href=#431 id=431 data-nosnippet>431</a>        <span class="macro">assert!</span>(circuit
+<a href=#432 id=432 data-nosnippet>432</a>            .check_circuit_satisfiability(<span class="kw-2">&amp;</span>public_inputs)
+<a href=#433 id=433 data-nosnippet>433</a>            .is_err());
+<a href=#434 id=434 data-nosnippet>434</a>    }
+<a href=#435 id=435 data-nosnippet>435</a>}
 </code></pre></div></section></main></body></html>

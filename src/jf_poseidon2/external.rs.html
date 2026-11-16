@@ -27,8 +27,8 @@
 <a href=#27 id=27 data-nosnippet>27</a>        <span class="kw">let </span>t0123 = t01 + t23;
 <a href=#28 id=28 data-nosnippet>28</a>        <span class="kw">let </span>t01123 = t0123 + x[<span class="number">1</span>];
 <a href=#29 id=29 data-nosnippet>29</a>        <span class="kw">let </span>t01233 = t0123 + x[<span class="number">3</span>];
-<a href=#30 id=30 data-nosnippet>30</a>        <span class="comment">// The order here is important. Need to overwrite x[0] and x[2] after x[1] and
-<a href=#31 id=31 data-nosnippet>31</a>        // x[3].
+<a href=#30 id=30 data-nosnippet>30</a>        <span class="comment">// The order here is important. Need to overwrite x[0] and x[2] after
+<a href=#31 id=31 data-nosnippet>31</a>        // x[1] and x[3].
 <a href=#32 id=32 data-nosnippet>32</a>        </span>x[<span class="number">3</span>] = t01233 + x[<span class="number">0</span>].double(); <span class="comment">// 3*x[0] + x[1] + x[2] + 2*x[3]
 <a href=#33 id=33 data-nosnippet>33</a>        </span>x[<span class="number">1</span>] = t01123 + x[<span class="number">2</span>].double(); <span class="comment">// x[0] + 2*x[1] + 3*x[2] + x[3]
 <a href=#34 id=34 data-nosnippet>34</a>        </span>x[<span class="number">0</span>] = t01123 + t01; <span class="comment">// 2*x[0] + 3*x[1] + x[2] + x[3]
@@ -54,51 +54,53 @@
 <a href=#54 id=54 data-nosnippet>54</a>            state[<span class="number">2</span>] += sum;
 <a href=#55 id=55 data-nosnippet>55</a>        },
 <a href=#56 id=56 data-nosnippet>56</a>
-<a href=#57 id=57 data-nosnippet>57</a>        <span class="comment">// NOTE: matching plonky3's behavior, differs from the Horizen Labs reference implementation
-<a href=#58 id=58 data-nosnippet>58</a>        // and the paper's description (Sec 5.1 of https://eprint.iacr.org/2023/323.pdf), in which for T=4,
+<a href=#57 id=57 data-nosnippet>57</a>        <span class="comment">// NOTE: matching plonky3's behavior, differs from the Horizen Labs
+<a href=#58 id=58 data-nosnippet>58</a>        // reference implementation and the paper's description (Sec 5.1 of https://eprint.iacr.org/2023/323.pdf), in which for T=4,
 <a href=#59 id=59 data-nosnippet>59</a>        // the circulant matrix is not applied.
 <a href=#60 id=60 data-nosnippet>60</a>
 <a href=#61 id=61 data-nosnippet>61</a>        // Given a 4x4 MDS matrix M, we multiply by the `4N x 4N` matrix
 <a href=#62 id=62 data-nosnippet>62</a>        // `[[2M M  ... M], [M  2M ... M], ..., [M  M ... 2M]]`.
 <a href=#63 id=63 data-nosnippet>63</a>        </span><span class="number">4 </span>| <span class="number">8 </span>| <span class="number">12 </span>| <span class="number">16 </span>| <span class="number">20 </span>| <span class="number">24 </span>=&gt; {
-<a href=#64 id=64 data-nosnippet>64</a>            <span class="comment">// First, we apply M_4 to each consecutive four elements of the state.
-<a href=#65 id=65 data-nosnippet>65</a>            // In Appendix B's terminology, this replaces each x_i with x_i'.
-<a href=#66 id=66 data-nosnippet>66</a>            </span><span class="kw">for </span>chunk <span class="kw">in </span>state.chunks_exact_mut(<span class="number">4</span>) {
-<a href=#67 id=67 data-nosnippet>67</a>                MDSMat4::matmul(chunk.try_into().unwrap());
-<a href=#68 id=68 data-nosnippet>68</a>            }
-<a href=#69 id=69 data-nosnippet>69</a>            <span class="comment">// Now, we apply the outer circulant matrix (to compute the y_i values).
-<a href=#70 id=70 data-nosnippet>70</a>
-<a href=#71 id=71 data-nosnippet>71</a>            // We first precompute the four sums of every four elements.
-<a href=#72 id=72 data-nosnippet>72</a>            </span><span class="kw">let </span>sums: [F; <span class="number">4</span>] =
-<a href=#73 id=73 data-nosnippet>73</a>                core::array::from_fn(|k| (<span class="number">0</span>..T).step_by(<span class="number">4</span>).map(|j| state[j + k]).sum::&lt;F&gt;());
-<a href=#74 id=74 data-nosnippet>74</a>
-<a href=#75 id=75 data-nosnippet>75</a>            <span class="comment">// The formula for each y_i involves 2x_i' term and x_j' terms for each j that
-<a href=#76 id=76 data-nosnippet>76</a>            // equals i mod 4. In other words, we can add a single copy of x_i'
-<a href=#77 id=77 data-nosnippet>77</a>            // to the appropriate one of our precomputed sums
-<a href=#78 id=78 data-nosnippet>78</a>            </span>state
-<a href=#79 id=79 data-nosnippet>79</a>                .iter_mut()
-<a href=#80 id=80 data-nosnippet>80</a>                .enumerate()
-<a href=#81 id=81 data-nosnippet>81</a>                .for_each(|(i, elem)| <span class="kw-2">*</span>elem += sums[i % <span class="number">4</span>]);
-<a href=#82 id=82 data-nosnippet>82</a>        },
-<a href=#83 id=83 data-nosnippet>83</a>
-<a href=#84 id=84 data-nosnippet>84</a>        <span class="kw">_ </span>=&gt; {
-<a href=#85 id=85 data-nosnippet>85</a>            <span class="macro">panic!</span>(<span class="string">"Unsupported state size"</span>);
-<a href=#86 id=86 data-nosnippet>86</a>        },
-<a href=#87 id=87 data-nosnippet>87</a>    }
-<a href=#88 id=88 data-nosnippet>88</a>}
-<a href=#89 id=89 data-nosnippet>89</a>
-<a href=#90 id=90 data-nosnippet>90</a><span class="attr">#[inline(always)]
-<a href=#91 id=91 data-nosnippet>91</a></span><span class="doccomment">/// One external round
-<a href=#92 id=92 data-nosnippet>92</a></span><span class="comment">// @credit `external_terminal_permute_state` in plonky3
-<a href=#93 id=93 data-nosnippet>93</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>permute_state&lt;F: PrimeField, <span class="kw">const </span>T: usize&gt;(
-<a href=#94 id=94 data-nosnippet>94</a>    state: <span class="kw-2">&amp;mut </span>[F; T],
-<a href=#95 id=95 data-nosnippet>95</a>    rc: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[F; T],
-<a href=#96 id=96 data-nosnippet>96</a>    d: usize,
-<a href=#97 id=97 data-nosnippet>97</a>) {
-<a href=#98 id=98 data-nosnippet>98</a>    add_rcs(state, rc);
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">for </span>s <span class="kw">in </span>state.iter_mut() {
-<a href=#100 id=100 data-nosnippet>100</a>        s_box(s, d);
-<a href=#101 id=101 data-nosnippet>101</a>    }
-<a href=#102 id=102 data-nosnippet>102</a>    matmul_external(state);
-<a href=#103 id=103 data-nosnippet>103</a>}
+<a href=#64 id=64 data-nosnippet>64</a>            <span class="comment">// First, we apply M_4 to each consecutive four elements of the
+<a href=#65 id=65 data-nosnippet>65</a>            // state. In Appendix B's terminology, this replaces each x_i with
+<a href=#66 id=66 data-nosnippet>66</a>            // x_i'.
+<a href=#67 id=67 data-nosnippet>67</a>            </span><span class="kw">for </span>chunk <span class="kw">in </span>state.chunks_exact_mut(<span class="number">4</span>) {
+<a href=#68 id=68 data-nosnippet>68</a>                MDSMat4::matmul(chunk.try_into().unwrap());
+<a href=#69 id=69 data-nosnippet>69</a>            }
+<a href=#70 id=70 data-nosnippet>70</a>            <span class="comment">// Now, we apply the outer circulant matrix (to compute the y_i
+<a href=#71 id=71 data-nosnippet>71</a>            // values).
+<a href=#72 id=72 data-nosnippet>72</a>
+<a href=#73 id=73 data-nosnippet>73</a>            // We first precompute the four sums of every four elements.
+<a href=#74 id=74 data-nosnippet>74</a>            </span><span class="kw">let </span>sums: [F; <span class="number">4</span>] =
+<a href=#75 id=75 data-nosnippet>75</a>                core::array::from_fn(|k| (<span class="number">0</span>..T).step_by(<span class="number">4</span>).map(|j| state[j + k]).sum::&lt;F&gt;());
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a>            <span class="comment">// The formula for each y_i involves 2x_i' term and x_j' terms for
+<a href=#78 id=78 data-nosnippet>78</a>            // each j that equals i mod 4. In other words, we can add a single
+<a href=#79 id=79 data-nosnippet>79</a>            // copy of x_i' to the appropriate one of our precomputed sums
+<a href=#80 id=80 data-nosnippet>80</a>            </span>state
+<a href=#81 id=81 data-nosnippet>81</a>                .iter_mut()
+<a href=#82 id=82 data-nosnippet>82</a>                .enumerate()
+<a href=#83 id=83 data-nosnippet>83</a>                .for_each(|(i, elem)| <span class="kw-2">*</span>elem += sums[i % <span class="number">4</span>]);
+<a href=#84 id=84 data-nosnippet>84</a>        },
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a>        <span class="kw">_ </span>=&gt; {
+<a href=#87 id=87 data-nosnippet>87</a>            <span class="macro">panic!</span>(<span class="string">"Unsupported state size"</span>);
+<a href=#88 id=88 data-nosnippet>88</a>        },
+<a href=#89 id=89 data-nosnippet>89</a>    }
+<a href=#90 id=90 data-nosnippet>90</a>}
+<a href=#91 id=91 data-nosnippet>91</a>
+<a href=#92 id=92 data-nosnippet>92</a><span class="attr">#[inline(always)]
+<a href=#93 id=93 data-nosnippet>93</a></span><span class="doccomment">/// One external round
+<a href=#94 id=94 data-nosnippet>94</a></span><span class="comment">// @credit `external_terminal_permute_state` in plonky3
+<a href=#95 id=95 data-nosnippet>95</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>permute_state&lt;F: PrimeField, <span class="kw">const </span>T: usize&gt;(
+<a href=#96 id=96 data-nosnippet>96</a>    state: <span class="kw-2">&amp;mut </span>[F; T],
+<a href=#97 id=97 data-nosnippet>97</a>    rc: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[F; T],
+<a href=#98 id=98 data-nosnippet>98</a>    d: usize,
+<a href=#99 id=99 data-nosnippet>99</a>) {
+<a href=#100 id=100 data-nosnippet>100</a>    add_rcs(state, rc);
+<a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">for </span>s <span class="kw">in </span>state.iter_mut() {
+<a href=#102 id=102 data-nosnippet>102</a>        s_box(s, d);
+<a href=#103 id=103 data-nosnippet>103</a>    }
+<a href=#104 id=104 data-nosnippet>104</a>    matmul_external(state);
+<a href=#105 id=105 data-nosnippet>105</a>}
 </code></pre></div></section></main></body></html>

@@ -215,8 +215,8 @@
 <a href=#215 id=215 data-nosnippet>215</a>            <span class="kw">let </span>next_carry_out = <span class="self">self</span>.create_variable(val_next_carry_out)<span class="question-mark">?</span>;
 <a href=#216 id=216 data-nosnippet>216</a>
 <a href=#217 id=217 data-nosnippet>217</a>            <span class="comment">// range checking for this carry out.
-<a href=#218 id=218 data-nosnippet>218</a>            // let a = 2^B - 1. The maximum possible value of `next_carry_out` is ((i + 1) *
-<a href=#219 id=219 data-nosnippet>219</a>            // 2 * a^2 + a) / 2^B.
+<a href=#218 id=218 data-nosnippet>218</a>            // let a = 2^B - 1. The maximum possible value of `next_carry_out`
+<a href=#219 id=219 data-nosnippet>219</a>            // is ((i + 1) * 2 * a^2 + a) / 2^B.
 <a href=#220 id=220 data-nosnippet>220</a>            </span><span class="kw">let </span>num_vals = <span class="number">2u64 </span>* (i <span class="kw">as </span>u64) + <span class="number">2</span>;
 <a href=#221 id=221 data-nosnippet>221</a>            <span class="kw">let </span>log_num_vals = (u64::BITS - num_vals.leading_zeros()) <span class="kw">as </span>usize;
 <a href=#222 id=222 data-nosnippet>222</a>            <span class="self">self</span>.enforce_in_range(next_carry_out, E::B + log_num_vals)<span class="question-mark">?</span>;

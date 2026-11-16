@@ -58,9 +58,9 @@
 <a href=#58 id=58 data-nosnippet>58</a>    </span><span class="kw">let </span>N = <span class="kw">match </span>coset_size {
 <a href=#59 id=59 data-nosnippet>59</a>        <span class="prelude-val">Some</span>(size) =&gt; size,
 <a href=#60 id=60 data-nosnippet>60</a>        <span class="prelude-val">None </span>=&gt; {
-<a href=#61 id=61 data-nosnippet>61</a>            <span class="comment">// let `2^s * t` be the size of the multiplicative group defined by the field
-<a href=#62 id=62 data-nosnippet>62</a>            // `F`, for some odd integer `t`, `s` is the 2-adicity of `F*`.
-<a href=#63 id=63 data-nosnippet>63</a>            // `2^s` is a guaranteed to be multiple of |H|.
+<a href=#61 id=61 data-nosnippet>61</a>            <span class="comment">// let `2^s * t` be the size of the multiplicative group defined by
+<a href=#62 id=62 data-nosnippet>62</a>            // the field `F`, for some odd integer `t`, `s` is the 2-adicity of
+<a href=#63 id=63 data-nosnippet>63</a>            // `F*`. `2^s` is a guaranteed to be multiple of |H|.
 <a href=#64 id=64 data-nosnippet>64</a>            </span><span class="number">2usize</span>.pow(&lt;F <span class="kw">as </span>FftField&gt;::TWO_ADICITY)
 <a href=#65 id=65 data-nosnippet>65</a>        },
 <a href=#66 id=66 data-nosnippet>66</a>    };

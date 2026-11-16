@@ -98,8 +98,8 @@
 <a href=#98 id=98 data-nosnippet>98</a>
 <a href=#99 id=99 data-nosnippet>99</a>        <span class="comment">// verifier transcript
 <a href=#100 id=100 data-nosnippet>100</a>        </span><span class="kw">let </span><span class="kw-2">mut </span>arthur = io.to_verifier_state(merlin.narg_string());
-<a href=#101 id=101 data-nosnippet>101</a>        <span class="comment">// reading prover's first message labelled "in", since we don't need it, read
-<a href=#102 id=102 data-nosnippet>102</a>        // into a one-time throw-away array
+<a href=#101 id=101 data-nosnippet>101</a>        <span class="comment">// reading prover's first message labelled "in", since we don't need it,
+<a href=#102 id=102 data-nosnippet>102</a>        // read into a one-time throw-away array
 <a href=#103 id=103 data-nosnippet>103</a>        </span>arthur.fill_next_units(<span class="kw-2">&amp;mut </span>[F::default()]).unwrap();
 <a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span><span class="kw-2">mut </span>arthur_challenges = [F::default(); <span class="number">2048</span>];
 <a href=#105 id=105 data-nosnippet>105</a>        arthur.fill_challenge_units(<span class="kw-2">&amp;mut </span>arthur_challenges).unwrap();
