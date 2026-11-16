@@ -23,7 +23,7 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        # keep in sync with NIGHTLY in .github/workflows/build.yml
+        # keep in sync with NIGHTLY in .github/workflows/build.yml and justfile
         nightlyToolchain = pkgs.rust-bin.nightly."2026-11-16".minimal.override {
           extensions = [ "rustfmt" ];
         };
@@ -32,10 +32,10 @@
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
           targets = [ "wasm32-unknown-unknown" ];
         };
-        # A script that calls nightly cargo if invoked with `+nightly`
-        # as the first argument, otherwise it calls stable cargo.
+        # A script that calls nightly cargo if invoked with `+nightly` or
+        # `+nightly-<date>` as the first argument, otherwise it calls stable cargo.
         cargo-with-nightly = pkgs.writeShellScriptBin "cargo" ''
-          if [[ "$1" == "+nightly" ]]; then
+          if [[ "$1" == +nightly* ]]; then
             shift
             # Prepend nightly toolchain directory containing cargo, rustc, etc.
             exec env PATH="${nightlyToolchain}/bin:$PATH" cargo "$@"

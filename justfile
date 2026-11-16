@@ -1,5 +1,6 @@
 features := "test-srs test-apis bls schnorr gadgets"
-nightly := env("NIGHTLY", "nightly")
+# keep in sync with NIGHTLY in .github/workflows/build.yml and flake.nix
+nightly := env("NIGHTLY", "nightly-2026-11-16")
 no_std_rustflags := '-C target-cpu=generic --cfg curve25519_dalek_backend="u32"'
 
 default:
