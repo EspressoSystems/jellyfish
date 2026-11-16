@@ -835,8 +835,8 @@ impl<F: FftField> PlonkCircuit<F> {
                 // Swap gate types
                 self.gates.swap(gate_id, *io_gate_id);
                 // Swap wire variables
-                for i in 0..GATE_WIDTH + 1 {
-                    self.wire_variables[i].swap(gate_id, *io_gate_id);
+                for wires in &mut self.wire_variables[..GATE_WIDTH + 1] {
+                    wires.swap(gate_id, *io_gate_id);
                 }
                 // Update io gate index
                 *io_gate_id = gate_id;
@@ -854,8 +854,8 @@ impl<F: FftField> PlonkCircuit<F> {
                         // Swap gate types
                         self.gates.swap(gate_id, cur_gate_id);
                         // Swap wire variables
-                        for j in 0..GATE_WIDTH + 1 {
-                            self.wire_variables[j].swap(gate_id, cur_gate_id);
+                        for wires in &mut self.wire_variables[..GATE_WIDTH + 1] {
+                            wires.swap(gate_id, cur_gate_id);
                         }
                         cur_gate_id -= 1;
                     }
