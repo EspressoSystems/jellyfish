@@ -23,13 +23,10 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
-        pkgsAllowUnfree = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
+        # keep in sync with NIGHTLY in .github/workflows/build.yml
+        nightlyToolchain = pkgs.rust-bin.nightly."2025-09-04".minimal.override {
+          extensions = [ "rustfmt" ];
         };
-        gcc11 = pkgs.overrideCC pkgs.stdenv pkgs.gcc11;
-        nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
-          toolchain.minimal.override { extensions = [ "rustfmt" ]; });
 
         stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
@@ -46,8 +43,8 @@
           exec ${stableToolchain}/bin/cargo "$@"
         '';
         baseShell = with pkgs;
-          clang15Stdenv.mkDerivation {
-            name = "clang15-nix-shell";
+          clangStdenv.mkDerivation {
+            name = "clang-nix-shell";
             buildInputs = [
               argbash
               openssl
@@ -61,14 +58,16 @@
               cargo-nextest
               just
               cargo-sort
-              clang-tools_15
+              clang-tools
               clangStdenv
-              llvm_15
+              llvm
               typos
               # grcov # TODO uncomment this line after https://github.com/mozilla/grcov/issues/1187#issuecomment-2252214718
             ];
 
             CARGO_TARGET_DIR = "target/nix_rustc";
+            # unsupported by clang for wasm32 (blst)
+            hardeningDisable = [ "zerocallusedregs" ];
 
             shellHook = ''
               export RUST_BACKTRACE=full
@@ -79,12 +78,12 @@
               # Ensure `cargo fmt` uses `rustfmt` from nightly.
               export RUSTFMT="${nightlyToolchain}/bin/rustfmt"
 
-              export C_INCLUDE_PATH="${llvmPackages_15.libclang.lib}/lib/clang/${llvmPackages_15.libclang.version}/include"
+              export C_INCLUDE_PATH="${llvmPackages.libclang.lib}/lib/clang/${lib.versions.major llvmPackages.libclang.version}/include"
               export LIBCLANG_PATH=
-              export CC="${clang-tools_15.clang}/bin/clang"
-              export CXX="${clang-tools_15.clang}/bin/clang++"
-              export AR="${llvm_15}/bin/llvm-ar"
-              export CFLAGS="-mcpu=generic"
+              export CC="${llvmPackages.clang}/bin/clang"
+              export CXX="${llvmPackages.clang}/bin/clang++"
+              export AR="${llvm}/bin/llvm-ar"
+              export CFLAGS_wasm32_unknown_unknown="-mcpu=generic"
 
               # by default choose u64_backend
               export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
@@ -133,28 +132,5 @@
           };
         };
         devShell = baseShell;
-        # extra dev shells
-        devShells = {
-          # run with `nix develop .#cudaShell`
-          cudaShell =
-            let cudatoolkit = pkgsAllowUnfree.cudaPackages_12_3.cudatoolkit;
-            in baseShell.overrideAttrs (oldAttrs: {
-              # for GPU/CUDA env (e.g. to run ICICLE code)
-              name = "cuda-env-shell";
-              buildInputs = oldAttrs.buildInputs
-                ++ [ cmake cudatoolkit util-linux gcc11 ];
-              # CXX is overridden to use gcc as icicle-curves's build scripts need them
-              shellHook = oldAttrs.shellHook + ''
-                export PATH="${pkgs.gcc11}/bin:${cudatoolkit}/bin:${cudatoolkit}/nvvm/bin:$PATH"
-                export LD_LIBRARY_PATH=${cudatoolkit}/lib
-                export CUDA_PATH=${cudatoolkit}
-                export CPATH="${cudatoolkit}/include"
-                export LIBRARY_PATH="$LIBRARY_PATH:/lib"
-                export CMAKE_CUDA_COMPILER=$CUDA_PATH/bin/nvcc
-                export LIBCLANG_PATH=${llvmPackages_15.libclang.lib}/lib
-                export CFLAGS=""
-              '';
-            });
-        };
       });
 }
