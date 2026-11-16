@@ -55,6 +55,7 @@
               cargo-with-nightly
               stableToolchain
               nightlyToolchain
+              cargo-audit
               cargo-nextest
               just
               cargo-sort
