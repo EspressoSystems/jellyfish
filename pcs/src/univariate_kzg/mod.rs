@@ -169,8 +169,6 @@ impl<E: Pairing> PolynomialCommitmentScheme for UnivariateKzgPCS<E> {
         )
         .into_affine();
 
-        // TODO offer an `open()` that doesn't also evaluate
-        // https://github.com/EspressoSystems/jellyfish/issues/426
         let eval = polynomial.evaluate(point);
 
         #[cfg(feature = "kzg-print-trace")]
