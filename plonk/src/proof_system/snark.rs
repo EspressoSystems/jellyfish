@@ -442,49 +442,12 @@ where
     type UniversalSRS = UniversalSrs<E>;
     type Error = PlonkError;
 
-    // FIXME: (alex) see <https://github.com/EspressoSystems/jellyfish/issues/249>
     #[cfg(any(test, feature = "test-srs"))]
     fn universal_setup_for_testing<R: RngCore + CryptoRng>(
         max_degree: usize,
         rng: &mut R,
     ) -> Result<Self::UniversalSRS, Self::Error> {
-        use ark_ec::{CurveGroup, ScalarMul};
-        use ark_std::{end_timer, start_timer, UniformRand};
-
-        let setup_time = start_timer!(|| format!("KZG10::Setup with degree {}", max_degree));
-        let beta = E::ScalarField::rand(rng);
-        let g = E::G1::rand(rng);
-        let h = E::G2::rand(rng);
-
-        let mut powers_of_beta = vec![E::ScalarField::one()];
-
-        let mut cur = beta;
-        for _ in 0..max_degree {
-            powers_of_beta.push(cur);
-            cur *= &beta;
-        }
-
-        let g_time = start_timer!(|| "Generating powers of G");
-        let powers_of_g = g
-            .batch_mul(&powers_of_beta)
-            .into_iter()
-            .map(E::G1::from)
-            .collect::<Vec<_>>();
-        end_timer!(g_time);
-
-        let powers_of_g = E::G1::normalize_batch(&powers_of_g);
-
-        let h = h.into_affine();
-        let beta_h = (h * beta).into_affine();
-
-        let pp = UniversalSrs {
-            powers_of_g,
-            h,
-            beta_h,
-            powers_of_h: vec![h, beta_h],
-        };
-        end_timer!(setup_time);
-        Ok(pp)
+        Ok(Self::UniversalSRS::gen_srs_for_testing(rng, max_degree)?)
     }
 
     /// Input a circuit and the SRS, precompute the proving key and verification

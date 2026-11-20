@@ -36,7 +36,7 @@ parallel = [
     "jf-rescue/parallel",
     "dep:rayon",
 ]
-test-srs = []
+test-srs = ["jf-pcs/test-srs"]
 
 [dependencies]
 ark-ec = { workspace = true }
@@ -73,6 +73,7 @@ ark-ed-on-bls12-377 = { workspace = true }
 ark-ed-on-bls12-381 = { workspace = true }
 ark-ed-on-bn254 = { workspace = true }
 hex = "^0.4.3"
+jf-pcs = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-pcs-v0.3.0", default-features = false, features = ["test-srs"] }
 rstest = "0.26.1"
 
 # Benchmarks
