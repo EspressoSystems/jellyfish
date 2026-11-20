@@ -67,8 +67,9 @@ pub type HasherMerkleTree<H, E> = GenericHasherMerkleTree<H, E, u64, 3>;
 /// Like [`HasherMerkleTree`] except with additional parameters.
 ///
 /// Additional parameters beyond [`HasherMerkleTree`]:
-/// - `I` is a [`Index`] data type that impls [`From<u64>`]. (eg. [`u64`],
-///   [`Field`](ark_ff::Field), etc.)
+/// - `I` is a [`Index`] data type that impls
+///   [`ToTraversalPath`](crate::ToTraversalPath). (eg. [`usize`], [`u32`],
+///   [`u64`], [`Field`](ark_ff::Field), etc.)
 /// - `ARITY` is a const generic. (eg. 2 for a binary tree, 3 for a trinary
 ///   tree, etc.)
 pub type GenericHasherMerkleTree<H, E, I, const ARITY: usize> =
