@@ -50,7 +50,8 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
         Ok(())
     }
 
-    // override default implementation since we want to use BigEndian serialization
+    // override default implementation since we want to use BigEndian
+    // serialization
     fn append_commitment<E, P>(
         &mut self,
         label: &'static [u8],
@@ -75,7 +76,8 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
         )
     }
 
-    // override default implementation since we want to use BigEndian serialization
+    // override default implementation since we want to use BigEndian
+    // serialization
     fn append_field_elem<E>(
         &mut self,
         label: &'static [u8],
@@ -128,11 +130,11 @@ impl<F: PrimeField> PlonkTranscript<F> for SolidityTranscript {
         // include [x]_2 G2 point from SRS
         // all G1 points from SRS are implicit reflected in committed polys
         //
-        // Since this is a fixed value, we don't need solidity-efficient serialization,
-        // we simply append the `to_bytes!()` which uses compressed, little-endian form
-        // instead of other proof-dependent field like number of public inputs or
-        // concrete polynomial commitments which uses uncompressed, big-endian
-        // form.
+        // Since this is a fixed value, we don't need solidity-efficient
+        // serialization, we simply append the `to_bytes!()` which uses
+        // compressed, little-endian form instead of other proof-dependent field
+        // like number of public inputs or concrete polynomial commitments which
+        // uses uncompressed, big-endian form.
         <Self as PlonkTranscript<F>>::append_message(
             self,
             b"SRS G2 element",

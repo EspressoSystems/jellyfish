@@ -225,7 +225,8 @@ where
             )?;
             state = RescueNonNativeGadget::<T, F>::rescue_permutation(self, state)?;
         }
-        // squeeze phase, but only a single output, can return directly from state
+        // squeeze phase, but only a single output, can return directly from
+        // state
         Ok(state.state[0])
     }
 
@@ -1049,7 +1050,8 @@ mod tests {
             *circuit.witness_mut(sponge_var[0].components().0) = witness;
         }
 
-        // If the data length is not a multiple of RATE==3 then an error is triggered
+        // If the data length is not a multiple of RATE==3 then an error is
+        // triggered
         let mut circuit = PlonkCircuit::<F>::new_ultra_plonk(RANGE_BIT_LEN_FOR_TEST);
 
         let size = 2 * CRHF_RATE + 1; // Non multiple of RATE

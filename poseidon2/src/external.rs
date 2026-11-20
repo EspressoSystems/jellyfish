@@ -27,8 +27,8 @@ impl MDSMat4 {
         let t0123 = t01 + t23;
         let t01123 = t0123 + x[1];
         let t01233 = t0123 + x[3];
-        // The order here is important. Need to overwrite x[0] and x[2] after x[1] and
-        // x[3].
+        // The order here is important. Need to overwrite x[0] and x[2] after
+        // x[1] and x[3].
         x[3] = t01233 + x[0].double(); // 3*x[0] + x[1] + x[2] + 2*x[3]
         x[1] = t01123 + x[2].double(); // x[0] + 2*x[1] + 3*x[2] + x[3]
         x[0] = t01123 + t01; // 2*x[0] + 3*x[1] + x[2] + x[3]
@@ -54,27 +54,29 @@ pub(super) fn matmul_external<F: PrimeField, const T: usize>(state: &mut [F; T])
             state[2] += sum;
         },
 
-        // NOTE: matching plonky3's behavior, differs from the Horizen Labs reference implementation
-        // and the paper's description (Sec 5.1 of https://eprint.iacr.org/2023/323.pdf), in which for T=4,
+        // NOTE: matching plonky3's behavior, differs from the Horizen Labs
+        // reference implementation and the paper's description (Sec 5.1 of https://eprint.iacr.org/2023/323.pdf), in which for T=4,
         // the circulant matrix is not applied.
 
         // Given a 4x4 MDS matrix M, we multiply by the `4N x 4N` matrix
         // `[[2M M  ... M], [M  2M ... M], ..., [M  M ... 2M]]`.
         4 | 8 | 12 | 16 | 20 | 24 => {
-            // First, we apply M_4 to each consecutive four elements of the state.
-            // In Appendix B's terminology, this replaces each x_i with x_i'.
+            // First, we apply M_4 to each consecutive four elements of the
+            // state. In Appendix B's terminology, this replaces each x_i with
+            // x_i'.
             for chunk in state.chunks_exact_mut(4) {
                 MDSMat4::matmul(chunk.try_into().unwrap());
             }
-            // Now, we apply the outer circulant matrix (to compute the y_i values).
+            // Now, we apply the outer circulant matrix (to compute the y_i
+            // values).
 
             // We first precompute the four sums of every four elements.
             let sums: [F; 4] =
                 core::array::from_fn(|k| (0..T).step_by(4).map(|j| state[j + k]).sum::<F>());
 
-            // The formula for each y_i involves 2x_i' term and x_j' terms for each j that
-            // equals i mod 4. In other words, we can add a single copy of x_i'
-            // to the appropriate one of our precomputed sums
+            // The formula for each y_i involves 2x_i' term and x_j' terms for
+            // each j that equals i mod 4. In other words, we can add a single
+            // copy of x_i' to the appropriate one of our precomputed sums
             state
                 .iter_mut()
                 .enumerate()

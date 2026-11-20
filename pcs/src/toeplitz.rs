@@ -315,7 +315,8 @@ mod tests {
         assert!(cir_matrix.fast_vec_mul(&bad_msg).is_err());
 
         // non power-of-two matrix fast mul should fail
-        let m = bad_msg.len(); // same dimension as the message, but not a power-of-two
+        let m = bad_msg.len(); // same dimension as the message, but not a
+                               // power-of-two
         let cir_matrix = CirculantMatrix::new((0..m).map(|_| Fr::rand(&mut rng)).collect());
 
         assert!(

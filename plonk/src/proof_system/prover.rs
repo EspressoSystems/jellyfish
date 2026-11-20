@@ -647,7 +647,8 @@ impl<E: Pairing> Prover<E> {
             {
                 *a += alpha_base * b;
             }
-            // update the random combiner for aggregating multiple proving instances
+            // update the random combiner for aggregating multiple proving
+            // instances
             if lookup_flag {
                 alpha_base *= alpha_7;
             } else {
@@ -744,7 +745,8 @@ impl<E: Pairing> Prover<E> {
                 });
 
         // The check that z(x) = 1 at point 1.
-        // (z(x)-1) * L1(x) * alpha^2 / Z_H(x) = (z(x)-1) * alpha^2 / (n * (x - 1))
+        // (z(x)-1) * L1(x) * alpha^2 / Z_H(x) = (z(x)-1) * alpha^2 / (n * (x -
+        // 1))
         let result_2 = challenges.alpha.square() * (*z_x - E::ScalarField::one())
             / (E::ScalarField::from(n as u64) * (eval_point - E::ScalarField::one()));
 
@@ -838,23 +840,24 @@ impl<E: Pairing> Prover<E> {
 
         // The check that h1(X) - h2(wX) = 0 at point w^{n-1}
         //
-        // Fh(X)/Z_H(X) = (Ln(X) * (h1(X) - h2(wX))) / Z_H(X) = (h1(X) - h2(wX)) *
-        // w^{n-1} / (n * (X - w^{n-1}))
+        // Fh(X)/Z_H(X) = (Ln(X) * (h1(X) - h2(wX))) / Z_H(X) = (h1(X) - h2(wX))
+        // * w^{n-1} / (n * (X - w^{n-1}))
         let term_h = (h_1_x - h_2_xw) * lagrange_n_coeff_div_vanish;
         let mut result_2 = alpha_power * term_h;
         alpha_power *= challenges.alpha;
 
         // The check that p(X) = 1 at point 1.
         //
-        // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X - 1))
+        // Fp1(X)/Z_H(X) = (L1(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) / (n * (X
+        // - 1))
         let term_p_1 = (p_x - E::ScalarField::one()) * lagrange_1_coeff_div_vanish;
         result_2 += alpha_power * term_p_1;
         alpha_power *= challenges.alpha;
 
         // The check that p(X) = 1 at point w^{n-1}.
         //
-        // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1} / (n *
-        // (X - w^{n-1}))
+        // Fp2(X)/Z_H(X) = (Ln(X) * (p(X) - 1)) / Z_H(X) = (p(X) - 1) * w^{n-1}
+        // / (n * (X - w^{n-1}))
         let term_p_2 = (p_x - E::ScalarField::one()) * lagrange_n_coeff_div_vanish;
         result_2 += alpha_power * term_p_2;
         alpha_power *= challenges.alpha;
@@ -862,10 +865,10 @@ impl<E: Pairing> Prover<E> {
         // The relation check between adjacent points on the vanishing set.
         // Delay the division of Z_H(X).
         //
-        // Fp3(X) = (X - w^{n-1}) * p(X) * (1+beta) * (gamma + merged_lookup(X)) *
-        // [gamma*(1+beta) + merged_table(X) + beta * merged_table(Xw)]
-        //        - (X - w^{n-1}) * p(Xw) * [gamma(1+beta) + h_1(X) + beta * h_1(Xw)] *
-        //          [gamma(1+beta) + h_2(X) + beta * h_2(Xw)]
+        // Fp3(X) = (X - w^{n-1}) * p(X) * (1+beta) * (gamma + merged_lookup(X))
+        // * [gamma*(1+beta) + merged_table(X) + beta * merged_table(Xw)]
+        //        - (X - w^{n-1}) * p(Xw) * [gamma(1+beta) + h_1(X) + beta *
+        //          h_1(Xw)] * [gamma(1+beta) + h_2(X) + beta * h_2(Xw)]
         let beta_plus_one = E::ScalarField::one() + challenges.beta;
         let gamma_mul_beta_plus_one = beta_plus_one * challenges.gamma;
         let term_p_3 = (eval_point - self.domain.group_gen_inv)

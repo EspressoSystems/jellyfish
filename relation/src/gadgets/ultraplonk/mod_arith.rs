@@ -578,7 +578,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // compute carry values
         //
         // c0' := c0 - 2^m is the carrier for |  z0 + w0p0 - x0y0  |,
-        // we define variable c0 rather than c0' because c0 is guaranteed to be positive
+        // we define variable c0 rather than c0' because c0 is guaranteed to be
+        // positive
         let x0y0_int = &x0_int * &y0_int;
         let z0_plus_p0w0_int = &z0_int + &p0_int * &w0_int;
         let c0_int = if z0_plus_p0w0_int >= x0y0_int {
@@ -589,8 +590,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
             &two_power_m_int - carry0_int
         };
 
-        // c1' := c1 - 2^{m+1} is the carrier for | z1 + w0p1 + w1p0 - x0y1 - x1y0 + c0|
-        // we define variable c1 rather than c1' because c1 is guaranteed to be positive
+        // c1' := c1 - 2^{m+1} is the carrier for | z1 + w0p1 + w1p0 - x0y1 -
+        // x1y0 + c0| we define variable c1 rather than c1' because c1 is
+        // guaranteed to be positive
         let a_int = &x0_int * &y1_int + &x1_int * &y0_int + &two_power_m_int;
         let b_int = &z1_int + &p0_int * &w1_int + &p1_int * &w0_int + &c0_int;
         let c1_int = if b_int >= a_int {
@@ -760,7 +762,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
         // compute carry values
         //
         // c0' := c0 - 2^m is the carrier for |  z0 + w0p0 - x0y0  |,
-        // we define variable c0 rather than c0' because c0 is guaranteed to be positive
+        // we define variable c0 rather than c0' because c0 is guaranteed to be
+        // positive
         let x0y0_int = &x0_int * &y0_int;
         let z0_plus_p0w0_int = &z0_int + &p0_int * &w0_int;
         let c0_int = if z0_plus_p0w0_int >= x0y0_int {
@@ -771,8 +774,9 @@ impl<F: PrimeField> PlonkCircuit<F> {
             &two_power_m_int - carry0_int
         };
 
-        // c1' := c1 - 2^{m+1} is the carrier for | z1 + w0p1 + w1p0 - x0y1 - x1y0 + c0|
-        // we define variable c1 rather than c1' because c1 is guaranteed to be positive
+        // c1' := c1 - 2^{m+1} is the carrier for | z1 + w0p1 + w1p0 - x0y1 -
+        // x1y0 + c0| we define variable c1 rather than c1' because c1 is
+        // guaranteed to be positive
         let a_int = &x0_int * &y1_int + &x1_int * &y0_int + &two_power_m_int;
         let b_int = &z1_int + &p0_int * &w1_int + &p1_int * &w0_int + &c0_int;
         let c1_int = if b_int >= a_int {

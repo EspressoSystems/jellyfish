@@ -86,8 +86,8 @@ where
         // both wires_poly_comms and split_quot_poly_comms are (GATE_WIDTH +1)
         // // Commitments, each point takes two base fields elements;
         // 3 individual commitment points;
-        // (GATE_WIDTH + 1) * 2 scalar fields in poly_evals are  converted to base
-        // fields.
+        // (GATE_WIDTH + 1) * 2 scalar fields in poly_evals are  converted to
+        // base fields.
         const TURBO_PLONK_LEN: usize = (GATE_WIDTH + 1) * 2 * 2 + 2 * 3 + (GATE_WIDTH + 1) * 2;
         if value.len() == TURBO_PLONK_LEN {
             // NOTE: for convenience, we slightly reordered our fields in Proof.

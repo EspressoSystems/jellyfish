@@ -137,7 +137,9 @@ mod mt_tests {
         assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
-        assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first 7 items will be inserted
+        assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first
+                                                          // 7 items will be
+                                                          // inserted
         assert_eq!(mt.num_leaves(), 9u64); // full merkle tree
 
         // Now unable to insert more data
@@ -402,7 +404,8 @@ mod mt_tests {
     }
 
     fn test_mt_collect_leaves_with_proofs_edge_cases_helper<F: RescueParameter>() {
-        // Height-0 tree (single leaf at the root): proof must be empty and verify.
+        // Height-0 tree (single leaf at the root): proof must be empty and
+        // verify.
         let single = [F::from(42u64)];
         let mt = RescueMerkleTree::<F>::from_elems(Some(0), single).unwrap();
         let commitment = mt.commitment();

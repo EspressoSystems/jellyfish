@@ -164,7 +164,8 @@ pub(crate) fn build_l<F: PrimeField>(
     let prefix_len = log2(points.len()) as usize;
     let mut uni_polys = Vec::new();
 
-    // 1.1 build the indexes and the univariate polys that go through the indexes
+    // 1.1 build the indexes and the univariate polys that go through the
+    // indexes
     let indexes: Vec<Vec<bool>> = (0..points.len())
         .map(|x| bit_decompose(x as u64, prefix_len))
         .collect();

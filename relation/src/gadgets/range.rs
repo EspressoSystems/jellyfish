@@ -29,8 +29,8 @@ impl<F: PrimeField> PlonkCircuit<F> {
     pub fn is_in_range(&mut self, a: Variable, bit_len: usize) -> Result<BoolVar, CircuitError> {
         let a_bit_le: Vec<BoolVar> = self.unpack(a, F::MODULUS_BIT_SIZE as usize)?;
         let a_bit_le: Vec<Variable> = a_bit_le.into_iter().map(|b| b.into()).collect();
-        // a is in range if and only if the bits in `a_bit_le[bit_len..]` are all
-        // zeroes.
+        // a is in range if and only if the bits in `a_bit_le[bit_len..]` are
+        // all zeroes.
         let higher_bit_sum = self.sum(&a_bit_le[bit_len..])?;
         self.is_zero(higher_bit_sum)
     }
@@ -114,20 +114,19 @@ impl<F: PrimeField> PlonkCircuit<F> {
                 bit_len
             )));
         }
-        // convert to variable in the circuit from the vector of boolean as binary
-        // representation
+        // convert to variable in the circuit from the vector of boolean as
+        // binary representation
         let a_bits_le: Vec<BoolVar> = a_bits_le
             .iter()
             .take(bit_len) // since little-endian, truncate would remove MSBs
-            .map(|&b| {
-                self.create_boolean_variable(b)
-            })
+            .map(|&b| self.create_boolean_variable(b))
             .collect::<Result<Vec<_>, CircuitError>>()?;
 
         // edge case: when decomposing a field to exactly MODULUS_BIT_SIZE,
-        // and when MODULUS < 2^MODULUS_BIT_SIZE (e.g. p=17, log2(p) = 5), then we need
-        // to rule out non-canonical representation of field elements (e.g.
-        // avoid bit-wise 18 to represent 1 mod 17) by making sure its always < MODULUS
+        // and when MODULUS < 2^MODULUS_BIT_SIZE (e.g. p=17, log2(p) = 5), then
+        // we need to rule out non-canonical representation of field elements
+        // (e.g. avoid bit-wise 18 to represent 1 mod 17) by making sure its
+        // always < MODULUS
         if bit_len == F::MODULUS_BIT_SIZE as usize {
             self.binary_decomposition_gate_with_canonical_check(a_bits_le.clone(), a)?;
         } else {
@@ -234,8 +233,8 @@ mod test {
         assert!(circuit.enforce_in_range(a, 0).is_err());
         // non-positive bit length is undefined, thus fail
         assert!(circuit.enforce_in_range(a, 0).is_err());
-        // bit length bigger than that of a field element (bit length takes 256 or 381
-        // bits)
+        // bit length bigger than that of a field element (bit length takes 256
+        // or 381 bits)
         let bit_len = (F::MODULUS_BIT_SIZE as usize / 8 + 1) * 8;
         assert!(circuit.enforce_in_range(a, bit_len + 1).is_err());
         // if mess up the wire value, should fail
@@ -244,9 +243,9 @@ mod test {
         // Check variable out of bound error.
         assert!(circuit.enforce_in_range(circuit.num_vars(), 10).is_err());
 
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
+        // build two fixed circuits with different variable assignments,
+        // checking that the arithmetized extended permutation polynomial is
+        // variable independent
         let circuit_1 = build_range_gate_circuit(F::from(314u32))?;
         let circuit_2 = build_range_gate_circuit(F::from(489u32))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
@@ -287,9 +286,9 @@ mod test {
         // Check variable out of bound error.
         assert!(circuit.is_in_range(circuit.num_vars(), 10).is_err());
 
-        // build two fixed circuits with different variable assignments, checking that
-        // the arithmetized extended permutation polynomial is variable
-        // independent
+        // build two fixed circuits with different variable assignments,
+        // checking that the arithmetized extended permutation polynomial is
+        // variable independent
         let circuit_1 = build_check_in_range_circuit(F::from(314u32))?;
         let circuit_2 = build_check_in_range_circuit(F::from(1489u32))?;
         test_variable_independence_for_circuit(circuit_1, circuit_2)?;
@@ -325,8 +324,8 @@ mod test {
             bit_len: usize,
         ) -> Result<Vec<BoolVar>, CircuitError> {
             self.check_var_bound(a)?;
-            // DIFF: this is only diff, directly accessing `.0` of Fp which avoid the
-            // canonicalization during `.into_bigint()`
+            // DIFF: this is only diff, directly accessing `.0` of Fp which
+            // avoid the canonicalization during `.into_bigint()`
             let a_bits_le: Vec<bool> = self.witness(a)?.0.to_bits_le();
             let a_bits_le: Vec<BoolVar> = a_bits_le
                 .iter()
@@ -338,7 +337,8 @@ mod test {
             Ok(a_bits_le)
         }
 
-        // fixing the vulnerable unpack by using a the gate `_with_canonical_check`
+        // fixing the vulnerable unpack by using a the gate
+        // `_with_canonical_check`
         fn fixed_unpack(
             &mut self,
             a: Variable,
@@ -364,7 +364,8 @@ mod test {
         // showcasing the vulnerability
         let mut circuit = PlonkCircuit::<F17>::new_turbo_plonk();
 
-        // a mod p = 1, but non-canonical representation with actual integer value of 18
+        // a mod p = 1, but non-canonical representation with actual integer
+        // value of 18
         let a: F17 = unsafe {
             let mut x = MaybeUninit::<F17>::uninit();
             // directly write the BigInt [18] into the inner field storage

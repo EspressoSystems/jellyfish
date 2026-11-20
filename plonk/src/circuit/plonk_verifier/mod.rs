@@ -330,13 +330,14 @@ mod test {
         },
         transcript::{PlonkTranscript, RescueTranscript},
     };
-    use ark_bls12_377::{g1::Config as Param377, Bls12_377, Fq as Fq377};
+    use ark_bls12_377::{g1::Config as Param377, Bls12_377, Fq as Fq377, Fr as Fr377};
     use ark_ec::{short_weierstrass::SWCurveConfig, twisted_edwards::TECurveConfig, CurveGroup};
     use ark_std::{vec, UniformRand};
     use jf_relation::{
         gadgets::test_utils::test_variable_independence_for_circuit, MergeableCircuitType,
     };
     use jf_utils::{field_switching, test_rng};
+    use rstest::rstest;
 
     const RANGE_BIT_LEN_FOR_TEST: usize = 16;
 
@@ -454,231 +455,224 @@ mod test {
         assert_eq!(vk_var.is_merged, vk.is_merged);
     }
 
-    #[test]
-    fn test_partial_verification_circuit() -> Result<(), CircuitError> {
-        test_partial_verification_circuit_helper::<Bls12_377, _, _, RescueTranscript<_>>()
-    }
-
-    fn test_partial_verification_circuit_helper<E, F, P, T>() -> Result<(), CircuitError>
-    where
-        E: Pairing<BaseField = F, G1Affine = Affine<P>>,
-        F: RescueParameter + SWToTEConParam,
-        P: SWCurveConfig<BaseField = F> + TECurveConfig,
-        T: PlonkTranscript<F>,
-    {
+    #[rstest]
+    fn test_partial_verification_circuit(
+        #[values(8, 9, 10, 11)] log_circuit_size: usize,
+    ) -> Result<(), CircuitError> {
         let rng = &mut test_rng();
 
-        for log_circuit_size in 8..12 {
+        // =======================================
+        // setup
+        // =======================================
+
+        // 1. Simulate universal setup
+        let n = 1 << log_circuit_size;
+        let max_degree = n + 2;
+        let srs = PlonkKzgSnark::<Bls12_377>::universal_setup_for_testing(max_degree, rng)?;
+
+        // 2. Setup instances
+        let shared_public_input = Fr377::rand(rng);
+        let mut instances_type_a = vec![];
+        let mut instances_type_b = vec![];
+        for i in 32..50 {
+            let circuit = new_mergeable_circuit_for_test::<Bls12_377>(
+                shared_public_input,
+                i,
+                MergeableCircuitType::TypeA,
+            )?;
+            let instance =
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeA)?;
+            instances_type_a.push(instance);
+
+            let circuit = new_mergeable_circuit_for_test::<Bls12_377>(
+                shared_public_input,
+                i,
+                MergeableCircuitType::TypeB,
+            )?;
+            let instance =
+                BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeB)?;
+            instances_type_b.push(instance);
+        }
+        // 3. Batch Proving
+        let batch_proof = BatchArgument::batch_prove::<_, RescueTranscript<Fq377>>(
+            rng,
+            &instances_type_a,
+            &instances_type_b,
+        )?;
+
+        // 4. Aggregate verification keys
+        let vks_type_a: Vec<&VerifyingKey<Bls12_377>> = instances_type_a
+            .iter()
+            .map(|pred| pred.verify_key_ref())
+            .collect();
+        let vks_type_b: Vec<&VerifyingKey<Bls12_377>> = instances_type_b
+            .iter()
+            .map(|pred| pred.verify_key_ref())
+            .collect();
+        let merged_vks = BatchArgument::aggregate_verify_keys(&vks_type_a, &vks_type_b)?;
+        // error path: inconsistent length between vks_type_a and vks_type_b
+        assert!(BatchArgument::aggregate_verify_keys(&vks_type_a[1..], &vks_type_b).is_err());
+
+        // 5. Verification
+        let open_key_ref = &vks_type_a[0].open_key;
+        let beta_g_ref = &srs.powers_of_g[1];
+        let blinding_factor = Fr377::rand(rng);
+        let (inner1, inner2) = BatchArgument::partial_verify::<RescueTranscript<Fq377>>(
+            beta_g_ref,
+            &open_key_ref.g,
+            &merged_vks,
+            &[shared_public_input],
+            &batch_proof,
+            blinding_factor,
+        )?;
+        assert!(BatchArgument::decide(open_key_ref, inner1, inner2)?);
+
+        {
             // =======================================
-            // setup
+            // good path
             // =======================================
+            let public_inputs = [[field_switching(&shared_public_input)].as_ref()].concat();
 
-            // 1. Simulate universal setup
-            let n = 1 << log_circuit_size;
-            let max_degree = n + 2;
-            let srs = PlonkKzgSnark::<E>::universal_setup_for_testing(max_degree, rng)?;
-
-            // 2. Setup instances
-            let shared_public_input = E::ScalarField::rand(rng);
-            let mut instances_type_a = vec![];
-            let mut instances_type_b = vec![];
-            for i in 32..50 {
-                let circuit = new_mergeable_circuit_for_test::<E>(
-                    shared_public_input,
-                    i,
-                    MergeableCircuitType::TypeA,
-                )?;
-                let instance =
-                    BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeA)?;
-                instances_type_a.push(instance);
-
-                let circuit = new_mergeable_circuit_for_test::<E>(
-                    shared_public_input,
-                    i,
-                    MergeableCircuitType::TypeB,
-                )?;
-                let instance =
-                    BatchArgument::setup_instance(&srs, circuit, MergeableCircuitType::TypeB)?;
-                instances_type_b.push(instance);
-            }
-            // 3. Batch Proving
-            let batch_proof =
-                BatchArgument::batch_prove::<_, T>(rng, &instances_type_a, &instances_type_b)?;
-
-            // 4. Aggregate verification keys
-            let vks_type_a: Vec<&VerifyingKey<E>> = instances_type_a
-                .iter()
-                .map(|pred| pred.verify_key_ref())
-                .collect();
-            let vks_type_b: Vec<&VerifyingKey<E>> = instances_type_b
-                .iter()
-                .map(|pred| pred.verify_key_ref())
-                .collect();
-            let merged_vks = BatchArgument::aggregate_verify_keys(&vks_type_a, &vks_type_b)?;
-            // error path: inconsistent length between vks_type_a and vks_type_b
-            assert!(BatchArgument::aggregate_verify_keys(&vks_type_a[1..], &vks_type_b).is_err());
-
-            // 5. Verification
-            let open_key_ref = &vks_type_a[0].open_key;
-            let beta_g_ref = &srs.powers_of_g[1];
-            let blinding_factor = E::ScalarField::rand(rng);
-            let (inner1, inner2) = BatchArgument::partial_verify::<T>(
+            let (mut circuit, partial_verify_points) = build_circuit::<Bls12_377, Fq377, Param377>(
+                &shared_public_input,
+                &merged_vks,
+                &batch_proof,
                 beta_g_ref,
                 &open_key_ref.g,
-                &merged_vks,
-                &[shared_public_input],
-                &batch_proof,
-                blinding_factor,
+                &blinding_factor,
             )?;
-            assert!(BatchArgument::decide(open_key_ref, inner1, inner2)?);
 
-            {
-                // =======================================
-                // good path
-                // =======================================
-                let public_inputs = [[field_switching(&shared_public_input)].as_ref()].concat();
+            assert!(
+                circuit.check_circuit_satisfiability(&public_inputs).is_ok(),
+                "{:?}",
+                circuit.check_circuit_satisfiability(&public_inputs)
+            );
+            assert_eq!(
+                circuit.point_witness(&partial_verify_points.0)?,
+                TEPoint::<Fq377>::from(inner1.into_affine())
+            );
+            assert_eq!(
+                circuit.point_witness(&partial_verify_points.1)?,
+                TEPoint::<Fq377>::from(inner2.into_affine())
+            );
 
-                let (mut circuit, partial_verify_points) = build_circuit::<E, F, P>(
-                    &shared_public_input,
-                    &merged_vks,
-                    &batch_proof,
-                    beta_g_ref,
-                    &open_key_ref.g,
-                    &blinding_factor,
-                )?;
+            // ark_std::println!("#variables: {}", circuit.num_vars());
+            // ark_std::println!("#constraints: {}\n", circuit.num_gates());
 
-                assert!(
-                    circuit.check_circuit_satisfiability(&public_inputs).is_ok(),
-                    "{:?}",
-                    circuit.check_circuit_satisfiability(&public_inputs)
-                );
-                assert_eq!(
-                    circuit.point_witness(&partial_verify_points.0)?,
-                    TEPoint::<F>::from(inner1.into_affine())
-                );
-                assert_eq!(
-                    circuit.point_witness(&partial_verify_points.1)?,
-                    TEPoint::<F>::from(inner2.into_affine())
-                );
+            // =======================================
+            // bad path: wrong pub inputs
+            // =======================================
+            // instance inputs = partial verify inputs != satisfiability inputs
+            let wrong_public_inputs = [[Fq377::rand(rng)].as_ref()].concat();
+            assert!(circuit
+                .check_circuit_satisfiability(&wrong_public_inputs)
+                .is_err(),);
 
-                // ark_std::println!("#variables: {}", circuit.num_vars());
-                // ark_std::println!("#constraints: {}\n", circuit.num_gates());
+            // =======================================
+            // bad path: wrong number of pub inputs
+            // =======================================
+            let wrong_public_inputs =
+                [[field_switching(&shared_public_input); 3].as_ref()].concat();
+            assert!(circuit
+                .check_circuit_satisfiability(&wrong_public_inputs)
+                .is_err(),);
 
-                // =======================================
-                // bad path: wrong pub inputs
-                // =======================================
-                // instance inputs = partial verify inputs != satisfiability inputs
-                let wrong_public_inputs = [[F::rand(rng)].as_ref()].concat();
-                assert!(circuit
-                    .check_circuit_satisfiability(&wrong_public_inputs)
-                    .is_err(),);
+            // =======================================
+            // bad path: wrong witness
+            // =======================================
+            *circuit.witness_mut(10) = Fq377::from(0u32);
+            assert!(circuit
+                .check_circuit_satisfiability(&public_inputs)
+                .is_err());
+        }
+        // ==============================================
+        // more bad path: wrong inputs length
+        // ==============================================
+        {
+            // wrong vks length (less by 1)
+            // should not be able to generate circuit
+            let mut wrong_merge_vks = merged_vks.clone();
+            let tmp = wrong_merge_vks.pop().unwrap();
+            assert!(build_circuit::<Bls12_377, Fq377, Param377>(
+                &shared_public_input,
+                &wrong_merge_vks,
+                &batch_proof,
+                beta_g_ref,
+                &open_key_ref.g,
+                &blinding_factor,
+            )
+            .is_err());
 
-                // =======================================
-                // bad path: wrong number of pub inputs
-                // =======================================
-                let wrong_public_inputs =
-                    [[field_switching(&shared_public_input); 3].as_ref()].concat();
-                assert!(circuit
-                    .check_circuit_satisfiability(&wrong_public_inputs)
-                    .is_err(),);
+            // wrong vks length (more by 1)
+            // should not be able to generate circuit
+            let mut wrong_merge_vks = merged_vks.clone();
+            wrong_merge_vks.push(tmp);
+            assert!(build_circuit::<Bls12_377, Fq377, Param377>(
+                &shared_public_input,
+                &wrong_merge_vks,
+                &batch_proof,
+                beta_g_ref,
+                &open_key_ref.g,
+                &blinding_factor,
+            )
+            .is_err());
+        }
 
-                // =======================================
-                // bad path: wrong witness
-                // =======================================
-                *circuit.witness_mut(10) = F::from(0u32);
-                assert!(circuit
+        // ==============================================
+        // more bad path: wrong inputs to the function
+        // ==============================================
+        {
+            // wrong shared input, the circuit is not satisfied
+            // instance inputs = satisfiability inputs != partial verify inputs
+            let public_inputs = [[field_switching(&shared_public_input)].as_ref()].concat();
+            let wrong_shared_public_input = Fr377::rand(rng);
+            let (circuit, partial_verify_points) = build_circuit::<Bls12_377, Fq377, Param377>(
+                &wrong_shared_public_input,
+                &merged_vks,
+                &batch_proof,
+                beta_g_ref,
+                &open_key_ref.g,
+                &blinding_factor,
+            )?;
+
+            assert!(
+                circuit
                     .check_circuit_satisfiability(&public_inputs)
-                    .is_err());
-            }
-            // ==============================================
-            // more bad path: wrong inputs length
-            // ==============================================
-            {
-                // wrong vks length (less by 1)
-                // should not be able to generate circuit
-                let mut wrong_merge_vks = merged_vks.clone();
-                let tmp = wrong_merge_vks.pop().unwrap();
-                assert!(build_circuit::<E, F, P>(
-                    &shared_public_input,
-                    &wrong_merge_vks,
-                    &batch_proof,
-                    beta_g_ref,
-                    &open_key_ref.g,
-                    &blinding_factor,
-                )
-                .is_err());
+                    .is_err(),
+                "{:?}",
+                circuit.check_circuit_satisfiability(public_inputs.as_ref())
+            );
+            assert_ne!(
+                circuit.point_witness(&partial_verify_points.0)?,
+                TEPoint::<Fq377>::from(inner1.into_affine())
+            );
+            assert_ne!(
+                circuit.point_witness(&partial_verify_points.1)?,
+                TEPoint::<Fq377>::from(inner2.into_affine())
+            );
 
-                // wrong vks length (more by 1)
-                // should not be able to generate circuit
-                let mut wrong_merge_vks = merged_vks.clone();
-                wrong_merge_vks.push(tmp);
-                assert!(build_circuit::<E, F, P>(
-                    &shared_public_input,
-                    &wrong_merge_vks,
-                    &batch_proof,
-                    beta_g_ref,
-                    &open_key_ref.g,
-                    &blinding_factor,
-                )
-                .is_err());
-            }
-
-            // ==============================================
-            // more bad path: wrong inputs to the function
-            // ==============================================
-            {
-                // wrong shared input, the circuit is not satisfied
-                // instance inputs = satisfiability inputs != partial verify inputs
-                let public_inputs = [[field_switching(&shared_public_input)].as_ref()].concat();
-                let wrong_shared_public_input = E::ScalarField::rand(rng);
-                let (circuit, partial_verify_points) = build_circuit::<E, F, P>(
-                    &wrong_shared_public_input,
-                    &merged_vks,
-                    &batch_proof,
-                    beta_g_ref,
-                    &open_key_ref.g,
-                    &blinding_factor,
-                )?;
-
-                assert!(
-                    circuit
-                        .check_circuit_satisfiability(&public_inputs)
-                        .is_err(),
-                    "{:?}",
-                    circuit.check_circuit_satisfiability(public_inputs.as_ref())
-                );
-                assert_ne!(
-                    circuit.point_witness(&partial_verify_points.0)?,
-                    TEPoint::<F>::from(inner1.into_affine())
-                );
-                assert_ne!(
-                    circuit.point_witness(&partial_verify_points.1)?,
-                    TEPoint::<F>::from(inner2.into_affine())
-                );
-
-                // wrong shared input and circuit input
-                // instance inputs != partial verify inputs = satisfiability inputs
-                // the circuit is satisfied because partial verify inputs = satisfiability
-                // inputs both output must be different so it will not verify
-                // original instance
-                let wrong_public_inputs =
-                    [[field_switching(&wrong_shared_public_input)].as_ref()].concat();
-                assert!(
-                    circuit
-                        .check_circuit_satisfiability(&wrong_public_inputs)
-                        .is_ok(),
-                    "{:?}",
-                    circuit.check_circuit_satisfiability(wrong_public_inputs.as_ref())
-                );
-                assert_ne!(
-                    circuit.point_witness(&partial_verify_points.0)?,
-                    TEPoint::<F>::from(inner1.into_affine())
-                );
-                assert_ne!(
-                    circuit.point_witness(&partial_verify_points.1)?,
-                    TEPoint::<F>::from(inner2.into_affine())
-                );
-            }
+            // wrong shared input and circuit input
+            // instance inputs != partial verify inputs = satisfiability inputs
+            // the circuit is satisfied because partial verify inputs =
+            // satisfiability inputs both output must be different so it will
+            // not verify original instance
+            let wrong_public_inputs =
+                [[field_switching(&wrong_shared_public_input)].as_ref()].concat();
+            assert!(
+                circuit
+                    .check_circuit_satisfiability(&wrong_public_inputs)
+                    .is_ok(),
+                "{:?}",
+                circuit.check_circuit_satisfiability(wrong_public_inputs.as_ref())
+            );
+            assert_ne!(
+                circuit.point_witness(&partial_verify_points.0)?,
+                TEPoint::<Fq377>::from(inner1.into_affine())
+            );
+            assert_ne!(
+                circuit.point_witness(&partial_verify_points.1)?,
+                TEPoint::<Fq377>::from(inner2.into_affine())
+            );
         }
 
         Ok(())
