@@ -6,4 +6,7 @@ ignore = [
     "RUSTSEC-2024-0436",
     # `tracing-subscriber` doesn't rule out poisoning logs. But we are not using it.
     "RUSTSEC-2025-0055",
+    # WARNING: crate `bincode` unmaintained (1.3.3 considered complete upstream).
+    # Only a dev-dependency of `jf-aead` and `jf-merkle-tree`, used in serde round-trip tests.
+    "RUSTSEC-2025-0141",
 ]
