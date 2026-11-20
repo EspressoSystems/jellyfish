@@ -3,16 +3,6 @@
 version = 3
 
 [[package]]
-name = "aead"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d122413f284cf2d62fb1b7db97e02edb8cda96d769b16e443a4f6195e35662b0"
-dependencies = [
- "crypto-common",
- "generic-array",
-]
-
-[[package]]
 name = "ahash"
 version = "0.8.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -477,12 +467,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
-name = "base16ct"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
-
-[[package]]
 name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -602,30 +586,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
-name = "chacha20"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3613f74bd2eac03dad61bd53dbe620703d4371614fe0bc3b9f04dd36fe4e818"
-dependencies = [
- "cfg-if",
- "cipher",
- "cpufeatures",
-]
-
-[[package]]
-name = "chacha20poly1305"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10cd79432192d1c0f4e1a0fef9527696cc039165d729fb41b3f4f4f354c2dc35"
-dependencies = [
- "aead",
- "chacha20",
- "cipher",
- "poly1305",
- "zeroize",
-]
-
-[[package]]
 name = "ciborium"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -650,17 +610,6 @@ checksum = "57663b653d948a338bfb3eeba9bb2fd5fcfaecb9e199e87e1eda4d9e8b240fd9"
 dependencies = [
  "ciborium-io",
  "half",
-]
-
-[[package]]
-name = "cipher"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
-dependencies = [
- "crypto-common",
- "inout",
- "zeroize",
 ]
 
 [[package]]
@@ -807,46 +756,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
 dependencies = [
  "generic-array",
- "rand_core",
  "typenum",
-]
-
-[[package]]
-name = "crypto_kx"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "704722d1d929489c8528bb1882805700f1ba20f54325704973e786352320b1ed"
-dependencies = [
- "blake2",
- "curve25519-dalek",
- "rand_core",
- "serdect",
-]
-
-[[package]]
-name = "curve25519-dalek"
-version = "4.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97fb8b7c4503de7d6ae7b42ab72a5a59857b4c937ec27a3d4539dba95b5ab2be"
-dependencies = [
- "cfg-if",
- "cpufeatures",
- "curve25519-dalek-derive",
- "fiat-crypto",
- "rustc_version",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "curve25519-dalek-derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f46882e17999c6cc590af592290432be3bce0428cb0d5f8b6715e4dc7b383eb3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
 ]
 
 [[package]]
@@ -953,12 +863,6 @@ checksum = "00d174d5400e5e8fd687ad1049e2f578285fa914201b1af7e8b112a4546bd826"
 name = "espresso-systems-common"
 version = "0.4.0"
 source = "git+https://github.com/espressosystems/espresso-systems-common?tag=0.4.0#5abd890f79014a86db31286e1f3a529f161e69de"
-
-[[package]]
-name = "fiat-crypto"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "find-msvc-tools"
@@ -1150,15 +1054,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inout"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "879f10e63c20629ecabbb64a8010319738c66a5cd0c29b02d63d272b03751d01"
-dependencies = [
- "generic-array",
-]
-
-[[package]]
 name = "is-terminal"
 version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1203,21 +1098,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3bd1574e617a9a6c1f8f8181bd7e841e1f20e4277607ef28945765188d6284d4"
 
 [[package]]
-name = "jf-aead"
-version = "0.2.0"
-dependencies = [
- "ark-serialize 0.5.0",
- "ark-std 0.5.0",
- "bincode",
- "chacha20poly1305",
- "crypto_kx",
- "displaydoc",
- "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
- "rand_chacha",
- "serde",
-]
-
-[[package]]
 name = "jf-commitment"
 version = "0.2.0"
 dependencies = [
@@ -1247,27 +1127,6 @@ source = "git+https://github.com/EspressoSystems/jellyfish?tag=jf-crhf-v0.2.0#f1
 dependencies = [
  "ark-serialize 0.5.0",
  "ark-std 0.5.0",
-]
-
-[[package]]
-name = "jf-elgamal"
-version = "0.3.0"
-dependencies = [
- "ark-ec 0.5.0",
- "ark-ed-on-bls12-377",
- "ark-ed-on-bls12-381",
- "ark-ed-on-bls12-381-bandersnatch",
- "ark-ed-on-bn254",
- "ark-ff 0.5.0",
- "ark-serialize 0.5.0",
- "ark-std 0.5.0",
- "derive-where",
- "displaydoc",
- "jf-relation 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-relation-v0.5.0)",
- "jf-rescue 0.3.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-rescue-v0.3.0)",
- "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
- "rayon",
- "zeroize",
 ]
 
 [[package]]
@@ -1495,31 +1354,6 @@ dependencies = [
 
 [[package]]
 name = "jf-rescue"
-version = "0.2.0"
-source = "git+https://github.com/EspressoSystems/jellyfish?tag=jf-rescue-v0.2.0#f1538793f7f0e391495cb17bbb0c8703ec5f689d"
-dependencies = [
- "ark-bls12-377",
- "ark-bls12-381",
- "ark-bn254 0.5.0",
- "ark-bw6-761",
- "ark-ed-on-bls12-377",
- "ark-ed-on-bls12-381",
- "ark-ed-on-bn254",
- "ark-ff 0.5.0",
- "ark-std 0.5.0",
- "displaydoc",
- "itertools 0.12.1",
- "jf-commitment 0.2.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-commitment-v0.2.0)",
- "jf-crhf 0.2.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-crhf-v0.2.0)",
- "jf-prf 0.2.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-prf-v0.2.0)",
- "jf-relation 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-relation-v0.5.0)",
- "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
- "spongefish",
- "zeroize",
-]
-
-[[package]]
-name = "jf-rescue"
 version = "0.3.0"
 dependencies = [
  "ark-bls12-377",
@@ -1566,36 +1400,6 @@ dependencies = [
  "jf-relation 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-relation-v0.5.0)",
  "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
  "spongefish",
- "zeroize",
-]
-
-[[package]]
-name = "jf-signature"
-version = "0.3.0"
-source = "git+https://github.com/EspressoSystems/jellyfish?tag=jf-signature-v0.3.0#f1538793f7f0e391495cb17bbb0c8703ec5f689d"
-dependencies = [
- "ark-bls12-381",
- "ark-bn254 0.5.0",
- "ark-ec 0.5.0",
- "ark-ff 0.5.0",
- "ark-serialize 0.5.0",
- "ark-std 0.5.0",
- "blst",
- "derivative",
- "digest",
- "displaydoc",
- "getrandom",
- "hashbrown 0.14.5",
- "itertools 0.12.1",
- "jf-crhf 0.2.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-crhf-v0.2.0)",
- "jf-relation 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-relation-v0.5.0)",
- "jf-rescue 0.2.0",
- "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
- "num-bigint",
- "num-traits",
- "serde",
- "sha3",
- "tagged-base64",
  "zeroize",
 ]
 
@@ -1680,20 +1484,6 @@ dependencies = [
  "serde",
  "sha2",
  "tagged-base64",
-]
-
-[[package]]
-name = "jf-vrf"
-version = "0.3.0"
-dependencies = [
- "ark-std 0.5.0",
- "digest",
- "displaydoc",
- "jf-signature 0.3.0",
- "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
- "serde",
- "sha2",
- "zeroize",
 ]
 
 [[package]]
@@ -1829,12 +1619,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
-name = "opaque-debug"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
-
-[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1872,17 +1656,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51bae2ac328883f7acdfea3d66a7c35751187f870bc81f94563733a154d7a670"
 dependencies = [
  "plotters-backend",
-]
-
-[[package]]
-name = "poly1305"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8159bd90725d2df49889a078b54f4f79e87f1f8a8444194cdca81d38f5393abf"
-dependencies = [
- "cpufeatures",
- "opaque-debug",
- "universal-hash",
 ]
 
 [[package]]
@@ -2122,16 +1895,6 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
-]
-
-[[package]]
-name = "serdect"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a84f14a19e9a014bb9f4512488d9829a68e04ecabffb0f9904cd1ace94598177"
-dependencies = [
- "base16ct",
- "serde",
 ]
 
 [[package]]
@@ -2392,16 +2155,6 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
-
-[[package]]
-name = "universal-hash"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc1de2c688dc15305988b563c3854064043356019f97a4b46276fe734c4f07ea"
-dependencies = [
- "crypto-common",
- "subtle",
-]
 
 [[package]]
 name = "valuable"
