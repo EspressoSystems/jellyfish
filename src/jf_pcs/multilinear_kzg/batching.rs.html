@@ -253,7 +253,7 @@
 <a href=#253 id=253 data-nosnippet>253</a>            value,
 <a href=#254 id=254 data-nosnippet>254</a>            <span class="kw-2">&amp;</span>batch_proof.q_x_opens[i],
 <a href=#255 id=255 data-nosnippet>255</a>        )<span class="question-mark">? </span>{
-<a href=#256 id=256 data-nosnippet>256</a>            <span class="attr">#[cfg(debug_assertions)]
+<a href=#256 id=256 data-nosnippet>256</a>            <span class="attr">#[cfg(all(debug_assertions, feature = <span class="string">"std"</span>))]
 <a href=#257 id=257 data-nosnippet>257</a>            </span><span class="macro">ark_std::println!</span>(<span class="string">"q(omega^{}) verification failed"</span>, i);
 <a href=#258 id=258 data-nosnippet>258</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
 <a href=#259 id=259 data-nosnippet>259</a>        }
@@ -266,7 +266,7 @@
 <a href=#266 id=266 data-nosnippet>266</a>        <span class="kw-2">&amp;</span>values[points_len],
 <a href=#267 id=267 data-nosnippet>267</a>        <span class="kw-2">&amp;</span>batch_proof.q_x_opens[points_len],
 <a href=#268 id=268 data-nosnippet>268</a>    )<span class="question-mark">? </span>{
-<a href=#269 id=269 data-nosnippet>269</a>        <span class="attr">#[cfg(debug_assertions)]
+<a href=#269 id=269 data-nosnippet>269</a>        <span class="attr">#[cfg(all(debug_assertions, feature = <span class="string">"std"</span>))]
 <a href=#270 id=270 data-nosnippet>270</a>        </span><span class="macro">ark_std::println!</span>(<span class="string">"q(r) verification failed"</span>);
 <a href=#271 id=271 data-nosnippet>271</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
 <a href=#272 id=272 data-nosnippet>272</a>    }
@@ -287,7 +287,7 @@
 <a href=#287 id=287 data-nosnippet>287</a>        <span class="kw-2">&amp;</span>batch_proof.proof,
 <a href=#288 id=288 data-nosnippet>288</a>    )<span class="question-mark">?</span>;
 <a href=#289 id=289 data-nosnippet>289</a>
-<a href=#290 id=290 data-nosnippet>290</a>    <span class="attr">#[cfg(debug_assertions)]
+<a href=#290 id=290 data-nosnippet>290</a>    <span class="attr">#[cfg(all(debug_assertions, feature = <span class="string">"std"</span>))]
 <a href=#291 id=291 data-nosnippet>291</a>    </span><span class="kw">if </span>!res {
 <a href=#292 id=292 data-nosnippet>292</a>        <span class="macro">ark_std::println!</span>(<span class="string">"multilinear KZG verification failed"</span>);
 <a href=#293 id=293 data-nosnippet>293</a>    }
