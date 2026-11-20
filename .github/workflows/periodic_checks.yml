@@ -19,3 +19,18 @@ jobs:
         uses: aig787/cargo-udeps-action@v1
         with:
           args: "--workspace --all-targets --features 'test-srs test-apis bls schnorr gadgets'"
+
+  feature-powerset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-hack
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check feature powerset (depth 2)
+        run: just check-feature-powerset

@@ -253,7 +253,7 @@ pub(super) fn batch_verify_internal<E: Pairing>(
             value,
             &batch_proof.q_x_opens[i],
         )? {
-            #[cfg(debug_assertions)]
+            #[cfg(all(debug_assertions, feature = "std"))]
             ark_std::println!("q(omega^{}) verification failed", i);
             return Ok(false);
         }
@@ -266,7 +266,7 @@ pub(super) fn batch_verify_internal<E: Pairing>(
         &values[points_len],
         &batch_proof.q_x_opens[points_len],
     )? {
-        #[cfg(debug_assertions)]
+        #[cfg(all(debug_assertions, feature = "std"))]
         ark_std::println!("q(r) verification failed");
         return Ok(false);
     }
@@ -287,7 +287,7 @@ pub(super) fn batch_verify_internal<E: Pairing>(
         &batch_proof.proof,
     )?;
 
-    #[cfg(debug_assertions)]
+    #[cfg(all(debug_assertions, feature = "std"))]
     if !res {
         ark_std::println!("multilinear KZG verification failed");
     }
