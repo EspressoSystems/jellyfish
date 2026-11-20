@@ -24,9 +24,6 @@ check-features:
 no-std:
     RUSTFLAGS='{{no_std_rustflags}}' cargo check --no-default-features --features 'bls schnorr gadgets'
 
-wasm:
-    RUSTFLAGS='{{no_std_rustflags}}' cargo build --target wasm32-unknown-unknown --no-default-features --features 'bls schnorr gadgets'
-
 [positional-arguments]
 test *args:
     cargo nextest run --no-fail-fast --workspace --features '{{features}}' "$@"
