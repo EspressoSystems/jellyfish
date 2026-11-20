@@ -36,6 +36,18 @@ The `jf-vid` crate is now moved to another repo [`jf-advz`](https://github.com/E
 - [`jf-relation`](relation): Jellyfish constraint system for PLONK.
 - [`jf-plonk`](plonk): KZG-PCS based TurboPlonk and UltraPlonk implementations.
 
+## Using jellyfish in dev builds
+
+Jellyfish does heavy finite field and elliptic curve arithmetic, which is very slow when compiled without optimizations. Cargo profile settings only apply at the top-level workspace, so jellyfish's own `[profile.dev]` has no effect on downstream crates. Rather than building everything with `--release`, downstream projects can optimize only their dependencies in the dev profile:
+
+```toml
+# In your workspace Cargo.toml
+[profile.dev.package."*"]
+opt-level = 3
+```
+
+Dependencies are compiled once and cached, so this barely affects incremental build times while giving near-release runtime performance. To narrow the scope, list specific packages instead (e.g. `[profile.dev.package.jf-plonk]`, `[profile.dev.package.ark-ff]`, ...).
+
 ## Development environment setup
 
 We recommend the following tools:
