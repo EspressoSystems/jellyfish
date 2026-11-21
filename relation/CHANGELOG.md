@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes
 
 - [#843](https://github.com/EspressoSystems/jellyfish/pull/843): replace unmaintained `derivative` with `derive_where`.
+- [#894](https://github.com/EspressoSystems/jellyfish/pull/893): Circuit bug: range-check the limb decomposition of `FpElemVar`. Adds `FpElemVar::new_checked` and uses it for the outputs of `mod_add`, `mod_add_constant`, `mod_add_vec` and `mod_negate`, whose limbs were previously underconstrained.
 
 ## 0.5.0
 
