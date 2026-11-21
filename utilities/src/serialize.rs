@@ -9,38 +9,6 @@
 use ark_std::vec::Vec;
 use serde::{Deserialize, Serialize};
 
-/// A helper for converting ark_serialize::CanonicalSerialize bytes to standard
-/// Serde bytes. Use this struct as intermediate target instead of directly
-/// deriving serde::Serialize/Deserialize to avoid implementation of Visitors.
-#[derive(Serialize, Deserialize)]
-pub struct CanonicalBytes(pub Vec<u8>);
-
-impl<T: ark_serialize::CanonicalSerialize> From<T> for CanonicalBytes {
-    fn from(obj: T) -> CanonicalBytes {
-        let mut bytes = Vec::new();
-        obj.serialize_compressed(&mut bytes)
-            .expect("fail to serialize to canonical bytes");
-        CanonicalBytes(bytes)
-    }
-}
-
-#[macro_export]
-macro_rules! deserialize_canonical_bytes {
-    ($t:ident) => {
-        deserialize_canonical_bytes!($t<>);
-    };
-
-    // match MyStruct<'a, 'b, T: MyTrait, R: MyTrait2, ...> where any number of lifetime and generic parameters
-    ($t:ident < $( $lt:lifetime ),* $( $T:ident : $trait:ident ),* >) => {
-        impl<$($lt),* $( $T: $trait ),*> From<CanonicalBytes> for $t<$($lt),* $( $T ),*> {
-            fn from(bytes: CanonicalBytes) -> Self {
-                ark_serialize::CanonicalDeserialize::deserialize_compressed(bytes.0.as_slice())
-                    .expect("fail to deserialize canonical bytes")
-            }
-        }
-    };
-}
-
 /// Serializers for elements that are Ark-Works serializable but not serde
 /// serializable.
 ///
@@ -84,17 +52,4 @@ pub mod canonical {
             )))
         }
     }
-}
-
-#[macro_export]
-macro_rules! test_serde_default {
-    ($struct:tt) => {
-        use ark_serialize::*;
-
-        let data = $struct::default();
-        let mut ser_bytes: $crate::Vec<u8> = $crate::Vec::new();
-        data.serialize(&mut ser_bytes).unwrap();
-        let de: $struct = $struct::deserialize_compressed(&ser_bytes[..]).unwrap();
-        assert_eq!(de, data);
-    };
 }
