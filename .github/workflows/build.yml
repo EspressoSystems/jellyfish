@@ -111,19 +111,6 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: just no-std
 
-  wasm:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-      - uses: taiki-e/install-action@just
-      - uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: just wasm
-
   test:
     runs-on: ubuntu-latest
     steps:

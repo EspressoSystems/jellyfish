@@ -30,7 +30,6 @@
 
         stableToolchain = pkgs.rust-bin.stable.latest.minimal.override {
           extensions = [ "clippy" "llvm-tools-preview" "rust-src" ];
-          targets = [ "wasm32-unknown-unknown" ];
         };
         # A script that calls nightly cargo if invoked with `+nightly` or
         # `+nightly-<date>` as the first argument, otherwise it calls stable cargo.
@@ -67,9 +66,6 @@
             ];
 
             CARGO_TARGET_DIR = "target/nix_rustc";
-            # unsupported by clang for wasm32 (blst)
-            hardeningDisable = [ "zerocallusedregs" ];
-
             shellHook = ''
               export RUST_BACKTRACE=full
               export PATH="$PATH:$(pwd)/target/debug:$(pwd)/target/release"
@@ -84,7 +80,6 @@
               export CC="${llvmPackages.clang}/bin/clang"
               export CXX="${llvmPackages.clang}/bin/clang++"
               export AR="${llvm}/bin/llvm-ar"
-              export CFLAGS_wasm32_unknown_unknown="-mcpu=generic"
 
               # by default choose u64_backend
               export RUSTFLAGS='--cfg curve25519_dalek_backend="u64"'
