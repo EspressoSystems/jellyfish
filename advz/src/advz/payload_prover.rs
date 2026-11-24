@@ -144,6 +144,22 @@ where
     ) -> VidResult<Result<(), ()>> {
         Self::check_stmt_consistency(&stmt)?;
 
+        // The prefix and suffix must fill exactly the field elements the range
+        // covers, or the proof could open the subslice at another offset.
+        let range_elem = self.range_byte_to_elem(&stmt.range);
+        let range_elem_byte = self.range_elem_to_byte_clamped(
+            &range_elem,
+            stmt.common.payload_byte_len.try_into().map_err(vid)?,
+        );
+        if proof.prefix_bytes.len() != stmt.range.start - range_elem_byte.start
+            || proof.suffix_bytes.len() != range_elem_byte.end - stmt.range.end
+        {
+            return Err(VidError::Argument(format!(
+                "prefix or suffix length inconsistent with range {:?}",
+                stmt.range
+            )));
+        }
+
         // prepare list of data elems
         let data_elems: Vec<_> = bytes_to_field::<_, KzgEval<E>>(
             proof
@@ -163,7 +179,6 @@ where
         }
 
         // index conversion
-        let range_elem = self.range_byte_to_elem(&stmt.range);
         let range_poly = self.range_elem_to_poly(&range_elem, stmt.common.multiplicity);
         let offset_elem =
             self.offset_poly_to_elem(range_poly.start, range_elem.start, stmt.common.multiplicity);
@@ -270,7 +285,29 @@ where
         Self::check_stmt_consistency(&stmt)?;
 
         // index conversion
-        let range_poly = self.range_byte_to_poly(&stmt.range, stmt.common.multiplicity);
+        let payload_byte_len = stmt.common.payload_byte_len.try_into().map_err(vid)?;
+        let multiplicity = stmt.common.multiplicity;
+        let range_elem = self.range_byte_to_elem(&stmt.range);
+        let range_poly = self.range_elem_to_poly(&range_elem, multiplicity);
+        let range_elem_byte = self.range_elem_to_byte_clamped(&range_elem, payload_byte_len);
+        let range_poly_byte =
+            self.range_poly_to_byte_clamped(&range_poly, payload_byte_len, multiplicity);
+        let offset_elem =
+            self.offset_poly_to_elem(range_poly.start, range_elem.start, multiplicity);
+        let poly_elems_len = self.range_byte_to_elem(&range_poly_byte).len();
+
+        // The prefix and suffix must fill exactly the polynomials the range
+        // covers, or the proof could place the subslice at another offset.
+        if proof.prefix_elems.len() != offset_elem
+            || proof.suffix_elems.len() != poly_elems_len - offset_elem - range_elem.len()
+            || proof.prefix_bytes.len() != stmt.range.start - range_elem_byte.start
+            || proof.suffix_bytes.len() != range_elem_byte.end - stmt.range.end
+        {
+            return Err(VidError::Argument(format!(
+                "prefix or suffix length inconsistent with range {:?}",
+                stmt.range
+            )));
+        }
 
         // rebuild the needed payload elements from statement and proof
         let elems_iter = proof
@@ -324,12 +361,6 @@ where
     }
     fn range_elem_to_poly(&self, range: &Range<usize>, multiplicity: u32) -> Range<usize> {
         range_coarsen(range, (self.recovery_threshold * multiplicity) as usize)
-    }
-    fn range_byte_to_poly(&self, range: &Range<usize>, multiplicity: u32) -> Range<usize> {
-        range_coarsen(
-            range,
-            (self.recovery_threshold * multiplicity) as usize * elem_byte_capacity::<KzgEval<E>>(),
-        )
     }
     fn range_poly_to_byte_clamped(
         &self,
@@ -438,6 +469,84 @@ mod tests {
     use ark_bn254::Bn254;
     use ark_std::{ops::Range, print, println, rand::Rng};
     use sha2::Sha256;
+
+    #[test]
+    fn proof_rejects_subslice_claimed_at_another_range() {
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(8, &mut rng);
+        let mut advz = Advz::<Bn254, Sha256>::with_multiplicity(6, 4, 2, srs).unwrap();
+        let payload: Vec<u8> = (0u8..200).collect();
+        let d = advz.disperse(&payload).unwrap();
+        let (honest, shifted) = (1..5, 10..14);
+        let stmt = |range: Range<usize>| Statement {
+            payload_subslice: &payload[honest.clone()],
+            range,
+            commit: &d.commit,
+            common: &d.common,
+        };
+
+        let small: SmallRangeProof<_> = advz.payload_proof(&payload, honest.clone()).unwrap();
+        assert_eq!(
+            advz.payload_verify(stmt(honest.clone()), &small).unwrap(),
+            Ok(())
+        );
+        assert!(advz.payload_verify(stmt(shifted.clone()), &small).is_err());
+
+        let large: LargeRangeProof<_> = advz.payload_proof(&payload, honest.clone()).unwrap();
+        assert_eq!(
+            advz.payload_verify(stmt(honest.clone()), &large).unwrap(),
+            Ok(())
+        );
+        assert!(advz.payload_verify(stmt(shifted), &large).is_err());
+    }
+
+    #[test]
+    fn large_range_proof_rejects_subslice_shifted_by_whole_elems() {
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(8, &mut rng);
+        let mut advz = Advz::<Bn254, Sha256>::with_multiplicity(6, 4, 2, srs).unwrap();
+        let payload: Vec<u8> = (0u8..200).collect();
+        let d = advz.disperse(&payload).unwrap();
+        let honest = 1..5;
+        let large: LargeRangeProof<_> = advz.payload_proof(&payload, honest.clone()).unwrap();
+
+        // Whole-element shifts keep the prefix and suffix byte lengths valid,
+        // so only the prefix and suffix elem counts reject them.
+        let cap = elem_byte_capacity::<<Bn254 as Pairing>::ScalarField>();
+        for k in [1, 4] {
+            let stmt = Statement {
+                payload_subslice: &payload[honest.clone()],
+                range: honest.start + k * cap..honest.end + k * cap,
+                commit: &d.commit,
+                common: &d.common,
+            };
+            assert!(advz.payload_verify(stmt, &large).is_err());
+        }
+    }
+
+    #[test]
+    fn small_range_proof_with_extra_element_is_rejected() {
+        let mut rng = jf_utils::test_rng();
+        let srs = init_srs(8, &mut rng);
+        let mut advz = Advz::<Bn254, Sha256>::with_multiplicity(6, 4, 2, srs).unwrap();
+        let payload: Vec<u8> = (0u8..200).collect();
+        let d = advz.disperse(&payload).unwrap();
+        let range = 1..5;
+        let mut proof: SmallRangeProof<_> = advz.payload_proof(&payload, range.clone()).unwrap();
+        proof.suffix_bytes.extend(vec![
+            7u8;
+            elem_byte_capacity::<<Bn254 as Pairing>::ScalarField>()
+        ]);
+        proof.proofs.push(proof.proofs[0].clone());
+
+        let stmt = Statement {
+            payload_subslice: &payload[range.clone()],
+            range,
+            commit: &d.commit,
+            common: &d.common,
+        };
+        assert!(advz.payload_verify(stmt, &proof).is_err());
+    }
 
     fn correctness_generic<E, H>()
     where
