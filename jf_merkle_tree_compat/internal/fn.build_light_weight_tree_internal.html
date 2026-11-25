@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Builds a lightweight Merkle tree with most nodes forgotten."><title>build_light_weight_tree_internal in jf_merkle_tree_compat::internal - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-203241e4.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="jf_merkle_tree_compat" data-themes="" data-resource-suffix="" data-rustdoc-version="1.100.0 (0ef1bc386 2026-11-09)" data-channel="1.100.0" data-search-js="search-b167f383.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-1814ead3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-9f56287d.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc fn"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><rustdoc-topbar><h2><a href="#">build_light_weight_tree_internal</a></h2></rustdoc-topbar><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../../jf_merkle_tree_compat/index.html">jf_<wbr>merkle_<wbr>tree_<wbr>compat</a><span class="version">0.3.2</span></h2></div><div class="sidebar-elems"><section id="rustdoc-toc"><h2 class="location"><a href="#">build_<wbr>light_<wbr>weight_<wbr>tree_<wbr>internal</a></h2><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#type-parameters" title="Type Parameters">Type Parameters</a></li><li><a href="#arguments" title="Arguments">Arguments</a></li><li><a href="#returns" title="Returns">Returns</a></li><li><a href="#errors" title="Errors">Errors</a></li><li><a href="#examples" title="Examples">Examples</a></li></ul></section><div id="rustdoc-modnav"><h2><a href="index.html">In jf_<wbr>merkle_<wbr>tree_<wbr>compat::<wbr>internal</a></h2></div></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><div class="width-limiter"><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><div class="rustdoc-breadcrumbs"><a href="../index.html">jf_merkle_tree_compat</a>::<wbr><a href="index.html">internal</a></div><h1>Function <span class="fn">build_<wbr>light_<wbr>weight_<wbr>tree_<wbr>internal</span>&nbsp;<button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><rustdoc-toolbar></rustdoc-toolbar><span class="sub-heading"><a class="src" href="../../src/jf_merkle_tree_compat/internal.rs.html#493-589">Source</a> </span></div><pre class="rust item-decl"><code>pub fn build_light_weight_tree_internal&lt;E, H, const ARITY: <a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.usize.html">usize</a>, T&gt;(
+    height: <a class="enum" href="https://doc.rust-lang.org/1.100.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.usize.html">usize</a>&gt;,
+    elems: impl <a class="trait" href="https://doc.rust-lang.org/1.100.0/core/iter/traits/collect/trait.IntoIterator.html" title="trait core::iter::traits::collect::IntoIterator">IntoIterator</a>&lt;Item = impl <a class="trait" href="https://doc.rust-lang.org/1.100.0/core/borrow/trait.Borrow.html" title="trait core::borrow::Borrow">Borrow</a>&lt;E&gt;&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.100.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(<a class="struct" href="https://doc.rust-lang.org/1.100.0/alloc/sync/struct.Arc.html" title="struct alloc::sync::Arc">Arc</a>&lt;<a class="enum" href="enum.MerkleNode.html" title="enum jf_merkle_tree_compat::internal::MerkleNode">MerkleNode</a>&lt;E, <a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.u64.html">u64</a>, T&gt;&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.usize.html">usize</a>, <a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.u64.html">u64</a>), <a class="enum" href="../errors/enum.MerkleTreeError.html" title="enum jf_merkle_tree_compat::errors::MerkleTreeError">MerkleTreeError</a>&gt;<div class="where">where
+    E: <a class="trait" href="../trait.Element.html" title="trait jf_merkle_tree_compat::Element">Element</a>,
+    H: <a class="trait" href="../trait.DigestAlgorithm.html" title="trait jf_merkle_tree_compat::DigestAlgorithm">DigestAlgorithm</a>&lt;E, <a class="primitive" href="https://doc.rust-lang.org/1.100.0/std/primitive.u64.html">u64</a>, T&gt;,
+    T: <a class="trait" href="../trait.NodeValue.html" title="trait jf_merkle_tree_compat::NodeValue">NodeValue</a>,</div></code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Builds a lightweight Merkle tree with most nodes forgotten.</p>
+<p>This function constructs a memory-efficient Merkle tree where all leaves
+except the last one (the frontier) are immediately forgotten. This is useful
+for append-only trees where only the most recent state needs to be in
+memory.</p>
+<p>The resulting tree maintains the correct root hash but keeps only the
+frontier leaf and path in memory, with all other nodes replaced by
+<code>ForgettenSubtree</code> variants containing just their hash values.</p>
+<h2 id="type-parameters"><a class="doc-anchor" href="#type-parameters">§</a>Type Parameters</h2>
+<ul>
+<li><code>E</code>: The element type stored in leaves</li>
+<li><code>H</code>: The digest algorithm used for hashing</li>
+<li><code>ARITY</code>: The branching factor (number of children per internal node)</li>
+<li><code>T</code>: The node value type (hash digest)</li>
+</ul>
+<h2 id="arguments"><a class="doc-anchor" href="#arguments">§</a>Arguments</h2>
+<ul>
+<li><code>height</code> - Optional tree height. If <code>None</code>, the minimum height to fit all
+elements is calculated automatically</li>
+<li><code>elems</code> - An iterator of elements to insert as leaves</li>
+</ul>
+<h2 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h2>
+<p>Returns a tuple of:</p>
+<ul>
+<li>The root node (as an <code>Arc</code>) with most nodes forgotten</li>
+<li>The tree height</li>
+<li>The number of leaves</li>
+</ul>
+<h2 id="errors"><a class="doc-anchor" href="#errors">§</a>Errors</h2>
+<p>Returns <a href="../errors/enum.MerkleTreeError.html#variant.ExceedCapacity" title="variant jf_merkle_tree_compat::errors::MerkleTreeError::ExceedCapacity"><code>MerkleTreeError::ExceedCapacity</code></a> if the number of elements
+exceeds the tree’s capacity for the given height, or
+<a href="../errors/enum.MerkleTreeError.html#variant.ParametersError" title="variant jf_merkle_tree_compat::errors::MerkleTreeError::ParametersError"><code>MerkleTreeError::ParametersError</code></a> if the tree size would be too large.</p>
+<h2 id="examples"><a class="doc-anchor" href="#examples">§</a>Examples</h2>
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>merkle_tree::internal::build_light_weight_tree_internal;
+
+<span class="kw">let </span>elements = <span class="macro">vec!</span>[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>];
+<span class="kw">let </span>(root, height, num_leaves) =
+    build_light_weight_tree_internal::&lt;<span class="kw">_</span>, MyHasher, <span class="number">2</span>, <span class="kw">_</span>&gt;(<span class="prelude-val">None</span>, elements)<span class="question-mark">?</span>;
+<span class="comment">// Only the last element and its path are fully in memory</span></code></pre></div></div></details></section></div></main></body></html>
