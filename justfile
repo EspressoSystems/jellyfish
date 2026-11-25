@@ -21,8 +21,8 @@ check-tests:
 check-features:
     cargo check --workspace --features 'std parallel {{features}}'
 
-# icicle* features need a CUDA toolchain, so they are excluded from cargo-hack runs
-hack_exclude := "icicle,icicle-core,icicle-bn254,icicle-cuda-runtime"
+# icicle* and gpu-vid features need a CUDA toolchain, so they are excluded from cargo-hack runs
+hack_exclude := "icicle,icicle-core,icicle-bn254,icicle-cuda-runtime,gpu-vid"
 
 # check every feature flag of every crate in isolation
 check-each-feature:
