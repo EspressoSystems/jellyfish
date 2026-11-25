@@ -48,7 +48,7 @@ displaydoc = { workspace = true }
 # inherited from digest-v0.10.7->crypto_common->generic-array
 generic-array = { version = "0.14.6", features = ["more_lengths", "serde"] }
 itertools = { version = "0.14", default-features = false, features = ["use_alloc"] }
-jf-merkle-tree-compat = { path = "../merkle_tree_compat", default-features = false }
+jf-merkle-tree-compat = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-merkle-tree-compat-v0.3.2", default-features = false }
 jf-pcs = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-pcs-v0.3.0", default-features = false }
 jf-utils = { git = "https://github.com/EspressoSystems/jellyfish", tag = "jf-utils-v0.5.0", default-features = false }
 rayon = { workspace = true, optional = true }

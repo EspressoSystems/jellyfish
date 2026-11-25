@@ -1423,7 +1423,7 @@ dependencies = [
  "generic-array",
  "getrandom 0.2.17",
  "itertools 0.14.0",
- "jf-merkle-tree-compat",
+ "jf-merkle-tree-compat 0.3.2 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-merkle-tree-compat-v0.3.2)",
  "jf-pcs 0.2.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-pcs-v0.3.0)",
  "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
  "rayon",
@@ -1570,6 +1570,34 @@ dependencies = [
  "proptest",
  "serde",
  "sha2",
+ "sha3",
+ "tagged-base64",
+]
+
+[[package]]
+name = "jf-merkle-tree-compat"
+version = "0.3.2"
+source = "git+https://github.com/EspressoSystems/jellyfish?tag=jf-merkle-tree-compat-v0.3.2#d73542d25ed691d3d78e8334c5f3aed5d85d8fbe"
+dependencies = [
+ "ark-bls12-377",
+ "ark-bls12-381",
+ "ark-bn254 0.5.0",
+ "ark-ec 0.5.0",
+ "ark-ff 0.5.0",
+ "ark-serialize 0.5.0",
+ "ark-std 0.5.0",
+ "derivative",
+ "digest",
+ "displaydoc",
+ "getrandom 0.2.17",
+ "hashbrown 0.16.1",
+ "itertools 0.14.0",
+ "jf-relation 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-relation-v0.5.0)",
+ "jf-rescue 0.3.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-rescue-v0.3.0)",
+ "jf-utils 0.5.0 (git+https://github.com/EspressoSystems/jellyfish?tag=jf-utils-v0.5.0)",
+ "num-bigint",
+ "num-traits",
+ "serde",
  "sha3",
  "tagged-base64",
 ]

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved from `jellyfish-compat` into the `jellyfish` repo.
 - Removed the `seq-fk-23` and `kzg-print-trace` features. They had no effect: neither was forwarded to `jf-pcs`. Enable `jf-pcs/seq-fk-23` or `jf-pcs/kzg-print-trace` directly instead.
 
+## Changes
+
+- Bump `jf-merkle-tree-compat` to 0.3.2.
+
 ## Security
 
 - [jellyfish-compat#56](https://github.com/EspressoSystems/jellyfish-compat/pull/56): `payload_verify` now requires the exact prefix and suffix lengths for `SmallRangeProof` and `LargeRangeProof`. Before, an honest proof for one byte range could also verify the same bytes claimed at another range of the same length, and a malformed `SmallRangeProof` could panic instead of returning an error.
