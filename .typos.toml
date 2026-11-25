@@ -1,3 +1,9 @@
+[type.snap]
+extend-glob = ["*.snap"]
+check-file = false
+
 [default.extend-words]
 # temporary fix for `*_2nd_*`
 nd = "nd"
+# `ForgettenSubtree` in jf-merkle-tree-compat is part of its serialization format
+Forgetten = "Forgetten"
