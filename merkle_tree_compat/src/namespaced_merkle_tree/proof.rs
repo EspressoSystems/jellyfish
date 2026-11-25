@@ -95,8 +95,8 @@ where
         namespace: N,
     ) -> Result<VerificationResult, MerkleTreeError> {
         if let Some(boundary_proof) = self.left_boundary_proof.as_ref() {
-            // If there is a leaf to the left of the namespace range, check that it is less
-            // than the target namespace
+            // If there is a leaf to the left of the namespace range, check that
+            // it is less than the target namespace
             if boundary_proof
                 .elem()
                 .ok_or(MerkleTreeError::InconsistentStructureError(
@@ -109,7 +109,8 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            // Create a commitment from the root hash with proper height calculation
+            // Create a commitment from the root hash with proper height
+            // calculation
             let proof_height = boundary_proof.proof.len().checked_sub(1).ok_or_else(|| {
                 MerkleTreeError::InconsistentStructureError("Empty boundary proof".to_string())
             })?;
@@ -124,8 +125,8 @@ where
                 return Ok(Err(()));
             }
         } else {
-            // If there is no left boundary, ensure that target namespace is the tree's
-            // minimum namespace
+            // If there is no left boundary, ensure that target namespace is the
+            // tree's minimum namespace
             if root.min_namespace != namespace {
                 return Ok(Err(()));
             }
@@ -139,8 +140,8 @@ where
         namespace: N,
     ) -> Result<VerificationResult, MerkleTreeError> {
         if let Some(boundary_proof) = self.right_boundary_proof.as_ref() {
-            // If there is a leaf to the left of the namespace range, check that it is less
-            // than the target namespace
+            // If there is a leaf to the left of the namespace range, check that
+            // it is less than the target namespace
             if boundary_proof
                 .elem()
                 .ok_or(MerkleTreeError::InconsistentStructureError(
@@ -153,7 +154,8 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proof
-            // Create a commitment from the root hash with proper height calculation
+            // Create a commitment from the root hash with proper height
+            // calculation
             let proof_height = boundary_proof.proof.len().checked_sub(1).ok_or_else(|| {
                 MerkleTreeError::InconsistentStructureError("Empty boundary proof".to_string())
             })?;
@@ -168,8 +170,8 @@ where
                 return Ok(Err(()));
             }
         } else {
-            // If there is no left boundary, ensure that target namespace is the tree's
-            // minimum namespace
+            // If there is no left boundary, ensure that target namespace is the
+            // tree's minimum namespace
             if root.max_namespace != namespace {
                 return Ok(Err(()));
             }
@@ -183,7 +185,8 @@ where
         namespace: N,
     ) -> Result<VerificationResult, MerkleTreeError> {
         if namespace < root.min_namespace || namespace > root.max_namespace {
-            // Easy case where the namespace isn't covered by the range of the tree root
+            // Easy case where the namespace isn't covered by the range of the
+            // tree root
             return Ok(Ok(()));
         } else {
             // Harder case: Find an element whose namespace is greater than our
@@ -223,7 +226,8 @@ where
                 return Ok(Err(()));
             }
             // Verify the boundary proofs
-            // Create a commitment from the root hash with proper height calculation
+            // Create a commitment from the root hash with proper height
+            // calculation
             let left_proof_height = left_proof.proof.len().checked_sub(1).ok_or_else(|| {
                 MerkleTreeError::InconsistentStructureError("Empty left boundary proof".to_string())
             })?;
@@ -265,7 +269,8 @@ where
         let mut last_idx: Option<u64> = None;
         for (idx, proof) in self.proofs.iter().enumerate() {
             let leaf_index = self.first_index + idx as u64;
-            // Create a commitment from the root hash with proper height calculation
+            // Create a commitment from the root hash with proper height
+            // calculation
             let proof_height = proof.proof.len().checked_sub(1).ok_or_else(|| {
                 MerkleTreeError::InconsistentStructureError("Empty proof".to_string())
             })?;
@@ -283,8 +288,8 @@ where
             {
                 return Ok(Err(()));
             }
-            // Indices must be sequential, this checks that there are no gaps in the
-            // namespace
+            // Indices must be sequential, this checks that there are no gaps in
+            // the namespace
             if let Some(prev_index) = last_idx {
                 if leaf_index != prev_index + 1 {
                     return Ok(Err(()));

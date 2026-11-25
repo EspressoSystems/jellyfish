@@ -445,7 +445,8 @@ mod mt_tests {
         .unwrap()
         .is_ok());
 
-        // Forgetting or looking up an element that is already forgotten should fail.
+        // Forgetting or looking up an element that is already forgotten should
+        // fail.
         assert!(matches!(
             mt.universal_forget(0u64.into()),
             LookupResult::NotInMemory
@@ -495,10 +496,11 @@ mod mt_tests {
         )
         .unwrap());
 
-        // Forgetting an empty sub-tree will never actually cause any new entries to be
-        // forgotten, since empty sub-trees are _already_ treated as if they
-        // were forgotten when deciding whether to forget their parent. So even
-        // though we "forgot" it, the empty sub-tree is still in memory.
+        // Forgetting an empty sub-tree will never actually cause any new
+        // entries to be forgotten, since empty sub-trees are _already_ treated
+        // as if they were forgotten when deciding whether to forget their
+        // parent. So even though we "forgot" it, the empty sub-tree is still in
+        // memory.
         match mt.universal_lookup(BigUint::from(1u64)) {
             LookupResult::NotFound(proof) => {
                 let commitment = mt.commitment();
@@ -529,8 +531,8 @@ mod mt_tests {
         .unwrap()
         .is_ok());
 
-        // Now if we forget the last entry, which is the only thing keeping the root
-        // branch in memory, every entry will be forgotten.
+        // Now if we forget the last entry, which is the only thing keeping the
+        // root branch in memory, every entry will be forgotten.
         mt.universal_forget(BigUint::from(2u64))
             .expect_ok()
             .unwrap();

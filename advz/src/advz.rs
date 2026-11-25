@@ -471,8 +471,8 @@ where
             return Ok(Err(())); // not an arg error
         }
 
-        // This is hacky because we changed the Merkle tree interface but not the VID
-        // related structs.
+        // This is hacky because we changed the Merkle tree interface but not
+        // the VID related structs.
         let proof_height = share
             .evals_proof
             .proof
@@ -550,7 +550,8 @@ where
         let result = verification_iter.find_any(abort);
 
         #[cfg(not(feature = "parallel"))]
-        let result = verification_iter.clone().find(abort); // `clone` because we need mutable
+        let result = verification_iter.clone().find(abort); // `clone` because
+                                                            // we need mutable
 
         result.unwrap_or(Ok(Ok(())))
     }
@@ -862,15 +863,15 @@ where
             .map_err(vid)?;
 
         // Notes on hash-to-field:
-        // - Can't use `Field::from_random_bytes` because it's fallible. (In what sense
-        //   is it from "random" bytes?!). This despite the docs explicitly say: "This
-        //   function is primarily intended for sampling random field elements from a
-        //   hash-function or RNG output."
-        // - We could use `ark_ff::fields::field_hashers::HashToField` but that forces
-        //   us to add additional trait bounds `Clone + Default + DynDigest` everywhere.
-        //   Also, `HashToField` does not expose an incremental API (ie. `update`) so we
-        //   would need to use an ordinary hasher and pipe `hasher.finalize()` through
-        //   `hash_to_field`. (Ugh!)
+        // - Can't use `Field::from_random_bytes` because it's fallible. (In
+        //   what sense is it from "random" bytes?!). This despite the docs
+        //   explicitly say: "This function is primarily intended for sampling
+        //   random field elements from a hash-function or RNG output."
+        // - We could use `ark_ff::fields::field_hashers::HashToField` but that
+        //   forces us to add additional trait bounds `Clone + Default +
+        //   DynDigest` everywhere. Also, `HashToField` does not expose an
+        //   incremental API (ie. `update`) so we would need to use an ordinary
+        //   hasher and pipe `hasher.finalize()` through `hash_to_field`. (Ugh!)
         // - We don't need the resulting field element to be cryptographically
         //   indistinguishable from uniformly random. We only need it to be
         //   unpredictable. So it suffices to use

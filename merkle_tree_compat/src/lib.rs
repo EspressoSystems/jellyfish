@@ -235,8 +235,8 @@ pub trait MerkleTreeScheme: Sized {
         proof: impl Borrow<Self::MembershipProof>,
     ) -> Result<VerificationResult, MerkleTreeError>;
 
-    // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) -> LookupResult<(),
-    // Self::BatchProof>; fn batch_verify(
+    // fn batch_lookup(&self, pos: impl Iterator<Item = usize>) ->
+    // LookupResult<(), Self::BatchProof>; fn batch_verify(
     //     &self,
     //     pos: impl Iterator<Item = usize>,
     //     proof: impl Borrow<Self::BatchProof>,

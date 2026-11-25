@@ -344,7 +344,8 @@ fn max_multiplicity() {
     // play with these items
     let num_storage_nodes = 6;
     let recovery_threshold = 4;
-    let max_multiplicity = 1 << 5; // intentionally large so as to fit many payload sizes into a single polynomial
+    let max_multiplicity = 1 << 5; // intentionally large so as to fit many
+                                   // payload sizes into a single polynomial
 
     let payload_byte_lens = [0, 1, 100, 10_000];
     type E = Bn254;
@@ -384,7 +385,8 @@ fn max_multiplicity() {
                 // https://github.com/EspressoSystems/jellyfish/issues/668
                 //
                 // After this issue is fixed the following test should use
-                // `common.multiplicity - 1` instead of `common.multiplicity / 2`.
+                // `common.multiplicity - 1` instead of `common.multiplicity /
+                // 2`.
                 assert!(
                     num_payload_elems > common.multiplicity / 2 * advz.recovery_threshold,
                     "derived multiplicity too large: payload_byte_len {}, common.multiplicity {}",

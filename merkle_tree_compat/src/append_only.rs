@@ -142,7 +142,9 @@ mod mt_tests {
         assert_eq!(mt.capacity(), BigUint::from(9u64));
         assert!(mt.push(F::from(2u64)).is_ok());
         assert!(mt.push(F::from(3u64)).is_ok());
-        assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first 7 items will be inserted
+        assert!(mt.extend(&[F::from(0u64); 9]).is_err()); // Will err, but first
+                                                          // 7 items will be
+                                                          // inserted
         assert_eq!(mt.num_leaves(), 9u64); // full merkle tree
 
         // Now unable to insert more data

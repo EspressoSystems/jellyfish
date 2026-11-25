@@ -371,8 +371,8 @@ where
             })
             .collect::<Result<Vec<Merkle3AryNodeVar>, CircuitError>>()?;
 
-        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child` are
-        // boolean
+        // `is_left_child`, `is_right_child` and `is_left_child+is_right_child`
+        // are boolean
         for node in nodes.iter() {
             // Boolean constrain `is_left_child + is_right_child` because a node
             // can either be the left or the right child of its parent
@@ -593,8 +593,8 @@ mod test {
             assert!(circuit.check_circuit_satisfiability(&[]).is_err());
 
             // Bad path:
-            // The circuit cannot be satisfied if an internal node has a left child with
-            // zero value.
+            // The circuit cannot be satisfied if an internal node has a left
+            // child with zero value.
             let mut circuit = PlonkCircuit::<F>::new_turbo_plonk();
             let elem_idx_var: Variable = circuit.create_variable(uid.into()).unwrap();
 

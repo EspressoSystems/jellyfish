@@ -255,8 +255,8 @@ where
     T: NodeValue,
     N: Namespace,
 {
-    // Helper function to lookup a proof that should be in the tree because of NMT
-    // invariants
+    // Helper function to lookup a proof that should be in the tree because of
+    // NMT invariants
     fn lookup_proof(&self, idx: u64) -> MerkleProof<E, u64, NamespacedHash<T, N>, ARITY> {
         if let LookupResult::Ok(_, proof) = self.inner.lookup(idx) {
             proof
@@ -275,7 +275,8 @@ where
     }
 
     // Helper function to keep namespace metadata in sync with new leaves,
-    // Returns cached leaf references so that the inner merkle tree can append them
+    // Returns cached leaf references so that the inner merkle tree can append
+    // them
     fn update_namespace_metadata(
         namespace_ranges: &mut NamespaceRanges<N>,
         elems: impl IntoIterator<Item = impl Borrow<E>>,
@@ -346,11 +347,12 @@ where
             proof_type = NamespaceProofType::Absence;
             // If there is a namespace in the tree greater than our target
             // namespace at some index i, prove that the
-            // target namespace is empty by providing proofs of leaves at index i and
-            // i - 1
+            // target namespace is empty by providing proofs of leaves at index
+            // i and i - 1
             if let Some((_, range)) = self.namespace_ranges.range(namespace..).next() {
                 let i = range.start;
-                // If i == 0, the target namespace is less than the tree's minimum namespace
+                // If i == 0, the target namespace is less than the tree's
+                // minimum namespace
                 if i > 0 {
                     left_boundary_proof = Some(self.lookup_proof(i - 1));
                     right_boundary_proof = Some(self.lookup_proof(i));
@@ -438,7 +440,8 @@ mod nmt_tests {
             (0, num_leaves - 1)
         );
 
-        // Ensure that digest errors when internal nodes are not sorted by namespace
+        // Ensure that digest errors when internal nodes are not sorted by
+        // namespace
         hashes[0] = hashes[hashes.len() - 1];
         assert!(Hasher::digest(&hashes).is_err());
     }
@@ -542,8 +545,8 @@ mod nmt_tests {
             .unwrap()
             .is_err());
 
-        // Check the simple absence proof case when the namespace falls outside of the
-        // tree range (namespace > root.max_namespace)
+        // Check the simple absence proof case when the namespace falls outside
+        // of the tree range (namespace > root.max_namespace)
         let absence_proof = tree.get_namespace_proof(last_ns + 1);
         let leaves: Vec<Leaf> = absence_proof
             .get_namespace_leaves()
@@ -556,8 +559,8 @@ mod nmt_tests {
             .is_ok());
         assert_eq!(leaves, []);
 
-        // Check the simple absence proof case when the namespace falls outside of the
-        // tree range (namespace < root.min_namespace)
+        // Check the simple absence proof case when the namespace falls outside
+        // of the tree range (namespace < root.min_namespace)
         let absence_proof = tree.get_namespace_proof(first_ns - 1);
         let leaves: Vec<Leaf> = absence_proof
             .get_namespace_leaves()
@@ -570,7 +573,8 @@ mod nmt_tests {
             .is_ok());
         assert_eq!(leaves, []);
 
-        // Check absence proof case when the namespace falls inside of the tree range
+        // Check absence proof case when the namespace falls inside of the tree
+        // range
         let absence_proof = tree.get_namespace_proof(3);
         let leaves: Vec<Leaf> = absence_proof
             .get_namespace_leaves()
@@ -583,7 +587,8 @@ mod nmt_tests {
             .is_ok());
         assert_eq!(leaves, []);
 
-        // Ensure that the absence proof fails when the boundaries are not provided
+        // Ensure that the absence proof fails when the boundaries are not
+        // provided
         let mut malformed_proof = absence_proof.clone();
         malformed_proof.left_boundary_proof = None;
         assert!(tree.verify_namespace_proof(&malformed_proof, 3).is_err());
@@ -591,8 +596,8 @@ mod nmt_tests {
         malformed_proof.right_boundary_proof = None;
         assert!(tree.verify_namespace_proof(&malformed_proof, 3).is_err());
 
-        // Ensure that the absence proof returns a verification error when one of the
-        // boundary proofs is incorrect
+        // Ensure that the absence proof returns a verification error when one
+        // of the boundary proofs is incorrect
         let mut malicious_proof = absence_proof.clone();
         malicious_proof
             .right_boundary_proof

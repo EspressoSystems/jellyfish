@@ -800,7 +800,8 @@ where
 
         match (self, &proof[height]) {
             (Self::ForgettenSubtree { value }, Self::Branch { children, .. }) => {
-                // Recurse into the appropriate sub-tree to remember the rest of the path.
+                // Recurse into the appropriate sub-tree to remember the rest of
+                // the path.
                 let mut children = children.clone();
                 children[traversal_path[height - 1]] = children[traversal_path[height - 1]]
                     .remember_internal::<H, ARITY>(
@@ -816,8 +817,9 @@ where
                 }))
             },
             (Self::ForgettenSubtree { .. }, node) => {
-                // Replace forgotten sub-tree with a hopefully-less-forgotten sub-tree from the
-                // proof. Safe because we already checked our hash value matches the proof.
+                // Replace forgotten sub-tree with a hopefully-less-forgotten
+                // sub-tree from the proof. Safe because we already checked our
+                // hash value matches the proof.
                 Ok(Arc::new(node.clone()))
             },
             (Self::Branch { value, children }, Self::Branch { .. }) => {
@@ -835,8 +837,8 @@ where
                 }))
             },
             (Self::Leaf { .. }, Self::Leaf { .. }) | (Self::Empty, Self::Empty) => {
-                // This node is already a complete sub-tree, so there's nothing to remember. The
-                // proof matches, so just return success.
+                // This node is already a complete sub-tree, so there's nothing
+                // to remember. The proof matches, so just return success.
                 Ok(Arc::new(self.clone()))
             },
             (..) => Err(MerkleTreeError::InconsistentStructureError(
@@ -1020,9 +1022,9 @@ where
                 {
                     Ok((Arc::new(MerkleNode::Empty), result.1, result.2))
                 } else {
-                    // Otherwise, an entry has been updated and the value of one of our children has
-                    // changed, so we must recompute our own value.
-                    // *value = digest_branch::<E, H, I, T>(&children)?;
+                    // Otherwise, an entry has been updated and the value of one
+                    // of our children has changed, so we must recompute our own
+                    // value. *value = digest_branch::<E, H, I, T>(&children)?;
                     Ok((
                         Arc::new(MerkleNode::Branch {
                             value: digest_branch::<E, H, I, T>(&children)?,

@@ -46,7 +46,8 @@ where
     // could set recovery thresholds independent of storage node counts.
     let multiplicities = [1, 256];
     let num_storage_nodes = 128;
-    const INVERSE_CODE_RATE: usize = 4; // ratio of num_storage_nodes : recovery_threshold
+    const INVERSE_CODE_RATE: usize = 4; // ratio of num_storage_nodes :
+                                        // recovery_threshold
 
     // more items as a function of the above
     let recovery_threshold = num_storage_nodes / INVERSE_CODE_RATE;
