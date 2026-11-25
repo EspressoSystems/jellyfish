@@ -3,6 +3,29 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# 0.2.5
+
+## Breaking changes
+
+- Moved from `jellyfish-compat` into the `jellyfish` repo.
+- Removed the `seq-fk-23` and `kzg-print-trace` features. They had no effect: neither was forwarded to `jf-pcs`. Enable `jf-pcs/seq-fk-23` or `jf-pcs/kzg-print-trace` directly instead.
+
+## Security
+
+- [jellyfish-compat#56](https://github.com/EspressoSystems/jellyfish-compat/pull/56): `payload_verify` now requires the exact prefix and suffix lengths for `SmallRangeProof` and `LargeRangeProof`. Before, an honest proof for one byte range could also verify the same bytes claimed at another range of the same length, and a malformed `SmallRangeProof` could panic instead of returning an error.
+
+# 0.2.4 (2026-02-05)
+
+- Bump `jf-merkle-tree-compat` to 0.3.1 (Merkle tree lookups return owned values).
+
+# 0.2.3 (2026-01-28)
+
+- Bump `jf-merkle-tree-compat` to 0.3.0.
+
+# 0.2.2 (2025-10-01)
+
+- Bump `jf-merkle-tree-compat` to 0.2.0 (`jf-rescue` 0.3.0).
+
 # 0.2.1 (2025-09-15)
 
 ## Breaking changes
